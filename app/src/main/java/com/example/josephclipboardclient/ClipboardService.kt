@@ -487,6 +487,7 @@ class ClipboardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         super.onDestroy()
+        TransferDaemon.releaseAllLocks() // free CPU + Wi-Fi/multicast locks when the foreground service goes away
         unregisterReceiver(pairingNotificationReceiver)
         try { serverSocket?.close() } catch (e: Exception) {} // best-effort close on shutdown
         serviceJob.cancel()

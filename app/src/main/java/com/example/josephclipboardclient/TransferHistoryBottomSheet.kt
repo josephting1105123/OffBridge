@@ -543,7 +543,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     private fun onDetailAction(record: TransferRecord) {
         when (record.status) {
             "completed", "declined", "cancelled" -> onBackToList()
-            "transferring" -> if (record.direction == "incoming") cancelTransfer(record) else { /* outgoing: disabled */ }
+            "transferring" -> cancelTransfer(record) // branches internally on session.isIncoming for both directions
             "pending" -> { /* disabled */ }
             else -> resumeTransfer(record) // paused / failed
         }

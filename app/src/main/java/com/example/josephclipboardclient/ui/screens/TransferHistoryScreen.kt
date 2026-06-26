@@ -413,10 +413,9 @@ private fun detailAction(record: TransferRecord): DetailActionStyle {
     val colors = AppThemeTokens.colors
     return when (record.status) {
         "completed", "declined", "cancelled" -> DetailActionStyle(R.string.action_close, true, colors.surfaceElevated, colors.textPrimary)
-        "transferring" -> if (record.direction == "incoming")
-            DetailActionStyle(R.string.action_cancel, true, colors.error, Color.White)
-        else
-            DetailActionStyle(R.string.status_transferring_dots, false, colors.divider, colors.textSecondary)
+        // Cancel is enabled for BOTH directions: cancelTransfer() sends CANCEL_TRANSFER| for
+        // outgoing and DECLINE_OFFER| for incoming, and the daemon already handles both.
+        "transferring" -> DetailActionStyle(R.string.action_cancel, true, colors.error, Color.White)
         "pending" -> DetailActionStyle(R.string.history_pending_accept, false, colors.divider, colors.textSecondary)
         else -> DetailActionStyle(R.string.action_resume, true, colors.green, Color.Black)
     }

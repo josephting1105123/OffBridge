@@ -141,16 +141,23 @@ object TransferDaemon {
 
         try {
             val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            // The multicast lock stays held for the daemon's whole lifetime: passive discovery
+            // (receiving UDP broadcasts with the screen off) needs it even with no transfer in flight.
             multicastLock = wifiManager.createMulticastLock("JosephShare_UDP_Lock")
             multicastLock?.setReferenceCounted(true)
             multicastLock?.acquire()
 
-            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JosephClipboardClient:TransferDaemonWakeLock")
-            wakeLock?.acquire()
-
-            wifiLock = wifiManager.createWifiLock(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF, "JosephClipboardClient:TransferDaemonWifiLock")
-            wifiLock?.acquire()
+            // The CPU wakelock and the LOW_LATENCY/HIGH_PERF Wi-Fi lock pin the CPU and the radio,
+            // so they are created here but NOT acquired up front. refreshPerfLocks() acquires them
+            // only while activeSessions has live work and releases them the moment it drains.
+            // Non-reference-counted so the isHeld-guarded acquire/release stay idempotent.
+            val powerManager = context.applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JosephClipboardClient:TransferDaemonWakeLock").apply {
+                setReferenceCounted(false)
+            }
+            wifiLock = wifiManager.createWifiLock(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF, "JosephClipboardClient:TransferDaemonWifiLock").apply {
+                setReferenceCounted(false)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -320,7 +327,12 @@ object TransferDaemon {
             while (isActive) {
                 delay(1000)
                 val now = System.currentTimeMillis()
-                
+
+                // Scope the perf locks to live work: acquire while a transfer/handshake is in
+                // flight, release as soon as activeSessions drains. Driven here (not in the
+                // data-path) so the transfer/stream functions never touch locks themselves.
+                refreshPerfLocks()
+
                 var newlyResumableCount = 0
                 var totalResumableCount = 0
 
@@ -374,6 +386,36 @@ object TransferDaemon {
                 }
             }
         }
+    }
+
+    /**
+     * Scopes the CPU wakelock + LOW_LATENCY/HIGH_PERF Wi-Fi lock to active work. Acquires both
+     * while [activeSessions] has an in-flight send/receive/handshake and releases them the moment
+     * it drains, so an idle daemon no longer pins the CPU and the radio's low-latency mode 24/7.
+     * The multicast lock is intentionally left untouched (always-on passive discovery). Called from
+     * the 1s housekeeping tick; idempotent (isHeld guard + non-reference-counted locks), so repeated
+     * calls in either state are no-ops.
+     */
+    @Synchronized
+    private fun refreshPerfLocks() {
+        if (activeSessions.isNotEmpty()) {
+            if (wakeLock?.isHeld != true) wakeLock?.acquire()
+            if (wifiLock?.isHeld != true) wifiLock?.acquire()
+        } else {
+            if (wakeLock?.isHeld == true) wakeLock?.release()
+            if (wifiLock?.isHeld == true) wifiLock?.release()
+        }
+    }
+
+    /**
+     * Full lock teardown for the hosting service's onDestroy: releases the perf locks plus the
+     * always-on multicast lock so nothing leaks when the foreground service goes away. Idempotent.
+     */
+    @Synchronized
+    fun releaseAllLocks() {
+        if (wakeLock?.isHeld == true) wakeLock?.release()
+        if (wifiLock?.isHeld == true) wifiLock?.release()
+        if (multicastLock?.isHeld == true) multicastLock?.release()
     }
 
     fun executeDownloadStream(context: Context, socket: Socket, session: TransferSession) {
