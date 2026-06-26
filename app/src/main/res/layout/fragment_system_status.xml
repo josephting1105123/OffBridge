@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:orientation="vertical"
+    android:padding="@dimen/space_xl">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="72dp"
+        android:layout_marginBottom="@dimen/space_xl">
+
+        <ImageView
+            android:layout_width="@dimen/header_icon"
+            android:layout_height="@dimen/header_icon"
+            android:src="@drawable/ic_hdr_status"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"
+            android:layout_marginEnd="@dimen/space_lg"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/system_status_title"
+                android:textAppearance="@style/TextAppearance.App.Headline" />
+
+            <TextView
+                android:id="@+id/tvClipboardStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/status_checking"
+                android:textAppearance="@style/TextAppearance.App.Label" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnHowToUse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action_how_to_use"
+            android:textAppearance="@style/TextAppearance.App.Caption"
+            android:textColor="?attr/appGreen"
+            android:textStyle="bold"
+            android:paddingStart="@dimen/space_md"
+            android:paddingEnd="@dimen/space_md"
+            android:paddingTop="@dimen/space_xs"
+            android:paddingBottom="@dimen/space_xs"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/rect_button_bg"
+            android:foreground="?attr/selectableItemBackground" />
+
+    </LinearLayout>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchSyncToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/discoverable_to_devices"
+        android:textAppearance="@style/TextAppearance.App.Body"
+        android:checked="true"
+        android:layout_marginTop="@dimen/space_lg"
+        app:useMaterialThemeColors="false"
+        app:thumbTint="@color/switch_thumb_color"
+        app:trackTint="@color/switch_track_color" />
+
+    <!-- Device Name Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_lg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/device_name_label"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:layout_marginEnd="@dimen/space_lg" />
+
+        <EditText
+            android:id="@+id/etStatusDeviceName"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:background="@drawable/rect_button_bg"
+            android:paddingStart="@dimen/space_md"
+            android:paddingEnd="@dimen/space_md"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="14sp"
+            android:inputType="text"
+            android:singleLine="true"
+            android:gravity="center_vertical|start" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/appDividerColor"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+    <LinearLayout
+        android:id="@+id/radarHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="@dimen/space_lg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/paired_and_nearby_devices"
+            android:textAppearance="@style/TextAppearance.App.Title" />
+
+        <ProgressBar
+            android:id="@+id/pbClipboardScanning"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="@dimen/space_lg"
+            android:indeterminateTint="#FFFFFF" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollViewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/clipboardDeviceContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/llDisconnectedState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/space_huge"
+            android:layout_height="@dimen/space_huge"
+            android:src="@drawable/ic_warning"
+            android:tint="?attr/appError"
+            android:contentDescription="@null"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/status_network_disconnected"
+            android:textColor="?attr/appError"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/press_button_to_reboot"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:gravity="center"
+            android:layout_marginTop="@dimen/space_sm"/>
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/btnClipboardRescan"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/space_lg"
+        android:layout_marginBottom="@dimen/space_xxl"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        app:cardCornerRadius="32dp"
+        app:cardBackgroundColor="?attr/appCardColor"
+        app:cardElevation="@dimen/space_xs">
+
+        <ImageView
+            android:id="@+id/ivButtonIcon"
+            android:layout_width="@dimen/icon_lg"
+            android:layout_height="@dimen/icon_lg"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_retry"
+            app:tint="?attr/appTextPrimaryColor"
+            android:contentDescription="Network Action" />
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

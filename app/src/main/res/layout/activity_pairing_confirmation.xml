@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <ImageView
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@android:drawable/ic_lock_lock"
+        android:layout_marginBottom="24dp"
+        app:tint="?attr/appTextPrimaryColor"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pairing_request_title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_pairing_device_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/default_device_name"
+            android:textColor="?attr/appGreen"
+            android:textSize="18sp"
+            android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:id="@+id/tv_pairing_verify_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pairing_verify_label"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="12dp"/>
+
+    <include
+        layout="@layout/view_pin_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"/>
+
+    <Button
+        android:id="@+id/btn_accept_pairing"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="?attr/appGreen"
+        android:textColor="@color/black"
+        android:text="@string/action_accept"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btn_decline_pairing"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="?attr/appCardColor"
+        android:textColor="?attr/appError"
+        android:text="@string/action_decline" />
+
+</LinearLayout>

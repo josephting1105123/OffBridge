@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample backup rules file; uncomment and customize as necessary.
+   See https://developer.android.com/guide/topics/data/autobackup
+   for details.
+   Note: This file is ignored for devices older than API 31
+   See https://developer.android.com/about/versions/12/backup-restore
+-->
+<full-backup-content>
+    <!-- API 29/30 (legacy Auto Backup). Mirror data_extraction_rules so device-bound encrypted
+         data (EncryptedSharedPreferences vault, Keystore-wrapped keys) and the Room DB are NOT
+         uploaded — they cannot be decrypted after restore to a new device, and the app intends a
+         fresh start on reinstall. -->
+    <exclude domain="sharedpref" path="."/>
+    <exclude domain="database" path="offgrid.db"/>
+    <exclude domain="database" path="offgrid.db-shm"/>
+    <exclude domain="database" path="offgrid.db-wal"/>
+    <exclude domain="database" path="offgrid.db-journal"/>
+</full-backup-content>

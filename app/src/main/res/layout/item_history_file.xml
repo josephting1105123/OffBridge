@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="@dimen/space_md"
+    android:layout_marginBottom="@dimen/space_sm"
+    android:background="@drawable/rect_button_bg"
+    android:foreground="?attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/tvHistoryFileIcon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:gravity="center"
+        android:text="📄"
+        android:textSize="24sp"
+        android:layout_marginEnd="@dimen/space_md" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvHistoryFileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:maxLines="1"
+            android:ellipsize="middle" />
+
+        <ProgressBar
+            android:id="@+id/pbHistoryFile"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:progressTint="?attr/appGreen"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/tvHistoryFileProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.App.Caption"
+            android:textColor="?attr/appTextSecondaryColor" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnOpenFile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        android:text="@string/action_open"
+        android:textSize="12sp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="@dimen/space_sm"
+        android:visibility="gone"
+        android:backgroundTint="?attr/appInfo"
+        android:textColor="@android:color/white"/>
+</LinearLayout>

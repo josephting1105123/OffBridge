@@ -1,0 +1,148 @@
+/* ==========================================================================
+   tokens.css — design tokens for the Clipboard Share marketing site.
+   Mirrors the app's "slate + emerald glass" brand. Dark is the hero theme;
+   [data-theme="light"] overrides below. All other CSS reads only these vars.
+   ========================================================================== */
+
+/* --- Font: Geist variable (self-hosted from the app repo) ----------------- */
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/geist_variable.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ----- Brand palette: DARK (default / hero aesthetic) ----- */
+  --bg: #141414;
+  --bg-deep: #0F0F0F;
+  --card: #1F1F1F;
+  --surface: #2A2A2A;
+  --text: #F5F5F5;
+  --text-secondary: #A3A3A3;
+  --text-tertiary: #6B6B6B;
+  --divider: #303030;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+
+  --accent: #22C55E;          /* fill — buttons/bars; always pair with dark label */
+  --accent-text: #4ADE88;     /* links/small text — WCAG-safe on dark surfaces */
+  --accent-on: #06210F;       /* label color on top of accent fill */
+  --accent-muted: rgba(34, 197, 94, 0.14);
+  --accent-glow: rgba(34, 197, 94, 0.30);
+
+  /* ----- Semantic ----- */
+  --success: #34D399;
+  --error: #EF4444;
+  --warning: #FBBF24;
+  --info: #60A5FA;
+
+  /* ----- Glass: surface tint gradient overlaid on solid cards ----- */
+  --glass-tint-top: rgba(255, 255, 255, 0.06);
+  --glass-tint-bottom: rgba(255, 255, 255, 0.01);
+  --scrim: rgba(0, 0, 0, 0.72);
+
+  /* ----- Radius ----- */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* ----- Spacing (8px rhythm) ----- */
+  --s-2: 2px;
+  --s-4: 4px;
+  --s-8: 8px;
+  --s-12: 12px;
+  --s-16: 16px;
+  --s-24: 24px;
+  --s-32: 32px;
+  --s-48: 48px;
+  --s-64: 64px;
+  --s-96: 96px;
+
+  /* ----- Section rhythm ----- */
+  --section-y: clamp(4rem, 3rem + 6vw, 8rem);
+  --container-max: 1200px;
+  --container-wide: 1320px;
+  --gutter: clamp(16px, 5vw, 48px);
+
+  /* ----- Type scale (fluid) ----- */
+  --t-display: clamp(2.1rem, 1rem + 5.5vw, 5rem);
+  --t-h1: clamp(2rem, 1.3rem + 3.2vw, 3.5rem);
+  --t-h2: clamp(1.6rem, 1.2rem + 1.8vw, 2.4rem);
+  --t-h3: clamp(1.2rem, 1.05rem + 0.7vw, 1.5rem);
+  --t-lead: clamp(1.05rem, 0.98rem + 0.45vw, 1.3rem);
+  --t-body: 1rem;
+  --t-small: 0.875rem;
+  --t-caption: 0.75rem;
+
+  /* ----- Motion ----- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --dur-slow: 320ms;
+  --press: 0.97;
+  --stagger: 40ms;
+
+  /* ----- Elevation (used sparingly; glass leans on tint + hairline) ----- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+  --shadow-8: 0 24px 60px -16px rgba(0, 0, 0, 0.7);
+
+  /* ----- Misc ----- */
+  --nav-h: 64px;
+  --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-text);
+
+  color-scheme: dark;
+}
+
+/* --- LIGHT theme overrides ------------------------------------------------ */
+[data-theme="light"] {
+  --bg: #F8FAFC;
+  --bg-deep: #EEF2F7;
+  --card: #FFFFFF;
+  --surface: #F1F5F9;
+  --text: #0F172A;
+  --text-secondary: #475569;
+  --text-tertiary: #94A3B8;
+  --divider: #E2E8F0;
+  --hairline: rgba(15, 23, 42, 0.08);
+  --hairline-strong: rgba(15, 23, 42, 0.14);
+
+  --accent: #34D399;
+  --accent-text: #047857;
+  --accent-on: #042F1C;
+  --accent-muted: rgba(52, 211, 153, 0.16);
+  --accent-glow: rgba(52, 211, 153, 0.28);
+
+  --success: #047857;
+  --error: #DC2626;
+  --warning: #B45309;
+  --info: #1D4ED8;
+
+  --glass-tint-top: rgba(255, 255, 255, 0.6);
+  --glass-tint-bottom: rgba(255, 255, 255, 0.0);
+  --scrim: rgba(15, 23, 42, 0.4);
+
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-3: 0 8px 24px -8px rgba(15, 23, 42, 0.14);
+  --shadow-8: 0 24px 60px -16px rgba(15, 23, 42, 0.18);
+
+  color-scheme: light;
+}
+
+/* --- Global reduced-motion guard ----------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

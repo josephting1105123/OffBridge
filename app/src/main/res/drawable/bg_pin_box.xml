@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Segmented PIN digit cell: rounded box with the brand-colour border. Theme attrs resolve
+     because this is inflated as a View background from a themed Activity context. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/appCardColor" />
+    <corners android:radius="10dp" />
+    <stroke
+        android:width="1.5dp"
+        android:color="?attr/appGreen" />
+</shape>

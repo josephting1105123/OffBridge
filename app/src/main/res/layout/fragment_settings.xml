@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/space_xl">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_marginTop="72dp"
+            android:layout_marginBottom="@dimen/space_xl"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="@dimen/header_icon"
+                android:layout_height="@dimen/header_icon"
+                android:layout_marginEnd="@dimen/space_lg"
+                android:src="@drawable/ic_hdr_settings"
+                android:tint="?attr/appGreen"
+                android:contentDescription="@null" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_title"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Headline" />
+        </LinearLayout>
+
+        <!-- ===================== GENERAL Section ===================== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_section_general"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <!-- Theme Setting -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/space_md">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/theme_setting"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Body"/>
+
+            <TextView
+                android:id="@+id/btn_change_theme"
+                android:layout_width="126dp"
+                android:layout_height="36dp"
+                android:background="@drawable/rounded_button_bg"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:text="@string/theme_system"
+                android:textColor="?attr/appTextPrimaryColor"/>
+        </LinearLayout>
+
+
+        <!-- Language Setting -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/space_md">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/language_setting"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Body"/>
+
+            <TextView
+                android:id="@+id/btn_change_language"
+                android:layout_width="126dp"
+                android:layout_height="36dp"
+                android:background="@drawable/rounded_button_bg"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:text="@string/theme_system"
+                android:textColor="?attr/appTextPrimaryColor"/>
+        </LinearLayout>
+
+        <!-- Save To Setting -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/space_lg">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/save_to_setting"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Body"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_save_location"
+                    android:layout_width="126dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/rounded_button_bg"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingStart="@dimen/space_md"
+                    android:paddingEnd="@dimen/space_md"
+                    android:text="@string/save_location_downloads"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp"
+                    android:ellipsize="end"
+                    android:singleLine="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- History backup note -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_lg"
+            android:text="@string/settings_history_backup_note"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textAppearance="@style/TextAppearance.App.Caption"/>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/appDividerColor"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <!-- ===================== DEVICE Section ===================== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_section_device"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <!-- Off-grid hotspot auto-connect (toggles saved-creds SoftAP auto-join; matches the toggles below) -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchHotspotAutoConnect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_hotspot_label"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:layout_marginBottom="@dimen/space_md"
+            app:useMaterialThemeColors="false"
+            app:thumbTint="@color/switch_thumb_color"
+            app:trackTint="@color/switch_track_color" />
+
+        <!-- Accept incoming clipboard (synced with the Clipboard History tab) -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchAcceptClipboardSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/accept_incoming_clipboard"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:layout_marginBottom="@dimen/space_md"
+            app:useMaterialThemeColors="false"
+            app:thumbTint="@color/switch_thumb_color"
+            app:trackTint="@color/switch_track_color" />
+
+        <!-- Discoverable to other devices (synced with System Status) -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchDiscoverableSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/discoverable_to_devices"
+            android:textAppearance="@style/TextAppearance.App.Body"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:layout_marginBottom="@dimen/space_md"
+            app:useMaterialThemeColors="false"
+            app:thumbTint="@color/switch_thumb_color"
+            app:trackTint="@color/switch_track_color" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/appDividerColor"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <!-- ===================== OTHERS Section ===================== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_section_others"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textAppearance="@style/TextAppearance.App.Label"
+            android:textStyle="bold"
+            android:layout_marginBottom="@dimen/space_lg"/>
+
+        <!-- Support / Donate -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/space_md">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/support_setting"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Body"/>
+
+            <Button
+                android:id="@+id/btn_donate"
+                android:layout_width="126dp"
+                android:layout_height="40dp"
+                android:text="@string/action_donate"
+                android:backgroundTint="?attr/appGreen"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:padding="0dp"/>
+        </LinearLayout>
+
+        <!-- Privacy Policy -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/space_xl">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/dialog_title_privacy_policy"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textAppearance="@style/TextAppearance.App.Body"/>
+
+            <Button
+                android:id="@+id/btn_privacy_policy"
+                android:layout_width="126dp"
+                android:layout_height="40dp"
+                android:text="@string/action_read_privacy_policy"
+                android:backgroundTint="?attr/appCardColor"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="14sp"
+                android:padding="0dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

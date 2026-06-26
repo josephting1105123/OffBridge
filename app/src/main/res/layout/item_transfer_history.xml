@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/space_sm"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/appBackgroundColor"
+    app:cardCornerRadius="@dimen/radius_lg"
+    app:cardElevation="@dimen/space_xxs"
+    app:strokeWidth="0dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="@dimen/space_md"
+            android:gravity="center_vertical">
+
+            <!-- Direction icon (visible in normal mode) -->
+            <TextView
+                android:id="@+id/tvDirectionIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:textSize="20sp" />
+
+            <!-- Circle checkbox (visible in select mode, replaces direction icon) -->
+            <CheckBox
+                android:id="@+id/cbSelectItem"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:button="@null"
+                android:gravity="center"
+                android:background="@drawable/circle_checkbox_selector"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="@dimen/space_md">
+
+                <!-- Device name -->
+                <TextView
+                    android:id="@+id/tvHistoryDeviceName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.App.Body"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- File summary -->
+                <TextView
+                    android:id="@+id/tvHistoryFileSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.App.Caption"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:layout_marginTop="@dimen/space_xxs"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- Timestamp -->
+                <TextView
+                    android:id="@+id/tvHistoryTimestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.App.Caption"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:textSize="11sp"
+                    android:layout_marginTop="@dimen/space_xxs" />
+            </LinearLayout>
+
+            <!-- Status badge -->
+            <TextView
+                android:id="@+id/tvHistoryStatus"
+                android:layout_width="96dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:paddingTop="@dimen/space_xs"
+                android:paddingBottom="@dimen/space_xs" />
+
+        </LinearLayout>
+
+        <!-- Selection overlay -->
+        <View
+            android:id="@+id/viewSelectionOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#2234D399"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</com.google.android.material.card.MaterialCardView>

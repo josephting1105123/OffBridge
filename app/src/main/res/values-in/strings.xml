@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">Selamat datang di Clipboard Share.
+
+
+        Aplikasi ini disediakan \"sebagaimana adanya\", tanpa jaminan apa pun, tersurat maupun
+        tersirat, termasuk namun tidak terbatas pada jaminan dapat diperjualbelikan,
+        kesesuaian untuk tujuan tertentu, dan non-pelanggaran. Dalam keadaan apa pun
+        penulis atau pemegang hak cipta tidak bertanggung jawab atas segala klaim, kerusakan, atau
+        kewajiban lainnya, baik dalam tindakan kontrak, kesalahan, atau lainnya, yang timbul dari,
+        luar atau sehubungan dengan perangkat lunak atau penggunaan atau transaksi lainnya dalam
+        perangkat lunak ini.
+
+
+        Dengan menggunakan aplikasi ini, Anda menyetujui hal berikut:
+
+
+        1.  Anda bertanggung jawab atas data yang Anda transfer. Jangan gunakan aplikasi ini untuk
+            mentransfer konten ilegal, berbahaya, atau berhak cipta di mana Anda tidak memiliki
+            hak untuk melakukannya.
+
+
+        2.  Aplikasi ini dirancang untuk digunakan di jaringan Wi-Fi pribadi yang tepercaya. Meskipun
+            koneksinya dienkripsi, menggunakannya di jaringan publik atau tidak tepercaya adalah
+            risiko Anda sendiri.
+
+
+        3.  Aplikasi ini memerlukan izin tertentu agar berfungsi dengan benar, termasuk
+            akses jaringan, akses notifikasi, dan kemampuan untuk berjalan di latar belakang.
+            Menonaktifkan izin ini dapat menyebabkan aplikasi tidak berfungsi.
+
+
+        4.  Pengembang tidak bertanggung jawab atas kehilangan atau kerusakan data yang mungkin terjadi
+            selama transfer.
+
+
+        Pastikan Anda memiliki hak yang diperlukan atas file apa pun yang Anda bagikan.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Kebijakan Privasi untuk Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Tanggal Efektif: 22/6/2026&lt;br&gt;&lt;br&gt;
+        Terima kasih telah menggunakan Clipboard Share (\"Aplikasi\"). Kebijakan Privasi ini menjelaskan prinsip kami terkait pengumpulan, penggunaan, dan pengungkapan informasi. Filosofi inti kami sederhana: data Anda adalah milik Anda, dan kami tidak menginginkannya.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PRINSIP INTI: KAMI TIDAK MENGUMPULKAN DATA ANDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share dirancang sejak awal dengan menjadikan privasi Anda sebagai prioritas utama. Aplikasi memfasilitasi komunikasi langsung, peer-to-peer (P2P) antar perangkat Anda melalui jaringan Wi-Fi lokal.&lt;br&gt;&lt;br&gt;
+        Kami tidak memiliki server yang mengumpulkan, menyimpan, atau memproses data pribadi Anda. Semua data Anda tetap berada di perangkat Anda dan di jaringan lokal Anda.&lt;br&gt;&lt;br&gt;
+        Secara khusus, kami TIDAK mengumpulkan, menerima, atau membagikan:&lt;br&gt;
+        • Konten papan klip Anda.&lt;br&gt;
+        • File yang Anda transfer.&lt;br&gt;
+        • Nama, alamat email, atau pengenal pribadi lainnya milik Anda.&lt;br&gt;
+        • Kontak, lokasi, atau informasi perangkat sensitif lainnya.&lt;br&gt;&lt;br&gt;
+        Aplikasi berfungsi tanpa mengharuskan Anda membuat akun atau masuk.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;INFORMASI YANG DISIMPAN APLIKASI SECARA LOKAL DI PERANGKAT ANDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Agar berfungsi dengan benar, Clipboard Share menyimpan sejumlah kecil data secara eksklusif di penyimpanan lokal perangkat Anda. Data ini berada di bawah kendali Anda dan tidak pernah meninggalkan perangkat Anda untuk dikirim kepada kami. Ini termasuk:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Kunci Kriptografi:&lt;/b&gt; Setelah Anda menyandingkan dua perangkat secara eksplisit, kunci enkripsi AES-256 unik dibuat dan disimpan dengan aman di setiap perangkat. Kunci ini digunakan untuk mengenkripsi semua komunikasi antara dua perangkat yang disandingkan tersebut dan sangat penting untuk keamanan Aplikasi.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Informasi Perangkat Tersanding:&lt;/b&gt; Aplikasi menyimpan alamat IP lokal dan nama perangkat pilihan pengguna dari perangkat yang telah Anda sandingkan. Hal ini digunakan untuk mengidentifikasi dan terhubung dengan mereka di jaringan lokal Anda.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Riwayat Papan Klip:&lt;/b&gt; Aplikasi menyimpan riwayat lokal item papan klip yang telah Anda salin untuk kenyamanan Anda. Riwayat ini hanya disimpan di perangkat Anda dan dapat dihapus oleh Anda kapan saja dari dalam Aplikasi.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Nama Perangkat:&lt;/b&gt; Nama yang Anda pilih untuk perangkat Anda di pengaturan Aplikasi disimpan secara lokal untuk mengidentifikasinya ke perangkat lain di jaringan Anda.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;BAGAIMANA DATA ANDA DITRANSFER&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Semua transfer data (baik papan klip maupun file) terjadi secara langsung antara perangkat Anda yang disandingkan melalui jaringan Wi-Fi lokal Anda. Data Anda tidak melewati server kami atau server pihak ketiga mana pun. Semua transfer dilindungi dengan enkripsi AES-256 ujung-ke-ujung (end-to-end) yang kuat menggunakan kunci yang dihasilkan selama proses penyandingan.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PENEMUAN PERANGKAT DI JARINGAN LOKAL ANDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Agar perangkat Anda dapat saling menemukan secara otomatis, Aplikasi secara berkala menyiarkan pesan penemuan kecil di jaringan Wi-Fi atau hotspot lokal Anda. Pesan ini hanya berisi nama perangkat yang Anda pilih, alamat IP lokal perangkat Anda, dan jenis sistem operasinya (misalnya, \"Android\"). Siaran ini hanya dikirim di jaringan lokal Anda agar perangkat di sekitar dapat menawarkan untuk menyandingkan atau terhubung. Siaran ini tidak pernah dikirim kepada kami, ke internet, atau ke pihak ketiga mana pun, dan tidak ada koneksi internet yang digunakan untuk penemuan. Tidak seperti transfer papan klip dan file Anda, yang dienkripsi ujung-ke-ujung dan hanya dipertukarkan antara perangkat yang disandingkan, pesan penemuan ini tidak dienkripsi dan terlihat oleh perangkat lain di jaringan lokal yang sama. Karena itu, kami menyarankan untuk menggunakan Aplikasi di jaringan pribadi yang tepercaya. Anda dapat menghentikan siaran ini kapan saja dengan menonaktifkan \"Dapat ditemukan perangkat lain\" di Pengaturan.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;FITUR MANA MENGGUNAKAN IZIN MANA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Agar jelas apa yang dilakukan setiap fitur, berikut cara Aplikasi menggunakan jaringan dan izin Anda:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Menemukan perangkat terdekat:&lt;/b&gt; Menggunakan jaringan Wi-Fi atau hotspot lokal Anda, dan pada beberapa versi Android izin Lokasi dan Perangkat Terdekat. Tidak menggunakan data seluler Anda.&lt;br&gt;
+        • &lt;b&gt;Menyandingkan dua perangkat:&lt;/b&gt; Menggunakan jaringan Wi-Fi lokal Anda, atau kamera (untuk memindai kode QR) atau NFC (untuk menyentuhkan), guna bertukar kunci enkripsi.&lt;br&gt;
+        • &lt;b&gt;Menyinkronkan teks papan klip:&lt;/b&gt; Menggunakan jaringan Wi-Fi lokal Anda untuk mengirim teks yang disalin ke perangkat yang disandingkan.&lt;br&gt;
+        • &lt;b&gt;Mentransfer file di jaringan yang sama:&lt;/b&gt; Menggunakan jaringan Wi-Fi lokal Anda.&lt;br&gt;
+        • &lt;b&gt;Transfer luar jaringan (tanpa router atau internet):&lt;/b&gt; Menggunakan Wi-Fi Direct dan Bluetooth untuk membentuk koneksi langsung antar perangkat, dimulai dengan kode QR (kamera) atau sentuhan NFC. Memerlukan izin Lokasi, Perangkat Terdekat, dan Bluetooth.&lt;br&gt;
+        • &lt;b&gt;Memasang aplikasi yang diterima:&lt;/b&gt; Menggunakan izin pemasangan, dan hanya setelah Anda mengonfirmasinya.&lt;br&gt;
+        • &lt;b&gt;Tetap siap di latar belakang:&lt;/b&gt; Menggunakan layanan latar depan dan notifikasi untuk terus mendengarkan item papan klip dan transfer masuk.&lt;br&gt;&lt;br&gt;
+        Singkatnya, Aplikasi menggunakan Wi-Fi lokal, hotspot, atau koneksi langsung antar perangkat untuk semuanya. Aplikasi tidak menggunakan data seluler Anda untuk penemuan atau transfer, dan tidak terhubung ke internet.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;IZIN YANG DIMINTA DALAM APLIKASI&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share meminta izin tertentu untuk mengaktifkan fitur-fiturnya. Inilah alasan mengapa kami membutuhkannya:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Akses Jaringan&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Diperlukan untuk menemukan perangkat lain dan mentransfer data melalui jaringan Wi-Fi lokal Anda.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Lokasi dan Perangkat Terdekat&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Beberapa versi Android memerlukan izin ini agar aplikasi dapat memindai dan terhubung ke perangkat terdekat melalui Wi-Fi Direct, yang digunakan Aplikasi untuk transfer luar jaringan. Kami tidak mengumpulkannya, tetapi fitur ini tidak dapat menemukan perangkat terdekat tanpanya. Aplikasi tidak membaca, menyimpan, atau membagikan lokasi fisik Anda.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Digunakan untuk membantu menyiapkan koneksi langsung luar jaringan dengan perangkat terdekat. Kami tidak mengumpulkan data apa pun melaluinya dan tidak pernah digunakan untuk melacak Anda.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Kamera dan NFC&lt;/b&gt; (CAMERA, NFC): Kamera hanya digunakan untuk memindai kode QR, dan NFC hanya untuk memulai koneksi saat Anda menyentuhkan dua perangkat, untuk penyandingan dan transfer luar jaringan. Informasi ini diproses di perangkat Anda dan tidak pernah disimpan atau dikirim ke mana pun.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Memasang Aplikasi yang Diterima&lt;/b&gt; (REQUEST_INSTALL_PACKAGES): Digunakan hanya agar, dengan konfirmasi eksplisit Anda, Anda dapat memasang aplikasi (APK) yang Anda terima melalui transfer. Aplikasi tidak pernah memasang apa pun dengan sendirinya.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Layanan Latar Depan dan Notifikasi&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Diperlukan untuk menjalankan layanan yang mendengarkan koneksi masuk dan menampilkan notifikasi persisten yang menunjukkan bahwa Aplikasi aktif dan melindungi koneksi Anda.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Jalankan saat Startup&lt;/b&gt; (RECEIVE_BOOT_COMPLETED): Memungkinkan Aplikasi memulai ulang layanannya saat Anda me-reboot perangkat, memastikannya selalu siap untuk terhubung.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Inten Layar Penuh&lt;/b&gt; (USE_FULL_SCREEN_INTENT): Digunakan untuk menampilkan peringatan layar penuh yang mendesak untuk permintaan penyandingan masuk atau transfer file sehingga Anda tidak melewatkannya.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Abaikan Pengoptimalan Baterai&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Sangat disarankan untuk mencegah sistem operasi Android mematikan layanan latar belakang Aplikasi, yang akan mengganggu sinkronisasi papan klip dan transfer file.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Penyimpanan Eksternal&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): Pada versi Android yang lebih lama (SDK 28 ke bawah), ini diperlukan untuk menyimpan file yang diterima ke penyimpanan perangkat Anda.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;LAYANAN PIHAK KETIGA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share tidak menggunakan layanan pihak ketiga mana pun untuk analitik, iklan, atau tujuan lain apa pun yang melibatkan berbagi data Anda.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PRIVASI ANAK-ANAK&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Aplikasi tidak ditujukan untuk digunakan oleh anak-anak di bawah usia 13 tahun. Kami tidak dengan sengaja mengumpulkan informasi apa pun dari anak-anak. Karena pada dasarnya kami tidak mengumpulkan data pribadi apa pun, kami tidak memiliki mekanisme untuk memverifikasi usia pengguna kami.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PERUBAHAN PADA KEBIJAKAN PRIVASI INI&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Kami dapat memperbarui Kebijakan Privasi kami dari waktu ke waktu. Kami akan memberi tahu Anda tentang perubahan apa pun dengan memposting Kebijakan Privasi baru di URL yang sama. Anda disarankan untuk meninjau Kebijakan Privasi ini secara berkala untuk melihat adanya perubahan.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;HUBUNGI KAMI&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami di:&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">Aplikasi (APK)</string>
+    <string name="search_hint">Cari</string>
+    <string name="zero_apps_count">0 Aplikasi</string>
+    <string name="select_multiple_apps">Pilih Beberapa Aplikasi</string>
+    <string name="action_select">Pilih</string>
+    <string name="receiving_files_title">Menerima File</string>
+    <string name="save_to_folder_downloads">Simpan ke folder: Downloads</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_close_with_check">✓ Tutup</string>
+    <string name="incoming_transfer_title">Transfer Masuk</string>
+    <string name="default_device_name">Nama Perangkat</string>
+    <string name="action_accept_files">Terima File</string>
+    <string name="action_decline">Tolak</string>
+    <string name="secure_pairing_title">Penyandingan Aman</string>
+    <string name="initiating_cryptographic_handshake">Memulai jabat tangan kriptografi...</string>
+    <string name="pairing_request_title">Permintaan Penyandingan</string>
+    <string name="action_accept">Terima</string>
+    <string name="clipboard_share_windows_title">Clipboard Share untuk Windows</string>
+    <string name="desktop_app_in_development_desc">Aplikasi desktop pendamping saat ini sedang dalam pengembangan dan akan segera tersedia.</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_windows_version">💻 Versi Windows</string>
+    <string name="menu_restart_services">🔄 Mulai Ulang Layanan</string>
+    <string name="menu_power_off">🔌 Matikan Daya</string>
+    <string name="action_pair">Sandingkan</string>
+    <string name="action_unpair">Batal Sanding</string>
+    <string name="send_files_title">Kirim File</string>
+    <string name="type_file">File</string>
+    <string name="type_media">Media</string>
+    <string name="type_folder">Folder</string>
+    <string name="type_app">Aplikasi</string>
+    <string name="selected_files_title">File Terpilih</string>
+    <string name="action_select_all">Pilih Semua</string>
+    <string name="select_trusted_recipients_title">Perangkat Terhubung</string>
+    <string name="action_send">Kirim</string>
+    <string name="history_and_push_title">Papan Klip &amp; Kirim</string>
+    <string name="action_push_current_clipboard">📤 Dorong Papan Klip Saat Ini</string>
+    <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk menyalin)</string>
+    <string name="required_permissions_title">Izin yang Diperlukan</string>
+    <string name="battery_optimization_title">Pengoptimalan Baterai</string>
+    <string name="battery_optimization_desc">Clipboard Share berjalan di latar belakang. Harap nonaktifkan pengoptimalan baterai untuk memastikan transfer dan sinkronisasi papan klip tidak terganggu.</string>
+    <string name="action_go_to_settings">Buka Pengaturan</string>
+    <string name="notifications_title">Notifikasi</string>
+    <string name="notifications_desc">Ini diperlukan untuk menampilkan status layanan persisten dan memperingatkan Anda tentang permintaan penyandingan atau file masuk.</string>
+    <string name="action_request_permission">Minta Izin</string>
+    <string name="action_finish_setup">Selesaikan Pengaturan</string>
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_section_device">PERANGKAT</string>
+    <string name="device_name_label">Nama Perangkat:</string>
+    <string name="device_name_hint">Nama perangkat</string>
+    <string name="settings_section_general">UMUM</string>
+    <string name="theme_setting">Tema</string>
+    <string name="theme_system">Sistem</string>
+    <string name="language_setting">Bahasa</string>
+    <string name="save_to_setting">Simpan Ke</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_section_others">LAINNYA</string>
+    <string name="support_setting">Dukungan</string>
+    <string name="action_donate">☕ Donasi</string>
+    <string name="privacy_policy_setting">Kebijakan Privasi</string>
+    <string name="action_read_privacy_policy">📄 Baca</string>
+    <string name="system_status_title">Status Sistem</string>
+    <string name="status_checking">Status: Memeriksa...</string>
+    <string name="accept_incoming_clipboard">Terima Papan Klip Masuk</string>
+    <string name="paired_and_nearby_devices">Perangkat Tersanding &amp; Sekitar</string>
+    <string name="network_disconnected">Jaringan Terputus</string>
+    <string name="press_button_to_reboot">Tekan tombol di bawah untuk memulai ulang mesin.</string>
+    <string name="user_agreement_title">Perjanjian Pengguna</string>
+    <string name="agree_to_terms">Saya telah membaca dan menyetujui persyaratan.</string>
+    <string name="action_next">Berikutnya</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">dokumen.pdf</string>
+    <string name="action_open">Buka</string>
+    <string name="default_file_name_zip">nama_file.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Jaringan Mesh Aktif</string>
+    <string name="unknown">Tidak diketahui</string>
+    <string name="unknown_file">File Tidak Diketahui</string>
+    <string name="action_select_count">Pilih (%d)</string>
+    <string name="toast_clipboard_is_empty">Papan klip kosong</string>
+    <string name="toast_failed_to_read_clipboard">Gagal membaca papan klip</string>
+    <string name="unknown_device">Perangkat Tidak Diketahui</string>
+    <string name="notification_successfully_pushed_title">Berhasil Didorong</string>
+    <string name="notification_clipboard_received_title">Papan Klip Diterima</string>
+    <string name="notification_mesh_network_active">Jaringan Mesh Aktif</string>
+    <string name="notification_channel_clipboard_share_service">Layanan Clipboard Share</string>
+    <string name="notification_channel_clipboard_alerts">Peringatan Papan Klip</string>
+    <string name="notification_channel_pairing_requests">Permintaan Penyandingan</string>
+    <string name="notification_from_sender">Dari: %s</string>
+    <string name="notification_channel_file_transfer_progress">Kemajuan Transfer File</string>
+    <string name="notification_channel_incoming_transfers">Transfer Masuk</string>
+    <string name="status_network_disconnected">Jaringan Terputus</string>
+    <string name="status_receiving_paused">Penerimaan Dijeda</string>
+    <string name="status_scanning_for_devices">Memindai perangkat...</string>
+    <string name="status_connected_to_devices">Terhubung ke %d perangkat tersanding</string>
+    <string name="toast_push_failed_no_devices">Dorongan gagal: Tidak ada perangkat tersanding yang online.</string>
+    <string name="toast_no_active_transfer">Tidak ada transfer aktif yang ditemukan.</string>
+    <string name="toast_failed_to_connect_for_resume">Gagal terhubung ke pengirim untuk melanjutkan</string>
+    <string name="incoming_transfer_details" formatted="false">%s mengirim %d file (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">Ruang penyimpanan tidak cukup untuk menerima file.</string>
+    <string name="toast_cancelling_transfer">Membatalkan transfer...</string>
+    <string name="toast_custom_save_location_inaccessible">Lokasi penyimpanan khusus tidak dapat diakses. Kembali ke Downloads.</string>
+    <string name="status_paused_timeout">Dijeda (Batas Waktu Habis)</string>
+    <string name="status_cancelled">Dibatalkan</string>
+    <string name="status_paused_network_dropped">Dijeda: Jaringan Terputus</string>
+    <string name="status_paused_waiting_reconnect">Dijeda (Menunggu sambung ulang...)</string>
+    <string name="toast_transfer_status">Transfer %s</string>
+    <string name="action_resume_when_reconnected">Lanjutkan saat tersambung kembali</string>
+    <string name="file_progress_waiting">Menunggu... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">Folder Khusus</string>
+    <string name="file_progress_complete_saved_to">Selesai - Disimpan ke %s</string>
+    <string name="toast_error_no_compatible_app">Kesalahan: Tidak ada aplikasi yang kompatibel untuk membuka format file ini.</string>
+    <string name="toast_error_generic">Kesalahan: %s</string>
+    <string name="action_delete">Hapus</string>
+    <string name="action_sending">Mengirim...</string>
+    <string name="toast_transfer_interrupted">Transfer terganggu. Penerima dapat melanjutkan saat tersambung kembali.</string>
+    <string name="toast_batch_transfer_complete">Transfer Batch Selesai!</string>
+    <string name="shortcut_send_to_device">Kirim ke %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transfer via Clipboard Share</string>
+    <string name="toast_pushing_clipboard_to_mesh">Mendorong papan klip ke mesh...</string>
+    <string name="no_clipboard_history_yet">Belum ada riwayat papan klip.</string>
+    <string name="toast_copied_to_clipboard">Disalin ke papan klip</string>
+    <string name="toast_notifications_permission_required">Izin notifikasi diperlukan untuk layanan latar depan.</string>
+    <string name="toast_storage_permission_required">Transfer file mungkin gagal tanpa izin penyimpanan pada versi Android ini.</string>
+    <string name="default_android_device_name">Perangkat Android</string>
+    <string name="toast_rebooting_engine">Memulai Ulang Mesin Clipboard Share...</string>
+    <string name="toast_shutting_down_engine">Mematikan Clipboard Share...</string>
+    <string name="toast_notification_permission_granted">Izin notifikasi diberikan!</string>
+    <string name="toast_notifications_recommended">Notifikasi sangat disarankan untuk pengalaman terbaik.</string>
+    <string name="toast_notification_permission_already_granted">Izin notifikasi sudah diberikan pada versi Android ini.</string>
+    <string name="status_permission_granted">Izin Diberikan</string>
+    <string name="status_granted_by_default">Diberikan secara Default</string>
+    <string name="toast_could_not_open_battery_settings">Tidak dapat membuka pengaturan baterai secara otomatis.</string>
+    <string name="theme_system_default">Default Sistem</string>
+    <string name="toast_could_not_open_browser">Tidak dapat membuka browser</string>
+    <string name="theme_light">Terang</string>
+    <string name="theme_dark">Gelap</string>
+    <string name="dialog_title_choose_theme">Pilih Tema</string>
+    <string name="dialog_title_choose_language">Pilih Bahasa</string>
+    <string name="toast_language_preference_saved">Preferensi bahasa disimpan. Dukungan terjemahan penuh akan segera hadir.</string>
+    <string name="dialog_title_privacy_policy">Kebijakan Privasi</string>
+    <string name="action_close">Tutup</string>
+    <string name="selected_folder_fallback">Folder Terpilih</string>
+    <string name="toast_failed_to_load_file_ui">Gagal memuat UI File</string>
+    <string name="status_no_network">Status: Tidak Ada Jaringan</string>
+    <string name="toast_rebooting_engines">Memulai Ulang Mesin...</string>
+    <string name="status_active_and_polling">Status: Aktif &amp; Memeriksa</string>
+    <string name="toast_flushing_network_cache">Membilas cache jaringan...</string>
+    <string name="toast_unpaired_from_device">Batal sandi dari %s</string>
+    <string name="status_requesting_pair">Meminta Penyandingan</string>
+    <string name="status_waiting_for_accept">Menunggu %s untuk menerima...</string>
+    <string name="toast_successfully_paired_with">Berhasil Disandingkan dengan %s!</string>
+    <string name="toast_pairing_declined_by">Penyandingan ditolak oleh %s.</string>
+    <string name="toast_pairing_timed_out">Waktu penyandingan habis. Pengguna lain tidak merespons.</string>
+    <string name="toast_pairing_failed">Penyandingan Gagal. Pastikan perangkat lain berada di jaringan yang sama.</string>
+    <string name="toast_paired_with_device">Disandingkan dengan %s</string>
+    <string name="toast_pairing_declined">Penyandingan ditolak</string>
+    <string name="notification_transfers_can_be_resumed">%d transfer dapat dilanjutkan</string>
+    <string name="notification_connection_restored_resume">Koneksi dipulihkan. Ketuk untuk melanjutkan.</string>
+    <string name="notification_sending_resumed_title">Pengiriman Dilanjutkan</string>
+    <string name="notification_resuming_batch_transfer">Melanjutkan transfer batch...</string>
+    <string name="toast_resumed_transfer_complete">Transfer Lanjutan Selesai</string>
+    <string name="notification_incoming_transfer_request_title">Permintaan Transfer Masuk</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s mengirimi Anda %d file. Ketuk untuk merespons.</string>
+    <string name="title_transfer_history">Riwayat Transfer</string>
+    <string name="no_transfer_history_yet">Belum ada riwayat transfer.</string>
+    <string name="format_selected_count">%d terpilih</string>
+    <string name="title_transaction_details">Detail Transaksi</string>
+    <string name="nav_send">Kirim</string>
+    <string name="nav_pairing">Pemasangan</string>
+    <string name="nav_clipboard">Papan Klip</string>
+    <string name="transfer_history_title">Riwayat Transfer</string>
+    <string name="format_to_device">Ke: %s</string>
+    <string name="format_from_device">Dari: %s</string>
+    <string name="status_transferring_dots">Mentransfer...</string>
+    <string name="status_declined">Ditolak</string>
+    <string name="status_done_with_icon">Selesai</string>
+    <string name="status_paused_with_icon">Dijeda</string>
+    <string name="status_transferring_with_icon">Mentransfer</string>
+    <string name="status_declined_with_icon">Ditolak</string>
+    <string name="status_transferring">Mentransfer</string>
+    <string name="status_paused">Dijeda</string>
+    <string name="action_continue">Lanjutkan</string>
+    <string name="action_grant">Berikan</string>
+    <string name="action_receive">Terima</string>
+    <string name="action_resume">Lanjutkan</string>
+    <string name="action_retry">Coba Lagi</string>
+    <string name="action_turn_on">Aktifkan</string>
+    <string name="action_use_bluetooth">Gunakan Bluetooth sekarang</string>
+    <string name="diagnostics_all_failed">Semua metode gagal</string>
+    <string name="diagnostics_connected_via">Terhubung melalui %1$s</string>
+    <string name="diagnostics_empty">Belum ada percobaan transfer luar jaringan yang tercatat. Coba transfer QR/NFC, lalu kembali ke sini.</string>
+    <string name="diagnostics_outcome_connected">Terhubung</string>
+    <string name="diagnostics_outcome_failed">Gagal</string>
+    <string name="diagnostics_outcome_pending">Sedang berlangsung</string>
+    <string name="diagnostics_outcome_skipped">Dilewati</string>
+    <string name="diagnostics_share">Bagikan log</string>
+    <string name="diagnostics_title">Diagnostik Koneksi</string>
+    <string name="menu_diagnostics">Diagnostik Koneksi</string>
+    <string name="menu_settings">Pengaturan</string>
+    <string name="nav_receive">Terima</string>
+    <string name="nfc_a11y_angled">Pegang ponsel pada sudut 45 derajat</string>
+    <string name="nfc_a11y_flat">Pegang ponsel secara datar</string>
+    <string name="nfc_a11y_not_selected">Tidak dipilih</string>
+    <string name="nfc_a11y_selected">Dipilih</string>
+    <string name="nfc_a11y_vertical">Pegang ponsel secara tegak</string>
+    <string name="nfc_guide_continue">Mengerti</string>
+    <string name="nfc_guide_label_their">Ponsel mereka</string>
+    <string name="nfc_guide_label_your">Ponsel Anda</string>
+    <string name="nfc_guide_subtitle_receive">Sentuhkan bagian belakang kedua ponsel agar titik yang menyala bertemu.</string>
+    <string name="nfc_guide_subtitle_send">Pegang ponsel Anda saling membelakangi dengan perangkat lain agar titik yang menyala bertemu.</string>
+    <string name="nfc_guide_title">Pegang kedua ponsel bersama</string>
+    <string name="nfc_hint_angled">Chip NFC Anda berada di bagian atas belakang — pegang ponsel pada sekitar 45° dan pertemukan titik yang menyala.</string>
+    <string name="nfc_hint_flat">Chip NFC Anda berada di dekat bagian atas — letakkan kedua ponsel secara datar dan pertemukan bagian atasnya tempat titik menyala.</string>
+    <string name="nfc_hint_vertical">Chip NFC Anda berada di sekitar bagian tengah — pegang kedua ponsel secara tegak dan pertemukan titik yang menyala.</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">Datar</string>
+    <string name="nfc_style_vertical">Tegak</string>
+    <string name="offgrid_accept_hint">Jika permintaan koneksi muncul di perangkat ini, ketuk Terima.</string>
+    <string name="offgrid_band_warning">Grup berada di %1$d MHz — beberapa perangkat mungkin tidak menemukannya.</string>
+    <string name="offgrid_bt_available">Wi-Fi terlalu lama? Bluetooth siap — lebih lambat, tetapi selalu terhubung.</string>
+    <string name="offgrid_camera_denied">Izin kamera diperlukan untuk memindai kode. Anda masih dapat menyentuhkan kedua ponsel untuk menggunakan NFC.</string>
+    <string name="offgrid_confirm_subtitle">%1$d file • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s ingin mengirimi Anda file</string>
+    <string name="offgrid_connecting_title">Menghubungkan…</string>
+    <string name="offgrid_degraded_bt_off">\nSaluran kontrol Bluetooth nonaktif — metode cadangan berkurang.</string>
+    <string name="offgrid_degraded_mode">Mode terbatas: hanya gabung Wi-Fi dasar yang aktif. Berikan izin perangkat di sekitar untuk koneksi yang lebih cepat dan andal.</string>
+    <string name="offgrid_error_all_methods">Tidak dapat terhubung dengan metode apa pun. Dekatkan kedua ponsel, pastikan Wi-Fi dan Bluetooth aktif, lalu coba lagi.</string>
+    <string name="offgrid_error_control_failed">Koneksi Bluetooth untuk mengoordinasikan transfer gagal terhubung. Jaga kedua ponsel tetap tidak terkunci dan berjarak kurang dari satu meter, lalu coba lagi.</string>
+    <string name="offgrid_error_code_expired">Kode kedaluwarsa — minta pengirim membuka kembali layar pengiriman.</string>
+    <string name="offgrid_error_connect_failed">Tidak dapat terhubung. Pastikan layar pengirim masih terbuka, lalu coba lagi.</string>
+    <string name="offgrid_error_fallback_failed">Koneksi langsung gagal. Dekatkan kedua ponsel, pastikan pengirim menerima, lalu coba lagi.</string>
+    <string name="offgrid_error_join_failed">Tidak dapat bergabung ke jaringan pengirim. Dekatkan kedua ponsel, terima permintaan koneksi, lalu coba lagi.</string>
+    <string name="offgrid_error_location_off">Lokasi nonaktif. Android perlu Lokasi diaktifkan untuk menemukan jaringan langsung pengirim.</string>
+    <string name="offgrid_error_no_files">Tidak ada file untuk dikirim.</string>
+    <string name="offgrid_error_sender_busy">Pengirim sedang sibuk dengan perangkat lain.</string>
+    <string name="offgrid_error_transfer_failed">Transfer gagal. Tampilkan kode lagi untuk mencoba ulang.</string>
+    <string name="offgrid_error_update_app">Kode ini dibuat oleh versi yang lebih baru. Perbarui aplikasi untuk menerima.</string>
+    <string name="offgrid_error_wifi_off">Wi-Fi nonaktif. Aktifkan untuk menggunakan pengiriman luar jaringan.</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fi nonaktif. Aktifkan untuk menerima — tidak diperlukan koneksi internet.</string>
+    <string name="offgrid_fallback_permission_rationale">Izinkan akses perangkat di sekitar agar aplikasi dapat terhubung langsung saat gabung standar tidak berfungsi.</string>
+    <string name="offgrid_hce_description">Kredensial transfer luar jaringan Clipboard Share</string>
+    <string name="offgrid_join_failed_closer">Tidak dapat menjangkau pengirim. Dekatkan kedua ponsel dan minta mereka menampilkan kode lagi, lalu coba lagi.</string>
+    <string name="offgrid_nfc_off">NFC nonaktif — ketuk untuk mengaktifkan</string>
+    <string name="offgrid_nfc_ready">NFC siap — ketuk untuk melihat posisi memegang ponsel</string>
+    <string name="offgrid_nfc_unavailable">NFC tidak tersedia — hanya QR</string>
+    <string name="offgrid_permission_miui_hint">\nPada Xiaomi/MIUI, aktifkan “Perangkat di sekitar” di Info aplikasi → Izin.</string>
+    <string name="offgrid_permission_permanently_denied">Izin perangkat di sekitar diblokir, jadi hanya gabung Wi-Fi dasar yang tersedia. Buka pengaturan aplikasi untuk mengaktifkannya demi koneksi langsung yang lebih cepat dan andal.</string>
+    <string name="offgrid_permission_required">Izin perangkat di sekitar diperlukan untuk pengiriman luar jaringan.</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">Terima via QR / NFC</string>
+    <string name="offgrid_send_title">Kirim via NFC / QR</string>
+    <string name="offgrid_session_notification_text">Menjaga koneksi langsung tetap aktif.</string>
+    <string name="offgrid_session_notification_title">Transfer luar jaringan aktif</string>
+    <string name="offgrid_status_code_scanned">Kode dipindai</string>
+    <string name="offgrid_status_complete">Transfer selesai</string>
+    <string name="offgrid_status_connecting">Menghubungkan ke %s…</string>
+    <string name="offgrid_status_control_linked">Tertaut dengan %s melalui Bluetooth — menegosiasikan koneksi tercepat…</string>
+    <string name="offgrid_status_creating_group">Menyiapkan koneksi langsung…</string>
+    <string name="offgrid_status_handshaking">Memverifikasi koneksi…</string>
+    <string name="offgrid_status_interrupted">Koneksi terputus — menunggu perangkat lain untuk melanjutkan…</string>
+    <string name="offgrid_status_receiving">Menerima file…</string>
+    <string name="offgrid_status_reestablishing">Membangun ulang grup…</string>
+    <string name="offgrid_status_rescan_to_resume">Koneksi ditutup. Pindai ulang untuk melanjutkan — kemajuan disimpan di Riwayat Transfer.</string>
+    <string name="offgrid_status_scanning">Arahkan kamera ke kode pengirim</string>
+    <string name="offgrid_status_sending">Perangkat terhubung — mengirim ke %1$s (%2$d file)…</string>
+    <string name="offgrid_status_trying_direct">Mencoba koneksi langsung… terima permintaan di pengirim.</string>
+    <string name="offgrid_status_trying_method">Mencoba metode koneksi %1$d dari %2$d…</string>
+    <string name="offgrid_status_waiting_for_scan">Menunggu pemindaian…</string>
+    <string name="receive_enable_nfc">Aktifkan NFC</string>
+    <string name="receive_nfc_listening">NFC Mendengarkan — sentuhkan kedua ponsel</string>
+    <string name="receive_nfc_unavailable_device">NFC tidak tersedia di perangkat ini</string>
+    <string name="receive_open_camera">Buka Kamera</string>
+    <string name="receive_title">Terima File</string>
+    <string name="send_to_devices_title">Kirim ke Perangkat</string>
+    <string name="send_via_connected_devices">Perangkat Terhubung</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">Kirim Via</string>
+    <string name="action_how_to_use">Cara pakai</string>
+    <string name="discoverable_to_devices">Dapat ditemukan perangkat lain</string>
+    <string name="transaction_details_title">Detail Transaksi</string>
+    <string name="type_text">Teks</string>
+    <string name="transfer_resume_request_title">Permintaan Lanjutkan</string>
+    <string name="transfer_resume_request_text">Pengirim meminta untuk melanjutkan transfer. Ketuk untuk melihat.</string>
+    <string name="transfer_resumable_one">1 transfer dapat dilanjutkan</string>
+    <string name="transfer_resumable_many">%1$d transfer dapat dilanjutkan</string>
+    <string name="transfer_connection_restored">Koneksi dipulihkan. Ketuk untuk melanjutkan.</string>
+    <string name="transfer_failed_connect_sender">Gagal terhubung ke pengirim</string>
+    <string name="transfer_sending_resumed_title">Pengiriman Dilanjutkan</string>
+    <string name="transfer_sending_resumed_text">Melanjutkan transfer batch...</string>
+    <string name="transfer_resumed_complete">Transfer Lanjutan Selesai</string>
+    <string name="transfer_incoming_title">Transfer Masuk</string>
+    <string name="transfer_incoming_text">%1$s ingin mengirimi Anda %2$d file.</string>
+    <string name="transfer_receiving_title">Menerima File</string>
+    <string name="transfer_receiving_text">%1$s sedang mengirimi Anda %2$d file. Ketuk untuk melihat kemajuan.</string>
+    <string name="applist_version_unknown">Tidak diketahui</string>
+    <string name="applist_app_count">%1$d Aplikasi</string>
+    <string name="applist_select_count">Pilih (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">Papan klip kosong</string>
+    <string name="clip_read_failed">Gagal membaca papan klip</string>
+    <string name="status_push_success_title">Berhasil Didorong</string>
+    <string name="status_clipboard_received_title">Papan Klip Diterima</string>
+    <string name="status_channel_service">Layanan Clipboard Share</string>
+    <string name="status_channel_alerts">Peringatan Papan Klip</string>
+    <string name="status_channel_pairing">Permintaan Penyandingan</string>
+    <string name="status_channel_transfer_progress">Kemajuan Transfer File</string>
+    <string name="status_channel_incoming_transfers">Transfer Masuk</string>
+    <string name="status_mesh_active">Jaringan Mesh Aktif</string>
+    <string name="pairing_request_from">Dari: %1$s</string>
+    <string name="status_scanning_devices">Memindai perangkat...</string>
+    <string name="status_connected_devices">Terhubung ke %1$d perangkat tersanding</string>
+    <string name="transfer_add_text_hint">Ketik sesuatu untuk ditambahkan...</string>
+    <string name="transfer_add_text_title">Tambah Teks</string>
+    <string name="transfer_add_text_positive">Tambah</string>
+    <string name="transfer_text_item_name">Teks %1$d</string>
+    <string name="transfer_tut_file_type">Pilih jenis file yang akan dikirim: File, Media, Folder, Teks, atau Aplikasi.</string>
+    <string name="transfer_tut_files_appear">File yang Anda pilih akan muncul di sini. Ketuk file untuk melihat pratinjaunya.</string>
+    <string name="transfer_tut_long_press">Tekan lama file mana pun untuk masuk ke mode pilih, lalu hapus item yang dipilih.</string>
+    <string name="transfer_tut_send_button">Setelah file dipilih, ketuk Kirim untuk memilih cara pengiriman.</string>
+    <string name="transfer_tut_send_via">Perangkat Terhubung menggunakan jaringan Wi-Fi Anda. NFC / QR berfungsi di mana saja — tanpa perlu router.</string>
+    <string name="transfer_tut_pick_devices">Pilih satu atau beberapa perangkat tersanding, lalu tekan Kirim.</string>
+    <string name="transfer_tut_offgrid_code">Tunjukkan kode ini ke ponsel penerima, atau cukup sentuhkan kedua ponsel.</string>
+    <string name="transfer_tut_history">Ketuk di sini untuk melihat riwayat transfer Anda dan melacak kemajuan.</string>
+    <string name="transfer_tut_next">Berikutnya</string>
+    <string name="transfer_shortcut_short_label">Kirim ke %1$s</string>
+    <string name="transfer_shortcut_long_label">Transfer via Clipboard Share</string>
+    <string name="transfer_unknown_file">File Tidak Diketahui</string>
+    <string name="history_tutorial_push">Ketuk di sini untuk langsung mendorong teks papan klip Anda saat ini ke semua perangkat tersanding.</string>
+    <string name="history_tutorial_accept_switch">Nonaktifkan ini jika Anda tidak ingin menerima konten papan klip dari perangkat lain.</string>
+    <string name="history_tutorial_next">Berikutnya</string>
+    <string name="history_toast_pushing">Mendorong papan klip ke mesh...</string>
+    <string name="history_toast_empty">Papan klip kosong</string>
+    <string name="history_toast_read_failed">Gagal membaca papan klip</string>
+    <string name="history_empty">Belum ada riwayat papan klip.</string>
+    <string name="history_toast_copied">Disalin ke papan klip</string>
+    <string name="perm_notifications_required">Izin notifikasi diperlukan untuk layanan latar depan.</string>
+    <string name="perm_storage_required">Transfer file mungkin gagal tanpa izin penyimpanan pada versi Android ini.</string>
+    <string name="status_default_device_name">Perangkat Android</string>
+    <string name="menu_restart_toast">Memulai Ulang Mesin Clipboard Share...</string>
+    <string name="menu_power_off_toast">Mematikan Clipboard Share...</string>
+    <string name="pairing_requesting_title">Meminta Penyandingan</string>
+    <string name="pairing_waiting_subtitle">Menunggu %1$s untuk menerima...</string>
+    <string name="pairing_success">Berhasil Disandingkan dengan %1$s!</string>
+    <string name="pairing_declined">Penyandingan ditolak oleh %1$s.</string>
+    <string name="pairing_timed_out">Waktu penyandingan habis. Pengguna lain tidak merespons.</string>
+    <string name="pairing_failed">Penyandingan Gagal. Pastikan perangkat lain berada di jaringan yang sama.</string>
+    <string name="pairing_unknown_device">Perangkat Tidak Diketahui</string>
+    <string name="pairing_from_device">Dari: %1$s</string>
+    <string name="pairing_paired_with">Disandingkan dengan %1$s</string>
+    <string name="perm_notification_granted_toast">Izin notifikasi diberikan!</string>
+    <string name="perm_notification_recommended_toast">Notifikasi disarankan untuk pengalaman terbaik.</string>
+    <string name="perm_notification_already_granted_toast">Izin notifikasi sudah diberikan pada versi Android ini.</string>
+    <string name="perm_permission_granted_label">Izin Diberikan</string>
+    <string name="perm_go_to_settings_label">Buka Pengaturan</string>
+    <string name="perm_request_permission_label">Minta Izin</string>
+    <string name="perm_granted_by_default_label">Diberikan secara Default</string>
+    <string name="perm_battery_settings_error_toast">Tidak dapat membuka pengaturan baterai secara otomatis.</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">Tidak dapat membuka browser</string>
+    <string name="settings_dialog_choose_language">Pilih Bahasa</string>
+    <string name="settings_toast_rebooting_engine">Memulai Ulang Mesin Clipboard Share...</string>
+    <string name="settings_dialog_privacy_policy">Kebijakan Privasi</string>
+    <string name="settings_action_close">Tutup</string>
+    <string name="settings_save_location_selected_folder">Folder Terpilih</string>
+    <string name="settings_default_device_name">Perangkat Android</string>
+    <string name="status_tutorial_discoverable_toggle">Nonaktifkan ini saat Anda tidak ingin dapat ditemukan oleh perangkat lain.</string>
+    <string name="status_tutorial_device_name">Ketuk di sini untuk mengubah nama tampilan perangkat Anda agar lebih mudah diidentifikasi.</string>
+    <string name="status_tutorial_pair_nearby">Ketuk \'Sandingkan\' pada perangkat di sekitar untuk menyandingkannya dan mulai mentransfer file.</string>
+    <string name="status_tutorial_pair_button">Ketuk tombol Sandingkan untuk terhubung ke perangkat ini dan mulai berbagi file.</string>
+    <string name="status_action_next">Berikutnya</string>
+    <string name="status_rebooting_engines">Memulai Ulang Mesin...</string>
+    <string name="status_flushing_cache">Membilas cache jaringan...</string>
+    <string name="status_unpaired_from">Batal sandi dari %1$s</string>
+    <string name="history_pending_accept">Menunggu Persetujuan...</string>
+    <string name="history_session_unavailable">Sesi tidak lagi tersedia</string>
+    <string name="history_resume_request_sent">Permintaan lanjutkan dikirim ke %1$s</string>
+    <string name="history_resume_request_failed">Gagal mengirim permintaan lanjutkan</string>
+    <string name="history_resume_no_device_ip">Tidak dapat menemukan IP perangkat untuk mengirim permintaan lanjutkan</string>
+    <string name="status_failed_with_icon">✗ Gagal</string>
+    <string name="status_pending_with_icon">⏳ Menunggu</string>
+    <string name="status_cancelled_with_icon">✗ Dibatalkan</string>
+    <string name="history_chooser_open_media">Buka Media</string>
+    <string name="history_chooser_open_storage">Buka Lokasi Penyimpanan</string>
+    <string name="history_chooser_open_file">Buka File</string>
+    <string name="history_file_not_found">File tidak ditemukan</string>
+    <string name="history_cannot_open_file">Tidak dapat membuka file</string>
+    <string name="history_waiting_zero">Menunggu (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d file (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> +%1$d lagi</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">Semua</string>
+    <string name="history_filter_sent">Terkirim</string>
+    <string name="history_filter_received">Diterima</string>
+    <string name="history_filter_completed">Selesai</string>
+    <string name="history_filter_pending">Menunggu</string>
+    <string name="history_filter_cancelled">Dibatalkan</string>
+    <string name="history_tutorial_list">Di sini Anda dapat melihat semua transfer file terbaru Anda.</string>
+    <string name="history_tutorial_filter">Filter berdasarkan Masuk, Keluar, Dijeda, atau Dibatalkan — ketuk sebuah kapsul.</string>
+    <string name="history_tutorial_select">Ketuk \'Pilih\' untuk mengelola dan menghapus catatan transfer.</string>
+    <string name="history_tutorial_tap_record">Ketuk catatan transfer mana pun untuk melihat detail dan kemajuannya.</string>
+    <string name="history_tutorial_open">Tekan tombol buka untuk membuka file yang diterima.</string>
+    <string name="transfer_incoming_from">Dari: %1$s (%2$d file)</string>
+    <string name="pairing_declined_simple">Penyandingan ditolak</string>
+</resources>

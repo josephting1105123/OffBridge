@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_send_files"
+        android:icon="@android:drawable/ic_menu_send"
+        android:title="@string/nav_send" />
+
+    <item
+        android:id="@+id/nav_receive"
+        android:icon="@drawable/ic_receive"
+        android:title="@string/nav_receive" />
+
+    <!-- Placeholder for the central FAB, will not be displayed -->
+    <item
+        android:id="@+id/nav_placeholder"
+        android:title=""
+        android:enabled="false" />
+
+    <item
+        android:id="@+id/nav_history"
+        android:icon="@drawable/ic_clipboard_light"
+        android:title="@string/nav_clipboard" />
+
+    <item
+        android:id="@+id/nav_system_status"
+        android:icon="@drawable/ic_link"
+        android:title="@string/nav_pairing" />
+
+</menu>

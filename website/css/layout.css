@@ -1,0 +1,166 @@
+/* ==========================================================================
+   layout.css — container, section rhythm, bento grid utilities.
+   ========================================================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.container--wide {
+  max-width: var(--container-wide);
+}
+
+main {
+  display: block;
+}
+
+section {
+  position: relative;
+  padding-block: var(--section-y);
+}
+
+.section-head {
+  max-width: 46rem;
+  margin-bottom: clamp(2rem, 1.5rem + 2vw, 3.5rem);
+}
+
+.section-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: var(--s-16);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.section-head--center .eyebrow {
+  justify-content: center;
+}
+
+.section-lead {
+  margin-top: var(--s-16);
+  font-size: var(--t-lead);
+  color: var(--text-secondary);
+  max-width: 42rem;
+}
+
+.section-head--center .section-lead {
+  margin-inline: auto;
+}
+
+/* --- Split layout (feature rows) ----------------------------------------- */
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 3vw, 4rem);
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .split {
+    grid-template-columns: 1fr 1fr;
+  }
+  .split--reverse .split__media {
+    order: -1;
+  }
+}
+
+.split__copy {
+  max-width: 34rem;
+  min-width: 0;
+}
+
+.split__media {
+  min-width: 0;
+}
+
+/* --- Bento grid ----------------------------------------------------------- */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-16);
+}
+
+@media (min-width: 768px) {
+  .bento {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bento {
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--s-24);
+  }
+}
+
+/* span helpers — mobile default = full width (2 cols) */
+.bento > * {
+  grid-column: span 2;
+}
+
+@media (min-width: 768px) {
+  .col-3 {
+    grid-column: span 3;
+  }
+  .col-4 {
+    grid-column: span 3;
+  }
+  .col-6 {
+    grid-column: span 6;
+  }
+  .col-8 {
+    grid-column: span 6;
+  }
+  .row-2 {
+    grid-row: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .col-3 {
+    grid-column: span 3;
+  }
+  .col-4 {
+    grid-column: span 4;
+  }
+  .col-6 {
+    grid-column: span 6;
+  }
+  .col-8 {
+    grid-column: span 8;
+  }
+}
+
+/* --- Generic cluster / stack --------------------------------------------- */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-12);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+}

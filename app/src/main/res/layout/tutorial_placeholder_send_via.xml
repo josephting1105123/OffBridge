@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fake "Send Via" chooser for Send-Files tutorial steps 5 & 7. Mirrors the REAL
+     bottom_sheet_send_via.xml: full-width sheet, rounded top, two 64dp option rows.
+     The rows carry ids so the tutorial can animate a finger-tap on whichever one the
+     next step opens (phSendViaDevices for step 6, phSendViaOffgrid for step 7). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:orientation="vertical"
+    android:background="@drawable/bottom_sheet_bg"
+    android:padding="@dimen/space_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/send_via_title"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+    <TextView
+        android:id="@+id/phSendViaOffgrid"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/send_via_nfc_qr"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="16sp"
+        android:background="@drawable/rect_button_bg"
+        android:backgroundTint="?attr/appNavBarColor"
+        android:layout_marginBottom="@dimen/space_md"/>
+
+    <TextView
+        android:id="@+id/phSendViaDevices"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/send_via_connected_devices"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="16sp"
+        android:background="@drawable/rect_button_bg"
+        android:backgroundTint="?attr/appNavBarColor"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+</LinearLayout>

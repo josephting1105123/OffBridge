@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Transfer-history detail → list (back): slide in from the left + fade. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:interpolator/decelerate_quad">
+    <translate android:fromXDelta="-12%p" android:toXDelta="0" android:duration="220" />
+    <alpha android:fromAlpha="0.0" android:toAlpha="1.0" android:duration="170" />
+</set>

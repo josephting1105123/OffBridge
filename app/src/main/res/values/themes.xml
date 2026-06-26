@@ -1,0 +1,111 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.JosephClipboardClient" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Smooth, responsive screen "pop" transitions app-wide. -->
+        <item name="android:windowAnimationStyle">@style/WindowAnimation.App</item>
+        <!-- Geist (Vercel typeface, res/font) app-wide instead of the Roboto platform default. -->
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <style name="WindowAnimation.App" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/pop_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/hold</item>
+        <item name="android:activityCloseEnterAnimation">@anim/hold</item>
+        <item name="android:activityCloseExitAnimation">@anim/pop_out</item>
+    </style>
+
+    <style name="Theme.JosephClipboardClient" parent="Base.Theme.JosephClipboardClient">
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+
+        <!-- Light theme colors (slate + emerald glass). Mirror of LightAppColors / TOKENS.md. -->
+        <item name="appBackgroundColor">#F8FAFC</item>
+        <item name="appCardColor">#FFFFFF</item>
+        <item name="appTextPrimaryColor">#0F172A</item>
+        <item name="appTextSecondaryColor">#475569</item>
+        <item name="appDividerColor">#E2E8F0</item>
+        <item name="appNavBarColor">#FFFFFF</item>
+        <item name="appNavIconColor">#475569</item>
+        <item name="appBottomSheetColor">#FFFFFF</item>
+        <item name="appSurfaceElevated">#F8FAFC</item>
+        <item name="appScrim">#660F172A</item>
+        <item name="appHairline">#0F0F172A</item>
+        <item name="appAccentMuted">#1A34D399</item>
+        <item name="appGreen">#34D399</item>
+        <!-- WCAG-safe green for text/icons on light surfaces (>=4.5:1); appGreen stays the fill colour. -->
+        <item name="appGreenText">#047857</item>
+        <item name="appSuccess">#047857</item>
+        <item name="appError">#DC2626</item>
+        <item name="appWarning">#B45309</item>
+        <item name="appInfo">#1D4ED8</item>
+
+        <!-- Material color roles so stock Material components (Button, Switch, dialogs, menus)
+             inherit the brand instead of the default M3 purple. Aligned with the app* tokens above. -->
+        <item name="colorPrimary">#34D399</item>
+        <item name="colorOnPrimary">#06281C</item>
+        <item name="colorPrimaryContainer">#D1FAE5</item>
+        <item name="colorOnPrimaryContainer">#065F46</item>
+        <item name="colorSecondary">#34D399</item>
+        <item name="colorOnSecondary">#06281C</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorOnSurface">#0F172A</item>
+        <item name="colorSurfaceVariant">#F1F5F9</item>
+        <item name="colorOnSurfaceVariant">#475569</item>
+        <item name="colorOutline">#E2E8F0</item>
+        <item name="android:colorBackground">#F8FAFC</item>
+        <item name="colorError">#DC2626</item>
+        <item name="colorOnError">#FFFFFF</item>
+        <item name="colorControlActivated">#34D399</item>
+    </style>
+
+    <style name="ShapeAppearance.App.Button" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="Widget.App.Button" parent="Widget.Material3.Button">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.Button</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <!-- Hairline outline so tonal/white buttons stay visible on the near-white light background. -->
+        <item name="strokeColor">?attr/appDividerColor</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="ShapeAppearance.App.FAB" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Theme overlay for green checkboxes with white checkmark -->
+    <style name="ThemeOverlay.GreenCheckBox" parent="">
+        <item name="colorControlActivated">#34D399</item>
+        <item name="colorControlNormal">#34D399</item>
+    </style>
+
+    <style name="TransparentBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/TransparentBottomSheetStyle</item>
+        <item name="android:windowAnimationStyle">@style/FastBottomSheetAnimation</item>
+    </style>
+
+    <style name="TransparentBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="FastBottomSheetAnimation" parent="Animation.Design.BottomSheetDialog">
+        <item name="android:windowEnterAnimation">@anim/fast_slide_up</item>
+        <item name="android:windowExitAnimation">@anim/fast_slide_down</item>
+    </style>
+
+    <!-- NFC/QR SENDER hosted as a slide-up sheet: translucent so the previous screen shows behind a
+         dim scrim, with the bottom-sheet slide-up/down window animation. Inherits the app theme so
+         ?attr/app* colors still resolve. Applied only in MODE_SEND; the receiver stays full-screen. -->
+    <style name="OffGridSlideUpTheme" parent="Theme.JosephClipboardClient">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@style/FastBottomSheetAnimation</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+</resources>

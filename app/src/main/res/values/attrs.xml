@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom theme attributes for our app -->
+    <declare-styleable name="SelectableDeviceCard">
+        <attr name="state_selected" format="boolean" />
+    </declare-styleable>
+
+    <attr name="appBackgroundColor" format="color" />
+    <attr name="appCardColor" format="color" />
+    <attr name="appTextPrimaryColor" format="color" />
+    <attr name="appTextSecondaryColor" format="color" />
+    <attr name="appDividerColor" format="color" />
+    <attr name="appNavBarColor" format="color" />
+    <attr name="appNavIconColor" format="color" />
+    <attr name="appBottomSheetColor" format="color" />
+    <!-- Glass / depth tokens (slate+emerald overhaul). -->
+    <attr name="appSurfaceElevated" format="color" />
+    <attr name="appScrim" format="color" />
+    <attr name="appHairline" format="color" />
+    <attr name="appAccentMuted" format="color" />
+    <attr name="appGreen" format="color" />
+    <!-- WCAG-safe green for text / links / small icons (appGreen fails 4.5:1 as text on light). -->
+    <attr name="appGreenText" format="color" />
+    <!-- Semantic state colours (pair with an icon/label — never colour-only). -->
+    <attr name="appSuccess" format="color" />
+    <attr name="appError" format="color" />
+    <attr name="appWarning" format="color" />
+    <attr name="appInfo" format="color" />
+</resources>

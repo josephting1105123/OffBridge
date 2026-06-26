@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+
+    <!-- Share-sheet text send (reliable Android→peer path) -->
+    <string name="share_text_sending">Sending text to your devices…</string>
+    <string name="history_share_sheet_hint">Tip: to send text from another app, tap its Share button and choose Clipboard Share.</string>
+    <string name="user_agreement_text">Welcome to Clipboard Share.\n\nThis application is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.\n\nBy using this application, you agree to the following:\n\n1. You are responsible for the data you transfer. Do not use this application to transfer illegal, malicious, or copyrighted content for which you do not have the rights.\n\n2. This application is designed for use on trusted, private Wi-Fi networks. While the connection is encrypted, using it on public or untrusted networks is at your own risk.\n\n3. The application requires certain permissions to function correctly, including network access, notification access, and the ability to run in the background. Disabling these permissions may cause the application to malfunction.\n\n4. The developer is not responsible for any data loss or corruption that may occur during a transfer.\n\nPlease ensure you have the necessary rights to any files you share.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Privacy Policy for Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Effective Date: 22/6/2026&lt;br&gt;&lt;br&gt;
+        Thank you for using Clipboard Share (\"the App\"). This Privacy Policy explains our principles regarding the collection, use, and disclosure of information. Our core philosophy is simple: your data is yours, and we do not want it.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;THE CORE PRINCIPLE: WE DO NOT COLLECT YOUR DATA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share is designed from the ground up with your privacy as the highest priority. The App facilitates direct, peer-to-peer (P2P) communication between your devices over your local Wi-Fi network.&lt;br&gt;&lt;br&gt;
+        We do not have servers that collect, store, or process your personal data. All of your data remains on your devices and on your local network.&lt;br&gt;&lt;br&gt;
+        Specifically, we DO NOT collect, receive, or share:&lt;br&gt;
+        • The content of your clipboard.&lt;br&gt;
+        • The files you transfer.&lt;br&gt;
+        • Your name, email address, or any other personal identifiers.&lt;br&gt;
+        • Your contacts, location, or any other sensitive device information.&lt;br&gt;&lt;br&gt;
+        The App functions without requiring you to create an account or sign in.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;INFORMATION THE APP STORES LOCALLY ON YOUR DEVICE&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        To function correctly, Clipboard Share stores a small amount of data exclusively on your device\'s local storage. This data is under your control and never leaves your device to be sent to us. This includes:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Cryptographic Keys:&lt;/b&gt; After you explicitly pair two devices, a unique AES-256 encryption key is generated and stored securely on each device. This key is used to encrypt all communication between those two paired devices and is essential for the App\'s security.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Paired Device Information:&lt;/b&gt; The App stores the local IP address and user-chosen device name of devices you have paired with. This is used to identify and connect to them on your local network.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Clipboard History:&lt;/b&gt; The App maintains a local history of clipboard items you have copied for your convenience. This history is stored only on your device and can be cleared by you at any time from within the App.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Device Name:&lt;/b&gt; The name you choose for your device in the App\'s settings is stored locally to identify it to other devices on your network.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;HOW YOUR DATA IS TRANSFERRED&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        All data transfers (both clipboard and files) occur directly between your paired devices over your local Wi-Fi network. Your data does not pass through our servers or any third-party servers. All transfers are protected with strong, end-to-end AES-256 encryption using the keys generated during the pairing process.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;DEVICE DISCOVERY ON YOUR LOCAL NETWORK&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        To let your devices find each other automatically, the App periodically broadcasts a small discovery message on your local Wi-Fi or hotspot network. This message contains only your chosen device name, your device\'s local IP address, and its operating system type (for example, \"Android\"). These broadcasts are sent only on your local network so that nearby devices can offer to pair or connect. They are never sent to us, to the internet, or to any third party, and no internet connection is used for discovery. Unlike your clipboard and file transfers, which are encrypted end-to-end and exchanged only between paired devices, these discovery messages are not encrypted and are visible to other devices on the same local network. For this reason, we recommend using the App on trusted, private networks. You can stop these broadcasts at any time by turning off \"Discoverable to other devices\" in Settings.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;WHICH FEATURES USE WHICH PERMISSIONS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        So it is clear what each feature does, here is how the App uses your network and permissions:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Finding nearby devices:&lt;/b&gt; Uses your local Wi-Fi or hotspot network, and on some Android versions the Location and Nearby Devices permission. It does not use your mobile (cellular) data.&lt;br&gt;
+        • &lt;b&gt;Pairing two devices:&lt;/b&gt; Uses your local Wi-Fi network, or the camera (to scan a QR code) or NFC (to tap), to exchange the encryption key.&lt;br&gt;
+        • &lt;b&gt;Syncing clipboard text:&lt;/b&gt; Uses your local Wi-Fi network to send copied text to your paired devices.&lt;br&gt;
+        • &lt;b&gt;Transferring files on the same network:&lt;/b&gt; Uses your local Wi-Fi network.&lt;br&gt;
+        • &lt;b&gt;Off-grid transfers (no router or internet):&lt;/b&gt; Uses Wi-Fi Direct and Bluetooth to form a direct device-to-device connection, started with a QR code (camera) or an NFC tap. Needs the Location, Nearby Devices and Bluetooth permissions.&lt;br&gt;
+        • &lt;b&gt;Installing a received app:&lt;/b&gt; Uses the install permission, and only after you confirm it.&lt;br&gt;
+        • &lt;b&gt;Staying ready in the background:&lt;/b&gt; Uses a foreground service and notification to keep listening for incoming clipboard items and transfers.&lt;br&gt;&lt;br&gt;
+        In short, the App uses your local Wi-Fi, a hotspot, or a direct device-to-device connection for everything. It does not use your mobile (cellular) data for discovery or transfers, and it does not connect to the internet.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PERMISSIONS REQUESTED IN THE APP&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share requests certain permissions to enable its features. Here is why we need them:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Network Access&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Required to discover other devices and transfer data over your local Wi-Fi network.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Location and Nearby Devices&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Some Android versions require this permission before an app can scan for and connect to nearby devices over Wi-Fi Direct, which the App uses for off-grid transfers. We do not collect it, but the feature cannot find nearby devices without it. The App does not read, store, or share your physical location.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Used to help set up a direct, off-grid connection with a nearby device. We do not collect any data through it, and it is never used to track you.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Camera and NFC&lt;/b&gt; (CAMERA, NFC): The camera is used only to scan a QR code, and NFC only to start a connection when you tap two devices together, for pairing and off-grid transfers. This information is processed on your device and is never stored or sent anywhere.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Installing a Received App&lt;/b&gt; (REQUEST_INSTALL_PACKAGES): Used only so that, with your explicit confirmation, you can install an app (APK) that you received through a transfer. The App never installs anything on its own.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Foreground Service and Notifications&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Required to run the service that listens for incoming connections and to show a persistent notification indicating the App is active and protecting your connection.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Run at Startup&lt;/b&gt; (RECEIVE_BOOT_COMPLETED): Allows the App to restart its service when you reboot your device, ensuring it is always ready to connect.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Full-Screen Intent&lt;/b&gt; (USE_FULL_SCREEN_INTENT): Used to show you urgent, full-screen alerts for incoming pairing requests or file transfers so you do not miss them.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Ignore Battery Optimizations&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Strongly recommended to prevent the Android operating system from shutting down the App\'s background service, which would interrupt clipboard syncing and file transfers.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;External Storage&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): On older Android versions (SDK 28 and below), this is required to save received files to your device\'s storage.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;THIRD-PARTY SERVICES&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share does not use any third-party services for analytics, advertising, or any other purpose that would involve sharing your data.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;CHILDREN\'S PRIVACY&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        The App is not intended for use by children under the age of 13. We do not knowingly collect any information from children. As we do not collect any personal data in the first place, we do not have a mechanism to verify the age of our users.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;CHANGES TO THIS PRIVACY POLICY&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy at the same URL. You are advised to review this Privacy Policy periodically for any changes.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;CONTACT US&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        If you have any questions about this Privacy Policy, please contact us at:&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">Apps (APK)</string>
+    <string name="search_hint">Search</string>
+    <string name="zero_apps_count">0 Apps</string>
+    <string name="select_multiple_apps">Select Multiple Apps</string>
+    <string name="action_select">Select</string>
+    <string name="action_how_to_use">How to use</string>
+    <string name="discoverable_to_devices">Discoverable to other devices</string>
+    <string name="transaction_details_title">Transaction Details</string>
+    <string name="type_text">Text</string>
+    <string name="receiving_files_title">Receiving Files</string>
+    <string name="save_to_folder_downloads">Save to folder: Downloads</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close_with_check">Close</string>
+    <string name="incoming_transfer_title">Incoming Transfer</string>
+    <string name="default_device_name">Device Name</string>
+    <string name="action_accept_files">Accept Files</string>
+    <string name="action_decline">Decline</string>
+    <string name="secure_pairing_title">Secure Pairing</string>
+    <string name="initiating_cryptographic_handshake">Initiating cryptographic handshake...</string>
+    <string name="pairing_request_title">Pairing Request</string>
+    <string name="action_accept">Accept</string>
+    <string name="clipboard_share_windows_title">Clipboard Share for Windows</string>
+    <string name="desktop_app_in_development_desc">The companion desktop app is currently in development and will be available soon.</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_windows_version">Windows Version</string>
+    <string name="menu_restart_services">Restart Services</string>
+    <string name="menu_power_off">Power Off</string>
+    <string name="action_pair">Pair</string>
+    <string name="action_unpair">Unpair</string>
+    <string name="send_files_title">Send Files</string>
+    <string name="type_file">File</string>
+    <string name="type_media">Media</string>
+    <string name="type_folder">Folder</string>
+    <string name="type_app">App</string>
+    <string name="selected_files_title">Selected Files</string>
+    <string name="action_select_all">Select All</string>
+    <string name="select_trusted_recipients_title">Connected Devices</string>
+    <string name="action_send">Send</string>
+    <string name="history_and_push_title">Clipboard</string>
+    <string name="action_push_current_clipboard">Push Current Clipboard</string>
+    <string name="recent_copies_hint">Recent Copies (Tap to view)</string>
+    <string name="selected_files_empty_hint">Files selected will be shown here</string>
+    <string name="copy_detail_title">Copy Detail</string>
+    <string name="copy_detail_button">Copy</string>
+    <string name="required_permissions_title">Required Permissions</string>
+    <string name="battery_optimization_title">Battery Optimization</string>
+    <string name="battery_optimization_desc">Clipboard Share runs in the background. Please disable battery optimization to ensure transfers and clipboard sync are not interrupted.</string>
+    <string name="action_go_to_settings">Go to Settings</string>
+    <string name="action_open_wifi">Open Wi-Fi</string>
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_desc">This is required to show the persistent service status and to alert you of incoming pairing or file requests.</string>
+    <string name="action_request_permission">Request Permission</string>
+    <string name="action_finish_setup">Finish Setup</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_device">DEVICE</string>
+    <string name="device_name_label">Device Name:</string>
+    <string name="device_name_hint">Device name</string>
+    <string name="settings_section_general">GENERAL</string>
+    <string name="theme_setting">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="language_setting">Language</string>
+    <string name="save_to_setting">Save To</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_history_backup_note">Your clipboard and transfer history is saved here as a plain file and restored when you pick this folder again — for example after reinstalling. Choose a private folder; avoid shared or cloud-synced ones if your clipboard holds sensitive text.</string>
+    <string name="settings_history_recovered">Recovered %1$d clipboard items and %2$d transfers</string>
+    <string name="settings_section_others">OTHERS</string>
+    <string name="support_setting">Support</string>
+    <string name="action_donate">Donate</string>
+    <string name="privacy_policy_setting">Privacy Policy</string>
+    <string name="action_read_privacy_policy">Read</string>
+    <string name="system_status_title">System Status</string>
+    <string name="status_checking">Status: Checking...</string>
+    <string name="accept_incoming_clipboard">Accept Incoming Clipboard</string>
+    <string name="paired_and_nearby_devices">Paired &amp; Nearby Devices</string>
+    <string name="network_disconnected">Network Disconnected</string>
+    <string name="press_button_to_reboot">Press the button below to reboot engines.</string>
+    <!-- System Status: bento overview tiles + actions + empty state (Windows parity). -->
+    <string name="bento_nearby">Nearby</string>
+    <string name="bento_paired">Paired</string>
+    <string name="bento_status">Status</string>
+    <string name="status_value_active">Active</string>
+    <string name="status_value_offline">Offline</string>
+    <string name="action_rescan">Rescan</string>
+    <string name="action_reboot">Reboot</string>
+    <string name="status_no_devices_found">No devices found yet</string>
+    <string name="status_no_devices_found_hint">Make sure the other device is on the same Wi-Fi or hotspot and is discoverable.</string>
+    <string name="paired_devices_title">Paired Devices</string>
+    <string name="paired_devices_empty">No paired devices yet.</string>
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline</string>
+    <string name="action_done">Done</string>
+    <string name="user_agreement_title">User Agreement</string>
+    <string name="agree_to_terms">I have read and agree to the terms.</string>
+    <string name="action_next">Next</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">document.pdf</string>
+    <string name="action_open">Open</string>
+    <string name="default_file_name_zip">filename.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Mesh Active</string>
+    <string name="unknown">Unknown</string>
+    <string name="unknown_file">Unknown File</string>
+    <string name="action_select_count">Select (%d)</string>
+    <string name="toast_clipboard_is_empty">Clipboard is empty</string>
+    <string name="toast_failed_to_read_clipboard">Failed to read clipboard</string>
+    <string name="unknown_device">Unknown Device</string>
+    <string name="notification_successfully_pushed_title">Successfully Pushed</string>
+    <string name="notification_clipboard_received_title">Clipboard Received</string>
+    <string name="notification_mesh_network_active">Mesh Network Active</string>
+    <string name="notification_channel_clipboard_share_service">Clipboard Share Service</string>
+    <string name="notification_channel_clipboard_alerts">Clipboard Alerts</string>
+    <string name="notification_channel_pairing_requests">Pairing Requests</string>
+    <string name="notification_from_sender">From: %s</string>
+    <string name="notification_channel_file_transfer_progress">File Transfer Progress</string>
+    <string name="notification_channel_incoming_transfers">Incoming Transfers</string>
+    <string name="status_network_disconnected">Network Disconnected</string>
+    <string name="status_receiving_paused">Receiving Paused</string>
+    <string name="status_scanning_for_devices">Scanning for devices...</string>
+    <string name="status_connected_to_devices">Connected to %d paired device(s)</string>
+    <string name="toast_push_failed_no_devices">Push failed: No paired devices online.</string>
+    <string name="toast_no_active_transfer">No active transfer found.</string>
+    <string name="toast_failed_to_connect_for_resume">Failed to connect to sender for resume</string>
+    <string name="incoming_transfer_details" formatted="false">%s is sending %d file(s) (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">Not enough storage space to receive files.</string>
+    <string name="toast_cancelling_transfer">Cancelling transfer...</string>
+    <string name="toast_custom_save_location_inaccessible">Custom save location is not accessible. Falling back to Downloads.</string>
+    <string name="status_paused_timeout">Paused (Timeout)</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="status_paused_network_dropped">Paused: Network Dropped</string>
+    <string name="status_paused_waiting_reconnect">Paused (Waiting for reconnect...)</string>
+    <string name="toast_transfer_status">Transfer %s</string>
+    <string name="action_resume_when_reconnected">Resume when reconnected</string>
+    <string name="file_progress_waiting">Waiting... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">Custom Folder</string>
+    <string name="file_progress_complete_saved_to">Complete - Saved to %s</string>
+    <string name="toast_error_no_compatible_app">Error: No compatible app found to open this file format.</string>
+    <string name="toast_error_generic">Error: %s</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_sending">Sending...</string>
+    <string name="toast_transfer_interrupted">Transfer interrupted. Receiver can resume when reconnected.</string>
+    <string name="toast_batch_transfer_complete">Batch Transfer Complete!</string>
+    <string name="shortcut_send_to_device">Send to %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transfer via Clipboard Share</string>
+    <string name="toast_pushing_clipboard_to_mesh">Pushing clipboard to mesh...</string>
+    <string name="no_clipboard_history_yet">No clipboard history yet.</string>
+    <string name="toast_copied_to_clipboard">Copied to clipboard</string>
+    <string name="toast_notifications_permission_required">Notifications permission is required for the foreground service.</string>
+    <string name="toast_storage_permission_required">File transfers may fail without storage permission on this Android version.</string>
+    <string name="default_android_device_name">Android Device</string>
+    <string name="toast_rebooting_engine">Rebooting Clipboard Share Engine...</string>
+    <string name="toast_shutting_down_engine">Shutting down Clipboard Share...</string>
+    <string name="toast_notification_permission_granted">Notification permission granted!</string>
+    <string name="toast_notifications_recommended">Notifications are recommended for the best experience.</string>
+    <string name="toast_notification_permission_already_granted">Notification permission is already granted on this Android version.</string>
+    <string name="status_permission_granted">Permission Granted</string>
+    <string name="status_granted_by_default">Granted by Default</string>
+    <string name="toast_could_not_open_battery_settings">Could not open battery settings automatically.</string>
+    <string name="theme_system_default">System Default</string>
+    <string name="toast_could_not_open_browser">Could not open browser</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="dialog_title_choose_theme">Choose Theme</string>
+    <string name="dialog_title_choose_language">Choose Language</string>
+    <string name="toast_language_preference_saved">Language preference saved. Full translation support coming soon.</string>
+    <string name="dialog_title_privacy_policy">Privacy Policy</string>
+    <string name="action_close">Close</string>
+    <string name="selected_folder_fallback">Selected Folder</string>
+    <string name="toast_failed_to_load_file_ui">Failed to load File UI</string>
+    <string name="status_no_network">Status: No Network</string>
+    <string name="toast_rebooting_engines">Rebooting Engines...</string>
+    <string name="status_active_and_polling">Status: Active &amp; Polling</string>
+    <string name="toast_flushing_network_cache">Flushing network cache...</string>
+    <string name="toast_unpaired_from_device">Unpaired from %s</string>
+    <string name="status_requesting_pair">Requesting Pair</string>
+    <string name="status_waiting_for_accept">Waiting for %s to accept...</string>
+    <string name="toast_successfully_paired_with">Successfully Paired with %s!</string>
+    <string name="toast_pairing_declined_by">Pairing was declined by %s.</string>
+    <string name="toast_pairing_timed_out">Pairing timed out. The other user did not respond.</string>
+    <string name="toast_pairing_failed">Pairing Failed. Ensure the other device is on the same network.</string>
+    <string name="toast_paired_with_device">Paired with %s</string>
+    <string name="toast_pairing_declined">Pairing declined</string>
+    <string name="notification_transfers_can_be_resumed">%d transfer(s) can be resumed</string>
+    <string name="notification_connection_restored_resume">Connection restored. Tap to resume.</string>
+    <string name="notification_sending_resumed_title">Sending Resumed</string>
+    <string name="notification_resuming_batch_transfer">Resuming batch transfer...</string>
+    <string name="toast_resumed_transfer_complete">Resumed Transfer Complete</string>
+    <string name="notification_incoming_transfer_request_title">Incoming Transfer Request</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s is sending you %d file(s). Tap to respond.</string>
+    <string name="title_transfer_history">Transfer History</string>
+    <string name="no_transfer_history_yet">No transfer history yet.</string>
+    <string name="format_selected_count">%d selected</string>
+    <string name="title_transaction_details">Transaction Details</string>
+    <string name="nav_send">Send</string>
+    <string name="nav_pairing">Pairing</string>
+    <string name="nav_clipboard">Clipboard</string>
+    <string name="nav_receive">Receive</string>
+    <string name="transfer_history_title">Transfer History</string>
+    <string name="format_to_device">To: %s</string>
+    <string name="format_from_device">From: %s</string>
+    <string name="status_transferring_dots">Transferring...</string>
+    <string name="status_declined">Declined</string>
+    <string name="status_done_with_icon">Done</string>
+    <string name="status_paused_with_icon">Paused</string>
+    <string name="status_transferring_with_icon">Transferring</string>
+    <string name="status_declined_with_icon">Declined</string>
+    <string name="status_transferring">Transferring</string>
+    <string name="status_paused">Paused</string>
+
+    <!-- V3.0: Send Via chooser -->
+    <string name="send_via_title">Send Via</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_connected_devices">Connected Devices</string>
+    <string name="send_to_devices_title">Send to Devices</string>
+
+    <!-- V3.0: Off-grid transport -->
+    <string name="offgrid_send_title">Send via NFC / QR</string>
+    <string name="offgrid_receive_title">Receive via QR / NFC</string>
+    <string name="offgrid_hce_description">Clipboard Share off-grid transfer credentials</string>
+    <string name="offgrid_session_notification_title">Off-grid transfer active</string>
+    <string name="offgrid_session_notification_text">Keeping the direct connection alive.</string>
+    <string name="offgrid_status_creating_group">Setting up the direct connection…</string>
+    <string name="offgrid_status_hotspot_lan">Your hotspot is on — connect the other phone to it, then scan this code.</string>
+    <string name="offgrid_status_hotspot_autojoin">Your hotspot is on — the other phone scans this to auto-join and receive.</string>
+    <string name="offgrid_error_lan_unreachable">Couldn\'t reach the sender. Connect this phone to the sender\'s hotspot (or the same Wi-Fi), then tap Retry.</string>
+    <string name="offgrid_hotspot_setup_set">Set hotspot password</string>
+    <string name="offgrid_hotspot_setup_saved">Hotspot password saved ✓</string>
+    <string name="offgrid_hotspot_speed_tip">Connecting over this phone\'s hotspot transfers files up to 10× faster.</string>
+
+    <!-- Off-grid hotspot auto-connect (settings + dialog) -->
+    <string name="settings_hotspot_open_settings">Find my password (open Hotspot settings)</string>
+    <string name="settings_hotspot_label">Hotspot auto-connect</string>
+    <string name="settings_hotspot_title">Hotspot auto-connect</string>
+    <string name="settings_hotspot_button_setup">Set up</string>
+    <string name="settings_hotspot_button_on">On</string>
+    <string name="settings_hotspot_dialog_msg">Enter your phone\'s hotspot name and password. The other phone will use them to join your hotspot automatically. You only need to enter them once.</string>
+    <string name="settings_hotspot_data_notice">It just uses your hotspot for the connection — <b>no data will be consumed.</b></string>
+    <string name="settings_hotspot_ssid_hint">Hotspot name</string>
+    <string name="settings_hotspot_password_hint">Hotspot password</string>
+    <string name="settings_hotspot_show_password">Show password</string>
+    <string name="settings_hotspot_save">Save</string>
+    <string name="settings_hotspot_clear">Clear</string>
+    <string name="settings_hotspot_toast_ssid_long">Hotspot name is too long (max 32 bytes).</string>
+    <string name="settings_hotspot_toast_psk_len">Password must be 8–63 characters.</string>
+    <string name="offgrid_status_waiting_for_scan">Waiting for scan…</string>
+    <string name="offgrid_status_sending">Device connected — sending to %1$s (%2$d files)…</string>
+    <string name="offgrid_status_complete">Transfer complete</string>
+    <string name="offgrid_status_interrupted">Connection lost — waiting for the other device to resume…</string>
+    <string name="offgrid_status_rescan_to_resume">Connection closed. Re-scan to resume — progress is saved in Transfer History.</string>
+    <string name="offgrid_status_scanning">Point the camera at the sender\'s code</string>
+    <string name="offgrid_status_code_scanned">Code scanned</string>
+    <string name="offgrid_status_connecting">Connecting to %s…</string>
+    <string name="offgrid_status_handshaking">Verifying the connection…</string>
+    <string name="offgrid_status_receiving">Receiving files…</string>
+    <string name="offgrid_confirm_title">%s wants to send you files</string>
+    <string name="offgrid_confirm_subtitle">%1$d file(s) • %2$.1f MB</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_nfc_unavailable">NFC not available — QR only</string>
+    <string name="offgrid_nfc_off">NFC off — tap to enable</string>
+    <string name="offgrid_nfc_ready">NFC ready — tap to see where to hold the phones</string>
+    <string name="offgrid_nfc_preparing">Preparing secure link… keep this screen open. Hold the phones together once it says Ready.</string>
+    <string name="offgrid_nfc_ready_prefix">Ready!</string>
+    <string name="offgrid_error_no_files">No files to send.</string>
+    <string name="offgrid_error_wifi_off">Wi-Fi is off. Turn it on to use off-grid send.</string>
+    <string name="offgrid_error_transfer_failed">Transfer failed. Show the code again to retry.</string>
+    <string name="offgrid_error_update_app">This code was made by a newer version. Update the app to receive.</string>
+    <string name="offgrid_error_sender_busy">Sender is busy with another device.</string>
+    <string name="offgrid_error_code_expired">Code expired — ask the sender to reopen the send screen.</string>
+    <string name="offgrid_error_connect_failed">Couldn\'t connect. Make sure the sender\'s screen is still open and retry.</string>
+    <string name="offgrid_error_join_failed">Couldn\'t join the sender\'s network. Keep the phones close, accept the connection prompt, and retry.</string>
+    <string name="offgrid_camera_denied">Camera permission is needed to scan the code. You can still tap the phones together to use NFC.</string>
+    <string name="offgrid_permission_required">Nearby-devices permission is required for off-grid send.</string>
+    <!-- V3.1: off-grid join diagnostics + P2P fallback -->
+    <string name="offgrid_band_warning">Group is on %1$d MHz — some devices may not find it.</string>
+    <string name="offgrid_status_reestablishing">Re-establishing group…</string>
+    <string name="offgrid_status_trying_direct">Trying direct connection… accept the prompt on the sender.</string>
+    <string name="offgrid_accept_hint">If a connection request appears on this device, tap Accept.</string>
+    <string name="offgrid_fallback_permission_rationale">Allow nearby-devices access so the app can connect directly when the standard join doesn\'t work.</string>
+    <string name="offgrid_error_fallback_failed">Direct connection failed. Keep the phones close, make sure the sender accepted, and retry.</string>
+    <string name="offgrid_join_failed_closer">Couldn\'t reach the sender. Move the phones closer and ask them to show the code again, then retry.</string>
+    <!-- V4: transport ladder + BLE control channel -->
+    <string name="offgrid_status_trying_method">Trying connection method %1$d of %2$d…</string>
+    <string name="offgrid_status_control_linked">Linked with %s over Bluetooth — negotiating the fastest connection…</string>
+    <string name="offgrid_error_all_methods">Couldn\'t connect. Keep both phones unlocked and close together, make sure Wi-Fi and Bluetooth are on, then tap Retry.</string>
+    <string name="offgrid_error_control_failed">The Bluetooth link used to coordinate the transfer didn\'t connect. Keep both phones unlocked and within a metre of each other, then tap Retry.</string>
+    <string name="offgrid_error_save_hotspot_creds">Your hotspot is on. Save its name and password so the other phone can join automatically, then retry.</string>
+    <string name="offgrid_error_turn_off_hotspot">A mobile hotspot is blocking Wi-Fi Direct. Turn off the hotspot on either phone, then retry.</string>
+    <string name="offgrid_warn_hotspot_on">Your mobile hotspot is on. This can stop you from receiving over Wi-Fi Direct. Turn it off before receiving.</string>
+    <string name="action_open_hotspot_settings">Hotspot settings</string>
+    <string name="offgrid_blocked_title">Can\'t receive files right now</string>
+    <string name="offgrid_blocked_disconnect_wifi">Disconnect from current Wi-Fi</string>
+    <string name="offgrid_blocked_turn_off_hotspot">Turn off hotspot</string>
+    <string name="offgrid_blocked_body">Your Wi-Fi is connected to another network and your hotspot is on, so the transfer can\'t be completed. Do one of the above, then return here.</string>
+    <string name="label_or">or</string>
+    <string name="offgrid_error_join_hotspot_free_wifi">This phone is connected to a different Wi-Fi, so it can\'t join the sender\'s hotspot. Disconnect from your current Wi-Fi (or connect to the sender\'s hotspot) in Wi-Fi settings, then tap Retry.</string>
+    <string name="offgrid_error_wifidirect_free_wifi">This phone is connected to a Wi-Fi network, which can stop it joining the sender\'s direct connection. Disconnect from your current Wi-Fi in Wi-Fi settings (mobile data is fine), then tap Retry.</string>
+    <string name="offgrid_bt_available">Wi-Fi taking too long? Bluetooth is ready — slower, but it always connects.</string>
+    <string name="action_use_bluetooth">Use Bluetooth now</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_receive">Receive</string>
+    <string name="action_resume">Resume</string>
+
+    <!-- V3.0+: Receive screen + NFC toggle -->
+    <string name="receive_title">Receive Files</string>
+    <string name="receive_open_camera">Open Camera</string>
+    <string name="receive_enable_nfc">Enable NFC</string>
+    <string name="receive_nfc_listening">NFC Listening — tap phones together</string>
+    <string name="receive_nfc_unavailable_device">NFC is not available on this device</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fi is off. Turn it on to receive — no internet connection is needed.</string>
+    <string name="offgrid_error_location_off">Location is off. Android needs Location turned on to find the sender\'s direct network.</string>
+    <string name="action_turn_on">Turn on</string>
+
+    <!-- V4.1: permission acquisition + degraded-mode visibility -->
+    <string name="action_grant">Grant</string>
+    <string name="offgrid_permission_permanently_denied">Nearby-devices permission is blocked, so only the basic Wi-Fi join is available. Open app settings to enable it for the faster, more reliable direct connection.</string>
+    <string name="offgrid_permission_miui_hint">\nOn Xiaomi/MIUI, enable “Nearby devices” under App info → Permissions.</string>
+    <string name="offgrid_degraded_mode">Limited mode: only the basic Wi-Fi join is active. Grant nearby-devices permission for the faster, more reliable connection.</string>
+    <string name="offgrid_degraded_bt_off">\nBluetooth control channel is off — fallback methods are reduced.</string>
+
+    <!-- V4.1: receiver connecting overlay -->
+    <string name="offgrid_connecting_title">Connecting…</string>
+
+    <!-- Transport diagnostics (on-screen connection trace) -->
+    <string name="offgrid_diag_title">Connection diagnostics</string>
+    <string name="offgrid_diag_copy">Copy</string>
+    <string name="offgrid_diag_copied">Diagnostics copied to clipboard</string>
+    <string name="offgrid_diag_hint">Connection log (long-press to copy)</string>
+
+    <!-- V4.1: NFC tap-position guide -->
+    <string name="nfc_guide_title">Hold the phones together</string>
+    <string name="nfc_guide_subtitle_receive">Touch the backs of the phones so the glowing spots meet.</string>
+    <string name="nfc_guide_subtitle_send">Hold your phone back-to-back with the other device so the glowing spots meet.</string>
+    <string name="nfc_guide_label_their">Their phone</string>
+    <string name="nfc_guide_label_your">Your phone</string>
+    <string name="nfc_guide_continue">Got it</string>
+    <string name="nfc_guide_back">Back</string>
+    <string name="nfc_read_status_fmt">NFC: %1$s</string>
+    <string name="nfc_read_status_armed">listening — hold the phones together…</string>
+    <string name="nfc_read_status_no_nfc">can\'t listen — turn NFC on, then reopen this screen.</string>
+    <string name="offgrid_nfc_receive_ready_prefix">Ready to receive!</string>
+    <string name="offgrid_nfc_receive_waiting">Waiting for sender\'s NFC tap…</string>
+    <string name="nfc_diag_label">NFC diagnostic log</string>
+    <string name="nfc_style_flat">Flat</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_vertical">Upright</string>
+    <string name="nfc_hint_flat">Your NFC chip is near the top — lay both phones flat and bring the tops together where the spots glow.</string>
+    <string name="nfc_hint_angled">Your NFC chip sits high on the back — hold the phones at about 45° and bring the glowing spots together.</string>
+    <string name="nfc_hint_vertical">Your NFC chip is around the middle — hold both phones upright and bring the glowing spots together.</string>
+    <string name="nfc_hint_auto_top">Your NFC antenna is near the top — hold the other phone against the glowing spot.</string>
+    <string name="nfc_hint_auto_center">Your NFC antenna is around the middle — hold the other phone against the glowing spot.</string>
+    <string name="nfc_hint_auto_bottom">Your NFC antenna is near the bottom — hold the other phone against the glowing spot.</string>
+    <string name="nfc_a11y_flat">Hold the phones flat</string>
+    <string name="nfc_a11y_angled">Hold the phones at 45 degrees</string>
+    <string name="nfc_a11y_vertical">Hold the phones upright</string>
+    <string name="nfc_a11y_selected">Selected</string>
+    <string name="nfc_a11y_not_selected">Not selected</string>
+
+    <!-- V4.1: connection diagnostics screen -->
+    <string name="menu_diagnostics">Connection Diagnostics</string>
+    <string name="diagnostics_title">Connection Diagnostics</string>
+    <string name="diagnostics_empty">No off-grid transfer attempts recorded yet. Try a QR/NFC transfer, then come back here.</string>
+    <string name="diagnostics_share">Share log</string>
+    <string name="diagnostics_connected_via">Connected via %1$s</string>
+    <string name="diagnostics_all_failed">All methods failed</string>
+    <string name="diagnostics_outcome_connected">Connected</string>
+    <string name="diagnostics_outcome_failed">Failed</string>
+    <string name="diagnostics_outcome_skipped">Skipped</string>
+    <string name="diagnostics_outcome_pending">In progress</string>
+    <string name="diagnostics_trace_header">Connection trace (this device)</string>
+    <string name="diagnostics_trace_saved">saved %1$s</string>
+
+    <!-- Externalized code strings -->
+    <string name="transfer_resume_request_title">Resume Request</string>
+    <string name="transfer_resume_request_text">Sender is requesting to resume the transfer. Tap to view.</string>
+    <string name="transfer_resumable_one">1 transfer can be resumed</string>
+    <string name="transfer_resumable_many">%1$d transfers can be resumed</string>
+    <string name="transfer_connection_restored">Connection restored. Tap to resume.</string>
+    <string name="transfer_failed_connect_sender">Failed to connect to sender</string>
+    <string name="transfer_sending_resumed_title">Sending Resumed</string>
+    <string name="transfer_sending_resumed_text">Resuming batch transfer...</string>
+    <string name="transfer_resumed_complete">Resumed Transfer Complete</string>
+    <string name="transfer_incoming_title">Incoming Transfer</string>
+    <string name="transfer_incoming_text">%1$s wants to send you %2$d file(s).</string>
+    <string name="transfer_receiving_title">Receiving Files</string>
+    <string name="transfer_receiving_text">%1$s is sending you %2$d file(s). Tap to view progress.</string>
+    <string name="applist_version_unknown">Unknown</string>
+    <string name="applist_app_count">%1$d Apps</string>
+    <string name="applist_select_count">Select (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">Clipboard is empty</string>
+    <string name="clip_read_failed">Failed to read clipboard</string>
+    <string name="status_push_success_title">Successfully Pushed</string>
+    <string name="status_clipboard_received_title">Clipboard Received</string>
+    <string name="status_channel_service">Clipboard Share Service</string>
+    <string name="status_channel_alerts">Clipboard Alerts</string>
+    <string name="status_channel_pairing">Pairing Requests</string>
+    <string name="status_channel_transfer_progress">File Transfer Progress</string>
+    <string name="status_channel_incoming_transfers">Incoming Transfers</string>
+    <string name="status_mesh_active">Mesh Network Active</string>
+    <string name="pairing_request_from">From: %1$s</string>
+    <string name="status_scanning_devices">Scanning for devices...</string>
+    <string name="status_connected_devices">Connected to %1$d paired device(s)</string>
+    <string name="transfer_add_text_hint">Type something to add...</string>
+    <string name="transfer_add_text_title">Add Text</string>
+    <string name="transfer_add_text_positive">Add</string>
+    <string name="transfer_text_item_name">Text %1$d</string>
+    <string name="transfer_tut_file_type">Select the file type to send: File, Media, Folder, Text, or App.</string>
+    <string name="transfer_tut_files_appear">Your selected files will appear here. Tap a file to preview it.</string>
+    <string name="transfer_tut_long_press">Long press a file to drag and reorder, or tap Select to remove several at once.</string>
+    <string name="transfer_tut_send_button">With files selected, tap Send to choose how to send.</string>
+    <string name="transfer_tut_send_via">Connected Devices uses your Wi-Fi network. NFC / QR works anywhere — no router needed.</string>
+    <string name="transfer_tut_pick_devices">Pick one or more paired devices, then hit Send.</string>
+    <string name="transfer_tut_offgrid_code">Show this QR code to the receiving phone — it scans to receive over the local network, no router needed.</string>
+    <string name="transfer_tut_nfc">Or just tap the phones back-to-back — hold them together until the transfer starts.</string>
+    <string name="transfer_tut_history">Tap here to view your transfer history and track progress.</string>
+    <string name="transfer_tut_next">Next</string>
+    <string name="transfer_shortcut_short_label">Send to %1$s</string>
+    <string name="transfer_shortcut_long_label">Transfer via Clipboard Share</string>
+    <string name="transfer_unknown_file">Unknown File</string>
+    <string name="history_tutorial_push">Tap here to instantly push your current clipboard text to all paired devices.</string>
+    <string name="history_tutorial_accept_switch">Turn this off if you don\'t want to receive clipboard content from other devices.</string>
+    <string name="history_tutorial_next">Next</string>
+    <!-- First-launch conceptual tour (6 steps, one per main interface + a how-to-use closer). -->
+    <string name="tour_pairing">Start by pairing your devices. Pairing unlocks a seamless workflow — clipboard sync and direct file transfer between them.</string>
+    <string name="tour_clipboard">Once your devices are paired, your clipboard syncs automatically — copy on one device, paste on another.</string>
+    <string name="tour_send_lan">Send files with no data charges and no quality loss. On the same Wi-Fi or hotspot, pick a Connected Device — fastest, no internet needed.</string>
+    <string name="tour_send_qr">On different networks? Share by QR code or NFC tap — no shared Wi-Fi required.</string>
+    <string name="tour_receive">Receiving by QR or NFC? Open the matching option on the Receive tab — scan a QR with the camera, or tap phones together for NFC.</string>
+    <string name="tour_how_to_use">Want the details? Every screen has a \"How to use\" button (top-right) with a full step-by-step guide.</string>
+    <!-- Receive tab "How to use" steps (NFC-receive + QR-scan as distinct methods). -->
+    <string name="receive_tut_nfc">NFC receive — tap to see where to hold the phones, then tap them back-to-back to receive a file over NFC.</string>
+    <string name="receive_tut_nfc_unavailable">NFC receive — tap phones back-to-back to receive. NFC isn\'t available on this device, so this stays disabled.</string>
+    <string name="receive_tut_qr">QR scan — tap Open Camera to scan the sender\'s QR code and pull the file across any network.</string>
+    <string name="history_toast_pushing">Pushing clipboard to mesh...</string>
+    <string name="history_toast_empty">Clipboard is empty</string>
+    <string name="history_toast_read_failed">Failed to read clipboard</string>
+    <string name="history_empty">No clipboard history yet.</string>
+    <string name="history_toast_copied">Copied to clipboard</string>
+    <string name="perm_notifications_required">Notifications permission is required for the foreground service.</string>
+    <string name="perm_storage_required">File transfers may fail without storage permission on this Android version.</string>
+    <string name="status_default_device_name">Android Device</string>
+    <string name="menu_restart_toast">Rebooting Clipboard Share Engine...</string>
+    <string name="menu_power_off_toast">Shutting down Clipboard Share...</string>
+    <string name="pairing_requesting_title">Requesting Pair</string>
+    <string name="pairing_waiting_subtitle">Waiting for %1$s to accept...</string>
+    <string name="pairing_success">Successfully Paired with %1$s!</string>
+    <string name="pairing_declined">Pairing was declined by %1$s.</string>
+    <string name="pairing_timed_out">Pairing timed out. The other user did not respond.</string>
+    <string name="pairing_failed">Pairing Failed. Ensure the other device is on the same network.</string>
+    <string name="pairing_unknown_device">Unknown Device</string>
+    <string name="pairing_from_device">From: %1$s</string>
+    <string name="pairing_verify_code">Verify this code matches on both devices:\n%1$s</string>
+    <string name="pairing_verify_label">Make sure this code matches on both devices</string>
+    <string name="pairing_paired_with">Paired with %1$s</string>
+    <string name="perm_notification_granted_toast">Notification permission granted!</string>
+    <string name="perm_notification_recommended_toast">Notifications are recommended for the best experience.</string>
+    <string name="perm_notification_already_granted_toast">Notification permission is already granted on this Android version.</string>
+    <string name="perm_permission_granted_label">Permission Granted</string>
+    <string name="perm_go_to_settings_label">Go to Settings</string>
+    <string name="perm_request_permission_label">Request Permission</string>
+    <string name="perm_nearby_title">Nearby devices &amp; Wi-Fi</string>
+    <string name="perm_nearby_desc">Lets the app find and connect to other phones over Wi-Fi Direct for off-grid transfers. Without it, transfers only work when both devices are on the same Wi-Fi network.</string>
+    <string name="perm_nearby_granted_toast">Nearby devices permission allowed.</string>
+    <string name="perm_nearby_settings_toast">Allow \"Nearby devices\" for this app under Permissions, then return.</string>
+    <string name="offgrid_nearby_grant_in_settings">Allow \"Nearby devices\" for this app in Settings → Permissions, then retry.</string>
+    <string name="perm_granted_by_default_label">Granted by Default</string>
+    <string name="perm_battery_settings_error_toast">Could not open battery settings automatically.</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">Could not open browser</string>
+    <string name="settings_dialog_choose_language">Choose Language</string>
+    <string name="settings_toast_rebooting_engine">Rebooting Clipboard Share Engine...</string>
+    <string name="settings_dialog_privacy_policy">Privacy Policy</string>
+    <string name="settings_action_close">Close</string>
+    <string name="settings_save_location_selected_folder">Selected Folder</string>
+    <string name="settings_default_device_name">Android Device</string>
+    <string name="status_tutorial_discoverable_toggle">Turn this off when you don\'t want to be discoverable by other devices.</string>
+    <string name="status_tutorial_device_name">Tap here to change your device\'s display name for easier identification.</string>
+    <string name="status_tutorial_pair_nearby">Tap \'Pair\' on a nearby device to pair with it and start transferring files.</string>
+    <string name="status_tutorial_pair_button">Tap the Pair button to connect to this device and start sharing files.</string>
+    <string name="status_action_next">Next</string>
+    <string name="status_rebooting_engines">Rebooting Engines...</string>
+    <string name="status_flushing_cache">Flushing network cache...</string>
+    <string name="status_unpaired_from">Unpaired from %1$s</string>
+    <string name="history_pending_accept">Pending Accept...</string>
+    <string name="history_session_unavailable">Session no longer available</string>
+    <string name="history_resume_request_sent">Sent resume request to %1$s</string>
+    <string name="history_resume_request_failed">Failed to send resume request</string>
+    <string name="history_resume_no_device_ip">Cannot find device IP to send resume request</string>
+    <string name="status_failed_with_icon">✗ Failed</string>
+    <string name="status_pending_with_icon">⏳ Pending</string>
+    <string name="status_cancelled_with_icon">✗ Cancelled</string>
+    <string name="history_chooser_open_media">Open Media</string>
+    <string name="history_chooser_open_storage">Open Storage Location</string>
+    <string name="history_chooser_open_file">Open File</string>
+    <string name="history_file_not_found">File not found</string>
+    <string name="history_cannot_open_file">Cannot open file</string>
+    <string name="history_waiting_zero">Waiting (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d files (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> +%1$d more</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_sent">Sent</string>
+    <string name="history_filter_received">Received</string>
+    <string name="history_filter_completed">Completed</string>
+    <string name="history_filter_pending">Pending</string>
+    <string name="history_filter_cancelled">Cancelled</string>
+    <string name="history_tutorial_list">Here you can see all your recent file transfers.</string>
+    <string name="history_tutorial_filter">Filter by Incoming, Outgoing, Paused or Cancelled — tap a capsule.</string>
+    <string name="history_tutorial_select">Tap \'Select\' to manage and delete transfer records.</string>
+    <string name="history_tutorial_tap_record">Tap on any transfer record to see its details and progress.</string>
+    <string name="history_tutorial_open">Press open button to open received file.</string>
+    <string name="transfer_incoming_from">From: %1$s (%2$d files)</string>
+    <string name="pairing_declined_simple">Pairing declined</string>
+
+    <!-- Separated QR / NFC send + NFC receive -->
+    <string name="send_via_qr">QR</string>
+    <string name="send_via_nfc">NFC</string>
+    <string name="send_via_nfc_unavailable">NFC is not available on this device</string>
+    <string name="receive_nfc">NFC receive</string>
+    <string name="offgrid_send_title_qr">Send via QR</string>
+    <string name="offgrid_send_title_nfc">Send via NFC</string>
+</resources>

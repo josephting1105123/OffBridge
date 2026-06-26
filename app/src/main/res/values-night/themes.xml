@@ -1,0 +1,43 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme for dark mode. -->
+    <style name="Theme.JosephClipboardClient" parent="Base.Theme.JosephClipboardClient">
+        <item name="materialButtonStyle">@style/Widget.App.Button</item>
+
+        <!-- Dark theme colors (neutral near-black grey + emerald). Mirror of DarkAppColors / TOKENS.md. -->
+        <item name="appBackgroundColor">#141414</item>
+        <item name="appCardColor">#1F1F1F</item>
+        <item name="appTextPrimaryColor">#F5F5F5</item>
+        <item name="appTextSecondaryColor">#A3A3A3</item>
+        <item name="appDividerColor">#303030</item>
+        <item name="appNavBarColor">#171717</item>
+        <item name="appNavIconColor">#A3A3A3</item>
+        <item name="appBottomSheetColor">#1F1F1F</item>
+        <item name="appSurfaceElevated">#2A2A2A</item>
+        <item name="appScrim">#B8000000</item>
+        <item name="appHairline">#14FFFFFF</item>
+        <item name="appAccentMuted">#2422C55E</item>
+        <item name="appGreen">#22C55E</item>
+        <item name="appGreenText">#4ADE88</item>
+        <item name="appSuccess">#34D399</item>
+        <item name="appError">#EF4444</item>
+        <item name="appWarning">#FBBF24</item>
+        <item name="appInfo">#60A5FA</item>
+
+        <!-- Material color roles (dark) — keep stock Material components on-brand, not default purple. -->
+        <item name="colorPrimary">#22C55E</item>
+        <item name="colorOnPrimary">#06281C</item>
+        <item name="colorPrimaryContainer">#14532D</item>
+        <item name="colorOnPrimaryContainer">#BBF7D0</item>
+        <item name="colorSecondary">#22C55E</item>
+        <item name="colorOnSecondary">#06281C</item>
+        <item name="colorSurface">#1F1F1F</item>
+        <item name="colorOnSurface">#F5F5F5</item>
+        <item name="colorSurfaceVariant">#2A2A2A</item>
+        <item name="colorOnSurfaceVariant">#A3A3A3</item>
+        <item name="colorOutline">#303030</item>
+        <item name="android:colorBackground">#141414</item>
+        <item name="colorError">#EF4444</item>
+        <item name="colorOnError">#3A0A0A</item>
+        <item name="colorControlActivated">#22C55E</item>
+    </style>
+</resources>

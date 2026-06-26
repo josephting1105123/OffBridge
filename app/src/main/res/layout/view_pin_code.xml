@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only segmented 6-digit verification code (brand-coloured boxes). Populate via PinBox.bind(). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pin_code_container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/pin_digit_0"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pin_digit_1"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pin_digit_2"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pin_digit_3"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pin_digit_4"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pin_digit_5"
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:layout_marginHorizontal="3dp"
+        android:background="@drawable/bg_pin_box"
+        android:gravity="center"
+        android:textColor="@color/pin_digit_text"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/historyViewFlipper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_rounded">
+
+    <!-- View 0: List View -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Header row with title and select checkbox -->
+            <LinearLayout
+                android:id="@+id/headerRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/transfer_history_title"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <CheckBox
+                    android:id="@+id/cbSelectMode"
+                    android:layout_width="96dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/action_select"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:textSize="13sp"
+                    android:layout_marginEnd="14dp"
+                    android:buttonTint="?attr/appTextSecondaryColor" />
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:id="@+id/filterScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:clipToPadding="false"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:id="@+id/filterCapsuleContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/listBodyContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvEmptyHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/no_transfer_history_yet"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:paddingTop="40dp"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTransferHistory"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/transfer_history_list_height"
+                android:clipToPadding="false" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Selection mode banner overlay — same padding/margin as header so it overlaps perfectly -->
+        <LinearLayout
+            android:id="@+id/selectionBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="16dp"
+            android:background="@drawable/bg_bottom_sheet_rounded"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/btnCancelSelection"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                app:tint="?attr/appTextPrimaryColor" />
+
+            <TextView
+                android:id="@+id/tvSelectionCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 selected"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnDeleteSelected"
+                android:layout_width="96dp"
+                android:layout_height="36dp"
+                android:text="@string/action_delete"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="?attr/appError"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="14dp" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- View 1: Detail View -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+            
+            <ImageView
+                android:id="@+id/btnBackToList"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="12dp"
+                app:tint="?attr/appTextPrimaryColor" />
+            
+            <TextView
+                android:id="@+id/tvDetailTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/transaction_details_title"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btnDeleteTransaction"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="@string/action_delete"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="?attr/appError"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:minWidth="72dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detailBodyContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvDetailSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="12sp"
+                android:layout_marginBottom="16dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDetailFiles"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/transfer_history_list_height"
+                android:clipToPadding="false" />
+
+            <Button
+                android:id="@+id/btnDetailAction"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="#333333"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ViewFlipper>

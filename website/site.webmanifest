@@ -1,0 +1,18 @@
+{
+  "name": "Clipboard Share",
+  "short_name": "Clipboard Share",
+  "description": "Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, AES-256 encrypted.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#141414",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fake "Send to Devices" interface for Send-Files tutorial step 6 (the destination after the
+     pointer clicks "Connected devices" on the Send-Via sheet). Mirrors fragment_send_to_devices:
+     the same selected-files placeholder as step 2, a recipients list with a device card, and the
+     Send button pinned at the bottom. Opaque app background so it reads as a full screen. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/appBackgroundColor"
+    android:padding="@dimen/space_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/send_to_devices_title"
+        android:textAppearance="@style/TextAppearance.App.Headline"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/selected_files_title"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:layout_marginBottom="@dimen/space_sm"/>
+
+    <!-- Same selected-files placeholder as tutorial step 2 -->
+    <include layout="@layout/tutorial_placeholder_files" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:layout_marginBottom="@dimen/space_md"
+        android:text="@string/select_trusted_recipients_title"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        android:textColor="?attr/appTextPrimaryColor"/>
+
+    <!-- Connected device card placeholder -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/selectable_device_background"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_device"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Android Phone"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_hdr_status"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"/>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- Send button pinned at the bottom -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/action_send"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:background="@drawable/rect_button_bg"
+        android:backgroundTint="?attr/appGreen"/>
+
+</LinearLayout>

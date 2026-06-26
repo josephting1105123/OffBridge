@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pairing PIN digits: white in dark mode (black light variant in values/colors.xml). -->
+    <color name="pin_digit_text">#FFFFFF</color>
+
+    <!-- Dark Mode Notification Colors -->
+    <color name="notification_text_color">#FFFFFFFF</color> <!-- White -->
+    <color name="notification_status_color">#34D399</color> <!-- Bright Green -->
+
+    <!-- Tutorial tooltip (theme-aware via this night variant; NOT ?attr/ so it resolves in ANY
+         inflation context, incl. the bottom-sheet dialog theme that doesn't inherit the app theme). -->
+    <color name="tutorial_tooltip_bg">#1F1F1F</color>
+    <color name="tutorial_tooltip_text">#F5F5F5</color>
+    <color name="tutorial_tooltip_text_secondary">#A3A3A3</color>
+    <color name="tutorial_tooltip_accent">#22C55E</color>
+</resources>

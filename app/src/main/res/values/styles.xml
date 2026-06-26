@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      App type scale (tokens). Apply with android:textAppearance="@style/TextAppearance.App.*"
+      so headings, titles, body and labels stay consistent across screens.
+    -->
+    <style name="TextAppearance.App.Headline" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <style name="TextAppearance.App.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <style name="TextAppearance.App.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textSize">15sp</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <style name="TextAppearance.App.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">14sp</item>        <item name="android:textColor">?attr/appTextSecondaryColor</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <style name="TextAppearance.App.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textSize">12sp</item>        <item name="android:textColor">?attr/appTextSecondaryColor</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="fontFamily">@font/geist_variable</item>
+    </style>
+
+    <!-- Shared "How to use" pill so the button is identical (size + position) across all interfaces. -->
+    <style name="Widget.App.HowToUse" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:text">@string/action_how_to_use</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="android:textColor">?attr/appGreenText</item>
+        <item name="android:drawableStart">@drawable/ic_help_outline</item>
+        <item name="android:drawablePadding">@dimen/space_xs</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:background">@drawable/howtouse_chip_bg</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+</resources>

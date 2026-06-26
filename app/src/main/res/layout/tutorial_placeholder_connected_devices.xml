@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fake "Send to Devices" interface for Send-Files tutorial step 6:
+     selected-files row on top, the connected-devices list in the middle,
+     and a Send button pinned at the bottom (mirrors SendToDevicesFragment). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp">
+
+    <!-- Selected files row -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="96dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingEnd="12dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginEnd="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="?attr/appCardColor"
+            app:cardElevation="0dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_hdr_send"
+                    android:tint="?attr/appGreen"
+                    android:contentDescription="@null"
+                    android:layout_marginBottom="6dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="file 1.mp4"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:singleLine="true"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginEnd="12dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="?attr/appCardColor"
+            app:cardElevation="0dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="8dp">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_hdr_send"
+                    android:tint="?attr/appGreen"
+                    android:contentDescription="@null"
+                    android:layout_marginBottom="6dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="file 2.pdf"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="12sp"
+                    android:gravity="center"
+                    android:singleLine="true"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="10dp"
+        android:text="@string/select_trusted_recipients_title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <!-- Connected devices list -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/selectable_device_background"
+        android:padding="14dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_device"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Android Phone"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_hdr_status"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"
+            android:visibility="invisible"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/selectable_device_background"
+        android:padding="14dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="@dimen/icon_md"
+            android:layout_height="@dimen/icon_md"
+            android:src="@drawable/ic_computer"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Windows PC"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Send button pinned at the bottom -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="@string/action_send"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:background="@drawable/rect_button_bg"
+        android:backgroundTint="?attr/appGreen"/>
+
+</LinearLayout>

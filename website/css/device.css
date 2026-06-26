@@ -1,0 +1,139 @@
+/* ==========================================================================
+   device.css — frames that hold REAL app screenshots (phone bezel + desktop
+   window card), light/dark image swap, and a graceful "pending" placeholder.
+   ========================================================================== */
+
+.device-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 3vw, 40px);
+}
+
+.device {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* --- The screenshot image + light/dark swap ------------------------------ */
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.shot--light {
+  display: none;
+}
+[data-theme="light"] .shot--dark {
+  display: none;
+}
+[data-theme="light"] .shot--light {
+  display: block;
+}
+
+/* --- Phone: bezel around a full-screen Android screenshot ----------------- */
+.device--phone {
+  width: clamp(178px, 23vw, 244px);
+}
+.device--phone .device__screen {
+  position: relative;
+  border-radius: 30px;
+  border: 1px solid var(--hairline-strong);
+  background: #000;
+  padding: 7px;
+  box-shadow: var(--shadow-8);
+  overflow: hidden;
+}
+.device--phone .shot {
+  border-radius: 23px;
+}
+
+/* --- Desktop: the Windows screenshot already includes its window chrome,
+       so we just present it in a clean shadowed card (no extra chrome). ----- */
+.device--desktop {
+  width: clamp(300px, 46vw, 580px);
+  align-self: center;
+}
+.device--desktop .device__screen {
+  position: relative;
+  border-radius: var(--r-md);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow-8);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+/* --- Graceful placeholder when an image file isn't present yet ------------ */
+.device.shot-missing .shot {
+  display: none !important;
+}
+.device.shot-missing .device__screen::after {
+  content: "Screenshot pending";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  color: var(--text-tertiary);
+  font-size: var(--t-small);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface),
+    var(--surface) 10px,
+    var(--card) 10px,
+    var(--card) 20px
+  );
+}
+.device--phone.shot-missing .device__screen::after {
+  aspect-ratio: 9 / 19.5;
+  border-radius: 23px;
+}
+.device--desktop.shot-missing .device__screen::after {
+  aspect-ratio: 16 / 10;
+}
+
+/* --- Fallback when only a dark screenshot exists (no light variant) ------- */
+.no-light .shot--light {
+  display: none !important;
+}
+[data-theme="light"] .no-light .shot--dark {
+  display: block !important;
+}
+
+/* --- Small screens: stack the two devices instead of squishing ----------- */
+@media (max-width: 760px) {
+  .device-stage {
+    flex-wrap: wrap;
+  }
+  .device--desktop {
+    width: min(560px, 100%);
+  }
+  .device--phone {
+    width: clamp(200px, 62vw, 264px);
+  }
+}
+
+/* --- Single-screenshot figure (used in comparison cards) ----------------- */
+.shot-card {
+  border-radius: var(--r-md);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+}
+.shot-card .shot {
+  width: 100%;
+}
+.shot-card.shot-missing .shot {
+  display: none !important;
+}
+.shot-card.shot-missing::after {
+  content: "Screenshot pending";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 10;
+  color: var(--text-tertiary);
+  font-size: var(--t-small);
+}

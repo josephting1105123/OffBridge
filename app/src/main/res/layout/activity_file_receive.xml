@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor">
+
+    <LinearLayout
+        android:id="@+id/receivingProgressLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="88dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/receiving_files_title"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/save_to_folder_downloads"
+            android:textColor="@color/app_green"
+            android:textSize="14sp"
+            android:layout_marginBottom="32dp"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/incomingFilesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <Button
+            android:id="@+id/btn_cancel_transfer"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="?attr/appCardColor"
+            android:text="@string/action_cancel"
+            android:textColor="?attr/appError"/>
+
+        <Button
+            android:id="@+id/btnReceiveDone"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="?attr/appCardColor"
+            android:text="@string/action_close_with_check"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/incomingRequestLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@android:drawable/ic_menu_share"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/incoming_transfer_title"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tvIncomingDeviceName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/default_device_name"
+            android:textColor="?attr/appGreen"
+            android:textSize="18sp"
+            android:layout_marginBottom="24dp"/>
+
+        <Button
+            android:id="@+id/btnAcceptTransfer"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:backgroundTint="?attr/appGreen"
+            android:textColor="@color/black"
+            android:text="@string/action_accept_files"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btnDeclineTransfer"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:backgroundTint="?attr/appCardColor"
+            android:textColor="?attr/appError"
+            android:text="@string/action_decline" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/selectable_device_background"
+    android:padding="16dp"
+    android:layout_marginBottom="12dp"
+    android:layout_marginStart="10dp"
+    android:layout_marginEnd="10dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:layout_width="@dimen/icon_md"
+        android:layout_height="@dimen/icon_md"
+        android:src="@drawable/ic_device"
+        android:tint="?attr/appGreen"
+        android:contentDescription="@null"
+        android:layout_marginEnd="16dp"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Android Phone"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btnTutorialPair"
+        android:layout_width="110dp"
+        android:layout_height="40dp"
+        android:text="@string/action_pair"
+        android:backgroundTint="@color/app_green"
+        android:textColor="@color/black" />
+
+</LinearLayout>

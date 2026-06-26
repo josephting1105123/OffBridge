@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nfc_guide_title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tvNfcGuideSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp" />
+
+    <com.EntropicSoftwareLab.ClipboardShare.offgrid.NfcTapGuideView
+        android:id="@+id/nfcTapGuideView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvNfcGuideHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:minLines="2"
+        android:accessibilityLiveRegion="polite"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Live NFC read status (receive mode only): reveals whether the tap couples, what the reader
+         sees, and exactly where a failed read stops. Hidden in the static send-side guide. -->
+    <TextView
+        android:id="@+id/tvNfcReadStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="12sp"
+        android:fontFamily="monospace"
+        android:gravity="center"
+        android:accessibilityLiveRegion="polite"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btnNfcGuideContinue"
+        style="@style/Widget.App.Button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="@string/nfc_guide_back"
+        android:backgroundTint="?attr/appNavBarColor"
+        android:textColor="?attr/appTextPrimaryColor" />
+
+</LinearLayout>

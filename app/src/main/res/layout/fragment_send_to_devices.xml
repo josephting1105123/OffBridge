@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Connected-devices send screen as a slide-up bottom sheet (rounded top, like Transfer History):
+     a header, a scrollable middle (file previews + paired-device list) and a pinned Send button. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/appBackgroundColor"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingTop="96dp"
+        android:paddingBottom="@dimen/space_md">
+
+        <ImageView
+            android:id="@+id/btnBackToSendFiles"
+            android:layout_width="@dimen/touch_target"
+            android:layout_height="@dimen/touch_target"
+            android:padding="@dimen/space_sm"
+            android:src="@drawable/ic_back"
+            app:tint="?attr/appTextPrimaryColor"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="@dimen/space_sm"
+            android:contentDescription="@string/action_close" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/send_to_devices_title"
+            android:textAppearance="@style/TextAppearance.App.Headline" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingEnd="@dimen/space_xl">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/space_lg">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/selected_files_title"
+                android:textAppearance="@style/TextAppearance.App.Title"
+                android:layout_marginBottom="@dimen/space_sm" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginBottom="@dimen/space_xl">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSendFiles"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal" />
+
+                <LinearLayout
+                    android:id="@+id/skeletonFilesContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="@dimen/space_lg"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_trusted_recipients_title"
+                    android:textAppearance="@style/TextAppearance.App.Title" />
+
+                <CheckBox
+                    android:id="@+id/cbSelectAllDevices"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:theme="@style/ThemeOverlay.GreenCheckBox"
+                    android:text="@string/action_select_all"
+                    android:textColor="?attr/appGreen" />
+
+                <ProgressBar
+                    android:id="@+id/pbDeviceScanning"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:indeterminateTint="?attr/appGreen"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/sendDeviceContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:id="@+id/skeletonDevicesContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnSendToSelectedDevices"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginStart="@dimen/space_xl"
+        android:layout_marginEnd="@dimen/space_xl"
+        android:layout_marginTop="@dimen/space_md"
+        android:layout_marginBottom="@dimen/space_xl"
+        android:backgroundTint="?attr/appGreen"
+        android:text="@string/action_send"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

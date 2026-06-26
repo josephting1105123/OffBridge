@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fake "Send via NFC / QR" interface for Send-Files tutorial step 7 (the destination after the
+     pointer clicks "NFC / QR" on the Send-Via sheet). Mirrors fragment_qr_display: a title, a real
+     QR (phQrImage is filled at runtime with a live QR), and the NFC chip. Opaque app background. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="?attr/appBackgroundColor"
+    android:padding="@dimen/space_lg">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        android:text="@string/offgrid_send_title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <FrameLayout
+        android:layout_width="230dp"
+        android:layout_height="230dp"
+        android:background="#FFFFFF">
+
+        <ImageView
+            android:id="@+id/phQrImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="14dp"
+            android:src="@drawable/ic_qr_code"
+            android:contentDescription="@null" />
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_lg"
+        android:text="@string/offgrid_status_waiting_for_scan"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="14sp"
+        android:gravity="center" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginBottom="@dimen/space_md"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:text="@string/offgrid_nfc_ready"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="13sp"
+        android:background="@drawable/rect_button_bg"/>
+
+</LinearLayout>

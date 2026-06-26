@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- State when checked -->
+    <item android:state_checked="true">
+        <layer-list>
+            <!-- The green background circle -->
+            <item>
+                <shape android:shape="oval">
+                    <solid android:color="#34D399" />
+                    <size android:width="22dp" android:height="22dp" />
+                </shape>
+            </item>
+            <!-- The white checkmark, inset to center inside the circle -->
+            <item
+                android:drawable="@drawable/ic_checkmark_black"
+                android:top="3dp"
+                android:bottom="3dp"
+                android:left="3dp"
+                android:right="3dp" />
+        </layer-list>
+    </item>
+
+    <!-- Default, unchecked state -->
+    <item android:state_checked="false">
+        <shape android:shape="oval">
+            <solid android:color="@android:color/transparent" />
+            <stroke android:width="2dp" android:color="#888888" />
+            <size android:width="22dp" android:height="22dp" />
+        </shape>
+    </item>
+</selector>

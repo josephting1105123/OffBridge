@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- NFC/QR sender as a slide-up sheet: a dim scrim (translucent window shows the previous screen
+     behind it) with a bottom-anchored rounded panel. The CardView's bottom corners sit just below the
+     screen (negative bottom margin) so only the TOP corners are rounded, like Transfer History.
+     The scrim is clickable but has NO dismiss handler — closing is via the screen's Cancel button or
+     Back, so a stray tap can't kill a live transfer. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/offGridScrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:layout_marginTop="56dp"
+        android:layout_marginBottom="-24dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/appBackgroundColor">
+
+        <FrameLayout
+            android:id="@+id/offGridFragmentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/appBackgroundColor" />
+    </androidx.cardview.widget.CardView>
+</FrameLayout>

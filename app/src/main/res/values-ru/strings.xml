@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">Добро пожаловать в Clipboard Share.
+
+
+        Данное приложение предоставляется «как есть», без каких-либо гарантий, явных или
+        подразумеваемых, включая, но не ограничиваясь гарантиями товарной пригодности,
+        пригодности для конкретной цели и ненарушения прав. Ни при каких обстоятельствах
+        авторы или правообладатели не несут ответственности за любые претензии, ущерб или иные
+        обязательства, будь то в результате действия договора, деликта или иным образом, возникающие из,
+        вне или в связи с программным обеспечением или использованием или иными сделками в
+        программном обеспечении.
+
+
+        Используя это приложение, вы соглашаетесь со следующим:
+
+
+        1.  Вы несете ответственность за передаваемые данные. Не используйте это приложение для
+            передачи незаконного, вредоносного или защищенного авторским правом контента, на который у вас нет
+            прав.
+
+
+        2.  Это приложение предназначено для использования в доверенных, частных сетях Wi-Fi. Хотя
+            соединение зашифровано, использование его в публичных или недоверенных сетях осуществляется на
+            ваш собственный риск.
+
+
+        3.  Для правильной работы приложению требуются определенные разрешения, включая
+            доступ к сети, доступ к уведомлениям и возможность работы в фоновом режиме.
+            Отключение этих разрешений может привести к сбоям в работе приложения.
+
+
+        4.  Разработчик не несет ответственности за потерю или повреждение данных, которые могут произойти
+            во время передачи.
+
+
+        Убедитесь, что у вас есть необходимые права на любые файлы, которыми вы делитесь.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Политика конфиденциальности Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Дата вступления в силу: 22/6/2026&lt;br&gt;&lt;br&gt;
+        Благодарим вас за использование Clipboard Share («Приложение»). Настоящая Политика конфиденциальности объясняет наши принципы в отношении сбора, использования и раскрытия информации. Наша основная философия проста: ваши данные принадлежат вам, и они нам не нужны.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ОСНОВНОЙ ПРИНЦИП: МЫ НЕ СОБИРАЕМ ВАШИ ДАННЫЕ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share с самого начала разрабатывалось так, чтобы ваша конфиденциальность была главным приоритетом. Приложение обеспечивает прямую одноранговую (P2P) связь между вашими устройствами в локальной сети Wi-Fi.&lt;br&gt;&lt;br&gt;
+        У нас нет серверов, которые собирают, хранят или обрабатывают ваши личные данные. Все ваши данные остаются на ваших устройствах и в вашей локальной сети.&lt;br&gt;&lt;br&gt;
+        В частности, мы НЕ собираем, НЕ получаем и НЕ передаём третьим лицам:&lt;br&gt;
+        • Содержимому вашего буфера обмена.&lt;br&gt;
+        • Файлам, которые вы передаете.&lt;br&gt;
+        • Вашему имени, адресу электронной почты или любым другим личным идентификаторам.&lt;br&gt;
+        • Вашим контактам, местоположению или любой другой конфиденциальной информации об устройстве.&lt;br&gt;&lt;br&gt;
+        Приложение работает без необходимости создания учетной записи или входа в систему.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ИНФОРМАЦИЯ, КОТОРУЮ ПРИЛОЖЕНИЕ ХРАНИТ ЛОКАЛЬНО НА ВАШЕМ УСТРОЙСТВЕ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Для правильной работы Clipboard Share хранит небольшой объем данных исключительно в локальном хранилище вашего устройства. Эти данные находятся под вашим контролем и никогда не покидают ваше устройство для отправки нам. К ним относятся:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Криптографические ключи:&lt;/b&gt; После явного сопряжения двух устройств генерируется уникальный ключ шифрования AES-256, который надежно сохраняется на каждом устройстве. Этот ключ используется для шифрования всех сообщений между этими двумя сопряженными устройствами и необходим для безопасности Приложения.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Информация о сопряженном устройстве:&lt;/b&gt; Приложение хранит локальный IP-адрес и выбранное пользователем имя устройств, с которыми вы выполнили сопряжение. Это используется для их идентификации и подключения к ним в вашей локальной сети.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;История буфера обмена:&lt;/b&gt; Для вашего удобства Приложение хранит локальную историю элементов буфера обмена, которые вы скопировали. Эта история хранится только на вашем устройстве и может быть удалена вами в любое время из Приложения.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Имя устройства:&lt;/b&gt; Имя, которое вы выбираете для своего устройства в настройках Приложения, сохраняется локально для идентификации его другим устройствам в вашей сети.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;КАК ПЕРЕДАЮТСЯ ВАШИ ДАННЫЕ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Все передачи данных (как буфера обмена, так и файлов) происходят непосредственно между вашими сопряженными устройствами по локальной сети Wi-Fi. Ваши данные не проходят через наши серверы или какие-либо сторонние серверы. Все передачи защищены надежным сквозным шифрованием AES-256 с использованием ключей, сгенерированных в процессе сопряжения.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ОБНАРУЖЕНИЕ УСТРОЙСТВ В ВАШЕЙ ЛОКАЛЬНОЙ СЕТИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Чтобы ваши устройства могли автоматически находить друг друга, Приложение периодически рассылает небольшое сообщение обнаружения в вашей локальной сети Wi-Fi или точки доступа. Это сообщение содержит только выбранное вами имя устройства, локальный IP-адрес вашего устройства и тип его операционной системы (например, \"Android\"). Эти рассылки отправляются только в вашей локальной сети, чтобы находящиеся рядом устройства могли предложить сопряжение или подключение. Они никогда не отправляются нам, в интернет или каким-либо третьим лицам, и для обнаружения не используется интернет-соединение. В отличие от передач буфера обмена и файлов, которые защищены сквозным шифрованием и передаются только между сопряжёнными устройствами, эти сообщения обнаружения не шифруются и видны другим устройствам в той же локальной сети. По этой причине мы рекомендуем использовать Приложение в доверенных частных сетях. Вы можете в любой момент остановить эти рассылки, отключив \"Видимо для других устройств\" в Настройках.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;КАКИЕ ФУНКЦИИ ИСПОЛЬЗУЮТ КАКИЕ РАЗРЕШЕНИЯ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Чтобы было понятно, что делает каждая функция, вот как Приложение использует вашу сеть и разрешения:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Поиск устройств поблизости:&lt;/b&gt; Использует вашу локальную сеть Wi-Fi или точки доступа, а на некоторых версиях Android — разрешение «Местоположение и устройства поблизости». Не использует мобильный интернет.&lt;br&gt;
+        • &lt;b&gt;Сопряжение двух устройств:&lt;/b&gt; Использует вашу локальную сеть Wi-Fi, либо камеру (для сканирования QR-кода) или NFC (для прикосновения), чтобы обменяться ключом шифрования.&lt;br&gt;
+        • &lt;b&gt;Синхронизация текста буфера обмена:&lt;/b&gt; Использует вашу локальную сеть Wi-Fi для отправки скопированного текста на ваши сопряжённые устройства.&lt;br&gt;
+        • &lt;b&gt;Передача файлов в той же сети:&lt;/b&gt; Использует вашу локальную сеть Wi-Fi.&lt;br&gt;
+        • &lt;b&gt;Автономные передачи (без роутера и интернета):&lt;/b&gt; Использует Wi-Fi Direct и Bluetooth для создания прямого соединения между устройствами, запускаемого QR-кодом (камера) или касанием NFC. Требует разрешений «Местоположение», «Устройства поблизости» и Bluetooth.&lt;br&gt;
+        • &lt;b&gt;Установка полученного приложения:&lt;/b&gt; Использует разрешение на установку и только после вашего подтверждения.&lt;br&gt;
+        • &lt;b&gt;Готовность в фоновом режиме:&lt;/b&gt; Использует службу переднего плана и уведомление, чтобы продолжать принимать входящие элементы буфера обмена и передачи.&lt;br&gt;&lt;br&gt;
+        Коротко: для всего Приложение использует вашу локальную сеть Wi-Fi, точку доступа или прямое соединение между устройствами. Оно не использует мобильный интернет для обнаружения или передач и не подключается к интернету.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;РАЗРЕШЕНИЯ, ЗАПРАШИВАЕМЫЕ В ПРИЛОЖЕНИИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share запрашивает определенные разрешения для работы своих функций. Вот почему они нам нужны:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Доступ к сети&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Требуется для обнаружения других устройств и передачи данных по локальной сети Wi-Fi.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Местоположение и устройства поблизости&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Некоторые версии Android требуют это разрешение, чтобы приложение могло искать и подключаться к ближайшим устройствам через Wi-Fi Direct, что Приложение использует для автономных передач. Мы его не собираем, но без него функция не может находить устройства поблизости. Приложение не считывает, не хранит и не передаёт ваше физическое местоположение.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Используется для установки прямого автономного соединения с ближайшим устройством. Мы не собираем через него никаких данных, и оно никогда не используется для отслеживания.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Камера и NFC&lt;/b&gt; (CAMERA, NFC): Камера используется только для сканирования QR-кода, а NFC — только для начала соединения, когда вы прикладываете два устройства друг к другу, для сопряжения и автономных передач. Эта информация обрабатывается на вашем устройстве и никогда не сохраняется и никуда не отправляется.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Установка полученного приложения&lt;/b&gt; (REQUEST_INSTALL_PACKAGES): Используется только для того, чтобы с вашего явного подтверждения вы могли установить приложение (APK), полученное при передаче. Приложение никогда ничего не устанавливает самостоятельно.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Служба переднего плана и уведомления&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Требуется для запуска службы, ожидающей входящих подключений, и для отображения постоянного уведомления о том, что Приложение активно и защищает ваше соединение.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Запуск при загрузке&lt;/b&gt; (RECEIVE_BOOT_COMPLETED): Позволяет Приложению перезапускать свою службу при перезагрузке устройства, гарантируя, что оно всегда готово к подключению.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Полноэкранное намерение&lt;/b&gt; (USE_FULL_SCREEN_INTENT): Используется для отображения срочных полноэкранных оповещений о входящих запросах на сопряжение или передаче файлов, чтобы вы их не пропустили.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Игнорировать оптимизацию батареи&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Настоятельно рекомендуется, чтобы операционная система Android не завершала работу фоновой службы Приложения, что привело бы к прерыванию синхронизации буфера обмена и передачи файлов.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Внешнее хранилище&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): В старых версиях Android (SDK 28 и ниже) это требуется для сохранения полученных файлов в хранилище вашего устройства.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;СТОРОННИЕ СЕРВИСЫ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share не использует никакие сторонние сервисы для аналитики, рекламы или любых других целей, связанных с обменом вашими данными.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;КОНФИДЕНЦИАЛЬНОСТЬ ДЕТЕЙ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Приложение не предназначено для использования детьми младше 13 лет. Мы сознательно не собираем информацию о детях. Поскольку мы изначально не собираем никаких личных данных, у нас нет механизма проверки возраста наших пользователей.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ИЗМЕНЕНИЯ В ДАННОЙ ПОЛИТИКЕ КОНФИДЕНЦИАЛЬНОСТИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Мы можем время от времени обновлять нашу Политику конфиденциальности. Мы уведомим вас о любых изменениях, опубликовав новую Политику конфиденциальности по тому же URL-адресу. Рекомендуется периодически просматривать настоящую Политику конфиденциальности на предмет изменений.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;СВЯЖИТЕСЬ С НАМИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Если у вас есть какие-либо вопросы по поводу настоящей Политики конфиденциальности, свяжитесь с нами по адресу:&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">Приложения (APK)</string>
+    <string name="search_hint">Поиск</string>
+    <string name="zero_apps_count">0 приложений</string>
+    <string name="select_multiple_apps">Выбрать несколько приложений</string>
+    <string name="action_select">Выбрать</string>
+    <string name="receiving_files_title">Получение файлов</string>
+    <string name="save_to_folder_downloads">Сохранить в папку: Downloads</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_close_with_check">✓ Закрыть</string>
+    <string name="incoming_transfer_title">Входящая передача</string>
+    <string name="default_device_name">Имя устройства</string>
+    <string name="action_accept_files">Принять файлы</string>
+    <string name="action_decline">Отклонить</string>
+    <string name="secure_pairing_title">Безопасное сопряжение</string>
+    <string name="initiating_cryptographic_handshake">Инициализация криптографического квитирования...</string>
+    <string name="pairing_request_title">Запрос на сопряжение</string>
+    <string name="action_accept">Принять</string>
+    <string name="clipboard_share_windows_title">Clipboard Share для Windows</string>
+    <string name="desktop_app_in_development_desc">Настольное приложение в настоящее время находится в разработке и скоро будет доступно.</string>
+    <string name="menu_title">Меню</string>
+    <string name="menu_windows_version">💻 Версия для Windows</string>
+    <string name="menu_restart_services">🔄 Перезапустить службы</string>
+    <string name="menu_power_off">🔌 Выключить</string>
+    <string name="action_pair">Сопряжение</string>
+    <string name="action_unpair">Отменить сопряжение</string>
+    <string name="send_files_title">Отправить файлы</string>
+    <string name="type_file">Файл</string>
+    <string name="type_media">Медиа</string>
+    <string name="type_folder">Папка</string>
+    <string name="type_app">Приложение</string>
+    <string name="selected_files_title">Выбранные файлы</string>
+    <string name="action_select_all">Выбрать все</string>
+    <string name="select_trusted_recipients_title">Подключенные устройства</string>
+    <string name="action_send">Отправить</string>
+    <string name="history_and_push_title">Буфер обмена и Отправка</string>
+    <string name="action_push_current_clipboard">📤 Отправить текущий буфер обмена</string>
+    <string name="recent_copies_hint">Недавние копии (нажмите, чтобы скопировать)</string>
+    <string name="required_permissions_title">Необходимые разрешения</string>
+    <string name="battery_optimization_title">Оптимизация батареи</string>
+    <string name="battery_optimization_desc">Clipboard Share работает в фоновом режиме. Пожалуйста, отключите оптимизацию батареи, чтобы передача и синхронизация буфера обмена не прерывались.</string>
+    <string name="action_go_to_settings">Перейти в настройки</string>
+    <string name="notifications_title">Уведомления</string>
+    <string name="notifications_desc">Это необходимо для отображения постоянного статуса службы и предупреждения о входящих запросах на сопряжение или файлы.</string>
+    <string name="action_request_permission">Запросить разрешение</string>
+    <string name="action_finish_setup">Завершить настройку</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_device">УСТРОЙСТВО</string>
+    <string name="device_name_label">Имя устройства:</string>
+    <string name="device_name_hint">Имя устройства</string>
+    <string name="settings_section_general">ОБЩИЕ</string>
+    <string name="theme_setting">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="language_setting">Язык</string>
+    <string name="save_to_setting">Сохранить в</string>
+    <string name="save_location_downloads">Загрузки (Downloads)</string>
+    <string name="settings_section_others">ДРУГОЕ</string>
+    <string name="support_setting">Поддержка</string>
+    <string name="action_donate">☕ Пожертвовать</string>
+    <string name="privacy_policy_setting">Политика конфиденциальности</string>
+    <string name="action_read_privacy_policy">📄 Читать</string>
+    <string name="system_status_title">Статус системы</string>
+    <string name="status_checking">Статус: Проверка...</string>
+    <string name="accept_incoming_clipboard">Принимать входящий буфер обмена</string>
+    <string name="paired_and_nearby_devices">Сопряженные и устройства поблизости</string>
+    <string name="network_disconnected">Сеть отключена</string>
+    <string name="press_button_to_reboot">Нажмите кнопку ниже, чтобы перезагрузить движки.</string>
+    <string name="user_agreement_title">Пользовательское соглашение</string>
+    <string name="agree_to_terms">Я прочитал и согласен с условиями.</string>
+    <string name="action_next">Далее</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">документ.pdf</string>
+    <string name="action_open">Открыть</string>
+    <string name="default_file_name_zip">имя_файла.zip</string>
+    <string name="default_file_progress">50% (5.0 МБ / 10.0 МБ)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Сеть Mesh активна</string>
+    <string name="unknown">Неизвестно</string>
+    <string name="unknown_file">Неизвестный файл</string>
+    <string name="action_select_count">Выбрать (%d)</string>
+    <string name="toast_clipboard_is_empty">Буфер обмена пуст</string>
+    <string name="toast_failed_to_read_clipboard">Не удалось прочитать буфер обмена</string>
+    <string name="unknown_device">Неизвестное устройство</string>
+    <string name="notification_successfully_pushed_title">Успешно отправлено</string>
+    <string name="notification_clipboard_received_title">Буфер обмена получен</string>
+    <string name="notification_mesh_network_active">Сеть Mesh активна</string>
+    <string name="notification_channel_clipboard_share_service">Служба Clipboard Share</string>
+    <string name="notification_channel_clipboard_alerts">Оповещения буфера обмена</string>
+    <string name="notification_channel_pairing_requests">Запросы на сопряжение</string>
+    <string name="notification_from_sender">От: %s</string>
+    <string name="notification_channel_file_transfer_progress">Прогресс передачи файлов</string>
+    <string name="notification_channel_incoming_transfers">Входящие передачи</string>
+    <string name="status_network_disconnected">Сеть отключена</string>
+    <string name="status_receiving_paused">Прием приостановлен</string>
+    <string name="status_scanning_for_devices">Поиск устройств...</string>
+    <string name="status_connected_to_devices">Подключено к %d сопряженным устройствам</string>
+    <string name="toast_push_failed_no_devices">Сбой отправки: нет сопряженных устройств в сети.</string>
+    <string name="toast_no_active_transfer">Активных передач не найдено.</string>
+    <string name="toast_failed_to_connect_for_resume">Не удалось подключиться к отправителю для возобновления</string>
+    <string name="incoming_transfer_details" formatted="false">%s отправляет %d файл(ов) (%.2f МБ)</string>
+    <string name="toast_not_enough_storage_space">Недостаточно места в хранилище для приема файлов.</string>
+    <string name="toast_cancelling_transfer">Отмена передачи...</string>
+    <string name="toast_custom_save_location_inaccessible">Пользовательское место сохранения недоступно. Используется папка Загрузки.</string>
+    <string name="status_paused_timeout">Приостановлено (Тайм-аут)</string>
+    <string name="status_cancelled">Отменено</string>
+    <string name="status_paused_network_dropped">Приостановлено: сеть отключилась</string>
+    <string name="status_paused_waiting_reconnect">Приостановлено (ожидание переподключения...)</string>
+    <string name="toast_transfer_status">Передача %s</string>
+    <string name="action_resume_when_reconnected">Возобновить при переподключении</string>
+    <string name="file_progress_waiting">Ожидание... (0.0 МБ / %.1f МБ)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f МБ / %.1f МБ)</string>
+    <string name="custom_folder_label">Пользовательская папка</string>
+    <string name="file_progress_complete_saved_to">Завершено - Сохранено в %s</string>
+    <string name="toast_error_no_compatible_app">Ошибка: не найдено совместимого приложения для открытия этого формата файла.</string>
+    <string name="toast_error_generic">Ошибка: %s</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_sending">Отправка...</string>
+    <string name="toast_transfer_interrupted">Передача прервана. Получатель может возобновить при переподключении.</string>
+    <string name="toast_batch_transfer_complete">Пакетная передача завершена!</string>
+    <string name="shortcut_send_to_device">Отправить на %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">Передать через Clipboard Share</string>
+    <string name="toast_pushing_clipboard_to_mesh">Отправка буфера обмена в сеть...</string>
+    <string name="no_clipboard_history_yet">Истории буфера обмена пока нет.</string>
+    <string name="toast_copied_to_clipboard">Скопировано в буфер обмена</string>
+    <string name="toast_notifications_permission_required">Для службы переднего плана требуется разрешение на уведомления.</string>
+    <string name="toast_storage_permission_required">На этой версии Android передача файлов может не удаться без разрешения на доступ к хранилищу.</string>
+    <string name="default_android_device_name">Устройство Android</string>
+    <string name="toast_rebooting_engine">Перезагрузка движка Clipboard Share...</string>
+    <string name="toast_shutting_down_engine">Завершение работы Clipboard Share...</string>
+    <string name="toast_notification_permission_granted">Разрешение на уведомления предоставлено!</string>
+    <string name="toast_notifications_recommended">Уведомления рекомендуются для лучшего опыта.</string>
+    <string name="toast_notification_permission_already_granted">Разрешение на уведомления уже предоставлено в этой версии Android.</string>
+    <string name="status_permission_granted">Разрешение предоставлено</string>
+    <string name="status_granted_by_default">Предоставлено по умолчанию</string>
+    <string name="toast_could_not_open_battery_settings">Не удалось автоматически открыть настройки батареи.</string>
+    <string name="theme_system_default">Системная по умолчанию</string>
+    <string name="toast_could_not_open_browser">Не удалось открыть браузер</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Темная</string>
+    <string name="dialog_title_choose_theme">Выбрать тему</string>
+    <string name="dialog_title_choose_language">Выбрать язык</string>
+    <string name="toast_language_preference_saved">Настройки языка сохранены. Полная поддержка перевода скоро появится.</string>
+    <string name="dialog_title_privacy_policy">Политика конфиденциальности</string>
+    <string name="action_close">Закрыть</string>
+    <string name="selected_folder_fallback">Выбранная папка</string>
+    <string name="toast_failed_to_load_file_ui">Не удалось загрузить интерфейс файлов</string>
+    <string name="status_no_network">Статус: Нет сети</string>
+    <string name="toast_rebooting_engines">Перезагрузка движков...</string>
+    <string name="status_active_and_polling">Статус: Активно и ожидание</string>
+    <string name="toast_flushing_network_cache">Очистка сетевого кэша...</string>
+    <string name="toast_unpaired_from_device">Сопряжение с %s отменено</string>
+    <string name="status_requesting_pair">Запрос на сопряжение</string>
+    <string name="status_waiting_for_accept">Ожидание принятия от %s...</string>
+    <string name="toast_successfully_paired_with">Успешное сопряжение с %s!</string>
+    <string name="toast_pairing_declined_by">Сопряжение отклонено пользователем %s.</string>
+    <string name="toast_pairing_timed_out">Время сопряжения истекло. Другой пользователь не ответил.</string>
+    <string name="toast_pairing_failed">Сбой сопряжения. Убедитесь, что другое устройство находится в той же сети.</string>
+    <string name="toast_paired_with_device">Сопряжено с %s</string>
+    <string name="toast_pairing_declined">Сопряжение отклонено</string>
+    <string name="notification_transfers_can_be_resumed">Можно возобновить %d передач(и)</string>
+    <string name="notification_connection_restored_resume">Соединение восстановлено. Нажмите для возобновления.</string>
+    <string name="notification_sending_resumed_title">Отправка возобновлена</string>
+    <string name="notification_resuming_batch_transfer">Возобновление пакетной передачи...</string>
+    <string name="toast_resumed_transfer_complete">Возобновленная передача завершена</string>
+    <string name="notification_incoming_transfer_request_title">Входящий запрос на передачу</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s отправляет вам %d файл(ов). Нажмите, чтобы ответить.</string>
+    <string name="title_transfer_history">История передач</string>
+    <string name="no_transfer_history_yet">Истории передач пока нет.</string>
+    <string name="format_selected_count">Выбрано: %d</string>
+    <string name="title_transaction_details">Детали транзакции</string>
+    <string name="nav_send">Отправить</string>
+    <string name="nav_pairing">Сопряжение</string>
+    <string name="nav_clipboard">Буфер обмена</string>
+    <string name="transfer_history_title">История передач</string>
+    <string name="format_to_device">Кому: %s</string>
+    <string name="format_from_device">От: %s</string>
+    <string name="status_transferring_dots">Передача...</string>
+    <string name="status_declined">Отклонено</string>
+    <string name="status_done_with_icon">Готово</string>
+    <string name="status_paused_with_icon">Приостановлено</string>
+    <string name="status_transferring_with_icon">Передача</string>
+    <string name="status_declined_with_icon">Отклонено</string>
+    <string name="status_transferring">Передача</string>
+    <string name="status_paused">Приостановлено</string>
+    <string name="action_continue">Продолжить</string>
+    <string name="action_grant">Предоставить</string>
+    <string name="action_receive">Получить</string>
+    <string name="action_resume">Возобновить</string>
+    <string name="action_retry">Повторить</string>
+    <string name="action_turn_on">Включить</string>
+    <string name="action_use_bluetooth">Использовать Bluetooth сейчас</string>
+    <string name="diagnostics_all_failed">Все методы не сработали</string>
+    <string name="diagnostics_connected_via">Подключено через %1$s</string>
+    <string name="diagnostics_empty">Попыток автономной передачи пока нет. Попробуйте передачу по QR/NFC, затем вернитесь сюда.</string>
+    <string name="diagnostics_outcome_connected">Подключено</string>
+    <string name="diagnostics_outcome_failed">Сбой</string>
+    <string name="diagnostics_outcome_pending">Выполняется</string>
+    <string name="diagnostics_outcome_skipped">Пропущено</string>
+    <string name="diagnostics_share">Поделиться журналом</string>
+    <string name="diagnostics_title">Диагностика подключения</string>
+    <string name="menu_diagnostics">Диагностика подключения</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="nav_receive">Получить</string>
+    <string name="nfc_a11y_angled">Держите телефоны под углом 45 градусов</string>
+    <string name="nfc_a11y_flat">Держите телефоны плашмя</string>
+    <string name="nfc_a11y_not_selected">Не выбрано</string>
+    <string name="nfc_a11y_selected">Выбрано</string>
+    <string name="nfc_a11y_vertical">Держите телефоны вертикально</string>
+    <string name="nfc_guide_continue">Понятно</string>
+    <string name="nfc_guide_label_their">Их телефон</string>
+    <string name="nfc_guide_label_your">Ваш телефон</string>
+    <string name="nfc_guide_subtitle_receive">Приложите телефоны задними панелями, чтобы светящиеся точки совпали.</string>
+    <string name="nfc_guide_subtitle_send">Держите свой телефон задней панелью к другому устройству, чтобы светящиеся точки совпали.</string>
+    <string name="nfc_guide_title">Приложите телефоны друг к другу</string>
+    <string name="nfc_hint_angled">Чип NFC расположен высоко на задней панели — держите телефоны под углом около 45° и сведите светящиеся точки вместе.</string>
+    <string name="nfc_hint_flat">Чип NFC находится у верхнего края — положите оба телефона плашмя и сведите их верхние края там, где светятся точки.</string>
+    <string name="nfc_hint_vertical">Чип NFC расположен примерно посередине — держите оба телефона вертикально и сведите светящиеся точки вместе.</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">Плашмя</string>
+    <string name="nfc_style_vertical">Вертикально</string>
+    <string name="offgrid_accept_hint">Если на этом устройстве появится запрос на подключение, нажмите «Принять».</string>
+    <string name="offgrid_band_warning">Группа работает на частоте %1$d MHz — некоторые устройства могут её не найти.</string>
+    <string name="offgrid_bt_available">Wi-Fi слишком долго подключается? Bluetooth готов — медленнее, но подключается всегда.</string>
+    <string name="offgrid_camera_denied">Для сканирования кода нужно разрешение на доступ к камере. Вы также можете приложить телефоны друг к другу для использования NFC.</string>
+    <string name="offgrid_confirm_subtitle">%1$d файл(ов) • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s хочет отправить вам файлы</string>
+    <string name="offgrid_connecting_title">Подключение…</string>
+    <string name="offgrid_degraded_bt_off">\nКанал управления Bluetooth отключён — резервных методов меньше.</string>
+    <string name="offgrid_degraded_mode">Ограниченный режим: активно только базовое подключение по Wi-Fi. Предоставьте разрешение на доступ к устройствам поблизости для более быстрого и надёжного соединения.</string>
+    <string name="offgrid_error_all_methods">Не удалось подключиться ни одним методом. Поднесите телефоны ближе, убедитесь, что Wi-Fi и Bluetooth включены, и повторите.</string>
+    <string name="offgrid_error_control_failed">Не удалось установить Bluetooth-соединение для координации передачи. Держите оба телефона разблокированными и не дальше метра друг от друга, затем повторите.</string>
+    <string name="offgrid_error_code_expired">Срок действия кода истёк — попросите отправителя снова открыть экран отправки.</string>
+    <string name="offgrid_error_connect_failed">Не удалось подключиться. Убедитесь, что экран отправителя ещё открыт, и повторите.</string>
+    <string name="offgrid_error_fallback_failed">Прямое подключение не удалось. Держите телефоны рядом, убедитесь, что отправитель принял запрос, и повторите.</string>
+    <string name="offgrid_error_join_failed">Не удалось подключиться к сети отправителя. Держите телефоны рядом, примите запрос на подключение и повторите.</string>
+    <string name="offgrid_error_location_off">Геолокация отключена. Для поиска прямой сети отправителя Android требуется включённая геолокация.</string>
+    <string name="offgrid_error_no_files">Нет файлов для отправки.</string>
+    <string name="offgrid_error_sender_busy">Отправитель занят с другим устройством.</string>
+    <string name="offgrid_error_transfer_failed">Сбой передачи. Покажите код снова, чтобы повторить.</string>
+    <string name="offgrid_error_update_app">Этот код создан более новой версией. Обновите приложение, чтобы получить файлы.</string>
+    <string name="offgrid_error_wifi_off">Wi-Fi отключён. Включите его для автономной отправки.</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fi отключён. Включите его для получения — подключение к интернету не требуется.</string>
+    <string name="offgrid_fallback_permission_rationale">Разрешите доступ к устройствам поблизости, чтобы приложение могло подключаться напрямую, когда стандартное подключение не работает.</string>
+    <string name="offgrid_hce_description">Учётные данные автономной передачи Clipboard Share</string>
+    <string name="offgrid_join_failed_closer">Не удалось связаться с отправителем. Поднесите телефоны ближе и попросите снова показать код, затем повторите.</string>
+    <string name="offgrid_nfc_off">NFC отключён — нажмите, чтобы включить</string>
+    <string name="offgrid_nfc_ready">NFC готов — нажмите, чтобы увидеть, как держать телефоны</string>
+    <string name="offgrid_nfc_unavailable">NFC недоступен — только QR</string>
+    <string name="offgrid_permission_miui_hint">\nНа Xiaomi/MIUI включите «Устройства поблизости» в разделе «О приложении» → «Разрешения».</string>
+    <string name="offgrid_permission_permanently_denied">Разрешение на доступ к устройствам поблизости заблокировано, поэтому доступно только базовое подключение по Wi-Fi. Откройте настройки приложения, чтобы включить его для более быстрого и надёжного прямого соединения.</string>
+    <string name="offgrid_permission_required">Для автономной отправки требуется разрешение на доступ к устройствам поблизости.</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">Получить через QR / NFC</string>
+    <string name="offgrid_send_title">Отправить через NFC / QR</string>
+    <string name="offgrid_session_notification_text">Поддержание прямого соединения.</string>
+    <string name="offgrid_session_notification_title">Автономная передача активна</string>
+    <string name="offgrid_status_code_scanned">Код отсканирован</string>
+    <string name="offgrid_status_complete">Передача завершена</string>
+    <string name="offgrid_status_connecting">Подключение к %s…</string>
+    <string name="offgrid_status_control_linked">Связь с %s по Bluetooth установлена — подбор самого быстрого соединения…</string>
+    <string name="offgrid_status_creating_group">Настройка прямого соединения…</string>
+    <string name="offgrid_status_handshaking">Проверка подключения…</string>
+    <string name="offgrid_status_interrupted">Соединение потеряно — ожидание возобновления другим устройством…</string>
+    <string name="offgrid_status_receiving">Получение файлов…</string>
+    <string name="offgrid_status_reestablishing">Восстановление группы…</string>
+    <string name="offgrid_status_rescan_to_resume">Соединение закрыто. Отсканируйте снова для возобновления — прогресс сохранён в Истории передач.</string>
+    <string name="offgrid_status_scanning">Наведите камеру на код отправителя</string>
+    <string name="offgrid_status_sending">Устройство подключено — отправка на %1$s (%2$d файлов)…</string>
+    <string name="offgrid_status_trying_direct">Попытка прямого подключения… примите запрос на устройстве отправителя.</string>
+    <string name="offgrid_status_trying_method">Попытка метода подключения %1$d из %2$d…</string>
+    <string name="offgrid_status_waiting_for_scan">Ожидание сканирования…</string>
+    <string name="receive_enable_nfc">Включить NFC</string>
+    <string name="receive_nfc_listening">NFC ожидает — приложите телефоны друг к другу</string>
+    <string name="receive_nfc_unavailable_device">NFC недоступен на этом устройстве</string>
+    <string name="receive_open_camera">Открыть камеру</string>
+    <string name="receive_title">Получить файлы</string>
+    <string name="send_to_devices_title">Отправить на устройства</string>
+    <string name="send_via_connected_devices">Подключенные устройства</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">Отправить через</string>
+    <string name="action_how_to_use">Как использовать</string>
+    <string name="discoverable_to_devices">Видимо для других устройств</string>
+    <string name="transaction_details_title">Сведения о передаче</string>
+    <string name="type_text">Текст</string>
+    <string name="transfer_resume_request_title">Запрос на возобновление</string>
+    <string name="transfer_resume_request_text">Отправитель запрашивает возобновление передачи. Нажмите для просмотра.</string>
+    <string name="transfer_resumable_one">Можно возобновить 1 передачу</string>
+    <string name="transfer_resumable_many">Можно возобновить передач: %1$d</string>
+    <string name="transfer_connection_restored">Соединение восстановлено. Нажмите для возобновления.</string>
+    <string name="transfer_failed_connect_sender">Не удалось подключиться к отправителю</string>
+    <string name="transfer_sending_resumed_title">Отправка возобновлена</string>
+    <string name="transfer_sending_resumed_text">Возобновление пакетной передачи…</string>
+    <string name="transfer_resumed_complete">Возобновлённая передача завершена</string>
+    <string name="transfer_incoming_title">Входящая передача</string>
+    <string name="transfer_incoming_text">%1$s хочет отправить вам файлов: %2$d.</string>
+    <string name="transfer_receiving_title">Получение файлов</string>
+    <string name="transfer_receiving_text">%1$s отправляет вам файлов: %2$d. Нажмите для просмотра прогресса.</string>
+    <string name="applist_version_unknown">Неизвестно</string>
+    <string name="applist_app_count">Приложений: %1$d</string>
+    <string name="applist_select_count">Выбрать (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">Буфер обмена пуст</string>
+    <string name="clip_read_failed">Не удалось прочитать буфер обмена</string>
+    <string name="status_push_success_title">Успешно отправлено</string>
+    <string name="status_clipboard_received_title">Буфер обмена получен</string>
+    <string name="status_channel_service">Служба Clipboard Share</string>
+    <string name="status_channel_alerts">Оповещения буфера обмена</string>
+    <string name="status_channel_pairing">Запросы на сопряжение</string>
+    <string name="status_channel_transfer_progress">Прогресс передачи файлов</string>
+    <string name="status_channel_incoming_transfers">Входящие передачи</string>
+    <string name="status_mesh_active">Сеть Mesh активна</string>
+    <string name="pairing_request_from">От: %1$s</string>
+    <string name="status_scanning_devices">Поиск устройств…</string>
+    <string name="status_connected_devices">Подключено к сопряжённым устройствам: %1$d</string>
+    <string name="transfer_add_text_hint">Введите текст для добавления…</string>
+    <string name="transfer_add_text_title">Добавить текст</string>
+    <string name="transfer_add_text_positive">Добавить</string>
+    <string name="transfer_text_item_name">Текст %1$d</string>
+    <string name="transfer_tut_file_type">Выберите тип файла для отправки: Файл, Медиа, Папка, Текст или Приложение.</string>
+    <string name="transfer_tut_files_appear">Здесь появятся выбранные вами файлы. Нажмите на файл для предпросмотра.</string>
+    <string name="transfer_tut_long_press">Удерживайте любой файл, чтобы войти в режим выбора, затем удалите выбранные элементы.</string>
+    <string name="transfer_tut_send_button">Выбрав файлы, нажмите «Отправить», чтобы выбрать способ отправки.</string>
+    <string name="transfer_tut_send_via">Подключённые устройства используют вашу сеть Wi-Fi. NFC / QR работает где угодно — роутер не нужен.</string>
+    <string name="transfer_tut_pick_devices">Выберите одно или несколько сопряжённых устройств, затем нажмите «Отправить».</string>
+    <string name="transfer_tut_offgrid_code">Покажите этот код принимающему телефону или просто приложите телефоны друг к другу.</string>
+    <string name="transfer_tut_history">Нажмите здесь, чтобы просмотреть историю передач и отслеживать прогресс.</string>
+    <string name="transfer_tut_next">Далее</string>
+    <string name="transfer_shortcut_short_label">Отправить на %1$s</string>
+    <string name="transfer_shortcut_long_label">Передать через Clipboard Share</string>
+    <string name="transfer_unknown_file">Неизвестный файл</string>
+    <string name="history_tutorial_push">Нажмите здесь, чтобы мгновенно отправить текущий текст буфера обмена на все сопряжённые устройства.</string>
+    <string name="history_tutorial_accept_switch">Отключите это, если не хотите получать содержимое буфера обмена с других устройств.</string>
+    <string name="history_tutorial_next">Далее</string>
+    <string name="history_toast_pushing">Отправка буфера обмена в сеть…</string>
+    <string name="history_toast_empty">Буфер обмена пуст</string>
+    <string name="history_toast_read_failed">Не удалось прочитать буфер обмена</string>
+    <string name="history_empty">Истории буфера обмена пока нет.</string>
+    <string name="history_toast_copied">Скопировано в буфер обмена</string>
+    <string name="perm_notifications_required">Для службы переднего плана требуется разрешение на уведомления.</string>
+    <string name="perm_storage_required">На этой версии Android передача файлов может не удаться без разрешения на доступ к хранилищу.</string>
+    <string name="status_default_device_name">Устройство Android</string>
+    <string name="menu_restart_toast">Перезагрузка движка Clipboard Share…</string>
+    <string name="menu_power_off_toast">Завершение работы Clipboard Share…</string>
+    <string name="pairing_requesting_title">Запрос на сопряжение</string>
+    <string name="pairing_waiting_subtitle">Ожидание принятия от %1$s…</string>
+    <string name="pairing_success">Успешное сопряжение с %1$s!</string>
+    <string name="pairing_declined">Сопряжение отклонено пользователем %1$s.</string>
+    <string name="pairing_timed_out">Время сопряжения истекло. Другой пользователь не ответил.</string>
+    <string name="pairing_failed">Сбой сопряжения. Убедитесь, что другое устройство находится в той же сети.</string>
+    <string name="pairing_unknown_device">Неизвестное устройство</string>
+    <string name="pairing_from_device">От: %1$s</string>
+    <string name="pairing_paired_with">Сопряжено с %1$s</string>
+    <string name="perm_notification_granted_toast">Разрешение на уведомления предоставлено!</string>
+    <string name="perm_notification_recommended_toast">Уведомления рекомендуются для лучшего опыта.</string>
+    <string name="perm_notification_already_granted_toast">Разрешение на уведомления уже предоставлено в этой версии Android.</string>
+    <string name="perm_permission_granted_label">Разрешение предоставлено</string>
+    <string name="perm_go_to_settings_label">Перейти в настройки</string>
+    <string name="perm_request_permission_label">Запросить разрешение</string>
+    <string name="perm_granted_by_default_label">Предоставлено по умолчанию</string>
+    <string name="perm_battery_settings_error_toast">Не удалось автоматически открыть настройки батареи.</string>
+    <string name="settings_save_location_downloads">Загрузки (Downloads)</string>
+    <string name="settings_toast_could_not_open_browser">Не удалось открыть браузер</string>
+    <string name="settings_dialog_choose_language">Выбрать язык</string>
+    <string name="settings_toast_rebooting_engine">Перезагрузка движка Clipboard Share…</string>
+    <string name="settings_dialog_privacy_policy">Политика конфиденциальности</string>
+    <string name="settings_action_close">Закрыть</string>
+    <string name="settings_save_location_selected_folder">Выбранная папка</string>
+    <string name="settings_default_device_name">Устройство Android</string>
+    <string name="status_tutorial_discoverable_toggle">Отключите это, когда не хотите быть видимым для других устройств.</string>
+    <string name="status_tutorial_device_name">Нажмите здесь, чтобы изменить отображаемое имя вашего устройства для удобной идентификации.</string>
+    <string name="status_tutorial_pair_nearby">Нажмите «Сопряжение» на ближайшем устройстве, чтобы выполнить с ним сопряжение и начать передачу файлов.</string>
+    <string name="status_tutorial_pair_button">Нажмите кнопку «Сопряжение», чтобы подключиться к этому устройству и начать обмен файлами.</string>
+    <string name="status_action_next">Далее</string>
+    <string name="status_rebooting_engines">Перезагрузка движков…</string>
+    <string name="status_flushing_cache">Очистка сетевого кэша…</string>
+    <string name="status_unpaired_from">Сопряжение с %1$s отменено</string>
+    <string name="history_pending_accept">Ожидание принятия…</string>
+    <string name="history_session_unavailable">Сеанс больше недоступен</string>
+    <string name="history_resume_request_sent">Запрос на возобновление отправлен на %1$s</string>
+    <string name="history_resume_request_failed">Не удалось отправить запрос на возобновление</string>
+    <string name="history_resume_no_device_ip">Не удалось найти IP устройства для отправки запроса на возобновление</string>
+    <string name="status_failed_with_icon">✗ Сбой</string>
+    <string name="status_pending_with_icon">⏳ Ожидание</string>
+    <string name="status_cancelled_with_icon">✗ Отменено</string>
+    <string name="history_chooser_open_media">Открыть медиа</string>
+    <string name="history_chooser_open_storage">Открыть место хранения</string>
+    <string name="history_chooser_open_file">Открыть файл</string>
+    <string name="history_file_not_found">Файл не найден</string>
+    <string name="history_cannot_open_file">Не удалось открыть файл</string>
+    <string name="history_waiting_zero">Ожидание (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d файлов (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> +ещё %1$d</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">Все</string>
+    <string name="history_filter_sent">Отправленные</string>
+    <string name="history_filter_received">Полученные</string>
+    <string name="history_filter_completed">Завершённые</string>
+    <string name="history_filter_pending">Ожидающие</string>
+    <string name="history_filter_cancelled">Отменённые</string>
+    <string name="history_tutorial_list">Здесь вы можете увидеть все свои недавние передачи файлов.</string>
+    <string name="history_tutorial_filter">Фильтруйте по Входящим, Исходящим, Приостановленным или Отменённым — нажмите на капсулу.</string>
+    <string name="history_tutorial_select">Нажмите «Выбрать», чтобы управлять записями передач и удалять их.</string>
+    <string name="history_tutorial_tap_record">Нажмите на любую запись передачи, чтобы увидеть её детали и прогресс.</string>
+    <string name="history_tutorial_open">Нажмите кнопку «Открыть», чтобы открыть полученный файл.</string>
+    <string name="transfer_incoming_from">От: %1$s (файлов: %2$d)</string>
+    <string name="pairing_declined_simple">Сопряжение отклонено</string>
+</resources>

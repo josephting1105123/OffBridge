@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="120dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingEnd="12dp">
+
+    <!-- File 1 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="112dp"
+        android:layout_height="112dp"
+        android:layout_marginEnd="12dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="?attr/appCardColor"
+        app:cardElevation="0dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📄"
+                android:textSize="32sp"
+                android:layout_marginBottom="8dp"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="file 1.mp4"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:ellipsize="middle"
+                android:singleLine="true"/>
+        </LinearLayout>
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_cancel" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- File 2 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="112dp"
+        android:layout_height="112dp"
+        android:layout_marginEnd="12dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="?attr/appCardColor"
+        app:cardElevation="0dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📄"
+                android:textSize="32sp"
+                android:layout_marginBottom="8dp"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="file 2.pdf"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:ellipsize="middle"
+                android:singleLine="true"/>
+        </LinearLayout>
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_cancel" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- File 3 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="112dp"
+        android:layout_height="112dp"
+        app:cardCornerRadius="16dp"
+        app:cardBackgroundColor="?attr/appCardColor"
+        app:cardElevation="0dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📄"
+                android:textSize="32sp"
+                android:layout_marginBottom="8dp"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="file 3.jpg"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:ellipsize="middle"
+                android:singleLine="true"/>
+        </LinearLayout>
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_cancel" />
+    </androidx.cardview.widget.CardView>
+
+</LinearLayout>

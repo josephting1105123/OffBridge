@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">欢迎使用 Clipboard Share。
+
+
+        本应用程序按“原样”提供，不提供任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性和非侵权性的担保。在任何情况下，作者或版权持有人均不对因软件或软件的使用或其他交易而产生的、引起的或与软件有关的任何索赔、损害或其他责任负责，无论是在合同、侵权或其他诉讼中。
+
+
+        使用本应用程序即表示您同意以下内容：
+
+
+        1. 您对传输的数据负责。请勿使用本应用程序传输您无权传输的非法、恶意或受版权保护的内容。
+
+
+        2. 本应用程序专为在受信任的私有 Wi-Fi 网络上使用而设计。虽然连接已加密，但在公共或不受信任的网络上使用的风险由您自行承担。
+
+
+        3. 应用程序需要某些权限才能正常运行，包括网络访问、通知访问和后台运行能力。禁用这些权限可能会导致应用程序出现故障。
+
+
+        4. 开发者对传输过程中可能发生的任何数据丢失或损坏不承担任何责任。
+
+
+        请确保您对共享的任何文件拥有必要的权利。</string>
+    <string name="privacy_policy_text">&lt;b&gt;Clipboard Share 隐私政策&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        生效日期：22/6/2026&lt;br&gt;&lt;br&gt;
+        感谢您使用 Clipboard Share（以下简称“本应用”）。本隐私政策阐明了我们在收集、使用和披露信息方面的原则。我们的核心理念很简单：您的数据属于您，我们不需要它。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;核心原则：我们不收集您的数据&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share 从设计之初就将您的隐私放在首位。本应用可促进您的设备在本地 Wi-Fi 网络上进行直接的端到端 (P2P) 通信。&lt;br&gt;&lt;br&gt;
+        我们没有收集、存储或处理您个人数据的服务器。您的所有数据都保留在您的设备和本地网络上。&lt;br&gt;&lt;br&gt;
+        具体而言，我们不会收集、接收或共享：&lt;br&gt;
+        • 您的剪贴板内容。&lt;br&gt;
+        • 您传输的文件。&lt;br&gt;
+        • 您的姓名、电子邮件地址或任何其他个人标识符。&lt;br&gt;
+        • 您的联系人、位置或任何其他敏感的设备信息。&lt;br&gt;&lt;br&gt;
+        本应用无需您创建帐户或登录即可使用。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;应用程序在您设备上本地存储的信息&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        为了正常运行，Clipboard Share 仅在您设备的本地存储中保存少量数据。这些数据由您控制，绝不会离开您的设备发送给我们。这包括：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;加密密钥：&lt;/b&gt;在您明确配对两台设备后，每台设备上会生成并安全存储一个唯一的 AES-256 加密密钥。此密钥用于加密这两台配对设备之间的所有通信，对本应用的安全性至关重要。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;配对设备信息：&lt;/b&gt;本应用会存储您配对设备的本地 IP 地址和用户选择的设备名称。这用于在本地网络上识别并连接它们。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;剪贴板历史记录：&lt;/b&gt;本应用会保留您复制的剪贴板项目的本地历史记录以方便您使用。此历史记录仅存储在您的设备上，您可随时在应用内将其清除。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;设备名称：&lt;/b&gt;您在本应用设置中为设备选择的名称会存储在本地，以便网络上的其他设备识别。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;您的数据如何传输&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        所有数据传输（剪贴板和文件）都直接通过本地 Wi-Fi 网络在配对设备之间进行。您的数据不会经过我们的服务器或任何第三方服务器。所有传输都使用配对过程中生成的密钥进行强大的端到端 AES-256 加密保护。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;在您本地网络上的设备发现&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        为了让您的设备能够自动相互发现，本应用会定期在您的本地 Wi-Fi 或热点网络上广播一条小的发现消息。该消息仅包含您所选择的设备名称、设备的本地 IP 地址及其操作系统类型（例如\"Android\"）。这些广播仅在您的本地网络上发送，以便附近的设备可以提出配对或连接。它们绝不会发送给我们、发送到互联网或任何第三方，并且发现过程不使用任何互联网连接。与您的剪贴板和文件传输（采用端到端加密，且仅在已配对的设备之间交换）不同，这些发现消息未经加密，同一本地网络上的其他设备均可看到。因此，我们建议在受信任的专用网络中使用本应用。您可以随时在设置中关闭\"可被其他设备发现\"来停止这些广播。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;哪些功能使用哪些权限&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        为了让您清楚每项功能的作用，以下说明本应用如何使用您的网络和权限：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;查找附近设备：&lt;/b&gt; 使用您的本地 Wi-Fi 或热点网络，在某些 Android 版本上还会使用位置和附近设备权限。不会使用您的移动数据。&lt;br&gt;
+        • &lt;b&gt;配对两台设备：&lt;/b&gt; 使用您的本地 Wi-Fi 网络，或相机（扫描二维码）或 NFC（贴近）来交换加密密钥。&lt;br&gt;
+        • &lt;b&gt;同步剪贴板文本：&lt;/b&gt; 使用您的本地 Wi-Fi 网络将复制的文本发送到您已配对的设备。&lt;br&gt;
+        • &lt;b&gt;在同一网络中传输文件：&lt;/b&gt; 使用您的本地 Wi-Fi 网络。&lt;br&gt;
+        • &lt;b&gt;离网传输（无路由器或互联网）：&lt;/b&gt; 使用 Wi-Fi Direct 和蓝牙建立设备间的直接连接，通过二维码（相机）或 NFC 贴近启动。需要位置、附近设备和蓝牙权限。&lt;br&gt;
+        • &lt;b&gt;安装收到的应用：&lt;/b&gt; 使用安装权限，且仅在您确认后才会进行。&lt;br&gt;
+        • &lt;b&gt;在后台保持就绪：&lt;/b&gt; 使用前台服务和通知，以持续监听传入的剪贴板项目和传输。&lt;br&gt;&lt;br&gt;
+        简而言之，本应用的所有功能都使用您的本地 Wi-Fi、热点或设备间的直接连接。它不会使用您的移动数据进行发现或传输，也不会连接到互联网。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;应用程序请求的权限&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share 请求某些权限以启用其功能。原因如下：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;网络访问权限&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：需要通过本地 Wi-Fi 网络发现其他设备并传输数据。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;位置和附近设备&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：某些 Android 版本要求应用获得此权限，才能通过 Wi-Fi Direct 扫描并连接附近的设备，本应用将其用于离网传输。我们不会收集它，但没有它，此功能就无法找到附近的设备。本应用不会读取、存储或共享您的实际位置。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;蓝牙&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：用于帮助与附近设备建立直接的离网连接。我们不会通过它收集任何数据，也绝不会用它来追踪您。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;相机和 NFC&lt;/b&gt; (CAMERA, NFC)：相机仅用于扫描二维码，NFC 仅用于在您将两台设备贴近时启动连接，用于配对和离网传输。这些信息在您的设备上处理，绝不会被存储或发送到任何地方。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;安装收到的应用&lt;/b&gt; (REQUEST_INSTALL_PACKAGES)：仅用于在您明确确认的情况下，安装您通过传输收到的应用 (APK)。本应用绝不会自行安装任何内容。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;前台服务和通知&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS)：需要运行监听传入连接的服务，并显示持续通知以指示应用程序处于活动状态且正在保护您的连接。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;开机启动&lt;/b&gt; (RECEIVE_BOOT_COMPLETED)：允许应用在您重启设备时重新启动其服务，确保随时可以连接。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;全屏意图&lt;/b&gt; (USE_FULL_SCREEN_INTENT)：用于向您显示传入配对请求或文件传输的紧急全屏警报，以免您错过。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;忽略电池优化&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：强烈建议使用，以防止 Android 操作系统关闭应用的后台服务，否则会中断剪贴板同步和文件传输。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;外部存储&lt;/b&gt; (WRITE_EXTERNAL_STORAGE)：在旧版 Android（SDK 28 及更低版本）上，需要此权限才能将接收到的文件保存到设备存储中。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;第三方服务&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share 不使用任何第三方服务进行分析、广告或任何其他涉及共享您数据的目的。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;儿童隐私&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        本应用不适合 13 岁以下儿童使用。我们不会有意收集儿童的任何信息。由于我们首先不收集任何个人数据，因此我们没有机制来验证用户的年龄。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;本隐私政策的变更&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        我们可能会不时更新我们的隐私政策。我们将通过在同一 URL 发布新的隐私政策来通知您任何更改。建议您定期查看本隐私政策以了解任何变更。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;联系我们&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        如果您对本隐私政策有任何疑问，请联系我们：&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">应用 (APK)</string>
+    <string name="search_hint">搜索</string>
+    <string name="zero_apps_count">0 个应用</string>
+    <string name="select_multiple_apps">选择多个应用</string>
+    <string name="action_select">选择</string>
+    <string name="receiving_files_title">正在接收文件</string>
+    <string name="save_to_folder_downloads">保存到文件夹：Downloads</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_close_with_check">✓ 关闭</string>
+    <string name="incoming_transfer_title">传入的传输</string>
+    <string name="default_device_name">设备名称</string>
+    <string name="action_accept_files">接收文件</string>
+    <string name="action_decline">拒绝</string>
+    <string name="secure_pairing_title">安全配对</string>
+    <string name="initiating_cryptographic_handshake">正在启动密码握手...</string>
+    <string name="pairing_request_title">配对请求</string>
+    <string name="action_accept">接受</string>
+    <string name="clipboard_share_windows_title">Clipboard Share Windows版</string>
+    <string name="desktop_app_in_development_desc">配套的桌面应用程序目前正在开发中，即将推出。</string>
+    <string name="menu_title">菜单</string>
+    <string name="menu_windows_version">💻 Windows 版本</string>
+    <string name="menu_restart_services">🔄 重启服务</string>
+    <string name="menu_power_off">🔌 关闭电源</string>
+    <string name="action_pair">配对</string>
+    <string name="action_unpair">取消配对</string>
+    <string name="send_files_title">发送文件</string>
+    <string name="type_file">文件</string>
+    <string name="type_media">媒体</string>
+    <string name="type_folder">文件夹</string>
+    <string name="type_app">应用</string>
+    <string name="selected_files_title">已选文件</string>
+    <string name="action_select_all">全选</string>
+    <string name="select_trusted_recipients_title">已连接设备</string>
+    <string name="action_send">发送</string>
+    <string name="history_and_push_title">剪贴板与推送</string>
+    <string name="action_push_current_clipboard">📤 推送当前剪贴板</string>
+    <string name="recent_copies_hint">最近复制内容（点击以复制）</string>
+    <string name="required_permissions_title">所需权限</string>
+    <string name="battery_optimization_title">电池优化</string>
+    <string name="battery_optimization_desc">Clipboard Share 在后台运行。请禁用电池优化以确保传输和剪贴板同步不被中断。</string>
+    <string name="action_go_to_settings">前往设置</string>
+    <string name="notifications_title">通知</string>
+    <string name="notifications_desc">需要此权限以显示持续的服务状态，并提醒您有传入的配对或文件请求。</string>
+    <string name="action_request_permission">请求权限</string>
+    <string name="action_finish_setup">完成设置</string>
+    <string name="settings_title">设置</string>
+    <string name="settings_section_device">设备</string>
+    <string name="device_name_label">设备名称：</string>
+    <string name="device_name_hint">设备名称</string>
+    <string name="settings_section_general">通用</string>
+    <string name="theme_setting">主题</string>
+    <string name="theme_system">系统</string>
+    <string name="language_setting">语言</string>
+    <string name="save_to_setting">保存至</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_section_others">其他</string>
+    <string name="support_setting">支持</string>
+    <string name="action_donate">☕ 捐赠</string>
+    <string name="privacy_policy_setting">隐私政策</string>
+    <string name="action_read_privacy_policy">📄 阅读</string>
+    <string name="system_status_title">系统状态</string>
+    <string name="status_checking">状态：检查中...</string>
+    <string name="accept_incoming_clipboard">接受传入的剪贴板</string>
+    <string name="paired_and_nearby_devices">已配对及附近设备</string>
+    <string name="network_disconnected">网络已断开</string>
+    <string name="press_button_to_reboot">按下方的按钮以重启引擎。</string>
+    <string name="user_agreement_title">用户协议</string>
+    <string name="agree_to_terms">我已阅读并同意这些条款。</string>
+    <string name="action_next">下一步</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">document.pdf</string>
+    <string name="action_open">打开</string>
+    <string name="default_file_name_zip">filename.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Mesh 活跃中</string>
+    <string name="unknown">未知</string>
+    <string name="unknown_file">未知文件</string>
+    <string name="action_select_count">选择 (%d)</string>
+    <string name="toast_clipboard_is_empty">剪贴板为空</string>
+    <string name="toast_failed_to_read_clipboard">无法读取剪贴板</string>
+    <string name="unknown_device">未知设备</string>
+    <string name="notification_successfully_pushed_title">推送成功</string>
+    <string name="notification_clipboard_received_title">已收到剪贴板</string>
+    <string name="notification_mesh_network_active">Mesh 网络活跃中</string>
+    <string name="notification_channel_clipboard_share_service">Clipboard Share 服务</string>
+    <string name="notification_channel_clipboard_alerts">剪贴板警报</string>
+    <string name="notification_channel_pairing_requests">配对请求</string>
+    <string name="notification_from_sender">来自：%s</string>
+    <string name="notification_channel_file_transfer_progress">文件传输进度</string>
+    <string name="notification_channel_incoming_transfers">传入的传输</string>
+    <string name="status_network_disconnected">网络已断开</string>
+    <string name="status_receiving_paused">接收已暂停</string>
+    <string name="status_scanning_for_devices">正在扫描设备...</string>
+    <string name="status_connected_to_devices">已连接到 %d 个配对设备</string>
+    <string name="toast_push_failed_no_devices">推送失败：没有在线的配对设备。</string>
+    <string name="toast_no_active_transfer">未找到活动传输。</string>
+    <string name="toast_failed_to_connect_for_resume">无法连接到发送方以恢复传输</string>
+    <string name="incoming_transfer_details" formatted="false">%s 正在发送 %d 个文件 (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">存储空间不足，无法接收文件。</string>
+    <string name="toast_cancelling_transfer">正在取消传输...</string>
+    <string name="toast_custom_save_location_inaccessible">自定义保存位置不可访问。退回到 Downloads 文件夹。</string>
+    <string name="status_paused_timeout">已暂停（超时）</string>
+    <string name="status_cancelled">已取消</string>
+    <string name="status_paused_network_dropped">已暂停：网络连接丢失</string>
+    <string name="status_paused_waiting_reconnect">已暂停（等待重新连接...）</string>
+    <string name="toast_transfer_status">传输 %s</string>
+    <string name="action_resume_when_reconnected">重新连接时恢复</string>
+    <string name="file_progress_waiting">等待中... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">自定义文件夹</string>
+    <string name="file_progress_complete_saved_to">完成 - 已保存至 %s</string>
+    <string name="toast_error_no_compatible_app">错误：找不到可打开此文件格式的兼容应用。</string>
+    <string name="toast_error_generic">错误：%s</string>
+    <string name="action_delete">删除</string>
+    <string name="action_sending">发送中...</string>
+    <string name="toast_transfer_interrupted">传输中断。接收方可以在重新连接时恢复。</string>
+    <string name="toast_batch_transfer_complete">批量传输完成！</string>
+    <string name="shortcut_send_to_device">发送到 %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">通过 Clipboard Share 传输</string>
+    <string name="toast_pushing_clipboard_to_mesh">正在将剪贴板推送到网络...</string>
+    <string name="no_clipboard_history_yet">暂无剪贴板历史记录。</string>
+    <string name="toast_copied_to_clipboard">已复制到剪贴板</string>
+    <string name="toast_notifications_permission_required">前台服务需要通知权限。</string>
+    <string name="toast_storage_permission_required">在此 Android 版本上，如果没有存储权限，文件传输可能会失败。</string>
+    <string name="default_android_device_name">Android 设备</string>
+    <string name="toast_rebooting_engine">正在重启 Clipboard Share 引擎...</string>
+    <string name="toast_shutting_down_engine">正在关闭 Clipboard Share...</string>
+    <string name="toast_notification_permission_granted">已授予通知权限！</string>
+    <string name="toast_notifications_recommended">建议开启通知以获得最佳体验。</string>
+    <string name="toast_notification_permission_already_granted">在此 Android 版本上已默认授予通知权限。</string>
+    <string name="status_permission_granted">权限已授予</string>
+    <string name="status_granted_by_default">默认授予</string>
+    <string name="toast_could_not_open_battery_settings">无法自动打开电池设置。</string>
+    <string name="theme_system_default">系统默认</string>
+    <string name="toast_could_not_open_browser">无法打开浏览器</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="dialog_title_choose_theme">选择主题</string>
+    <string name="dialog_title_choose_language">选择语言</string>
+    <string name="toast_language_preference_saved">已保存语言首选项。即将提供完整翻译支持。</string>
+    <string name="dialog_title_privacy_policy">隐私政策</string>
+    <string name="action_close">关闭</string>
+    <string name="selected_folder_fallback">选定文件夹</string>
+    <string name="toast_failed_to_load_file_ui">无法加载文件 UI</string>
+    <string name="status_no_network">状态：无网络</string>
+    <string name="toast_rebooting_engines">正在重启引擎...</string>
+    <string name="status_active_and_polling">状态：活跃并轮询中</string>
+    <string name="toast_flushing_network_cache">正在刷新网络缓存...</string>
+    <string name="toast_unpaired_from_device">已取消与 %s 的配对</string>
+    <string name="status_requesting_pair">正在请求配对</string>
+    <string name="status_waiting_for_accept">等待 %s 接受...</string>
+    <string name="toast_successfully_paired_with">已成功与 %s 配对！</string>
+    <string name="toast_pairing_declined_by">%s 拒绝了配对。</string>
+    <string name="toast_pairing_timed_out">配对超时。对方未响应。</string>
+    <string name="toast_pairing_failed">配对失败。请确保另一台设备位于同一网络上。</string>
+    <string name="toast_paired_with_device">已与 %s 配对</string>
+    <string name="toast_pairing_declined">配对被拒绝</string>
+    <string name="notification_transfers_can_be_resumed">可恢复 %d 个传输</string>
+    <string name="notification_connection_restored_resume">连接已恢复。点击以恢复。</string>
+    <string name="notification_sending_resumed_title">发送已恢复</string>
+    <string name="notification_resuming_batch_transfer">正在恢复批量传输...</string>
+    <string name="toast_resumed_transfer_complete">恢复的传输已完成</string>
+    <string name="notification_incoming_transfer_request_title">传入的传输请求</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s 正在向您发送 %d 个文件。点击以响应。</string>
+    <string name="title_transfer_history">传输历史记录</string>
+    <string name="no_transfer_history_yet">暂无传输历史记录。</string>
+    <string name="format_selected_count">已选 %d 个</string>
+    <string name="title_transaction_details">交易详情</string>
+    <string name="nav_send">发送</string>
+    <string name="nav_pairing">配对</string>
+    <string name="nav_clipboard">剪贴板</string>
+    <string name="transfer_history_title">传输历史记录</string>
+    <string name="format_to_device">至：%s</string>
+    <string name="format_from_device">来自：%s</string>
+    <string name="status_transferring_dots">传输中...</string>
+    <string name="status_declined">已拒绝</string>
+    <string name="status_done_with_icon">完成</string>
+    <string name="status_paused_with_icon">已暂停</string>
+    <string name="status_transferring_with_icon">传输中</string>
+    <string name="status_declined_with_icon">已拒绝</string>
+    <string name="status_transferring">传输中</string>
+    <string name="status_paused">已暂停</string>
+    <string name="action_continue">继续</string>
+    <string name="action_grant">授予</string>
+    <string name="action_receive">接收</string>
+    <string name="action_resume">恢复</string>
+    <string name="action_retry">重试</string>
+    <string name="action_turn_on">开启</string>
+    <string name="action_use_bluetooth">立即使用蓝牙</string>
+    <string name="diagnostics_all_failed">所有方式均失败</string>
+    <string name="diagnostics_connected_via">已通过 %1$s 连接</string>
+    <string name="diagnostics_empty">尚未记录任何离网传输尝试。请先尝试 QR/NFC 传输，然后再回到这里。</string>
+    <string name="diagnostics_outcome_connected">已连接</string>
+    <string name="diagnostics_outcome_failed">失败</string>
+    <string name="diagnostics_outcome_pending">进行中</string>
+    <string name="diagnostics_outcome_skipped">已跳过</string>
+    <string name="diagnostics_share">分享日志</string>
+    <string name="diagnostics_title">连接诊断</string>
+    <string name="menu_diagnostics">连接诊断</string>
+    <string name="menu_settings">设置</string>
+    <string name="nav_receive">接收</string>
+    <string name="nfc_a11y_angled">将手机保持 45 度角</string>
+    <string name="nfc_a11y_flat">将手机平放</string>
+    <string name="nfc_a11y_not_selected">未选中</string>
+    <string name="nfc_a11y_selected">已选中</string>
+    <string name="nfc_a11y_vertical">将手机竖直握持</string>
+    <string name="nfc_guide_continue">知道了</string>
+    <string name="nfc_guide_label_their">对方手机</string>
+    <string name="nfc_guide_label_your">你的手机</string>
+    <string name="nfc_guide_subtitle_receive">将两部手机的背面贴在一起，让发光点相互对齐。</string>
+    <string name="nfc_guide_subtitle_send">将你的手机与对方设备背靠背贴合，让发光点相互对齐。</string>
+    <string name="nfc_guide_title">将手机贴合在一起</string>
+    <string name="nfc_hint_angled">你的 NFC 芯片位于背面靠上的位置——将手机保持约 45° 角，让发光点相互对齐。</string>
+    <string name="nfc_hint_flat">你的 NFC 芯片靠近顶部——将两部手机平放，让顶部发光点处相互贴合。</string>
+    <string name="nfc_hint_vertical">你的 NFC 芯片大约在中间位置——将两部手机竖直握持，让发光点相互对齐。</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">平放</string>
+    <string name="nfc_style_vertical">竖直</string>
+    <string name="offgrid_accept_hint">如果此设备上出现连接请求，请点击“接受”。</string>
+    <string name="offgrid_band_warning">群组使用 %1$d MHz 频段——部分设备可能无法找到它。</string>
+    <string name="offgrid_bt_available">Wi-Fi 耗时太久？蓝牙已就绪——速度较慢，但始终能连上。</string>
+    <string name="offgrid_camera_denied">扫描二维码需要相机权限。你也可以将两部手机贴合以使用 NFC。</string>
+    <string name="offgrid_confirm_subtitle">%1$d 个文件 • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s 想要向你发送文件</string>
+    <string name="offgrid_connecting_title">正在连接…</string>
+    <string name="offgrid_degraded_bt_off">\n蓝牙控制通道已关闭——回退方式受限。</string>
+    <string name="offgrid_degraded_mode">受限模式：仅基础 Wi-Fi 加入可用。请授予附近设备权限，以获得更快、更可靠的连接。</string>
+    <string name="offgrid_error_all_methods">所有方式均无法连接。请将手机靠近，确认 Wi-Fi 和蓝牙已开启，然后重试。</string>
+    <string name="offgrid_error_control_failed">用于协调传输的蓝牙连接未能建立。请将两部手机解锁并靠近至一米以内，然后重试。</string>
+    <string name="offgrid_error_code_expired">二维码已过期——请让发送方重新打开发送界面。</string>
+    <string name="offgrid_error_connect_failed">无法连接。请确认发送方的界面仍处于打开状态，然后重试。</string>
+    <string name="offgrid_error_fallback_failed">直连失败。请让手机保持靠近，确认发送方已接受，然后重试。</string>
+    <string name="offgrid_error_join_failed">无法加入发送方的网络。请让手机保持靠近，接受连接提示，然后重试。</string>
+    <string name="offgrid_error_location_off">定位已关闭。Android 需要开启定位才能找到发送方的直连网络。</string>
+    <string name="offgrid_error_no_files">没有可发送的文件。</string>
+    <string name="offgrid_error_sender_busy">发送方正忙于与另一台设备通信。</string>
+    <string name="offgrid_error_transfer_failed">传输失败。请重新显示二维码以重试。</string>
+    <string name="offgrid_error_update_app">此二维码由更新版本生成。请更新应用以接收。</string>
+    <string name="offgrid_error_wifi_off">Wi-Fi 已关闭。请开启它以使用离网发送。</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fi 已关闭。请开启它以接收——无需互联网连接。</string>
+    <string name="offgrid_fallback_permission_rationale">请允许访问附近设备，以便在标准加入方式无效时，应用可以直接连接。</string>
+    <string name="offgrid_hce_description">Clipboard Share 离网传输凭据</string>
+    <string name="offgrid_join_failed_closer">无法连接到发送方。请将手机靠近，并请对方重新显示二维码，然后重试。</string>
+    <string name="offgrid_nfc_off">NFC 已关闭——点击以启用</string>
+    <string name="offgrid_nfc_ready">NFC 已就绪——点击查看手机的握持位置</string>
+    <string name="offgrid_nfc_unavailable">NFC 不可用——仅限 QR</string>
+    <string name="offgrid_permission_miui_hint">\n在 Xiaomi/MIUI 上，请在“应用信息 → 权限”中启用“附近的设备”。</string>
+    <string name="offgrid_permission_permanently_denied">附近设备权限已被阻止，因此仅基础 Wi-Fi 加入可用。请打开应用设置以启用它，从而获得更快、更可靠的直连。</string>
+    <string name="offgrid_permission_required">离网发送需要附近设备权限。</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">通过 QR / NFC 接收</string>
+    <string name="offgrid_send_title">通过 NFC / QR 发送</string>
+    <string name="offgrid_session_notification_text">正在保持直连。</string>
+    <string name="offgrid_session_notification_title">离网传输进行中</string>
+    <string name="offgrid_status_code_scanned">已扫描二维码</string>
+    <string name="offgrid_status_complete">传输完成</string>
+    <string name="offgrid_status_connecting">正在连接到 %s…</string>
+    <string name="offgrid_status_control_linked">已通过蓝牙与 %s 建立连接——正在协商最快的连接方式…</string>
+    <string name="offgrid_status_creating_group">正在建立直连…</string>
+    <string name="offgrid_status_handshaking">正在验证连接…</string>
+    <string name="offgrid_status_interrupted">连接已断开——正在等待对方设备恢复…</string>
+    <string name="offgrid_status_receiving">正在接收文件…</string>
+    <string name="offgrid_status_reestablishing">正在重新建立群组…</string>
+    <string name="offgrid_status_rescan_to_resume">连接已关闭。重新扫描以恢复——进度已保存在传输历史记录中。</string>
+    <string name="offgrid_status_scanning">将相机对准发送方的二维码</string>
+    <string name="offgrid_status_sending">设备已连接——正在发送给 %1$s（%2$d 个文件）…</string>
+    <string name="offgrid_status_trying_direct">正在尝试直连…请在发送方设备上接受提示。</string>
+    <string name="offgrid_status_trying_method">正在尝试连接方式 %1$d / %2$d…</string>
+    <string name="offgrid_status_waiting_for_scan">正在等待扫描…</string>
+    <string name="receive_enable_nfc">启用 NFC</string>
+    <string name="receive_nfc_listening">NFC 监听中——将手机贴合在一起</string>
+    <string name="receive_nfc_unavailable_device">此设备不支持 NFC</string>
+    <string name="receive_open_camera">打开相机</string>
+    <string name="receive_title">接收文件</string>
+    <string name="send_to_devices_title">发送到设备</string>
+    <string name="send_via_connected_devices">已连接设备</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">发送方式</string>
+    <string name="action_how_to_use">使用帮助</string>
+    <string name="discoverable_to_devices">可被其他设备发现</string>
+    <string name="transaction_details_title">传输详情</string>
+    <string name="type_text">文本</string>
+    <string name="transfer_resume_request_title">恢复请求</string>
+    <string name="transfer_resume_request_text">发送方请求恢复传输。点击查看。</string>
+    <string name="transfer_resumable_one">可恢复 1 个传输</string>
+    <string name="transfer_resumable_many">可恢复 %1$d 个传输</string>
+    <string name="transfer_connection_restored">连接已恢复。点击以恢复。</string>
+    <string name="transfer_failed_connect_sender">无法连接到发送方</string>
+    <string name="transfer_sending_resumed_title">发送已恢复</string>
+    <string name="transfer_sending_resumed_text">正在恢复批量传输…</string>
+    <string name="transfer_resumed_complete">恢复的传输已完成</string>
+    <string name="transfer_incoming_title">传入的传输</string>
+    <string name="transfer_incoming_text">%1$s 想向您发送 %2$d 个文件。</string>
+    <string name="transfer_receiving_title">正在接收文件</string>
+    <string name="transfer_receiving_text">%1$s 正在向您发送 %2$d 个文件。点击查看进度。</string>
+    <string name="applist_version_unknown">未知</string>
+    <string name="applist_app_count">%1$d 个应用</string>
+    <string name="applist_select_count">选择 (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">剪贴板为空</string>
+    <string name="clip_read_failed">无法读取剪贴板</string>
+    <string name="status_push_success_title">推送成功</string>
+    <string name="status_clipboard_received_title">已收到剪贴板</string>
+    <string name="status_channel_service">Clipboard Share 服务</string>
+    <string name="status_channel_alerts">剪贴板警报</string>
+    <string name="status_channel_pairing">配对请求</string>
+    <string name="status_channel_transfer_progress">文件传输进度</string>
+    <string name="status_channel_incoming_transfers">传入的传输</string>
+    <string name="status_mesh_active">Mesh 网络活跃中</string>
+    <string name="pairing_request_from">来自：%1$s</string>
+    <string name="status_scanning_devices">正在扫描设备…</string>
+    <string name="status_connected_devices">已连接到 %1$d 个配对设备</string>
+    <string name="transfer_add_text_hint">输入要添加的内容…</string>
+    <string name="transfer_add_text_title">添加文本</string>
+    <string name="transfer_add_text_positive">添加</string>
+    <string name="transfer_text_item_name">文本 %1$d</string>
+    <string name="transfer_tut_file_type">选择要发送的文件类型：文件、媒体、文件夹、文本或应用。</string>
+    <string name="transfer_tut_files_appear">您选择的文件将显示在这里。点击文件即可预览。</string>
+    <string name="transfer_tut_long_press">长按任意文件进入选择模式，然后删除选中的项目。</string>
+    <string name="transfer_tut_send_button">选好文件后，点击“发送”选择发送方式。</string>
+    <string name="transfer_tut_send_via">“已连接设备”使用您的 Wi-Fi 网络。NFC / QR 随处可用——无需路由器。</string>
+    <string name="transfer_tut_pick_devices">选择一个或多个已配对设备，然后点击“发送”。</string>
+    <string name="transfer_tut_offgrid_code">向接收方手机出示此代码，或直接将两部手机贴合在一起。</string>
+    <string name="transfer_tut_history">点击此处查看传输历史记录并跟踪进度。</string>
+    <string name="transfer_tut_next">下一步</string>
+    <string name="transfer_shortcut_short_label">发送到 %1$s</string>
+    <string name="transfer_shortcut_long_label">通过 Clipboard Share 传输</string>
+    <string name="transfer_unknown_file">未知文件</string>
+    <string name="history_tutorial_push">点击此处即可将您当前的剪贴板文本立即推送到所有已配对设备。</string>
+    <string name="history_tutorial_accept_switch">如果您不想接收其他设备的剪贴板内容，请关闭此项。</string>
+    <string name="history_tutorial_next">下一步</string>
+    <string name="history_toast_pushing">正在将剪贴板推送到网络…</string>
+    <string name="history_toast_empty">剪贴板为空</string>
+    <string name="history_toast_read_failed">无法读取剪贴板</string>
+    <string name="history_empty">暂无剪贴板历史记录。</string>
+    <string name="history_toast_copied">已复制到剪贴板</string>
+    <string name="perm_notifications_required">前台服务需要通知权限。</string>
+    <string name="perm_storage_required">在此 Android 版本上，如果没有存储权限，文件传输可能会失败。</string>
+    <string name="status_default_device_name">Android 设备</string>
+    <string name="menu_restart_toast">正在重启 Clipboard Share 引擎…</string>
+    <string name="menu_power_off_toast">正在关闭 Clipboard Share…</string>
+    <string name="pairing_requesting_title">正在请求配对</string>
+    <string name="pairing_waiting_subtitle">正在等待 %1$s 接受…</string>
+    <string name="pairing_success">已成功与 %1$s 配对！</string>
+    <string name="pairing_declined">%1$s 拒绝了配对。</string>
+    <string name="pairing_timed_out">配对超时。对方未响应。</string>
+    <string name="pairing_failed">配对失败。请确保另一台设备位于同一网络上。</string>
+    <string name="pairing_unknown_device">未知设备</string>
+    <string name="pairing_from_device">来自：%1$s</string>
+    <string name="pairing_paired_with">已与 %1$s 配对</string>
+    <string name="perm_notification_granted_toast">已授予通知权限！</string>
+    <string name="perm_notification_recommended_toast">建议开启通知以获得最佳体验。</string>
+    <string name="perm_notification_already_granted_toast">在此 Android 版本上已默认授予通知权限。</string>
+    <string name="perm_permission_granted_label">权限已授予</string>
+    <string name="perm_go_to_settings_label">前往设置</string>
+    <string name="perm_request_permission_label">请求权限</string>
+    <string name="perm_granted_by_default_label">默认授予</string>
+    <string name="perm_battery_settings_error_toast">无法自动打开电池设置。</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">无法打开浏览器</string>
+    <string name="settings_dialog_choose_language">选择语言</string>
+    <string name="settings_toast_rebooting_engine">正在重启 Clipboard Share 引擎…</string>
+    <string name="settings_dialog_privacy_policy">隐私政策</string>
+    <string name="settings_action_close">关闭</string>
+    <string name="settings_save_location_selected_folder">选定文件夹</string>
+    <string name="settings_default_device_name">Android 设备</string>
+    <string name="status_tutorial_discoverable_toggle">如果您不想被其他设备发现，请关闭此项。</string>
+    <string name="status_tutorial_device_name">点击此处更改您设备的显示名称，以便更容易识别。</string>
+    <string name="status_tutorial_pair_nearby">点击附近设备上的“配对”即可与其配对并开始传输文件。</string>
+    <string name="status_tutorial_pair_button">点击“配对”按钮即可连接到此设备并开始共享文件。</string>
+    <string name="status_action_next">下一步</string>
+    <string name="status_rebooting_engines">正在重启引擎…</string>
+    <string name="status_flushing_cache">正在刷新网络缓存…</string>
+    <string name="status_unpaired_from">已取消与 %1$s 的配对</string>
+    <string name="history_pending_accept">等待接受…</string>
+    <string name="history_session_unavailable">会话不再可用</string>
+    <string name="history_resume_request_sent">已向 %1$s 发送恢复请求</string>
+    <string name="history_resume_request_failed">无法发送恢复请求</string>
+    <string name="history_resume_no_device_ip">找不到设备 IP 来发送恢复请求</string>
+    <string name="status_failed_with_icon">✗ 失败</string>
+    <string name="status_pending_with_icon">⏳ 待处理</string>
+    <string name="status_cancelled_with_icon">✗ 已取消</string>
+    <string name="history_chooser_open_media">打开媒体</string>
+    <string name="history_chooser_open_storage">打开存储位置</string>
+    <string name="history_chooser_open_file">打开文件</string>
+    <string name="history_file_not_found">找不到文件</string>
+    <string name="history_cannot_open_file">无法打开文件</string>
+    <string name="history_waiting_zero">等待中 (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d 个文件 (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> 还有 +%1$d 个</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s：%2$s</string>
+    <string name="history_filter_all">全部</string>
+    <string name="history_filter_sent">已发送</string>
+    <string name="history_filter_received">已接收</string>
+    <string name="history_filter_completed">已完成</string>
+    <string name="history_filter_pending">待处理</string>
+    <string name="history_filter_cancelled">已取消</string>
+    <string name="history_tutorial_list">在这里您可以查看所有近期的文件传输。</string>
+    <string name="history_tutorial_filter">按传入、传出、已暂停或已取消筛选——点击一个胶囊标签。</string>
+    <string name="history_tutorial_select">点击“选择”即可管理和删除传输记录。</string>
+    <string name="history_tutorial_tap_record">点击任意传输记录即可查看其详情和进度。</string>
+    <string name="history_tutorial_open">按“打开”按钮即可打开接收到的文件。</string>
+    <string name="transfer_incoming_from">来自：%1$s（%2$d 个文件）</string>
+    <string name="pairing_declined_simple">配对被拒绝</string>
+</resources>

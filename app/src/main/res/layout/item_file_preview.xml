@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:layout_margin="@dimen/space_xs"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="@dimen/radius_lg"
+    app:cardBackgroundColor="?attr/appCardColor"
+    app:strokeColor="?attr/appDividerColor"
+    app:strokeWidth="1dp"
+    app:cardElevation="0dp">
+
+    <FrameLayout
+        android:id="@+id/clickableContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="visible"/>
+
+        <LinearLayout
+            android:id="@+id/otherFileContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="@dimen/space_sm"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvFileIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="28sp"
+                android:layout_marginBottom="@dimen/space_sm"/>
+
+            <ImageView
+                android:id="@+id/ivFileIcon"
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:visibility="gone"
+                app:tint="?attr/appGreen" />
+
+            <TextView
+                android:id="@+id/tvOtherFileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/default_file_name_pdf"
+                android:textAppearance="@style/TextAppearance.App.Caption"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center"
+                android:ellipsize="middle"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <!-- Semi-transparent green overlay for selection state -->
+        <View
+            android:id="@+id/selectionOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#6634D399"
+            android:visibility="gone"/>
+
+        <ImageButton
+            android:id="@+id/btnCancelFile"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="top|end"
+            android:layout_marginTop="@dimen/space_xs"
+            android:layout_marginEnd="@dimen/space_xs"
+            android:background="@android:color/transparent"
+            android:contentDescription="Remove file"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_cancel"
+            android:visibility="visible"/>
+
+    </FrameLayout>
+</com.google.android.material.card.MaterialCardView>

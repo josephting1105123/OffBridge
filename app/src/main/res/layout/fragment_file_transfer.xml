@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainContentLayer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor">
+
+    <!-- Pinned header — stays fixed at top like the other interfaces (was inside the ScrollView). -->
+    <LinearLayout
+        android:id="@+id/sendHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="?attr/appBackgroundColor"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingTop="96dp"
+        android:paddingBottom="@dimen/space_xl">
+
+        <ImageView
+            android:layout_width="@dimen/header_icon"
+            android:layout_height="@dimen/header_icon"
+            android:layout_marginEnd="@dimen/space_lg"
+            android:src="@drawable/ic_hdr_send"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tvSectionTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/send_files_title"
+            android:textAppearance="@style/TextAppearance.App.Headline"
+            android:textColor="?attr/appTextPrimaryColor"/>
+
+        <TextView
+            android:id="@+id/btnHowToUse"
+            style="@style/Widget.App.HowToUse" />
+
+        <ImageView
+            android:id="@+id/btnTransferHistory"
+            android:layout_width="@dimen/touch_target"
+            android:layout_height="@dimen/touch_target"
+            android:padding="@dimen/space_sm"
+            android:src="@drawable/ic_transfer_history"
+            app:tint="?attr/appTextSecondaryColor"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Transfer History" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/sendHeader"
+        android:layout_above="@+id/btnSendSelected"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingTop="@dimen/space_sm"
+        android:paddingBottom="@dimen/space_xl">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:clipToPadding="false"
+                android:layout_marginBottom="@dimen/space_lg">
+
+                <LinearLayout
+                    android:id="@+id/initialSelectionPanel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- File Button -->
+                    <LinearLayout
+                        android:id="@+id/btnSelectFile"
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rect_button_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="@dimen/icon_lg"
+                            android:layout_height="@dimen/icon_lg"
+                            android:src="@drawable/ic_file"
+                            app:tint="?attr/appTextSecondaryColor" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/type_file"
+                            android:textColor="?attr/appTextPrimaryColor"
+                            android:textSize="14sp"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+
+                    <!-- Media Button -->
+                    <LinearLayout
+                        android:id="@+id/btnSelectMedia"
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rect_button_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="@dimen/icon_lg"
+                            android:layout_height="@dimen/icon_lg"
+                            android:src="@drawable/ic_media"
+                            app:tint="?attr/appTextSecondaryColor" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/type_media"
+                            android:textColor="?attr/appTextPrimaryColor"
+                            android:textSize="14sp"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+
+                    <!-- Folder Button -->
+                    <LinearLayout
+                        android:id="@+id/btnSelectFolder"
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rect_button_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="@dimen/icon_lg"
+                            android:layout_height="@dimen/icon_lg"
+                            android:src="@drawable/ic_folder"
+                            app:tint="?attr/appTextSecondaryColor" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/type_folder"
+                            android:textColor="?attr/appTextPrimaryColor"
+                            android:textSize="14sp"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+
+                    <!-- Text Button -->
+                    <LinearLayout
+                        android:id="@+id/btnSelectText"
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rect_button_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="@dimen/icon_lg"
+                            android:layout_height="@dimen/icon_lg"
+                            android:src="@drawable/ic_clipboard_light"
+                            app:tint="?attr/appTextSecondaryColor" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/type_text"
+                            android:textColor="?attr/appTextPrimaryColor"
+                            android:textSize="14sp"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+
+                    <!-- App Button -->
+                    <LinearLayout
+                        android:id="@+id/btnSelectApp"
+                        android:layout_width="120dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="@dimen/space_md"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rect_button_bg"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+                        <ImageView
+                            android:layout_width="@dimen/icon_lg"
+                            android:layout_height="@dimen/icon_lg"
+                            android:src="@drawable/ic_app"
+                            app:tint="#A0A0A0" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/type_app"
+                            android:textColor="?attr/appTextPrimaryColor"
+                            android:textSize="14sp"
+                            android:layout_marginTop="@dimen/space_sm" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/llSelectedFilesHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginTop="@dimen/space_sm"
+                android:layout_marginBottom="@dimen/space_sm"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/selected_files_title"
+                    android:textAppearance="@style/TextAppearance.App.Title"
+                    android:textColor="?attr/appTextPrimaryColor" />
+
+                <CheckBox
+                    android:id="@+id/cbSelectAllFiles"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_lg"
+                    android:theme="@style/ThemeOverlay.GreenCheckBox"
+                    android:text="@string/action_select_all"
+                    android:textColor="?attr/appGreen"
+                    android:visibility="visible" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bottom_sheet_bg"
+                android:padding="@dimen/space_sm">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSelectedFiles"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false" />
+
+                <TextView
+                    android:id="@+id/tvNoFiles"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/selected_files_empty_hint"
+                    android:textAppearance="@style/TextAppearance.App.Body"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:gravity="center" />
+            </FrameLayout>
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSendSelected"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="@dimen/space_xl"
+        android:layout_marginEnd="@dimen/space_xl"
+        android:layout_marginBottom="@dimen/space_xl"
+        android:backgroundTint="?attr/appGreen"
+        android:text="@string/action_send"
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

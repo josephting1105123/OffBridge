@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">Willkommen bei Clipboard Share.
+
+
+        Diese Anwendung wird \"wie besehen\" bereitgestellt, ohne jegliche ausdrückliche oder
+        stillschweigende Garantie, einschließlich, aber nicht beschränkt auf Garantien der Marktgängigkeit,
+        der Eignung für einen bestimmten Zweck und der Nichtverletzung von Rechten Dritter. In keinem Fall haften die
+        Autoren oder Urheberrechtsinhaber für Ansprüche, Schäden oder andere
+        Haftungen, sei es aus vertraglicher Handlung, unerlaubter Handlung oder anderweitig, die sich aus,
+        im Zusammenhang mit der Software oder der Nutzung oder anderen Geschäften mit der
+        Software ergeben.
+
+
+        Durch die Nutzung dieser Anwendung stimmen Sie Folgendem zu:
+
+
+        1.  Sie sind für die von Ihnen übertragenen Daten verantwortlich. Verwenden Sie diese Anwendung nicht, um
+            illegale, bösartige oder urheberrechtlich geschützte Inhalte zu übertragen, für die Sie nicht
+            die Rechte besitzen.
+
+
+        2.  Diese Anwendung ist für die Nutzung in vertrauenswürdigen, privaten WLAN-Netzwerken konzipiert. Obwohl
+            die Verbindung verschlüsselt ist, erfolgt die Nutzung in öffentlichen oder nicht vertrauenswürdigen Netzwerken auf
+            eigene Gefahr.
+
+
+        3.  Die Anwendung erfordert bestimmte Berechtigungen, um ordnungsgemäß zu funktionieren, einschließlich
+            Netzwerkzugriff, Benachrichtigungszugriff und die Möglichkeit, im Hintergrund ausgeführt zu werden.
+            Die Deaktivierung dieser Berechtigungen kann zu Fehlfunktionen der Anwendung führen.
+
+
+        4.  Der Entwickler ist nicht verantwortlich für Datenverluste oder -beschädigungen, die
+            während einer Übertragung auftreten können.
+
+
+        Bitte stellen Sie sicher, dass Sie die erforderlichen Rechte für alle freigegebenen Dateien haben.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Datenschutzerklärung für Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Gültigkeitsdatum: 22.6.2026&lt;br&gt;&lt;br&gt;
+        Vielen Dank, dass Sie Clipboard Share („die App“) verwenden. Diese Datenschutzerklärung erläutert unsere Grundsätze zur Erfassung, Verwendung und Offenlegung von Informationen. Unsere Kernphilosophie ist einfach: Ihre Daten gehören Ihnen, und wir wollen sie nicht.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;DAS GRUNDPRINZIP: WIR ERFASSEN IHRE DATEN NICHT&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share wurde von Grund auf mit dem Schutz Ihrer Privatsphäre als oberste Priorität entwickelt. Die App ermöglicht die direkte Peer-to-Peer-Kommunikation (P2P) zwischen Ihren Geräten über Ihr lokales WLAN-Netzwerk.&lt;br&gt;&lt;br&gt;
+        Wir haben keine Server, die Ihre personenbezogenen Daten erfassen, speichern oder verarbeiten. Alle Ihre Daten verbleiben auf Ihren Geräten und in Ihrem lokalen Netzwerk.&lt;br&gt;&lt;br&gt;
+        Insbesondere erfassen, empfangen oder teilen wir Folgendes nicht:&lt;br&gt;
+        • Den Inhalt Ihrer Zwischenablage.&lt;br&gt;
+        • Die von Ihnen übertragenen Dateien.&lt;br&gt;
+        • Ihren Namen, Ihre E-Mail-Adresse oder andere persönliche Identifikatoren.&lt;br&gt;
+        • Ihre Kontakte, Ihren Standort oder andere vertrauliche Geräteinformationen.&lt;br&gt;&lt;br&gt;
+        Die App funktioniert, ohne dass Sie ein Konto erstellen oder sich anmelden müssen.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;INFORMATIONEN, DIE DIE APP LOKAL AUF IHREM GERÄT SPEICHERT&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Um ordnungsgemäß zu funktionieren, speichert Clipboard Share eine kleine Datenmenge ausschließlich auf dem lokalen Speicher Ihres Geräts. Diese Daten unterliegen Ihrer Kontrolle und verlassen Ihr Gerät niemals, um an uns gesendet zu werden. Dies umfasst:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Kryptografische Schlüssel:&lt;/b&gt; Nachdem Sie zwei Geräte explizit gekoppelt haben, wird ein einzigartiger AES-256-Verschlüsselungsschlüssel generiert und sicher auf jedem Gerät gespeichert. Dieser Schlüssel wird verwendet, um die gesamte Kommunikation zwischen diesen beiden gekoppelten Geräten zu verschlüsseln, und ist für die Sicherheit der App unerlässlich.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Informationen zu gekoppelten Geräten:&lt;/b&gt; Die App speichert die lokale IP-Adresse und den vom Benutzer gewählten Gerätenamen von Geräten, mit denen Sie gekoppelt haben. Dies wird verwendet, um sie in Ihrem lokalen Netzwerk zu identifizieren und eine Verbindung zu ihnen herzustellen.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Verlauf der Zwischenablage:&lt;/b&gt; Die App führt einen lokalen Verlauf der Zwischenablage-Elemente, die Sie für Ihre Bequemlichkeit kopiert haben. Dieser Verlauf wird nur auf Ihrem Gerät gespeichert und kann von Ihnen jederzeit innerhalb der App gelöscht werden.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Gerätename:&lt;/b&gt; Der Name, den Sie in den Einstellungen der App für Ihr Gerät auswählen, wird lokal gespeichert, um ihn anderen Geräten in Ihrem Netzwerk gegenüber zu identifizieren.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;WIE IHRE DATEN ÜBERTRAGEN WERDEN&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Alle Datenübertragungen (sowohl Zwischenablage als auch Dateien) erfolgen direkt zwischen Ihren gekoppelten Geräten über Ihr lokales WLAN-Netzwerk. Ihre Daten werden weder über unsere Server noch über Server von Drittanbietern geleitet. Alle Übertragungen sind mit einer starken End-to-End-AES-256-Verschlüsselung mithilfe der während des Kopplungsprozesses generierten Schlüssel geschützt.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;GERÄTEERKENNUNG IN IHREM LOKALEN NETZWERK&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Damit sich Ihre Geräte automatisch finden können, sendet die App in regelmäßigen Abständen eine kleine Erkennungsnachricht über Ihr lokales WLAN- oder Hotspot-Netzwerk. Diese Nachricht enthält nur den von Ihnen gewählten Gerätenamen, die lokale IP-Adresse Ihres Geräts und dessen Betriebssystemtyp (zum Beispiel \"Android\"). Diese Sendungen werden nur in Ihrem lokalen Netzwerk verbreitet, damit Geräte in der Nähe eine Kopplung oder Verbindung anbieten können. Sie werden niemals an uns, an das Internet oder an Dritte gesendet, und für die Erkennung wird keine Internetverbindung verwendet. Anders als Ihre Zwischenablage- und Dateiübertragungen, die Ende-zu-Ende verschlüsselt sind und nur zwischen gekoppelten Geräten ausgetauscht werden, sind diese Erkennungsnachrichten nicht verschlüsselt und für andere Geräte im selben lokalen Netzwerk sichtbar. Aus diesem Grund empfehlen wir, die App in vertrauenswürdigen, privaten Netzwerken zu verwenden. Sie können diese Sendungen jederzeit stoppen, indem Sie \"Für andere Geräte sichtbar\" in den Einstellungen deaktivieren.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;WELCHE FUNKTIONEN WELCHE BERECHTIGUNGEN NUTZEN&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Damit klar ist, was jede Funktion tut, erfahren Sie hier, wie die App Ihr Netzwerk und Ihre Berechtigungen nutzt:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Geräte in der Nähe finden:&lt;/b&gt; Nutzt Ihr lokales WLAN- oder Hotspot-Netzwerk und auf einigen Android-Versionen die Berechtigung Standort und Geräte in der Nähe. Es werden keine mobilen Daten verwendet.&lt;br&gt;
+        • &lt;b&gt;Zwei Geräte koppeln:&lt;/b&gt; Nutzt Ihr lokales WLAN-Netzwerk oder die Kamera (zum Scannen eines QR-Codes) bzw. NFC (zum Aneinanderhalten), um den Verschlüsselungsschlüssel auszutauschen.&lt;br&gt;
+        • &lt;b&gt;Zwischenablage-Text synchronisieren:&lt;/b&gt; Nutzt Ihr lokales WLAN-Netzwerk, um kopierten Text an Ihre gekoppelten Geräte zu senden.&lt;br&gt;
+        • &lt;b&gt;Dateien im selben Netzwerk übertragen:&lt;/b&gt; Nutzt Ihr lokales WLAN-Netzwerk.&lt;br&gt;
+        • &lt;b&gt;Offline-Übertragungen (ohne Router oder Internet):&lt;/b&gt; Nutzt Wi-Fi Direct und Bluetooth, um eine direkte Verbindung zwischen Geräten herzustellen, gestartet per QR-Code (Kamera) oder NFC-Berührung. Benötigt die Berechtigungen Standort, Geräte in der Nähe und Bluetooth.&lt;br&gt;
+        • &lt;b&gt;Eine empfangene App installieren:&lt;/b&gt; Nutzt die Installationsberechtigung und nur, nachdem Sie es bestätigt haben.&lt;br&gt;
+        • &lt;b&gt;Im Hintergrund bereitbleiben:&lt;/b&gt; Nutzt einen Vordergrunddienst und eine Benachrichtigung, um weiter auf eingehende Zwischenablage-Elemente und Übertragungen zu warten.&lt;br&gt;&lt;br&gt;
+        Kurz gesagt: Die App nutzt für alles Ihr lokales WLAN, einen Hotspot oder eine direkte Verbindung zwischen Geräten. Sie verwendet weder für die Erkennung noch für Übertragungen Ihre mobilen Daten und stellt keine Internetverbindung her.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;IN DER APP ANGEFORDERTE BERECHTIGUNGEN&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share fordert bestimmte Berechtigungen an, um seine Funktionen zu aktivieren. Hier ist der Grund, warum wir sie benötigen:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Netzwerkzugriff&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Erforderlich, um andere Geräte zu erkennen und Daten über Ihr lokales WLAN-Netzwerk zu übertragen.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Standort und Geräte in der Nähe&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Einige Android-Versionen erfordern diese Berechtigung, damit eine App über Wi-Fi Direct nach Geräten in der Nähe suchen und sich mit ihnen verbinden kann, was die App für Offline-Übertragungen nutzt. Wir erfassen ihn nicht, aber die Funktion kann ohne ihn keine Geräte in der Nähe finden. Die App liest, speichert oder teilt Ihren physischen Standort nicht.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Wird verwendet, um eine direkte Offline-Verbindung mit einem Gerät in der Nähe herzustellen. Wir erfassen darüber keine Daten, und es wird niemals zur Nachverfolgung verwendet.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Kamera und NFC&lt;/b&gt; (CAMERA, NFC): Die Kamera wird nur zum Scannen eines QR-Codes verwendet und NFC nur, um eine Verbindung zu starten, wenn Sie zwei Geräte aneinander halten, zum Koppeln und für Offline-Übertragungen. Diese Informationen werden auf Ihrem Gerät verarbeitet und niemals gespeichert oder irgendwohin gesendet.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Installieren einer empfangenen App&lt;/b&gt; (REQUEST_INSTALL_PACKAGES): Wird nur verwendet, damit Sie mit Ihrer ausdrücklichen Bestätigung eine App (APK) installieren können, die Sie über eine Übertragung erhalten haben. Die App installiert niemals etwas von selbst.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Vordergrunddienst und Benachrichtigungen&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Erforderlich, um den Dienst auszuführen, der auf eingehende Verbindungen wartet, und um eine dauerhafte Benachrichtigung anzuzeigen, die darauf hinweist, dass die App aktiv ist und Ihre Verbindung schützt.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Beim Start ausführen&lt;/b&gt; (RECEIVE_BOOT_COMPLETED): Ermöglicht es der App, ihren Dienst neu zu starten, wenn Sie Ihr Gerät neu starten, und stellt sicher, dass sie immer verbindungsbereit ist.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Vollbild-Intent&lt;/b&gt; (USE_FULL_SCREEN_INTENT): Wird verwendet, um Ihnen dringende Vollbildwarnungen für eingehende Kopplungsanfragen oder Dateiübertragungen anzuzeigen, damit Sie diese nicht verpassen.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Akku-Optimierungen ignorieren&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Dringend empfohlen, um zu verhindern, dass das Android-Betriebssystem den Hintergrunddienst der App herunterfährt, was die Synchronisierung der Zwischenablage und die Dateiübertragungen unterbrechen würde.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Externer Speicher&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): Auf älteren Android-Versionen (SDK 28 und niedriger) ist dies erforderlich, um empfangene Dateien im Speicher Ihres Geräts zu speichern.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;DIENSTE VON DRITTANBIETERN&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Share verwendet keine Dienste von Drittanbietern für Analysen, Werbung oder andere Zwecke, die die Weitergabe Ihrer Daten beinhalten würden.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;DATENSCHUTZ FÜR KINDER&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Die App ist nicht für die Nutzung durch Kinder unter 13 Jahren vorgesehen. Wir erfassen wissentlich keine Informationen von Kindern. Da wir von vornherein keine personenbezogenen Daten erfassen, haben wir keinen Mechanismus zur Überprüfung des Alters unserer Nutzer.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ÄNDERUNGEN AN DIESER DATENSCHUTZERKLÄRUNG&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Wir können unsere Datenschutzerklärung von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzerklärung unter derselben URL veröffentlichen. Es wird empfohlen, diese Datenschutzerklärung regelmäßig auf Änderungen zu überprüfen.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;KONTAKTIEREN SIE UNS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte unter:&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">Apps (APK)</string>
+    <string name="search_hint">Suchen</string>
+    <string name="zero_apps_count">0 Apps</string>
+    <string name="select_multiple_apps">Mehrere Apps auswählen</string>
+    <string name="action_select">Auswählen</string>
+    <string name="receiving_files_title">Dateien werden empfangen</string>
+    <string name="save_to_folder_downloads">Speichern in Ordner: Downloads</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_close_with_check">✓ Schließen</string>
+    <string name="incoming_transfer_title">Eingehende Übertragung</string>
+    <string name="default_device_name">Gerätename</string>
+    <string name="action_accept_files">Dateien annehmen</string>
+    <string name="action_decline">Ablehnen</string>
+    <string name="secure_pairing_title">Sichere Kopplung</string>
+    <string name="initiating_cryptographic_handshake">Kryptografischer Handshake wird initiiert...</string>
+    <string name="pairing_request_title">Kopplungsanfrage</string>
+    <string name="action_accept">Akzeptieren</string>
+    <string name="clipboard_share_windows_title">Clipboard Share für Windows</string>
+    <string name="desktop_app_in_development_desc">Die begleitende Desktop-App befindet sich derzeit in Entwicklung und wird bald verfügbar sein.</string>
+    <string name="menu_title">Menü</string>
+    <string name="menu_windows_version">💻 Windows-Version</string>
+    <string name="menu_restart_services">🔄 Dienste neu starten</string>
+    <string name="menu_power_off">🔌 Ausschalten</string>
+    <string name="action_pair">Koppeln</string>
+    <string name="action_unpair">Entkoppeln</string>
+    <string name="send_files_title">Dateien senden</string>
+    <string name="type_file">Datei</string>
+    <string name="type_media">Medien</string>
+    <string name="type_folder">Ordner</string>
+    <string name="type_app">App</string>
+    <string name="selected_files_title">Ausgewählte Dateien</string>
+    <string name="action_select_all">Alles auswählen</string>
+    <string name="select_trusted_recipients_title">Verbundene Geräte</string>
+    <string name="action_send">Senden</string>
+    <string name="history_and_push_title">Zwischenablage &amp; Senden</string>
+    <string name="action_push_current_clipboard">📤 Aktuelle Zwischenablage senden</string>
+    <string name="recent_copies_hint">Kürzlich kopiert (Tippen zum Kopieren)</string>
+    <string name="required_permissions_title">Erforderliche Berechtigungen</string>
+    <string name="battery_optimization_title">Akku-Optimierung</string>
+    <string name="battery_optimization_desc">Clipboard Share läuft im Hintergrund. Bitte deaktivieren Sie die Akku-Optimierung, damit Übertragungen nicht unterbrochen werden.</string>
+    <string name="action_go_to_settings">Zu den Einstellungen</string>
+    <string name="notifications_title">Benachrichtigungen</string>
+    <string name="notifications_desc">Dies ist erforderlich, um den Dienststatus anzuzeigen und Sie auf eingehende Kopplungs- oder Dateianfragen aufmerksam zu machen.</string>
+    <string name="action_request_permission">Berechtigung anfordern</string>
+    <string name="action_finish_setup">Setup abschließen</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_section_device">GERÄT</string>
+    <string name="device_name_label">Gerätename:</string>
+    <string name="device_name_hint">Gerätename</string>
+    <string name="settings_section_general">ALLGEMEIN</string>
+    <string name="theme_setting">Design</string>
+    <string name="theme_system">System</string>
+    <string name="language_setting">Sprache</string>
+    <string name="save_to_setting">Speichern unter</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_section_others">SONSTIGES</string>
+    <string name="support_setting">Unterstützung</string>
+    <string name="action_donate">☕ Spenden</string>
+    <string name="privacy_policy_setting">Datenschutzerklärung</string>
+    <string name="action_read_privacy_policy">📄 Lesen</string>
+    <string name="system_status_title">Systemstatus</string>
+    <string name="status_checking">Status: Wird überprüft...</string>
+    <string name="accept_incoming_clipboard">Eingehende Zwischenablage annehmen</string>
+    <string name="paired_and_nearby_devices">Gekoppelte &amp; nahe Geräte</string>
+    <string name="network_disconnected">Netzwerk getrennt</string>
+    <string name="press_button_to_reboot">Drücken Sie die Schaltfläche unten, um neu zu starten.</string>
+    <string name="user_agreement_title">Nutzervereinbarung</string>
+    <string name="agree_to_terms">Ich habe die Bedingungen gelesen und stimme zu.</string>
+    <string name="action_next">Weiter</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">dokument.pdf</string>
+    <string name="action_open">Öffnen</string>
+    <string name="default_file_name_zip">dateiname.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Mesh aktiv</string>
+    <string name="unknown">Unbekannt</string>
+    <string name="unknown_file">Unbekannte Datei</string>
+    <string name="action_select_count">Auswählen (%d)</string>
+    <string name="toast_clipboard_is_empty">Zwischenablage ist leer</string>
+    <string name="toast_failed_to_read_clipboard">Zwischenablage konnte nicht gelesen werden</string>
+    <string name="unknown_device">Unbekanntes Gerät</string>
+    <string name="notification_successfully_pushed_title">Erfolgreich gesendet</string>
+    <string name="notification_clipboard_received_title">Zwischenablage empfangen</string>
+    <string name="notification_mesh_network_active">Mesh-Netzwerk aktiv</string>
+    <string name="notification_channel_clipboard_share_service">Clipboard Share Dienst</string>
+    <string name="notification_channel_clipboard_alerts">Zwischenablage-Benachrichtigungen</string>
+    <string name="notification_channel_pairing_requests">Kopplungsanfragen</string>
+    <string name="notification_from_sender">Von: %s</string>
+    <string name="notification_channel_file_transfer_progress">Dateitransfer-Fortschritt</string>
+    <string name="notification_channel_incoming_transfers">Eingehende Übertragungen</string>
+    <string name="status_network_disconnected">Netzwerk getrennt</string>
+    <string name="status_receiving_paused">Empfang pausiert</string>
+    <string name="status_scanning_for_devices">Suche nach Geräten...</string>
+    <string name="status_connected_to_devices">Verbunden mit %d Gerät(en)</string>
+    <string name="toast_push_failed_no_devices">Senden fehlgeschlagen: Keine Geräte online.</string>
+    <string name="toast_no_active_transfer">Keine aktive Übertragung gefunden.</string>
+    <string name="toast_failed_to_connect_for_resume">Verbindung zum Sender konnte nicht wiederhergestellt werden</string>
+    <string name="incoming_transfer_details" formatted="false">%s sendet %d Datei(en) (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">Nicht genügend Speicherplatz zum Empfangen.</string>
+    <string name="toast_cancelling_transfer">Übertragung wird abgebrochen...</string>
+    <string name="toast_custom_save_location_inaccessible">Benutzerdefinierter Speicherort nicht zugänglich. Verwende Downloads.</string>
+    <string name="status_paused_timeout">Pausiert (Zeitüberschreitung)</string>
+    <string name="status_cancelled">Abgebrochen</string>
+    <string name="status_paused_network_dropped">Pausiert: Netzwerkabbruch</string>
+    <string name="status_paused_waiting_reconnect">Pausiert (Warten auf Verbindung...)</string>
+    <string name="toast_transfer_status">Übertragung %s</string>
+    <string name="action_resume_when_reconnected">Nach Wiederverbindung fortsetzen</string>
+    <string name="file_progress_waiting">Warten... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">Eigener Ordner</string>
+    <string name="file_progress_complete_saved_to">Abgeschlossen - Gespeichert in %s</string>
+    <string name="toast_error_no_compatible_app">Fehler: Keine kompatible App für dieses Dateiformat gefunden.</string>
+    <string name="toast_error_generic">Fehler: %s</string>
+    <string name="action_delete">Löschen</string>
+    <string name="action_sending">Wird gesendet...</string>
+    <string name="toast_transfer_interrupted">Übertragung unterbrochen. Kann später fortgesetzt werden.</string>
+    <string name="toast_batch_transfer_complete">Stapelübertragung abgeschlossen!</string>
+    <string name="shortcut_send_to_device">Senden an %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">Via Clipboard Share übertragen</string>
+    <string name="toast_pushing_clipboard_to_mesh">Sende Zwischenablage an Mesh...</string>
+    <string name="no_clipboard_history_yet">Noch kein Zwischenablagen-Verlauf.</string>
+    <string name="toast_copied_to_clipboard">In die Zwischenablage kopiert</string>
+    <string name="toast_notifications_permission_required">Benachrichtigungsberechtigung für Hintergrunddienst erforderlich.</string>
+    <string name="toast_storage_permission_required">Dateiübertragungen können ohne Speicherberechtigung fehlschlagen.</string>
+    <string name="default_android_device_name">Android-Gerät</string>
+    <string name="toast_rebooting_engine">Clipboard Share Engine wird neu gestartet...</string>
+    <string name="toast_shutting_down_engine">Clipboard Share wird heruntergefahren...</string>
+    <string name="toast_notification_permission_granted">Benachrichtigungsberechtigung erteilt!</string>
+    <string name="toast_notifications_recommended">Benachrichtigungen werden für das beste Erlebnis empfohlen.</string>
+    <string name="toast_notification_permission_already_granted">Berechtigung auf dieser Android-Version bereits erteilt.</string>
+    <string name="status_permission_granted">Berechtigung erteilt</string>
+    <string name="status_granted_by_default">Standardmäßig erteilt</string>
+    <string name="toast_could_not_open_battery_settings">Akku-Einstellungen konnten nicht automatisch geöffnet werden.</string>
+    <string name="theme_system_default">Systemstandard</string>
+    <string name="toast_could_not_open_browser">Browser konnte nicht geöffnet werden</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="dialog_title_choose_theme">Design auswählen</string>
+    <string name="dialog_title_choose_language">Sprache auswählen</string>
+    <string name="toast_language_preference_saved">Spracheinstellung gespeichert. Vollständige Übersetzung folgt bald.</string>
+    <string name="dialog_title_privacy_policy">Datenschutzerklärung</string>
+    <string name="action_close">Schließen</string>
+    <string name="selected_folder_fallback">Ausgewählter Ordner</string>
+    <string name="toast_failed_to_load_file_ui">Datei-UI konnte nicht geladen werden</string>
+    <string name="status_no_network">Status: Kein Netzwerk</string>
+    <string name="toast_rebooting_engines">Motoren werden neu gestartet...</string>
+    <string name="status_active_and_polling">Status: Aktiv &amp; Abrufend</string>
+    <string name="toast_flushing_network_cache">Netzwerk-Cache wird geleert...</string>
+    <string name="toast_unpaired_from_device">Von %s entkoppelt</string>
+    <string name="status_requesting_pair">Kopplung wird angefordert</string>
+    <string name="status_waiting_for_accept">Warten auf Annahme von %s...</string>
+    <string name="toast_successfully_paired_with">Erfolgreich mit %s gekoppelt!</string>
+    <string name="toast_pairing_declined_by">Kopplung wurde von %s abgelehnt.</string>
+    <string name="toast_pairing_timed_out">Kopplung abgelaufen. Der andere Benutzer hat nicht geantwortet.</string>
+    <string name="toast_pairing_failed">Kopplung fehlgeschlagen. Stellen Sie sicher, dass das Gerät im selben Netzwerk ist.</string>
+    <string name="toast_paired_with_device">Gekoppelt mit %s</string>
+    <string name="toast_pairing_declined">Kopplung abgelehnt</string>
+    <string name="notification_transfers_can_be_resumed">%d Übertragung(en) können fortgesetzt werden</string>
+    <string name="notification_connection_restored_resume">Verbindung wiederhergestellt. Tippen zum Fortsetzen.</string>
+    <string name="notification_sending_resumed_title">Senden fortgesetzt</string>
+    <string name="notification_resuming_batch_transfer">Stapelübertragung wird fortgesetzt...</string>
+    <string name="toast_resumed_transfer_complete">Fortgesetzte Übertragung abgeschlossen</string>
+    <string name="notification_incoming_transfer_request_title">Eingehende Dateiübertragung</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s sendet Ihnen %d Datei(en). Tippen zum Antworten.</string>
+    <string name="title_transfer_history">Übertragungsverlauf</string>
+    <string name="no_transfer_history_yet">Noch kein Übertragungsverlauf.</string>
+    <string name="format_selected_count">%d ausgewählt</string>
+    <string name="title_transaction_details">Transaktionsdetails</string>
+    <string name="nav_send">Senden</string>
+    <string name="nav_pairing">Kopplung</string>
+    <string name="nav_clipboard">Zwischenablage</string>
+    <string name="transfer_history_title">Übertragungsverlauf</string>
+    <string name="format_to_device">An: %s</string>
+    <string name="format_from_device">Von: %s</string>
+    <string name="status_transferring_dots">Wird übertragen...</string>
+    <string name="status_declined">Abgelehnt</string>
+    <string name="status_done_with_icon">Abgeschlossen</string>
+    <string name="status_paused_with_icon">Pausiert</string>
+    <string name="status_transferring_with_icon">Wird übertragen</string>
+    <string name="status_declined_with_icon">Abgelehnt</string>
+    <string name="status_transferring">Wird übertragen</string>
+    <string name="status_paused">Pausiert</string>
+    <string name="action_continue">Fortfahren</string>
+    <string name="action_grant">Erteilen</string>
+    <string name="action_receive">Empfangen</string>
+    <string name="action_resume">Fortsetzen</string>
+    <string name="action_retry">Erneut versuchen</string>
+    <string name="action_turn_on">Einschalten</string>
+    <string name="action_use_bluetooth">Jetzt Bluetooth verwenden</string>
+    <string name="diagnostics_all_failed">Alle Methoden fehlgeschlagen</string>
+    <string name="diagnostics_connected_via">Verbunden über %1$s</string>
+    <string name="diagnostics_empty">Noch keine Off-Grid-Übertragungsversuche aufgezeichnet. Versuchen Sie eine QR-/NFC-Übertragung und kommen Sie dann hierher zurück.</string>
+    <string name="diagnostics_outcome_connected">Verbunden</string>
+    <string name="diagnostics_outcome_failed">Fehlgeschlagen</string>
+    <string name="diagnostics_outcome_pending">Läuft</string>
+    <string name="diagnostics_outcome_skipped">Übersprungen</string>
+    <string name="diagnostics_share">Protokoll teilen</string>
+    <string name="diagnostics_title">Verbindungsdiagnose</string>
+    <string name="menu_diagnostics">Verbindungsdiagnose</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="nav_receive">Empfangen</string>
+    <string name="nfc_a11y_angled">Halten Sie die Telefone in einem Winkel von 45 Grad</string>
+    <string name="nfc_a11y_flat">Halten Sie die Telefone flach</string>
+    <string name="nfc_a11y_not_selected">Nicht ausgewählt</string>
+    <string name="nfc_a11y_selected">Ausgewählt</string>
+    <string name="nfc_a11y_vertical">Halten Sie die Telefone aufrecht</string>
+    <string name="nfc_guide_continue">Verstanden</string>
+    <string name="nfc_guide_label_their">Ihr Telefon (anderes)</string>
+    <string name="nfc_guide_label_your">Ihr Telefon</string>
+    <string name="nfc_guide_subtitle_receive">Berühren Sie die Rückseiten der Telefone, sodass sich die leuchtenden Punkte treffen.</string>
+    <string name="nfc_guide_subtitle_send">Halten Sie Ihr Telefon Rücken an Rücken mit dem anderen Gerät, sodass sich die leuchtenden Punkte treffen.</string>
+    <string name="nfc_guide_title">Halten Sie die Telefone zusammen</string>
+    <string name="nfc_hint_angled">Ihr NFC-Chip sitzt oben auf der Rückseite — halten Sie die Telefone in etwa 45° und bringen Sie die leuchtenden Punkte zusammen.</string>
+    <string name="nfc_hint_flat">Ihr NFC-Chip befindet sich nahe der Oberkante — legen Sie beide Telefone flach hin und bringen Sie die oberen Enden dort zusammen, wo die Punkte leuchten.</string>
+    <string name="nfc_hint_vertical">Ihr NFC-Chip befindet sich etwa in der Mitte — halten Sie beide Telefone aufrecht und bringen Sie die leuchtenden Punkte zusammen.</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">Flach</string>
+    <string name="nfc_style_vertical">Aufrecht</string>
+    <string name="offgrid_accept_hint">Wenn auf diesem Gerät eine Verbindungsanfrage erscheint, tippen Sie auf Akzeptieren.</string>
+    <string name="offgrid_band_warning">Gruppe ist auf %1$d MHz — einige Geräte finden sie möglicherweise nicht.</string>
+    <string name="offgrid_bt_available">Wi-Fi dauert zu lange? Bluetooth ist bereit — langsamer, aber es verbindet immer.</string>
+    <string name="offgrid_camera_denied">Zum Scannen des Codes wird die Kameraberechtigung benötigt. Sie können die Telefone auch zusammentippen, um NFC zu verwenden.</string>
+    <string name="offgrid_confirm_subtitle">%1$d Datei(en) • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s möchte Ihnen Dateien senden</string>
+    <string name="offgrid_connecting_title">Verbindung wird hergestellt…</string>
+    <string name="offgrid_degraded_bt_off">\nBluetooth-Steuerkanal ist aus — Ausweichmethoden sind eingeschränkt.</string>
+    <string name="offgrid_degraded_mode">Eingeschränkter Modus: Nur die einfache Wi-Fi-Verbindung ist aktiv. Erteilen Sie die Berechtigung für Geräte in der Nähe, um eine schnellere, zuverlässigere Verbindung zu erhalten.</string>
+    <string name="offgrid_error_all_methods">Verbindung mit keiner Methode möglich. Bringen Sie die Telefone näher zusammen, prüfen Sie, ob Wi-Fi und Bluetooth aktiviert sind, und versuchen Sie es erneut.</string>
+    <string name="offgrid_error_control_failed">Die Bluetooth-Verbindung zur Koordination der Übertragung kam nicht zustande. Halten Sie beide Telefone entsperrt und weniger als einen Meter voneinander entfernt und versuchen Sie es erneut.</string>
+    <string name="offgrid_error_code_expired">Code abgelaufen — bitten Sie den Sender, den Sendebildschirm erneut zu öffnen.</string>
+    <string name="offgrid_error_connect_failed">Verbindung nicht möglich. Stellen Sie sicher, dass der Bildschirm des Senders noch geöffnet ist, und versuchen Sie es erneut.</string>
+    <string name="offgrid_error_fallback_failed">Direkte Verbindung fehlgeschlagen. Halten Sie die Telefone nah beieinander, stellen Sie sicher, dass der Sender akzeptiert hat, und versuchen Sie es erneut.</string>
+    <string name="offgrid_error_join_failed">Beitritt zum Netzwerk des Senders nicht möglich. Halten Sie die Telefone nah beieinander, akzeptieren Sie die Verbindungsaufforderung und versuchen Sie es erneut.</string>
+    <string name="offgrid_error_location_off">Standort ist aus. Android benötigt einen aktivierten Standort, um das direkte Netzwerk des Senders zu finden.</string>
+    <string name="offgrid_error_no_files">Keine Dateien zum Senden.</string>
+    <string name="offgrid_error_sender_busy">Sender ist mit einem anderen Gerät beschäftigt.</string>
+    <string name="offgrid_error_transfer_failed">Übertragung fehlgeschlagen. Zeigen Sie den Code erneut an, um es zu wiederholen.</string>
+    <string name="offgrid_error_update_app">Dieser Code wurde mit einer neueren Version erstellt. Aktualisieren Sie die App, um zu empfangen.</string>
+    <string name="offgrid_error_wifi_off">Wi-Fi ist aus. Schalten Sie es ein, um das Off-Grid-Senden zu verwenden.</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fi ist aus. Schalten Sie es ein, um zu empfangen — es ist keine Internetverbindung erforderlich.</string>
+    <string name="offgrid_fallback_permission_rationale">Erlauben Sie den Zugriff auf Geräte in der Nähe, damit die App sich direkt verbinden kann, wenn die normale Verbindung nicht funktioniert.</string>
+    <string name="offgrid_hce_description">Clipboard Share Off-Grid-Übertragungsanmeldedaten</string>
+    <string name="offgrid_join_failed_closer">Sender nicht erreichbar. Bringen Sie die Telefone näher zusammen, bitten Sie um erneutes Anzeigen des Codes und versuchen Sie es erneut.</string>
+    <string name="offgrid_nfc_off">NFC aus — zum Aktivieren tippen</string>
+    <string name="offgrid_nfc_ready">NFC bereit — tippen, um zu sehen, wo die Telefone zu halten sind</string>
+    <string name="offgrid_nfc_unavailable">NFC nicht verfügbar — nur QR</string>
+    <string name="offgrid_permission_miui_hint">\nAuf Xiaomi/MIUI aktivieren Sie „Geräte in der Nähe“ unter App-Info → Berechtigungen.</string>
+    <string name="offgrid_permission_permanently_denied">Die Berechtigung für Geräte in der Nähe ist blockiert, daher ist nur die einfache Wi-Fi-Verbindung verfügbar. Öffnen Sie die App-Einstellungen, um sie für die schnellere, zuverlässigere Direktverbindung zu aktivieren.</string>
+    <string name="offgrid_permission_required">Für das Off-Grid-Senden ist die Berechtigung für Geräte in der Nähe erforderlich.</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">Über QR / NFC empfangen</string>
+    <string name="offgrid_send_title">Über NFC / QR senden</string>
+    <string name="offgrid_session_notification_text">Hält die direkte Verbindung aufrecht.</string>
+    <string name="offgrid_session_notification_title">Off-Grid-Übertragung aktiv</string>
+    <string name="offgrid_status_code_scanned">Code gescannt</string>
+    <string name="offgrid_status_complete">Übertragung abgeschlossen</string>
+    <string name="offgrid_status_connecting">Verbindung mit %s wird hergestellt…</string>
+    <string name="offgrid_status_control_linked">Mit %s über Bluetooth verbunden — schnellste Verbindung wird ausgehandelt…</string>
+    <string name="offgrid_status_creating_group">Direkte Verbindung wird eingerichtet…</string>
+    <string name="offgrid_status_handshaking">Verbindung wird überprüft…</string>
+    <string name="offgrid_status_interrupted">Verbindung verloren — warten, bis das andere Gerät fortsetzt…</string>
+    <string name="offgrid_status_receiving">Dateien werden empfangen…</string>
+    <string name="offgrid_status_reestablishing">Gruppe wird wiederhergestellt…</string>
+    <string name="offgrid_status_rescan_to_resume">Verbindung geschlossen. Erneut scannen, um fortzusetzen — der Fortschritt wird im Übertragungsverlauf gespeichert.</string>
+    <string name="offgrid_status_scanning">Richten Sie die Kamera auf den Code des Senders</string>
+    <string name="offgrid_status_sending">Gerät verbunden — sende an %1$s (%2$d Dateien)…</string>
+    <string name="offgrid_status_trying_direct">Direkte Verbindung wird versucht… akzeptieren Sie die Aufforderung auf dem Sender.</string>
+    <string name="offgrid_status_trying_method">Verbindungsmethode %1$d von %2$d wird versucht…</string>
+    <string name="offgrid_status_waiting_for_scan">Warten auf Scan…</string>
+    <string name="receive_enable_nfc">NFC aktivieren</string>
+    <string name="receive_nfc_listening">NFC wartet — Telefone zusammentippen</string>
+    <string name="receive_nfc_unavailable_device">NFC ist auf diesem Gerät nicht verfügbar</string>
+    <string name="receive_open_camera">Kamera öffnen</string>
+    <string name="receive_title">Dateien empfangen</string>
+    <string name="send_to_devices_title">An Geräte senden</string>
+    <string name="send_via_connected_devices">Verbundene Geräte</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">Senden über</string>
+    <string name="action_how_to_use">Anleitung</string>
+    <string name="discoverable_to_devices">Für andere Geräte sichtbar</string>
+    <string name="transaction_details_title">Transaktionsdetails</string>
+    <string name="type_text">Text</string>
+    <string name="transfer_resume_request_title">Anfrage zum Fortsetzen</string>
+    <string name="transfer_resume_request_text">Der Sender möchte die Übertragung fortsetzen. Tippen zum Anzeigen.</string>
+    <string name="transfer_resumable_one">1 Übertragung kann fortgesetzt werden</string>
+    <string name="transfer_resumable_many">%1$d Übertragungen können fortgesetzt werden</string>
+    <string name="transfer_connection_restored">Verbindung wiederhergestellt. Tippen zum Fortsetzen.</string>
+    <string name="transfer_failed_connect_sender">Verbindung zum Sender fehlgeschlagen</string>
+    <string name="transfer_sending_resumed_title">Senden fortgesetzt</string>
+    <string name="transfer_sending_resumed_text">Stapelübertragung wird fortgesetzt...</string>
+    <string name="transfer_resumed_complete">Fortgesetzte Übertragung abgeschlossen</string>
+    <string name="transfer_incoming_title">Eingehende Übertragung</string>
+    <string name="transfer_incoming_text">%1$s möchte Ihnen %2$d Datei(en) senden.</string>
+    <string name="transfer_receiving_title">Dateien werden empfangen</string>
+    <string name="transfer_receiving_text">%1$s sendet Ihnen %2$d Datei(en). Tippen, um den Fortschritt anzuzeigen.</string>
+    <string name="applist_version_unknown">Unbekannt</string>
+    <string name="applist_app_count">%1$d Apps</string>
+    <string name="applist_select_count">Auswählen (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">Zwischenablage ist leer</string>
+    <string name="clip_read_failed">Zwischenablage konnte nicht gelesen werden</string>
+    <string name="status_push_success_title">Erfolgreich gesendet</string>
+    <string name="status_clipboard_received_title">Zwischenablage empfangen</string>
+    <string name="status_channel_service">Clipboard Share Dienst</string>
+    <string name="status_channel_alerts">Zwischenablage-Benachrichtigungen</string>
+    <string name="status_channel_pairing">Kopplungsanfragen</string>
+    <string name="status_channel_transfer_progress">Dateitransfer-Fortschritt</string>
+    <string name="status_channel_incoming_transfers">Eingehende Übertragungen</string>
+    <string name="status_mesh_active">Mesh-Netzwerk aktiv</string>
+    <string name="pairing_request_from">Von: %1$s</string>
+    <string name="status_scanning_devices">Suche nach Geräten...</string>
+    <string name="status_connected_devices">Verbunden mit %1$d gekoppelten Gerät(en)</string>
+    <string name="transfer_add_text_hint">Etwas zum Hinzufügen eingeben...</string>
+    <string name="transfer_add_text_title">Text hinzufügen</string>
+    <string name="transfer_add_text_positive">Hinzufügen</string>
+    <string name="transfer_text_item_name">Text %1$d</string>
+    <string name="transfer_tut_file_type">Wählen Sie den zu sendenden Dateityp: Datei, Medien, Ordner, Text oder App.</string>
+    <string name="transfer_tut_files_appear">Ihre ausgewählten Dateien erscheinen hier. Tippen Sie auf eine Datei, um sie in der Vorschau anzuzeigen.</string>
+    <string name="transfer_tut_long_press">Halten Sie eine beliebige Datei gedrückt, um in den Auswahlmodus zu wechseln, und löschen Sie dann die ausgewählten Elemente.</string>
+    <string name="transfer_tut_send_button">Wenn Dateien ausgewählt sind, tippen Sie auf Senden, um die Sendemethode zu wählen.</string>
+    <string name="transfer_tut_send_via">Verbundene Geräte nutzen Ihr Wi-Fi-Netzwerk. NFC / QR funktioniert überall — kein Router nötig.</string>
+    <string name="transfer_tut_pick_devices">Wählen Sie ein oder mehrere gekoppelte Geräte und tippen Sie dann auf Senden.</string>
+    <string name="transfer_tut_offgrid_code">Zeigen Sie diesen Code dem empfangenden Telefon oder tippen Sie die Telefone einfach zusammen.</string>
+    <string name="transfer_tut_history">Tippen Sie hier, um Ihren Übertragungsverlauf anzuzeigen und den Fortschritt zu verfolgen.</string>
+    <string name="transfer_tut_next">Weiter</string>
+    <string name="transfer_shortcut_short_label">Senden an %1$s</string>
+    <string name="transfer_shortcut_long_label">Via Clipboard Share übertragen</string>
+    <string name="transfer_unknown_file">Unbekannte Datei</string>
+    <string name="history_tutorial_push">Tippen Sie hier, um den aktuellen Text Ihrer Zwischenablage sofort an alle gekoppelten Geräte zu senden.</string>
+    <string name="history_tutorial_accept_switch">Schalten Sie dies aus, wenn Sie keine Zwischenablage-Inhalte von anderen Geräten empfangen möchten.</string>
+    <string name="history_tutorial_next">Weiter</string>
+    <string name="history_toast_pushing">Sende Zwischenablage an Mesh...</string>
+    <string name="history_toast_empty">Zwischenablage ist leer</string>
+    <string name="history_toast_read_failed">Zwischenablage konnte nicht gelesen werden</string>
+    <string name="history_empty">Noch kein Zwischenablagen-Verlauf.</string>
+    <string name="history_toast_copied">In die Zwischenablage kopiert</string>
+    <string name="perm_notifications_required">Benachrichtigungsberechtigung für den Vordergrunddienst erforderlich.</string>
+    <string name="perm_storage_required">Dateiübertragungen können auf dieser Android-Version ohne Speicherberechtigung fehlschlagen.</string>
+    <string name="status_default_device_name">Android-Gerät</string>
+    <string name="menu_restart_toast">Clipboard Share Engine wird neu gestartet...</string>
+    <string name="menu_power_off_toast">Clipboard Share wird heruntergefahren...</string>
+    <string name="pairing_requesting_title">Kopplung wird angefordert</string>
+    <string name="pairing_waiting_subtitle">Warten auf Annahme von %1$s...</string>
+    <string name="pairing_success">Erfolgreich mit %1$s gekoppelt!</string>
+    <string name="pairing_declined">Kopplung wurde von %1$s abgelehnt.</string>
+    <string name="pairing_timed_out">Kopplung abgelaufen. Der andere Benutzer hat nicht geantwortet.</string>
+    <string name="pairing_failed">Kopplung fehlgeschlagen. Stellen Sie sicher, dass das andere Gerät im selben Netzwerk ist.</string>
+    <string name="pairing_unknown_device">Unbekanntes Gerät</string>
+    <string name="pairing_from_device">Von: %1$s</string>
+    <string name="pairing_paired_with">Gekoppelt mit %1$s</string>
+    <string name="perm_notification_granted_toast">Benachrichtigungsberechtigung erteilt!</string>
+    <string name="perm_notification_recommended_toast">Benachrichtigungen werden für das beste Erlebnis empfohlen.</string>
+    <string name="perm_notification_already_granted_toast">Benachrichtigungsberechtigung ist auf dieser Android-Version bereits erteilt.</string>
+    <string name="perm_permission_granted_label">Berechtigung erteilt</string>
+    <string name="perm_go_to_settings_label">Zu den Einstellungen</string>
+    <string name="perm_request_permission_label">Berechtigung anfordern</string>
+    <string name="perm_granted_by_default_label">Standardmäßig erteilt</string>
+    <string name="perm_battery_settings_error_toast">Akku-Einstellungen konnten nicht automatisch geöffnet werden.</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">Browser konnte nicht geöffnet werden</string>
+    <string name="settings_dialog_choose_language">Sprache auswählen</string>
+    <string name="settings_toast_rebooting_engine">Clipboard Share Engine wird neu gestartet...</string>
+    <string name="settings_dialog_privacy_policy">Datenschutzerklärung</string>
+    <string name="settings_action_close">Schließen</string>
+    <string name="settings_save_location_selected_folder">Ausgewählter Ordner</string>
+    <string name="settings_default_device_name">Android-Gerät</string>
+    <string name="status_tutorial_discoverable_toggle">Schalten Sie dies aus, wenn Sie für andere Geräte nicht sichtbar sein möchten.</string>
+    <string name="status_tutorial_device_name">Tippen Sie hier, um den Anzeigenamen Ihres Geräts zur einfacheren Identifizierung zu ändern.</string>
+    <string name="status_tutorial_pair_nearby">Tippen Sie auf \'Koppeln\' bei einem Gerät in der Nähe, um es zu koppeln und mit der Dateiübertragung zu beginnen.</string>
+    <string name="status_tutorial_pair_button">Tippen Sie auf die Schaltfläche Koppeln, um eine Verbindung zu diesem Gerät herzustellen und Dateien zu teilen.</string>
+    <string name="status_action_next">Weiter</string>
+    <string name="status_rebooting_engines">Motoren werden neu gestartet...</string>
+    <string name="status_flushing_cache">Netzwerk-Cache wird geleert...</string>
+    <string name="status_unpaired_from">Von %1$s entkoppelt</string>
+    <string name="history_pending_accept">Annahme ausstehend...</string>
+    <string name="history_session_unavailable">Sitzung nicht mehr verfügbar</string>
+    <string name="history_resume_request_sent">Anfrage zum Fortsetzen an %1$s gesendet</string>
+    <string name="history_resume_request_failed">Anfrage zum Fortsetzen konnte nicht gesendet werden</string>
+    <string name="history_resume_no_device_ip">Geräte-IP zum Senden der Fortsetzungsanfrage nicht gefunden</string>
+    <string name="status_failed_with_icon">✗ Fehlgeschlagen</string>
+    <string name="status_pending_with_icon">⏳ Ausstehend</string>
+    <string name="status_cancelled_with_icon">✗ Abgebrochen</string>
+    <string name="history_chooser_open_media">Medien öffnen</string>
+    <string name="history_chooser_open_storage">Speicherort öffnen</string>
+    <string name="history_chooser_open_file">Datei öffnen</string>
+    <string name="history_file_not_found">Datei nicht gefunden</string>
+    <string name="history_cannot_open_file">Datei kann nicht geöffnet werden</string>
+    <string name="history_waiting_zero">Warten (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d Dateien (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> +%1$d weitere</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">Alle</string>
+    <string name="history_filter_sent">Gesendet</string>
+    <string name="history_filter_received">Empfangen</string>
+    <string name="history_filter_completed">Abgeschlossen</string>
+    <string name="history_filter_pending">Ausstehend</string>
+    <string name="history_filter_cancelled">Abgebrochen</string>
+    <string name="history_tutorial_list">Hier sehen Sie alle Ihre letzten Dateiübertragungen.</string>
+    <string name="history_tutorial_filter">Filtern Sie nach Eingehend, Ausgehend, Pausiert oder Abgebrochen — tippen Sie auf eine Kapsel.</string>
+    <string name="history_tutorial_select">Tippen Sie auf \'Auswählen\', um Übertragungseinträge zu verwalten und zu löschen.</string>
+    <string name="history_tutorial_tap_record">Tippen Sie auf einen beliebigen Übertragungseintrag, um seine Details und den Fortschritt anzuzeigen.</string>
+    <string name="history_tutorial_open">Drücken Sie die Schaltfläche Öffnen, um die empfangene Datei zu öffnen.</string>
+    <string name="transfer_incoming_from">Von: %1$s (%2$d Dateien)</string>
+    <string name="pairing_declined_simple">Kopplung abgelehnt</string>
+</resources>

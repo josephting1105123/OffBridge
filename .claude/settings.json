@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "JAVA_HOME=\"C:/Program Files/Android/Android Studio/jbr\" ./gradlew.bat :app:compileDebugKotlin -q || true"
+          }
+        ]
+      }
+    ]
+  }
+}

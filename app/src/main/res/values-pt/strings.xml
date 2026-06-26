@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">Bem-vindo ao Clipboard Share.
+
+
+        Este aplicativo é fornecido \"no estado em que se encontra\", sem garantia de qualquer tipo, expressa ou
+        implícita, incluindo, mas não se limitando a garantias de comercialização,
+        adequação a um propósito específico e não violação. Em nenhum caso os
+        autores ou detentores de direitos autorais serão responsáveis por qualquer reclamação, danos ou outra
+        responsabilidade, seja em uma ação de contrato, ato ilícito ou de outra forma, decorrente de,
+        fora de ou em conexão com o software ou o uso ou outras negociações no
+        software.
+
+
+        Ao usar este aplicativo, você concorda com o seguinte:
+
+
+        1.  Você é responsável pelos dados que transfere. Não use este aplicativo para
+            transferir conteúdo ilegal, malicioso ou protegido por direitos autorais para o qual você não tem
+            os direitos.
+
+
+        2.  Este aplicativo foi projetado para uso em redes Wi-Fi privadas e confiáveis. Embora
+            a conexão seja criptografada, usá-lo em redes públicas ou não confiáveis é por
+            sua conta e risco.
+
+
+        3.  O aplicativo requer certas permissões para funcionar corretamente, incluindo
+            acesso à rede, acesso a notificações e a capacidade de ser executado em segundo plano.
+            Desativar essas permissões pode causar mau funcionamento do aplicativo.
+
+
+        4.  O desenvolvedor não é responsável por qualquer perda ou corrupção de dados que possa ocorrer
+            durante uma transferência.
+
+
+        Certifique-se de ter os direitos necessários sobre quaisquer arquivos que você compartilha.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Política de Privacidade do Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Data de Vigência: 22/6/2026&lt;br&gt;&lt;br&gt;
+        Obrigado por usar o Clipboard Share (\"o Aplicativo\"). Esta Política de Privacidade explica nossos princípios em relação à coleta, uso e divulgação de informações. Nossa filosofia central é simples: seus dados são seus, e nós não os queremos.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;O PRINCÍPIO CENTRAL: NÃO COLETAMOS SEUS DADOS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        O Clipboard Share foi projetado desde o início com sua privacidade como prioridade máxima. O Aplicativo facilita a comunicação direta ponto a ponto (P2P) entre seus dispositivos na sua rede Wi-Fi local.&lt;br&gt;&lt;br&gt;
+        Não possuímos servidores que coletam, armazenam ou processam seus dados pessoais. Todos os seus dados permanecem em seus dispositivos e na sua rede local.&lt;br&gt;&lt;br&gt;
+        Especificamente, NÃO coletamos, recebemos ou compartilhamos:&lt;br&gt;
+        • O conteúdo da sua área de transferência.&lt;br&gt;
+        • Os arquivos que você transfere.&lt;br&gt;
+        • Seu nome, endereço de e-mail ou quaisquer outros identificadores pessoais.&lt;br&gt;
+        • Seus contatos, localização ou qualquer outra informação sensível do dispositivo.&lt;br&gt;&lt;br&gt;
+        O Aplicativo funciona sem exigir que você crie uma conta ou faça login.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;INFORMAÇÕES QUE O APLICATIVO ARMAZENA LOCALMENTE EM SEU DISPOSITIVO&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Para funcionar corretamente, o Clipboard Share armazena uma pequena quantidade de dados exclusivamente no armazenamento local do seu dispositivo. Esses dados estão sob seu controle e nunca saem do seu dispositivo para serem enviados a nós. Isso inclui:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Chaves Criptográficas:&lt;/b&gt; Após você emparelhar explicitamente dois dispositivos, uma chave de criptografia AES-256 única é gerada e armazenada de forma segura em cada dispositivo. Esta chave é usada para criptografar toda a comunicação entre esses dois dispositivos emparelhados e é essencial para a segurança do Aplicativo.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Informações de Dispositivos Emparelhados:&lt;/b&gt; O Aplicativo armazena o endereço IP local e o nome do dispositivo escolhido pelo usuário com o qual você foi emparelhado. Isso é usado para identificá-los e conectar-se a eles na sua rede local.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Histórico da Área de Transferência:&lt;/b&gt; O Aplicativo mantém um histórico local dos itens da área de transferência que você copiou para sua conveniência. Este histórico é armazenado apenas no seu dispositivo e pode ser limpo por você a qualquer momento dentro do Aplicativo.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Nome do Dispositivo:&lt;/b&gt; O nome que você escolhe para o seu dispositivo nas configurações do Aplicativo é armazenado localmente para identificá-lo para outros dispositivos na sua rede.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;COMO SEUS DADOS SÃO TRANSFERIDOS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Todas as transferências de dados (tanto da área de transferência quanto de arquivos) ocorrem diretamente entre seus dispositivos emparelhados através da sua rede Wi-Fi local. Seus dados não passam por nossos servidores ou quaisquer servidores de terceiros. Todas as transferências são protegidas com forte criptografia de ponta a ponta AES-256 usando as chaves geradas durante o processo de emparelhamento.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;DESCOBERTA DE DISPOSITIVOS NA SUA REDE LOCAL&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Para permitir que seus dispositivos se encontrem automaticamente, o Aplicativo transmite periodicamente uma pequena mensagem de descoberta na sua rede Wi-Fi ou de ponto de acesso local. Essa mensagem contém apenas o nome de dispositivo que você escolheu, o endereço IP local do seu dispositivo e o tipo de sistema operacional dele (por exemplo, \"Android\"). Essas transmissões são enviadas somente na sua rede local para que dispositivos próximos possam se oferecer para emparelhar ou conectar. Elas nunca são enviadas para nós, para a internet ou para terceiros, e nenhuma conexão com a internet é usada para a descoberta. Ao contrário das suas transferências de área de transferência e de arquivos, que são criptografadas de ponta a ponta e trocadas apenas entre dispositivos emparelhados, essas mensagens de descoberta não são criptografadas e ficam visíveis para outros dispositivos na mesma rede local. Por esse motivo, recomendamos usar o Aplicativo em redes privadas e confiáveis. Você pode interromper essas transmissões a qualquer momento desativando \"Visível para outros dispositivos\" nas Configurações.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;QUAIS RECURSOS USAM QUAIS PERMISSÕES&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Para que fique claro o que cada recurso faz, veja como o Aplicativo usa sua rede e suas permissões:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Encontrar dispositivos próximos:&lt;/b&gt; Usa sua rede Wi-Fi ou de ponto de acesso local e, em algumas versões do Android, a permissão de Localização e Dispositivos Próximos. Não usa seus dados móveis.&lt;br&gt;
+        • &lt;b&gt;Emparelhar dois dispositivos:&lt;/b&gt; Usa sua rede Wi-Fi local, ou a câmera (para ler um código QR) ou o NFC (para aproximar), para trocar a chave de criptografia.&lt;br&gt;
+        • &lt;b&gt;Sincronizar o texto da área de transferência:&lt;/b&gt; Usa sua rede Wi-Fi local para enviar o texto copiado aos seus dispositivos emparelhados.&lt;br&gt;
+        • &lt;b&gt;Transferir arquivos na mesma rede:&lt;/b&gt; Usa sua rede Wi-Fi local.&lt;br&gt;
+        • &lt;b&gt;Transferências off-line (sem roteador ou internet):&lt;/b&gt; Usa Wi-Fi Direct e Bluetooth para formar uma conexão direta entre dispositivos, iniciada por um código QR (câmera) ou um toque NFC. Precisa das permissões de Localização, Dispositivos Próximos e Bluetooth.&lt;br&gt;
+        • &lt;b&gt;Instalar um aplicativo recebido:&lt;/b&gt; Usa a permissão de instalação, e somente após você confirmar.&lt;br&gt;
+        • &lt;b&gt;Permanecer pronto em segundo plano:&lt;/b&gt; Usa um serviço em primeiro plano e uma notificação para continuar ouvindo itens da área de transferência e transferências recebidas.&lt;br&gt;&lt;br&gt;
+        Em resumo, o Aplicativo usa seu Wi-Fi local, um ponto de acesso ou uma conexão direta entre dispositivos para tudo. Ele não usa seus dados móveis para descoberta ou transferências e não se conecta à internet.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PERMISSÕES SOLICITADAS NO APLICATIVO&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        O Clipboard Share solicita certas permissões para habilitar seus recursos. Eis por que precisamos delas:&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Acesso à Rede&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Necessário para descobrir outros dispositivos e transferir dados através da sua rede Wi-Fi local.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Localização e Dispositivos Próximos&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Algumas versões do Android exigem essa permissão para que um aplicativo possa procurar e se conectar a dispositivos próximos via Wi-Fi Direct, o que o Aplicativo usa para transferências off-line. Não a coletamos, mas o recurso não consegue encontrar dispositivos próximos sem ela. O Aplicativo não lê, armazena nem compartilha sua localização física.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Usado para ajudar a estabelecer uma conexão direta e off-line com um dispositivo próximo. Não coletamos nenhum dado por meio dele e ele nunca é usado para rastrear você.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Câmera e NFC&lt;/b&gt; (CAMERA, NFC): A câmera é usada apenas para ler um código QR, e o NFC apenas para iniciar uma conexão quando você aproxima dois dispositivos, para emparelhamento e transferências off-line. Essas informações são processadas no seu dispositivo e nunca são armazenadas ou enviadas para qualquer lugar.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Instalar um Aplicativo Recebido&lt;/b&gt; (REQUEST_INSTALL_PACKAGES): Usado apenas para que, com a sua confirmação explícita, você possa instalar um aplicativo (APK) que recebeu por meio de uma transferência. O Aplicativo nunca instala nada por conta própria.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Serviço em Primeiro Plano e Notificações&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Necessário para executar o serviço que escuta conexões de entrada e para mostrar uma notificação persistente indicando que o Aplicativo está ativo e protegendo sua conexão.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Executar na Inicialização&lt;/b&gt; (RECEIVE_BOOT_COMPLETED): Permite que o Aplicativo reinicie seu serviço quando você reinicia seu dispositivo, garantindo que ele esteja sempre pronto para conectar.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Intenção de Tela Cheia&lt;/b&gt; (USE_FULL_SCREEN_INTENT): Usado para mostrar a você alertas urgentes em tela cheia para solicitações de emparelhamento ou transferências de arquivos de entrada para que você não os perca.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Ignorar Otimizações de Bateria&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Fortemente recomendado para evitar que o sistema operacional Android encerre o serviço em segundo plano do Aplicativo, o que interromperia a sincronização da área de transferência e transferências de arquivos.&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Armazenamento Externo&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): Em versões mais antigas do Android (SDK 28 e inferior), isso é necessário para salvar os arquivos recebidos no armazenamento do seu dispositivo.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;SERVIÇOS DE TERCEIROS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        O Clipboard Share não usa nenhum serviço de terceiros para análises, publicidade ou qualquer outro propósito que envolveria o compartilhamento de seus dados.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;PRIVACIDADE DE CRIANÇAS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        O Aplicativo não se destina ao uso por crianças menores de 13 anos. Não coletamos intencionalmente nenhuma informação de crianças. Como não coletamos dados pessoais em primeiro lugar, não temos um mecanismo para verificar a idade de nossos usuários.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ALTERAÇÕES NESTA POLÍTICA DE PRIVACIDADE&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Podemos atualizar nossa Política de Privacidade de tempos em tempos. Notificaremos você sobre quaisquer alterações postando a nova Política de Privacidade no mesmo URL. É aconselhável revisar esta Política de Privacidade periodicamente para quaisquer alterações.&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;CONTATE-NOS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Se você tiver alguma dúvida sobre esta Política de Privacidade, entre em contato conosco em:&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">Apps (APK)</string>
+    <string name="search_hint">Pesquisar</string>
+    <string name="zero_apps_count">0 Apps</string>
+    <string name="select_multiple_apps">Selecionar Vários Apps</string>
+    <string name="action_select">Selecionar</string>
+    <string name="receiving_files_title">Recebendo Arquivos</string>
+    <string name="save_to_folder_downloads">Salvar na pasta: Downloads</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close_with_check">✓ Fechar</string>
+    <string name="incoming_transfer_title">Transferência Recebida</string>
+    <string name="default_device_name">Nome do Dispositivo</string>
+    <string name="action_accept_files">Aceitar Arquivos</string>
+    <string name="action_decline">Recusar</string>
+    <string name="secure_pairing_title">Emparelhamento Seguro</string>
+    <string name="initiating_cryptographic_handshake">Iniciando verificação criptográfica...</string>
+    <string name="pairing_request_title">Pedido de Emparelhamento</string>
+    <string name="action_accept">Aceitar</string>
+    <string name="clipboard_share_windows_title">Clipboard Share para Windows</string>
+    <string name="desktop_app_in_development_desc">O aplicativo de desktop complementar está atualmente em desenvolvimento e estará disponível em breve.</string>
+    <string name="menu_title">Menu</string>
+    <string name="menu_windows_version">💻 Versão para Windows</string>
+    <string name="menu_restart_services">🔄 Reiniciar Serviços</string>
+    <string name="menu_power_off">🔌 Desligar</string>
+    <string name="action_pair">Emparelhar</string>
+    <string name="action_unpair">Desemparelhar</string>
+    <string name="send_files_title">Enviar Arquivos</string>
+    <string name="type_file">Arquivo</string>
+    <string name="type_media">Mídia</string>
+    <string name="type_folder">Pasta</string>
+    <string name="type_app">App</string>
+    <string name="selected_files_title">Arquivos Selecionados</string>
+    <string name="action_select_all">Selecionar Tudo</string>
+    <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
+    <string name="action_send">Enviar</string>
+    <string name="history_and_push_title">Área de Transferência e Envio</string>
+    <string name="action_push_current_clipboard">📤 Enviar Área de Transferência Atual</string>
+    <string name="recent_copies_hint">Cópias Recentes (Toque para copiar)</string>
+    <string name="required_permissions_title">Permissões Necessárias</string>
+    <string name="battery_optimization_title">Otimização de Bateria</string>
+    <string name="battery_optimization_desc">O Clipboard Share é executado em segundo plano. Desative a otimização da bateria para garantir que as transferências e a sincronização não sejam interrompidas.</string>
+    <string name="action_go_to_settings">Ir para Configurações</string>
+    <string name="notifications_title">Notificações</string>
+    <string name="notifications_desc">Isto é necessário para mostrar o status persistente do serviço e alertá-lo sobre pedidos recebidos.</string>
+    <string name="action_request_permission">Solicitar Permissão</string>
+    <string name="action_finish_setup">Concluir Configuração</string>
+    <string name="settings_title">Configurações</string>
+    <string name="settings_section_device">DISPOSITIVO</string>
+    <string name="device_name_label">Nome do Dispositivo:</string>
+    <string name="device_name_hint">Nome do dispositivo</string>
+    <string name="settings_section_general">GERAL</string>
+    <string name="theme_setting">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="language_setting">Idioma</string>
+    <string name="save_to_setting">Salvar em</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_section_others">OUTROS</string>
+    <string name="support_setting">Suporte</string>
+    <string name="action_donate">☕ Doar</string>
+    <string name="privacy_policy_setting">Política de Privacidade</string>
+    <string name="action_read_privacy_policy">📄 Ler</string>
+    <string name="system_status_title">Status do Sistema</string>
+    <string name="status_checking">Status: Verificando...</string>
+    <string name="accept_incoming_clipboard">Aceitar Área de Transferência Recebida</string>
+    <string name="paired_and_nearby_devices">Dispositivos Emparelhados e Próximos</string>
+    <string name="network_disconnected">Rede Desconectada</string>
+    <string name="press_button_to_reboot">Pressione o botão abaixo para reiniciar os motores.</string>
+    <string name="user_agreement_title">Acordo de Usuário</string>
+    <string name="agree_to_terms">Li e concordo com os termos.</string>
+    <string name="action_next">Próximo</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">documento.pdf</string>
+    <string name="action_open">Abrir</string>
+    <string name="default_file_name_zip">arquivo.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">Rede Mesh Ativa</string>
+    <string name="unknown">Desconhecido</string>
+    <string name="unknown_file">Arquivo Desconhecido</string>
+    <string name="action_select_count">Selecionar (%d)</string>
+    <string name="toast_clipboard_is_empty">A área de transferência está vazia</string>
+    <string name="toast_failed_to_read_clipboard">Falha ao ler a área de transferência</string>
+    <string name="unknown_device">Dispositivo Desconhecido</string>
+    <string name="notification_successfully_pushed_title">Enviado com Sucesso</string>
+    <string name="notification_clipboard_received_title">Área de Transferência Recebida</string>
+    <string name="notification_mesh_network_active">Rede Mesh Ativa</string>
+    <string name="notification_channel_clipboard_share_service">Serviço Clipboard Share</string>
+    <string name="notification_channel_clipboard_alerts">Alertas da Área de Transferência</string>
+    <string name="notification_channel_pairing_requests">Pedidos de Emparelhamento</string>
+    <string name="notification_from_sender">De: %s</string>
+    <string name="notification_channel_file_transfer_progress">Progresso da Transferência</string>
+    <string name="notification_channel_incoming_transfers">Transferências Recebidas</string>
+    <string name="status_network_disconnected">Rede Desconectada</string>
+    <string name="status_receiving_paused">Recebimento Pausado</string>
+    <string name="status_scanning_for_devices">Procurando dispositivos...</string>
+    <string name="status_connected_to_devices">Conectado a %d dispositivo(s)</string>
+    <string name="toast_push_failed_no_devices">Falha ao enviar: Nenhum dispositivo online.</string>
+    <string name="toast_no_active_transfer">Nenhuma transferência ativa encontrada.</string>
+    <string name="toast_failed_to_connect_for_resume">Falha ao conectar ao remetente para retomar</string>
+    <string name="incoming_transfer_details" formatted="false">%s está enviando %d arquivo(s) (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">Espaço insuficiente para receber arquivos.</string>
+    <string name="toast_cancelling_transfer">Cancelando transferência...</string>
+    <string name="toast_custom_save_location_inaccessible">O local de salvamento não está acessível. Voltando para Downloads.</string>
+    <string name="status_paused_timeout">Pausado (Tempo Esgotado)</string>
+    <string name="status_cancelled">Cancelado</string>
+    <string name="status_paused_network_dropped">Pausado: Rede Caiu</string>
+    <string name="status_paused_waiting_reconnect">Pausado (Aguardando reconexão...)</string>
+    <string name="toast_transfer_status">Transferência %s</string>
+    <string name="action_resume_when_reconnected">Retomar quando reconectar</string>
+    <string name="file_progress_waiting">Aguardando... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">Pasta Personalizada</string>
+    <string name="file_progress_complete_saved_to">Completo - Salvo em %s</string>
+    <string name="toast_error_no_compatible_app">Erro: Nenhum app compatível encontrado para este arquivo.</string>
+    <string name="toast_error_generic">Erro: %s</string>
+    <string name="action_delete">Excluir</string>
+    <string name="action_sending">Enviando...</string>
+    <string name="toast_transfer_interrupted">Transferência interrompida. Será retomada ao reconectar.</string>
+    <string name="toast_batch_transfer_complete">Transferência em Lote Concluída!</string>
+    <string name="shortcut_send_to_device">Enviar para %s</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transferir via Clipboard Share</string>
+    <string name="toast_pushing_clipboard_to_mesh">Enviando área de transferência para a rede...</string>
+    <string name="no_clipboard_history_yet">Nenhum histórico ainda.</string>
+    <string name="toast_copied_to_clipboard">Copiado para a área de transferência</string>
+    <string name="toast_notifications_permission_required">A permissão de notificações é necessária para o serviço.</string>
+    <string name="toast_storage_permission_required">As transferências de arquivos podem falhar sem permissão de armazenamento.</string>
+    <string name="default_android_device_name">Dispositivo Android</string>
+    <string name="toast_rebooting_engine">Reiniciando motor Clipboard Share...</string>
+    <string name="toast_shutting_down_engine">Desligando Clipboard Share...</string>
+    <string name="toast_notification_permission_granted">Permissão de notificação concedida!</string>
+    <string name="toast_notifications_recommended">Notificações são recomendadas para a melhor experiência.</string>
+    <string name="toast_notification_permission_already_granted">Permissão de notificação já concedida nesta versão do Android.</string>
+    <string name="status_permission_granted">Permissão Concedida</string>
+    <string name="status_granted_by_default">Concedido por Padrão</string>
+    <string name="toast_could_not_open_battery_settings">Não foi possível abrir as configurações de bateria automaticamente.</string>
+    <string name="theme_system_default">Padrão do Sistema</string>
+    <string name="toast_could_not_open_browser">Não foi possível abrir o navegador</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="dialog_title_choose_theme">Escolher Tema</string>
+    <string name="dialog_title_choose_language">Escolher Idioma</string>
+    <string name="toast_language_preference_saved">Preferência de idioma salva. Suporte completo em breve.</string>
+    <string name="dialog_title_privacy_policy">Política de Privacidade</string>
+    <string name="action_close">Fechar</string>
+    <string name="selected_folder_fallback">Pasta Selecionada</string>
+    <string name="toast_failed_to_load_file_ui">Falha ao carregar a interface de arquivos</string>
+    <string name="status_no_network">Status: Sem Rede</string>
+    <string name="toast_rebooting_engines">Reiniciando Motores...</string>
+    <string name="status_active_and_polling">Status: Ativo e Verificando</string>
+    <string name="toast_flushing_network_cache">Limpando cache de rede...</string>
+    <string name="toast_unpaired_from_device">Desemparelhado de %s</string>
+    <string name="status_requesting_pair">Solicitando Emparelhamento</string>
+    <string name="status_waiting_for_accept">Aguardando %s aceitar...</string>
+    <string name="toast_successfully_paired_with">Emparelhado com Sucesso com %s!</string>
+    <string name="toast_pairing_declined_by">O emparelhamento foi recusado por %s.</string>
+    <string name="toast_pairing_timed_out">Emparelhamento expirou. O outro usuário não respondeu.</string>
+    <string name="toast_pairing_failed">Falha no emparelhamento. Verifique se estão na mesma rede.</string>
+    <string name="toast_paired_with_device">Emparelhado com %s</string>
+    <string name="toast_pairing_declined">Emparelhamento recusado</string>
+    <string name="notification_transfers_can_be_resumed">%d transferência(s) pode(m) ser retomada(s)</string>
+    <string name="notification_connection_restored_resume">Conexão restaurada. Toque para retomar.</string>
+    <string name="notification_sending_resumed_title">Envio Retomado</string>
+    <string name="notification_resuming_batch_transfer">Retomando transferência em lote...</string>
+    <string name="toast_resumed_transfer_complete">Transferência Retomada Concluída</string>
+    <string name="notification_incoming_transfer_request_title">Solicitação de Transferência Recebida</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%s está lhe enviando %d arquivo(s). Toque para responder.</string>
+    <string name="title_transfer_history">Histórico de Transferências</string>
+    <string name="no_transfer_history_yet">Nenhum histórico de transferências ainda.</string>
+    <string name="format_selected_count">%d selecionado(s)</string>
+    <string name="title_transaction_details">Detalhes da Transação</string>
+    <string name="nav_send">Enviar</string>
+    <string name="nav_pairing">Emparelhamento</string>
+    <string name="nav_clipboard">Área de Transferência</string>
+    <string name="transfer_history_title">Histórico de Transferências</string>
+    <string name="format_to_device">Para: %s</string>
+    <string name="format_from_device">De: %s</string>
+    <string name="status_transferring_dots">Transferindo...</string>
+    <string name="status_declined">Recusado</string>
+    <string name="status_done_with_icon">Concluído</string>
+    <string name="status_paused_with_icon">Pausado</string>
+    <string name="status_transferring_with_icon">Transferindo</string>
+    <string name="status_declined_with_icon">Recusado</string>
+    <string name="status_transferring">Transferindo</string>
+    <string name="status_paused">Pausado</string>
+    <string name="action_continue">Continuar</string>
+    <string name="action_grant">Conceder</string>
+    <string name="action_receive">Receber</string>
+    <string name="action_resume">Retomar</string>
+    <string name="action_retry">Tentar novamente</string>
+    <string name="action_turn_on">Ativar</string>
+    <string name="action_use_bluetooth">Usar Bluetooth agora</string>
+    <string name="diagnostics_all_failed">Todos os métodos falharam</string>
+    <string name="diagnostics_connected_via">Conectado via %1$s</string>
+    <string name="diagnostics_empty">Nenhuma tentativa de transferência off-grid registrada ainda. Tente uma transferência por QR/NFC e volte aqui.</string>
+    <string name="diagnostics_outcome_connected">Conectado</string>
+    <string name="diagnostics_outcome_failed">Falhou</string>
+    <string name="diagnostics_outcome_pending">Em andamento</string>
+    <string name="diagnostics_outcome_skipped">Ignorado</string>
+    <string name="diagnostics_share">Compartilhar registro</string>
+    <string name="diagnostics_title">Diagnóstico de Conexão</string>
+    <string name="menu_diagnostics">Diagnóstico de Conexão</string>
+    <string name="menu_settings">Configurações</string>
+    <string name="nav_receive">Receber</string>
+    <string name="nfc_a11y_angled">Segure os telefones a 45 graus</string>
+    <string name="nfc_a11y_flat">Segure os telefones na horizontal</string>
+    <string name="nfc_a11y_not_selected">Não selecionado</string>
+    <string name="nfc_a11y_selected">Selecionado</string>
+    <string name="nfc_a11y_vertical">Segure os telefones na vertical</string>
+    <string name="nfc_guide_continue">Entendi</string>
+    <string name="nfc_guide_label_their">Telefone deles</string>
+    <string name="nfc_guide_label_your">Seu telefone</string>
+    <string name="nfc_guide_subtitle_receive">Toque as partes traseiras dos telefones para que os pontos brilhantes se encontrem.</string>
+    <string name="nfc_guide_subtitle_send">Encoste seu telefone na parte de trás do outro dispositivo para que os pontos brilhantes se encontrem.</string>
+    <string name="nfc_guide_title">Encoste os telefones</string>
+    <string name="nfc_hint_angled">Seu chip NFC fica na parte alta da traseira — segure os telefones a cerca de 45° e junte os pontos brilhantes.</string>
+    <string name="nfc_hint_flat">Seu chip NFC fica perto do topo — deixe os dois telefones na horizontal e junte as partes de cima onde os pontos brilham.</string>
+    <string name="nfc_hint_vertical">Seu chip NFC fica perto do meio — segure os dois telefones na vertical e junte os pontos brilhantes.</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">Horizontal</string>
+    <string name="nfc_style_vertical">Em pé</string>
+    <string name="offgrid_accept_hint">Se aparecer uma solicitação de conexão neste dispositivo, toque em Aceitar.</string>
+    <string name="offgrid_band_warning">O grupo está em %1$d MHz — alguns dispositivos podem não encontrá-lo.</string>
+    <string name="offgrid_bt_available">Wi-Fi demorando demais? O Bluetooth está pronto — mais lento, mas sempre conecta.</string>
+    <string name="offgrid_camera_denied">A permissão de câmera é necessária para ler o código. Você ainda pode encostar os telefones para usar o NFC.</string>
+    <string name="offgrid_confirm_subtitle">%1$d arquivo(s) • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s quer enviar arquivos para você</string>
+    <string name="offgrid_connecting_title">Conectando…</string>
+    <string name="offgrid_degraded_bt_off">\nO canal de controle Bluetooth está desligado — os métodos alternativos estão reduzidos.</string>
+    <string name="offgrid_degraded_mode">Modo limitado: apenas a conexão Wi-Fi básica está ativa. Conceda a permissão de dispositivos próximos para uma conexão mais rápida e confiável.</string>
+    <string name="offgrid_error_all_methods">Não foi possível conectar com nenhum método. Aproxime os telefones, verifique se o Wi-Fi e o Bluetooth estão ligados e tente novamente.</string>
+    <string name="offgrid_error_control_failed">Não foi possível estabelecer a ligação Bluetooth que coordena a transferência. Mantenha os dois telefones desbloqueados e a menos de um metro e tente novamente.</string>
+    <string name="offgrid_error_code_expired">Código expirado — peça ao remetente para reabrir a tela de envio.</string>
+    <string name="offgrid_error_connect_failed">Não foi possível conectar. Verifique se a tela do remetente ainda está aberta e tente novamente.</string>
+    <string name="offgrid_error_fallback_failed">A conexão direta falhou. Mantenha os telefones próximos, verifique se o remetente aceitou e tente novamente.</string>
+    <string name="offgrid_error_join_failed">Não foi possível entrar na rede do remetente. Mantenha os telefones próximos, aceite a solicitação de conexão e tente novamente.</string>
+    <string name="offgrid_error_location_off">A localização está desativada. O Android precisa da Localização ativada para encontrar a rede direta do remetente.</string>
+    <string name="offgrid_error_no_files">Nenhum arquivo para enviar.</string>
+    <string name="offgrid_error_sender_busy">O remetente está ocupado com outro dispositivo.</string>
+    <string name="offgrid_error_transfer_failed">A transferência falhou. Mostre o código novamente para tentar de novo.</string>
+    <string name="offgrid_error_update_app">Este código foi criado por uma versão mais nova. Atualize o aplicativo para receber.</string>
+    <string name="offgrid_error_wifi_off">O Wi-Fi está desligado. Ative-o para usar o envio off-grid.</string>
+    <string name="offgrid_error_wifi_off_receiver">O Wi-Fi está desligado. Ative-o para receber — nenhuma conexão com a internet é necessária.</string>
+    <string name="offgrid_fallback_permission_rationale">Permita o acesso a dispositivos próximos para que o aplicativo possa conectar diretamente quando a conexão padrão não funcionar.</string>
+    <string name="offgrid_hce_description">Credenciais de transferência off-grid do Clipboard Share</string>
+    <string name="offgrid_join_failed_closer">Não foi possível alcançar o remetente. Aproxime os telefones e peça para mostrar o código novamente, depois tente de novo.</string>
+    <string name="offgrid_nfc_off">NFC desligado — toque para ativar</string>
+    <string name="offgrid_nfc_ready">NFC pronto — toque para ver onde segurar os telefones</string>
+    <string name="offgrid_nfc_unavailable">NFC indisponível — somente QR</string>
+    <string name="offgrid_permission_miui_hint">\nEm Xiaomi/MIUI, ative “Dispositivos próximos” em Informações do app → Permissões.</string>
+    <string name="offgrid_permission_permanently_denied">A permissão de dispositivos próximos está bloqueada, então apenas a conexão Wi-Fi básica está disponível. Abra as configurações do app para ativá-la e obter uma conexão direta mais rápida e confiável.</string>
+    <string name="offgrid_permission_required">A permissão de dispositivos próximos é necessária para o envio off-grid.</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">Receber via QR / NFC</string>
+    <string name="offgrid_send_title">Enviar via NFC / QR</string>
+    <string name="offgrid_session_notification_text">Mantendo a conexão direta ativa.</string>
+    <string name="offgrid_session_notification_title">Transferência off-grid ativa</string>
+    <string name="offgrid_status_code_scanned">Código lido</string>
+    <string name="offgrid_status_complete">Transferência concluída</string>
+    <string name="offgrid_status_connecting">Conectando a %s…</string>
+    <string name="offgrid_status_control_linked">Vinculado a %s por Bluetooth — negociando a conexão mais rápida…</string>
+    <string name="offgrid_status_creating_group">Configurando a conexão direta…</string>
+    <string name="offgrid_status_handshaking">Verificando a conexão…</string>
+    <string name="offgrid_status_interrupted">Conexão perdida — aguardando o outro dispositivo retomar…</string>
+    <string name="offgrid_status_receiving">Recebendo arquivos…</string>
+    <string name="offgrid_status_reestablishing">Restabelecendo grupo…</string>
+    <string name="offgrid_status_rescan_to_resume">Conexão encerrada. Leia o código novamente para retomar — o progresso é salvo no Histórico de Transferências.</string>
+    <string name="offgrid_status_scanning">Aponte a câmera para o código do remetente</string>
+    <string name="offgrid_status_sending">Dispositivo conectado — enviando para %1$s (%2$d arquivos)…</string>
+    <string name="offgrid_status_trying_direct">Tentando conexão direta… aceite a solicitação no remetente.</string>
+    <string name="offgrid_status_trying_method">Tentando método de conexão %1$d de %2$d…</string>
+    <string name="offgrid_status_waiting_for_scan">Aguardando leitura…</string>
+    <string name="receive_enable_nfc">Ativar NFC</string>
+    <string name="receive_nfc_listening">NFC à escuta — encoste os telefones</string>
+    <string name="receive_nfc_unavailable_device">O NFC não está disponível neste dispositivo</string>
+    <string name="receive_open_camera">Abrir Câmera</string>
+    <string name="receive_title">Receber Arquivos</string>
+    <string name="send_to_devices_title">Enviar para Dispositivos</string>
+    <string name="send_via_connected_devices">Dispositivos Conectados</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">Enviar Via</string>
+    <string name="action_how_to_use">Como usar</string>
+    <string name="discoverable_to_devices">Visível para outros dispositivos</string>
+    <string name="transaction_details_title">Detalhes da transação</string>
+    <string name="type_text">Texto</string>
+    <string name="transfer_resume_request_title">Solicitação de Retomada</string>
+    <string name="transfer_resume_request_text">O remetente está solicitando retomar a transferência. Toque para ver.</string>
+    <string name="transfer_resumable_one">1 transferência pode ser retomada</string>
+    <string name="transfer_resumable_many">%1$d transferências podem ser retomadas</string>
+    <string name="transfer_connection_restored">Conexão restaurada. Toque para retomar.</string>
+    <string name="transfer_failed_connect_sender">Falha ao conectar ao remetente</string>
+    <string name="transfer_sending_resumed_title">Envio Retomado</string>
+    <string name="transfer_sending_resumed_text">Retomando transferência em lote...</string>
+    <string name="transfer_resumed_complete">Transferência Retomada Concluída</string>
+    <string name="transfer_incoming_title">Transferência Recebida</string>
+    <string name="transfer_incoming_text">%1$s quer enviar %2$d arquivo(s) para você.</string>
+    <string name="transfer_receiving_title">Recebendo Arquivos</string>
+    <string name="transfer_receiving_text">%1$s está enviando %2$d arquivo(s) para você. Toque para ver o progresso.</string>
+    <string name="applist_version_unknown">Desconhecido</string>
+    <string name="applist_app_count">%1$d Apps</string>
+    <string name="applist_select_count">Selecionar (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">A área de transferência está vazia</string>
+    <string name="clip_read_failed">Falha ao ler a área de transferência</string>
+    <string name="status_push_success_title">Enviado com Sucesso</string>
+    <string name="status_clipboard_received_title">Área de Transferência Recebida</string>
+    <string name="status_channel_service">Serviço Clipboard Share</string>
+    <string name="status_channel_alerts">Alertas da Área de Transferência</string>
+    <string name="status_channel_pairing">Pedidos de Emparelhamento</string>
+    <string name="status_channel_transfer_progress">Progresso da Transferência</string>
+    <string name="status_channel_incoming_transfers">Transferências Recebidas</string>
+    <string name="status_mesh_active">Rede Mesh Ativa</string>
+    <string name="pairing_request_from">De: %1$s</string>
+    <string name="status_scanning_devices">Procurando dispositivos...</string>
+    <string name="status_connected_devices">Conectado a %1$d dispositivo(s) emparelhado(s)</string>
+    <string name="transfer_add_text_hint">Digite algo para adicionar...</string>
+    <string name="transfer_add_text_title">Adicionar Texto</string>
+    <string name="transfer_add_text_positive">Adicionar</string>
+    <string name="transfer_text_item_name">Texto %1$d</string>
+    <string name="transfer_tut_file_type">Selecione o tipo de arquivo a enviar: Arquivo, Mídia, Pasta, Texto ou App.</string>
+    <string name="transfer_tut_files_appear">Os arquivos selecionados aparecerão aqui. Toque em um arquivo para visualizá-lo.</string>
+    <string name="transfer_tut_long_press">Mantenha pressionado qualquer arquivo para entrar no modo de seleção e excluir os itens selecionados.</string>
+    <string name="transfer_tut_send_button">Com os arquivos selecionados, toque em Enviar para escolher como enviar.</string>
+    <string name="transfer_tut_send_via">Dispositivos Conectados usa sua rede Wi-Fi. NFC / QR funciona em qualquer lugar — sem precisar de roteador.</string>
+    <string name="transfer_tut_pick_devices">Escolha um ou mais dispositivos emparelhados e toque em Enviar.</string>
+    <string name="transfer_tut_offgrid_code">Mostre este código ao telefone que vai receber ou apenas encoste os telefones.</string>
+    <string name="transfer_tut_history">Toque aqui para ver seu histórico de transferências e acompanhar o progresso.</string>
+    <string name="transfer_tut_next">Próximo</string>
+    <string name="transfer_shortcut_short_label">Enviar para %1$s</string>
+    <string name="transfer_shortcut_long_label">Transferir via Clipboard Share</string>
+    <string name="transfer_unknown_file">Arquivo Desconhecido</string>
+    <string name="history_tutorial_push">Toque aqui para enviar instantaneamente o texto atual da sua área de transferência para todos os dispositivos emparelhados.</string>
+    <string name="history_tutorial_accept_switch">Desative isto se você não quiser receber conteúdo da área de transferência de outros dispositivos.</string>
+    <string name="history_tutorial_next">Próximo</string>
+    <string name="history_toast_pushing">Enviando área de transferência para a rede...</string>
+    <string name="history_toast_empty">A área de transferência está vazia</string>
+    <string name="history_toast_read_failed">Falha ao ler a área de transferência</string>
+    <string name="history_empty">Nenhum histórico da área de transferência ainda.</string>
+    <string name="history_toast_copied">Copiado para a área de transferência</string>
+    <string name="perm_notifications_required">A permissão de notificações é necessária para o serviço em primeiro plano.</string>
+    <string name="perm_storage_required">As transferências de arquivos podem falhar sem permissão de armazenamento nesta versão do Android.</string>
+    <string name="status_default_device_name">Dispositivo Android</string>
+    <string name="menu_restart_toast">Reiniciando motor Clipboard Share...</string>
+    <string name="menu_power_off_toast">Desligando Clipboard Share...</string>
+    <string name="pairing_requesting_title">Solicitando Emparelhamento</string>
+    <string name="pairing_waiting_subtitle">Aguardando %1$s aceitar...</string>
+    <string name="pairing_success">Emparelhado com Sucesso com %1$s!</string>
+    <string name="pairing_declined">O emparelhamento foi recusado por %1$s.</string>
+    <string name="pairing_timed_out">Emparelhamento expirou. O outro usuário não respondeu.</string>
+    <string name="pairing_failed">Falha no emparelhamento. Verifique se o outro dispositivo está na mesma rede.</string>
+    <string name="pairing_unknown_device">Dispositivo Desconhecido</string>
+    <string name="pairing_from_device">De: %1$s</string>
+    <string name="pairing_paired_with">Emparelhado com %1$s</string>
+    <string name="perm_notification_granted_toast">Permissão de notificação concedida!</string>
+    <string name="perm_notification_recommended_toast">Notificações são recomendadas para a melhor experiência.</string>
+    <string name="perm_notification_already_granted_toast">A permissão de notificação já foi concedida nesta versão do Android.</string>
+    <string name="perm_permission_granted_label">Permissão Concedida</string>
+    <string name="perm_go_to_settings_label">Ir para Configurações</string>
+    <string name="perm_request_permission_label">Solicitar Permissão</string>
+    <string name="perm_granted_by_default_label">Concedido por Padrão</string>
+    <string name="perm_battery_settings_error_toast">Não foi possível abrir as configurações de bateria automaticamente.</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">Não foi possível abrir o navegador</string>
+    <string name="settings_dialog_choose_language">Escolher Idioma</string>
+    <string name="settings_toast_rebooting_engine">Reiniciando motor Clipboard Share...</string>
+    <string name="settings_dialog_privacy_policy">Política de Privacidade</string>
+    <string name="settings_action_close">Fechar</string>
+    <string name="settings_save_location_selected_folder">Pasta Selecionada</string>
+    <string name="settings_default_device_name">Dispositivo Android</string>
+    <string name="status_tutorial_discoverable_toggle">Desative isto quando você não quiser ser detectável por outros dispositivos.</string>
+    <string name="status_tutorial_device_name">Toque aqui para alterar o nome de exibição do seu dispositivo e identificá-lo mais facilmente.</string>
+    <string name="status_tutorial_pair_nearby">Toque em \'Emparelhar\' em um dispositivo próximo para emparelhar com ele e começar a transferir arquivos.</string>
+    <string name="status_tutorial_pair_button">Toque no botão Emparelhar para conectar-se a este dispositivo e começar a compartilhar arquivos.</string>
+    <string name="status_action_next">Próximo</string>
+    <string name="status_rebooting_engines">Reiniciando Motores...</string>
+    <string name="status_flushing_cache">Limpando cache de rede...</string>
+    <string name="status_unpaired_from">Desemparelhado de %1$s</string>
+    <string name="history_pending_accept">Aguardando Aceitação...</string>
+    <string name="history_session_unavailable">Sessão não está mais disponível</string>
+    <string name="history_resume_request_sent">Solicitação de retomada enviada para %1$s</string>
+    <string name="history_resume_request_failed">Falha ao enviar a solicitação de retomada</string>
+    <string name="history_resume_no_device_ip">Não foi possível encontrar o IP do dispositivo para enviar a solicitação de retomada</string>
+    <string name="status_failed_with_icon">✗ Falhou</string>
+    <string name="status_pending_with_icon">⏳ Pendente</string>
+    <string name="status_cancelled_with_icon">✗ Cancelado</string>
+    <string name="history_chooser_open_media">Abrir Mídia</string>
+    <string name="history_chooser_open_storage">Abrir Local de Armazenamento</string>
+    <string name="history_chooser_open_file">Abrir Arquivo</string>
+    <string name="history_file_not_found">Arquivo não encontrado</string>
+    <string name="history_cannot_open_file">Não foi possível abrir o arquivo</string>
+    <string name="history_waiting_zero">Aguardando (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d arquivos (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> +%1$d mais</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">Todos</string>
+    <string name="history_filter_sent">Enviados</string>
+    <string name="history_filter_received">Recebidos</string>
+    <string name="history_filter_completed">Concluídos</string>
+    <string name="history_filter_pending">Pendentes</string>
+    <string name="history_filter_cancelled">Cancelados</string>
+    <string name="history_tutorial_list">Aqui você pode ver todas as suas transferências de arquivos recentes.</string>
+    <string name="history_tutorial_filter">Filtre por Recebidas, Enviadas, Pausadas ou Canceladas — toque em uma cápsula.</string>
+    <string name="history_tutorial_select">Toque em \'Selecionar\' para gerenciar e excluir registros de transferência.</string>
+    <string name="history_tutorial_tap_record">Toque em qualquer registro de transferência para ver seus detalhes e progresso.</string>
+    <string name="history_tutorial_open">Pressione o botão abrir para abrir o arquivo recebido.</string>
+    <string name="transfer_incoming_from">De: %1$s (%2$d arquivos)</string>
+    <string name="pairing_declined_simple">Emparelhamento recusado</string>
+</resources>

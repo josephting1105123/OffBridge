@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A realistic-looking QR code (three finder patterns, timing rows, and a data-module
+     field) for the Send-Files step-7 tutorial placeholder. Decorative, not a real payload. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="25"
+    android:viewportHeight="25">
+
+    <!-- Black: finder squares + timing + data modules -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0,0h7v7h-7z M18,0h7v7h-7z M0,18h7v7h-7z
+            M8,6h1v1h-1z M10,6h1v1h-1z M12,6h1v1h-1z M14,6h1v1h-1z M16,6h1v1h-1z
+            M6,8h1v1h-1z M6,10h1v1h-1z M6,12h1v1h-1z M6,14h1v1h-1z M6,16h1v1h-1z
+            M9,9h1v1h-1z M11,9h1v1h-1z M13,9h1v1h-1z M15,9h1v1h-1z
+            M9,11h1v1h-1z M12,11h1v1h-1z M14,11h1v1h-1z M16,10h1v1h-1z
+            M10,13h1v1h-1z M13,13h1v1h-1z M15,12h1v1h-1z M18,9h1v1h-1z
+            M20,10h1v1h-1z M22,9h1v1h-1z M19,12h1v1h-1z M21,13h1v1h-1z
+            M23,11h1v1h-1z M9,15h1v1h-1z M11,16h1v1h-1z M13,15h1v1h-1z
+            M15,17h1v1h-1z M17,15h1v1h-1z M19,16h1v1h-1z M21,17h1v1h-1z
+            M23,15h1v1h-1z M9,18h1v1h-1z M9,20h1v1h-1z M11,19h1v1h-1z
+            M13,18h1v1h-1z M15,20h1v1h-1z M17,19h1v1h-1z M19,21h1v1h-1z
+            M21,20h1v1h-1z M23,22h1v1h-1z M11,22h1v1h-1z M13,23h1v1h-1z
+            M15,22h1v1h-1z M17,23h1v1h-1z M20,18h1v1h-1z M22,20h1v1h-1z" />
+
+    <!-- White: carve the inner ring of each finder pattern -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M1,1h5v5h-5z M19,1h5v5h-5z M1,19h5v5h-5z" />
+
+    <!-- Black: the solid centre of each finder pattern -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M2,2h3v3h-3z M20,2h3v3h-3z M2,20h3v3h-3z" />
+</vector>

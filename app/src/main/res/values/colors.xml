@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="app_green">#34D399</color>
+    <!-- Pairing PIN digits: black in light mode, white in dark (values-night). The box border stays brand green. -->
+    <color name="pin_digit_text">#000000</color>
+    <color name="ic_launcher_background_color">#1E1E1E</color>
+
+    <!-- Base/Light Mode Notification Colors -->
+    <color name="notification_text_color">#FF000000</color> <!-- Black -->
+    <color name="notification_status_color">#006400</color> <!-- Dark Green -->
+
+    <!-- Tutorial tooltip (light). Dark variant in values-night/colors.xml. Plain @color (NOT ?attr/)
+         so it resolves under ANY theme — the bottom-sheet dialog theme doesn't inherit app attrs. -->
+    <color name="tutorial_tooltip_bg">#FFFFFF</color>
+    <color name="tutorial_tooltip_text">#0F172A</color>
+    <color name="tutorial_tooltip_text_secondary">#475569</color>
+    <color name="tutorial_tooltip_accent">#34D399</color>
+</resources>

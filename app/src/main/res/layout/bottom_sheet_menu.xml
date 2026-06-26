@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginBottom="16dp"
+    android:orientation="vertical"
+    android:background="@drawable/bottom_sheet_bg"
+    android:padding="@dimen/space_lg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_title"
+        android:textAppearance="@style/TextAppearance.App.Headline"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/space_md"/>
+
+    <!-- Rounded frame grouping the 5 menu buttons for a unified feel -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/menu_group_frame"
+        android:padding="@dimen/space_md">
+
+        <!-- Row 1: Settings | Windows Version -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="@dimen/space_md">
+
+            <LinearLayout
+                android:id="@+id/btn_menu_settings"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="100dp"
+                android:layout_marginEnd="@dimen/space_md"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/rect_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_hdr_settings"
+                    app:tint="?attr/appGreen"
+                    android:contentDescription="@null" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/menu_settings"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp"
+                    android:layout_marginTop="@dimen/space_sm" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btn_menu_windows"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="100dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/rect_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_computer"
+                    app:tint="?attr/appGreen"
+                    android:contentDescription="@null" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/menu_windows_version"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp"
+                    android:layout_marginTop="@dimen/space_sm" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 2: Diagnostics | Restart Services -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="@dimen/space_md">
+
+            <LinearLayout
+                android:id="@+id/btn_menu_diagnostics"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="100dp"
+                android:layout_marginEnd="@dimen/space_md"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/rect_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_diagnostics"
+                    app:tint="?attr/appGreen"
+                    android:contentDescription="@null" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/menu_diagnostics"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp"
+                    android:layout_marginTop="@dimen/space_sm" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btn_menu_restart"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="100dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/rect_button_bg"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+                <ImageView
+                    android:layout_width="@dimen/icon_lg"
+                    android:layout_height="@dimen/icon_lg"
+                    android:src="@drawable/ic_retry"
+                    app:tint="?attr/appGreen"
+                    android:contentDescription="@null" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/menu_restart_services"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp"
+                    android:layout_marginTop="@dimen/space_sm" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Row 3: Power Off (full width, destructive) -->
+        <LinearLayout
+            android:id="@+id/btn_menu_power_off"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/rect_button_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:src="@drawable/ic_power"
+                app:tint="?attr/appError"
+                android:contentDescription="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_power_off"
+                android:textColor="?attr/appError"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginTop="@dimen/space_sm" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

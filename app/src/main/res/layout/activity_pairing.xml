@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <ImageView
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:src="@drawable/ic_lock"
+        android:tint="?attr/appGreen"
+        android:contentDescription="@null"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tvPairingTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/secure_pairing_title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tvPairingSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/initiating_cryptographic_handshake"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:id="@+id/tvPairingVerifyLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pairing_verify_label"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <include
+        layout="@layout/view_pin_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp" />
+
+    <ProgressBar
+        android:id="@+id/pbPairingLoading"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:indeterminateTint="?attr/appGreen" />
+
+    <LinearLayout
+        android:id="@+id/llPairingContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+    </LinearLayout>
+
+</LinearLayout>

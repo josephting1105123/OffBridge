@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Exclude shared preferences (onboarding flag, history prefs) for a fresh start on
+             reinstall, AND the Room DB + its WAL/SHM/journal sidecars — the off-grid DB holds
+             device-bound / encrypted data that cannot be decrypted after restore to a new device. -->
+        <exclude domain="sharedpref" />
+        <exclude domain="database" path="offgrid.db" />
+        <exclude domain="database" path="offgrid.db-shm" />
+        <exclude domain="database" path="offgrid.db-wal" />
+        <exclude domain="database" path="offgrid.db-journal" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" />
+        <exclude domain="database" path="offgrid.db" />
+        <exclude domain="database" path="offgrid.db-shm" />
+        <exclude domain="database" path="offgrid.db-wal" />
+        <exclude domain="database" path="offgrid.db-journal" />
+    </device-transfer>
+</data-extraction-rules>

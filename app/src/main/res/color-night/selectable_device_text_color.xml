@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- State when selected -->
+    <item app:state_selected="true" android:color="#000000" /> <!-- Black -->
+
+    <!-- Default, unselected state -->
+    <item android:color="#FFFFFF" /> <!-- White -->
+
+</selector>

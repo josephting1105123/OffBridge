@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor"
+    android:orientation="vertical"
+    android:padding="@dimen/space_xl">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="72dp"
+        android:layout_marginBottom="@dimen/space_xl"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/iconHeader"
+            android:layout_width="@dimen/header_icon"
+            android:layout_height="@dimen/header_icon"
+            android:layout_marginEnd="@dimen/space_lg"
+            android:src="@drawable/ic_hdr_history"
+            android:tint="?attr/appGreen"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/history_and_push_title"
+            android:textAppearance="@style/TextAppearance.App.Headline"
+            android:textColor="?attr/appTextPrimaryColor" />
+
+        <TextView
+            android:id="@+id/btnHowToUse"
+            style="@style/Widget.App.HowToUse" />
+
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/btnPushCurrent"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginBottom="@dimen/space_lg"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardBackgroundColor="?attr/appGreen"
+        app:cardCornerRadius="@dimen/radius_lg"
+        app:cardElevation="@dimen/space_xxs">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="@string/action_push_current_clipboard"
+            android:textAppearance="@style/TextAppearance.App.Title"
+            android:textColor="#000000"
+            android:textStyle="bold"
+            android:gravity="center"/>
+    </androidx.cardview.widget.CardView>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchAcceptClipboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/accept_incoming_clipboard"
+        android:textAppearance="@style/TextAppearance.App.Body"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:layout_marginBottom="@dimen/space_lg"
+        app:useMaterialThemeColors="false"
+        app:thumbTint="@color/switch_thumb_color"
+        app:trackTint="@color/switch_track_color" />
+
+    <!-- Reliable cross-app send: share text from any app via the system share sheet. -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/space_lg"
+        android:text="@string/history_share_sheet_hint"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:textAppearance="@style/TextAppearance.App.Caption"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/appDividerColor"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/recent_copies_hint"
+        android:textAppearance="@style/TextAppearance.App.Title"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textStyle="bold"
+        android:layout_marginBottom="@dimen/space_lg"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/historyContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+</LinearLayout>

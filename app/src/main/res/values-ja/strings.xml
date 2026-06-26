@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Clipboard Share</string>
+    <string name="user_agreement_text">Clipboard Shareへようこそ。
+
+
+        本アプリケーションは「現状有姿」で提供され、商品性、特定目的への適合性、および非侵害の保証を含むがこれらに限定されない、明示的または黙示的なあらゆる種類の保証なしで提供されます。いかなる場合も、
+        作者または著作権所有者は、契約違反、不法行為、その他の理由を問わず、ソフトウェア、
+        またはソフトウェアの使用またはその他の取引から生じる、
+        またそれらに関連するいかなる請求、損害、その他の責任についても責任を負わないものとします。
+
+
+        本アプリケーションを使用することにより、以下の事項に同意するものとします：
+
+
+        1.  転送するデータについてはお客様が責任を負います。権利を所有していない
+            違法、悪意のある、または著作権で保護されたコンテンツを転送するために
+            本アプリケーションを使用しないでください。
+
+
+        2.  本アプリケーションは、信頼できるプライベートWi-Fiネットワーク上での使用を目的としています。
+            接続は暗号化されていますが、公共または信頼できないネットワークでの使用は
+            自己責任で行ってください。
+
+
+        3.  アプリケーションが正しく機能するためには、ネットワークアクセス、通知アクセス、
+            バックグラウンドでの実行機能など、特定の権限が必要です。
+            これらの権限を無効にすると、アプリケーションが誤動作する可能性があります。
+
+
+        4.  開発者は、転送中に発生する可能性のあるデータの損失または破損について
+            一切責任を負いません。
+
+
+        共有するファイルについて、必要な権利を有していることを確認してください。</string>
+    <string name="privacy_policy_text">&lt;b&gt;Clipboard Shareのプライバシーポリシー&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        発効日：2026年6月22日&lt;br&gt;&lt;br&gt;
+        Clipboard Share（以下「本アプリ」）をご利用いただきありがとうございます。このプライバシーポリシーは、情報の収集、使用、開示に関する当社の原則を説明するものです。当社の基本理念はシンプルです：あなたのデータはあなたのものであり、私たちはそれを必要としません。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;基本原則：当社はあなたのデータを収集しません&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Shareは、あなたのプライバシーを最優先事項としてゼロから設計されています。本アプリは、ローカルWi-Fiネットワーク上のデバイス間の直接のピアツーピア（P2P）通信を容易にします。&lt;br&gt;&lt;br&gt;
+        当社には、あなたの個人データを収集、保存、または処理するサーバーはありません。すべてのデータはあなたのデバイスおよびローカルネットワーク上に残ります。&lt;br&gt;&lt;br&gt;
+        具体的には、当社が以下のものを収集、受信、または共有することはありません：&lt;br&gt;
+        • クリップボードの内容。&lt;br&gt;
+        • 転送するファイル。&lt;br&gt;
+        • 名前、メールアドレス、その他の個人識別情報。&lt;br&gt;
+        • 連絡先、位置情報、その他の機密性の高いデバイス情報。&lt;br&gt;&lt;br&gt;
+        本アプリは、アカウントの作成やサインインを必要とせずに機能します。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;本アプリがデバイスにローカルで保存する情報&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        正しく機能するために、Clipboard Shareは少量のデータをデバイスのローカルストレージに排他的に保存します。このデータはあなたの管理下にあり、デバイスを離れて当社に送信されることは決してありません。これには以下が含まれます：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;暗号化キー：&lt;/b&gt; 2つのデバイスを明示的にペアリングした後、固有のAES-256暗号化キーが生成され、各デバイスに安全に保存されます。このキーは、ペアリングされた2つのデバイス間のすべての通信を暗号化するために使用され、本アプリのセキュリティに不可欠です。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;ペアリングされたデバイス情報：&lt;/b&gt; 本アプリは、ペアリングしたデバイスのローカルIPアドレスとユーザーが選択したデバイス名を保存します。これは、ローカルネットワーク上でそれらを識別して接続するために使用されます。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;クリップボード履歴：&lt;/b&gt; 本アプリは、利便性のためにコピーしたクリップボードアイテムのローカル履歴を保持します。この履歴はデバイスにのみ保存され、アプリ内からいつでも消去できます。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;デバイス名：&lt;/b&gt; アプリの設定でデバイスに選択した名前は、ネットワーク上の他のデバイスに識別させるためにローカルに保存されます。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;データの転送方法&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        すべてのデータ転送（クリップボードとファイルの両方）は、ローカルWi-Fiネットワークを介してペアリングされたデバイス間で直接行われます。データは当社のサーバーやサードパーティのサーバーを通過しません。すべての転送は、ペアリングプロセス中に生成されたキーを使用して、強力なエンドツーエンドのAES-256暗号化で保護されます。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;ローカルネットワークでのデバイス検出&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        お使いのデバイスが自動的に互いを見つけられるように、アプリはローカルのWi-Fiまたはホットスポットネットワーク上で、小さな検出メッセージを定期的にブロードキャストします。このメッセージには、あなたが選んだデバイス名、デバイスのローカルIPアドレス、およびオペレーティングシステムの種類（例：\"Android\"）のみが含まれます。これらのブロードキャストは、近くのデバイスがペアリングや接続を提案できるようにするためだけに、ローカルネットワーク上にのみ送信されます。当社、インターネット、または第三者に送信されることは一切なく、検出にインターネット接続は使用されません。エンドツーエンドで暗号化され、ペアリングされたデバイス間でのみやり取りされるクリップボードおよびファイルの転送とは異なり、これらの検出メッセージは暗号化されておらず、同じローカルネットワーク上の他のデバイスから見える状態になります。このため、信頼できるプライベートなネットワークでアプリを使用することをお勧めします。設定で「他のデバイスから検出可能」をオフにすることで、いつでもこれらのブロードキャストを停止できます。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;どの機能がどの権限を使用するか&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        各機能が何を行うかを明確にするため、本アプリがあなたのネットワークと権限をどのように使用するかを以下に示します：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;付近のデバイスを探す：&lt;/b&gt; ローカルのWi-Fiまたはホットスポットネットワークを使用し、一部のAndroidバージョンでは「位置情報と付近のデバイス」権限を使用します。モバイルデータは使用しません。&lt;br&gt;
+        • &lt;b&gt;2つのデバイスをペアリングする：&lt;/b&gt; ローカルのWi-Fiネットワーク、またはカメラ（QRコードのスキャン）やNFC（タッチ）を使用して、暗号化キーを交換します。&lt;br&gt;
+        • &lt;b&gt;クリップボードのテキストを同期する：&lt;/b&gt; ローカルのWi-Fiネットワークを使用して、コピーしたテキストをペアリング済みのデバイスに送信します。&lt;br&gt;
+        • &lt;b&gt;同じネットワークでファイルを転送する：&lt;/b&gt; ローカルのWi-Fiネットワークを使用します。&lt;br&gt;
+        • &lt;b&gt;オフライン転送（ルーターやインターネットなし）：&lt;/b&gt; Wi-Fi DirectとBluetoothを使用してデバイス間の直接接続を確立し、QRコード（カメラ）またはNFCタッチで開始します。「位置情報」「付近のデバイス」「Bluetooth」の権限が必要です。&lt;br&gt;
+        • &lt;b&gt;受信したアプリをインストールする：&lt;/b&gt; インストール権限を使用し、あなたが確認した後にのみ実行されます。&lt;br&gt;
+        • &lt;b&gt;バックグラウンドで待機する：&lt;/b&gt; フォアグラウンドサービスと通知を使用して、受信するクリップボード項目や転送を待ち受けます。&lt;br&gt;&lt;br&gt;
+        要するに、本アプリはすべてにローカルのWi-Fi、ホットスポット、またはデバイス間の直接接続を使用します。検出や転送にモバイルデータを使用することはなく、インターネットに接続することもありません。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;アプリでリクエストされる権限&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Shareは、機能を有効にするために特定の権限をリクエストします。その理由は以下の通りです：&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;ネットワークアクセス&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：他のデバイスを検出し、ローカルWi-Fiネットワークを介してデータを転送するために必要です。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;位置情報と付近のデバイス&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：一部のAndroidバージョンでは、アプリがWi-Fi Direct経由で付近のデバイスを検索して接続するためにこの権限が必要であり、本アプリはこれをオフライン転送に使用します。当社はこれを収集しませんが、この権限がないと付近のデバイスを見つけられません。本アプリがあなたの物理的な位置情報を読み取ったり、保存したり、共有したりすることはありません。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：付近のデバイスとの直接的なオフライン接続を確立するために使用されます。これを通じてデータを収集することはなく、あなたを追跡するために使用されることもありません。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;カメラとNFC&lt;/b&gt; (CAMERA, NFC)：カメラはQRコードのスキャンのみに、NFCは2つのデバイスを近づけたときに接続を開始するためのみに、ペアリングとオフライン転送に使用されます。この情報はあなたのデバイス上で処理され、保存されたりどこかに送信されたりすることは一切ありません。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;受信したアプリのインストール&lt;/b&gt; (REQUEST_INSTALL_PACKAGES)：転送で受信したアプリ（APK）を、あなたの明示的な確認のもとでインストールできるようにするためのみに使用されます。本アプリが自動的に何かをインストールすることはありません。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;フォアグラウンドサービスと通知&lt;/b&gt; (FOREGROUND_SERVICE, POST_NOTIFICATIONS)：着信接続をリッスンするサービスを実行し、アプリがアクティブで接続を保護していることを示す永続的な通知を表示するために必要です。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;起動時の実行&lt;/b&gt; (RECEIVE_BOOT_COMPLETED)：デバイスを再起動したときにアプリがサービスを再起動できるようにし、常に接続できる状態を確保します。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;全画面インテント&lt;/b&gt; (USE_FULL_SCREEN_INTENT)：見逃さないように、ペアリングリクエストやファイル転送の着信に関する緊急の全画面アラートを表示するために使用されます。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;バッテリー最適化の無視&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：Androidオペレーティングシステムがアプリのバックグラウンドサービスをシャットダウンしてクリップボードの同期やファイル転送を中断するのを防ぐために、強く推奨されます。&lt;br&gt;&lt;br&gt;
+        • &lt;b&gt;外部ストレージ&lt;/b&gt; (WRITE_EXTERNAL_STORAGE)：古いAndroidバージョン（SDK 28以下）では、受信したファイルをデバイスのストレージに保存するために必要です。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;サードパーティサービス&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        Clipboard Shareは、分析、広告、またはデータの共有を伴うその他の目的でサードパーティのサービスを使用しません。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;子供のプライバシー&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        本アプリは13歳未満の子供による使用を意図していません。子供から意図的に情報を収集することはありません。そもそも個人データを収集しないため、ユーザーの年齢を確認するメカニズムはありません。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;このプライバシーポリシーの変更&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        当社は随時プライバシーポリシーを更新することがあります。変更があった場合は、同じURLに新しいプライバシーポリシーを掲載してお知らせします。変更がないか、定期的にこのプライバシーポリシーを確認することをお勧めします。&lt;br&gt;&lt;br&gt;
+        &lt;b&gt;お問い合わせ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+        このプライバシーポリシーについてご質問がある場合は、以下までお問い合わせください：&lt;br&gt;
+        entropic.software.lab@gmail.com</string>
+    <string name="apps_apk_title">アプリ (APK)</string>
+    <string name="search_hint">検索</string>
+    <string name="zero_apps_count">0 アプリ</string>
+    <string name="select_multiple_apps">複数のアプリを選択</string>
+    <string name="action_select">選択</string>
+    <string name="receiving_files_title">ファイルを受信中</string>
+    <string name="save_to_folder_downloads">保存先フォルダ：Downloads</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_close_with_check">✓ 閉じる</string>
+    <string name="incoming_transfer_title">着信転送</string>
+    <string name="default_device_name">デバイス名</string>
+    <string name="action_accept_files">ファイルを受け入れる</string>
+    <string name="action_decline">拒否</string>
+    <string name="secure_pairing_title">安全なペアリング</string>
+    <string name="initiating_cryptographic_handshake">暗号化ハンドシェイクを開始しています...</string>
+    <string name="pairing_request_title">ペアリングリクエスト</string>
+    <string name="action_accept">承認</string>
+    <string name="clipboard_share_windows_title">Clipboard Share Windows版</string>
+    <string name="desktop_app_in_development_desc">コンパニオンのデスクトップアプリは現在開発中であり、間もなく利用可能になります。</string>
+    <string name="menu_title">メニュー</string>
+    <string name="menu_windows_version">💻 Windows バージョン</string>
+    <string name="menu_restart_services">🔄 サービスを再起動</string>
+    <string name="menu_power_off">🔌 電源オフ</string>
+    <string name="action_pair">ペアリング</string>
+    <string name="action_unpair">ペアリング解除</string>
+    <string name="send_files_title">ファイルを送信</string>
+    <string name="type_file">ファイル</string>
+    <string name="type_media">メディア</string>
+    <string name="type_folder">フォルダ</string>
+    <string name="type_app">アプリ</string>
+    <string name="selected_files_title">選択されたファイル</string>
+    <string name="action_select_all">すべて選択</string>
+    <string name="select_trusted_recipients_title">接続されているデバイス</string>
+    <string name="action_send">送信</string>
+    <string name="history_and_push_title">クリップボードとプッシュ</string>
+    <string name="action_push_current_clipboard">📤 現在のクリップボードをプッシュ</string>
+    <string name="recent_copies_hint">最近のコピー（タップしてコピー）</string>
+    <string name="required_permissions_title">必要な権限</string>
+    <string name="battery_optimization_title">バッテリー最適化</string>
+    <string name="battery_optimization_desc">Clipboard Shareはバックグラウンドで実行されます。転送と同期が中断されないように、バッテリー最適化を無効にしてください。</string>
+    <string name="action_go_to_settings">設定へ進む</string>
+    <string name="notifications_title">通知</string>
+    <string name="notifications_desc">永続的なサービス状態を表示し、着信ペアリングやファイルリクエストを警告するために必要です。</string>
+    <string name="action_request_permission">権限をリクエスト</string>
+    <string name="action_finish_setup">セットアップを完了</string>
+    <string name="settings_title">設定</string>
+    <string name="settings_section_device">デバイス</string>
+    <string name="device_name_label">デバイス名：</string>
+    <string name="device_name_hint">デバイス名</string>
+    <string name="settings_section_general">一般</string>
+    <string name="theme_setting">テーマ</string>
+    <string name="theme_system">システム</string>
+    <string name="language_setting">言語</string>
+    <string name="save_to_setting">保存先</string>
+    <string name="save_location_downloads">Downloads</string>
+    <string name="settings_section_others">その他</string>
+    <string name="support_setting">サポート</string>
+    <string name="action_donate">☕ 寄付</string>
+    <string name="privacy_policy_setting">プライバシーポリシー</string>
+    <string name="action_read_privacy_policy">📄 読む</string>
+    <string name="system_status_title">システムステータス</string>
+    <string name="status_checking">ステータス：確認中...</string>
+    <string name="accept_incoming_clipboard">着信クリップボードを許可</string>
+    <string name="paired_and_nearby_devices">ペアリング済み＆近くのデバイス</string>
+    <string name="network_disconnected">ネットワークが切断されました</string>
+    <string name="press_button_to_reboot">下のボタンを押してエンジンを再起動します。</string>
+    <string name="user_agreement_title">ユーザー同意書</string>
+    <string name="agree_to_terms">規約を読み、同意します。</string>
+    <string name="action_next">次へ</string>
+    <string name="default_ip_address">192.168.x.x</string>
+    <string name="default_file_name_pdf">document.pdf</string>
+    <string name="action_open">開く</string>
+    <string name="default_file_name_zip">filename.zip</string>
+    <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
+    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_mesh_active">メッシュ有効</string>
+    <string name="unknown">不明</string>
+    <string name="unknown_file">不明なファイル</string>
+    <string name="action_select_count">選択 (%d)</string>
+    <string name="toast_clipboard_is_empty">クリップボードが空です</string>
+    <string name="toast_failed_to_read_clipboard">クリップボードの読み取りに失敗しました</string>
+    <string name="unknown_device">不明なデバイス</string>
+    <string name="notification_successfully_pushed_title">プッシュに成功しました</string>
+    <string name="notification_clipboard_received_title">クリップボードを受信しました</string>
+    <string name="notification_mesh_network_active">メッシュネットワークが有効です</string>
+    <string name="notification_channel_clipboard_share_service">Clipboard Share サービス</string>
+    <string name="notification_channel_clipboard_alerts">クリップボードアラート</string>
+    <string name="notification_channel_pairing_requests">ペアリングリクエスト</string>
+    <string name="notification_from_sender">送信元: %s</string>
+    <string name="notification_channel_file_transfer_progress">ファイル転送の進捗状況</string>
+    <string name="notification_channel_incoming_transfers">着信転送</string>
+    <string name="status_network_disconnected">ネットワークが切断されました</string>
+    <string name="status_receiving_paused">受信が一時停止しました</string>
+    <string name="status_scanning_for_devices">デバイスをスキャンしています...</string>
+    <string name="status_connected_to_devices">%d個のデバイスに接続済み</string>
+    <string name="toast_push_failed_no_devices">プッシュ失敗：オンラインのデバイスがありません。</string>
+    <string name="toast_no_active_transfer">アクティブな転送が見つかりません。</string>
+    <string name="toast_failed_to_connect_for_resume">再開のための接続に失敗しました</string>
+    <string name="incoming_transfer_details" formatted="false">%sが%d個のファイルを送信中 (%.2f MB)</string>
+    <string name="toast_not_enough_storage_space">ファイルを受信するためのストレージ容量が不足しています。</string>
+    <string name="toast_cancelling_transfer">転送をキャンセルしています...</string>
+    <string name="toast_custom_save_location_inaccessible">カスタム保存場所にアクセスできません。Downloadsにフォールバックします。</string>
+    <string name="status_paused_timeout">一時停止（タイムアウト）</string>
+    <string name="status_cancelled">キャンセル済み</string>
+    <string name="status_paused_network_dropped">一時停止：ネットワーク切断</string>
+    <string name="status_paused_waiting_reconnect">一時停止（再接続を待機中...）</string>
+    <string name="toast_transfer_status">転送 %s</string>
+    <string name="action_resume_when_reconnected">再接続時に再開</string>
+    <string name="file_progress_waiting">待機中... (0.0 MB / %.1f MB)</string>
+    <string name="file_progress_percentage" formatted="false">%d%% (%.1f MB / %.1f MB)</string>
+    <string name="custom_folder_label">カスタムフォルダ</string>
+    <string name="file_progress_complete_saved_to">完了 - %sに保存されました</string>
+    <string name="toast_error_no_compatible_app">エラー：このファイル形式を開くためのアプリが見つかりません。</string>
+    <string name="toast_error_generic">エラー：%s</string>
+    <string name="action_delete">削除</string>
+    <string name="action_sending">送信中...</string>
+    <string name="toast_transfer_interrupted">転送が中断されました。再接続時に再開できます。</string>
+    <string name="toast_batch_transfer_complete">一括転送が完了しました！</string>
+    <string name="shortcut_send_to_device">%sに送信</string>
+    <string name="shortcut_transfer_via_clipboard_share">Clipboard Shareで転送</string>
+    <string name="toast_pushing_clipboard_to_mesh">クリップボードをメッシュにプッシュしています...</string>
+    <string name="no_clipboard_history_yet">クリップボードの履歴はまだありません。</string>
+    <string name="toast_copied_to_clipboard">クリップボードにコピーしました</string>
+    <string name="toast_notifications_permission_required">フォアグラウンドサービスには通知権限が必要です。</string>
+    <string name="toast_storage_permission_required">このAndroidバージョンでは、ストレージ権限がないとファイル転送が失敗する可能性があります。</string>
+    <string name="default_android_device_name">Androidデバイス</string>
+    <string name="toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>
+    <string name="toast_shutting_down_engine">Clipboard Share をシャットダウンしています...</string>
+    <string name="toast_notification_permission_granted">通知権限が許可されました！</string>
+    <string name="toast_notifications_recommended">最高のエクスペリエンスを得るために通知を推奨します。</string>
+    <string name="toast_notification_permission_already_granted">このバージョンでは通知権限は既に許可されています。</string>
+    <string name="status_permission_granted">権限付与済み</string>
+    <string name="status_granted_by_default">デフォルトで許可</string>
+    <string name="toast_could_not_open_battery_settings">バッテリー設定を自動的に開けませんでした。</string>
+    <string name="theme_system_default">システムデフォルト</string>
+    <string name="toast_could_not_open_browser">ブラウザを開けませんでした</string>
+    <string name="theme_light">ライト</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="dialog_title_choose_theme">テーマの選択</string>
+    <string name="dialog_title_choose_language">言語の選択</string>
+    <string name="toast_language_preference_saved">言語設定が保存されました。完全な翻訳サポートは間もなく追加されます。</string>
+    <string name="dialog_title_privacy_policy">プライバシーポリシー</string>
+    <string name="action_close">閉じる</string>
+    <string name="selected_folder_fallback">選択したフォルダ</string>
+    <string name="toast_failed_to_load_file_ui">ファイルUIの読み込みに失敗しました</string>
+    <string name="status_no_network">ステータス：ネットワークなし</string>
+    <string name="toast_rebooting_engines">エンジンを再起動しています...</string>
+    <string name="status_active_and_polling">ステータス：アクティブ＆ポーリング中</string>
+    <string name="toast_flushing_network_cache">ネットワークキャッシュをクリアしています...</string>
+    <string name="toast_unpaired_from_device">%sとのペアリングを解除しました</string>
+    <string name="status_requesting_pair">ペアリングをリクエスト中</string>
+    <string name="status_waiting_for_accept">%sの承認を待っています...</string>
+    <string name="toast_successfully_paired_with">%sと正常にペアリングしました！</string>
+    <string name="toast_pairing_declined_by">%sによってペアリングが拒否されました。</string>
+    <string name="toast_pairing_timed_out">ペアリングがタイムアウトしました。応答がありません。</string>
+    <string name="toast_pairing_failed">ペアリング失敗。同じネットワーク上にいるか確認してください。</string>
+    <string name="toast_paired_with_device">%sとペアリング済み</string>
+    <string name="toast_pairing_declined">ペアリングが拒否されました</string>
+    <string name="notification_transfers_can_be_resumed">%d個の転送を再開できます</string>
+    <string name="notification_connection_restored_resume">接続が復元されました。タップして再開します。</string>
+    <string name="notification_sending_resumed_title">送信が再開されました</string>
+    <string name="notification_resuming_batch_transfer">一括転送を再開しています...</string>
+    <string name="toast_resumed_transfer_complete">再開された転送が完了しました</string>
+    <string name="notification_incoming_transfer_request_title">着信転送リクエスト</string>
+    <string name="notification_incoming_transfer_request_desc" formatted="false">%sが%d個のファイルを送信しています。タップして応答します。</string>
+    <string name="title_transfer_history">転送履歴</string>
+    <string name="no_transfer_history_yet">転送履歴はまだありません。</string>
+    <string name="format_selected_count">%d 選択済み</string>
+    <string name="title_transaction_details">トランザクションの詳細</string>
+    <string name="nav_send">送信</string>
+    <string name="nav_pairing">ペアリング</string>
+    <string name="nav_clipboard">クリップボード</string>
+    <string name="transfer_history_title">転送履歴</string>
+    <string name="format_to_device">宛先: %s</string>
+    <string name="format_from_device">送信元: %s</string>
+    <string name="status_transferring_dots">転送中...</string>
+    <string name="status_declined">拒否</string>
+    <string name="status_done_with_icon">完了</string>
+    <string name="status_paused_with_icon">一時停止</string>
+    <string name="status_transferring_with_icon">転送中</string>
+    <string name="status_declined_with_icon">拒否</string>
+    <string name="status_transferring">転送中</string>
+    <string name="status_paused">一時停止</string>
+    <string name="action_continue">続行</string>
+    <string name="action_grant">許可</string>
+    <string name="action_receive">受信</string>
+    <string name="action_resume">再開</string>
+    <string name="action_retry">再試行</string>
+    <string name="action_turn_on">オンにする</string>
+    <string name="action_use_bluetooth">今すぐBluetoothを使う</string>
+    <string name="diagnostics_all_failed">すべての方法が失敗しました</string>
+    <string name="diagnostics_connected_via">%1$s 経由で接続済み</string>
+    <string name="diagnostics_empty">オフグリッド転送の試行はまだ記録されていません。QR/NFC転送を試してから、ここに戻ってください。</string>
+    <string name="diagnostics_outcome_connected">接続済み</string>
+    <string name="diagnostics_outcome_failed">失敗</string>
+    <string name="diagnostics_outcome_pending">進行中</string>
+    <string name="diagnostics_outcome_skipped">スキップ</string>
+    <string name="diagnostics_share">ログを共有</string>
+    <string name="diagnostics_title">接続診断</string>
+    <string name="menu_diagnostics">接続診断</string>
+    <string name="menu_settings">設定</string>
+    <string name="nav_receive">受信</string>
+    <string name="nfc_a11y_angled">スマホを45度に傾けて持ってください</string>
+    <string name="nfc_a11y_flat">スマホを平らに持ってください</string>
+    <string name="nfc_a11y_not_selected">未選択</string>
+    <string name="nfc_a11y_selected">選択済み</string>
+    <string name="nfc_a11y_vertical">スマホを縦に持ってください</string>
+    <string name="nfc_guide_continue">わかりました</string>
+    <string name="nfc_guide_label_their">相手のスマホ</string>
+    <string name="nfc_guide_label_your">あなたのスマホ</string>
+    <string name="nfc_guide_subtitle_receive">スマホの背面どうしを合わせて、光る点が重なるようにしてください。</string>
+    <string name="nfc_guide_subtitle_send">あなたのスマホを相手のデバイスと背面どうしで合わせて、光る点が重なるようにしてください。</string>
+    <string name="nfc_guide_title">スマホどうしを合わせてください</string>
+    <string name="nfc_hint_angled">NFCチップは背面の上の方にあります。スマホを約45°に傾けて、光る点どうしを合わせてください。</string>
+    <string name="nfc_hint_flat">NFCチップは上部近くにあります。両方のスマホを平らに置き、点が光る上部どうしを合わせてください。</string>
+    <string name="nfc_hint_vertical">NFCチップは中央あたりにあります。両方のスマホを縦に持ち、光る点どうしを合わせてください。</string>
+    <string name="nfc_style_angled">45°</string>
+    <string name="nfc_style_flat">平ら</string>
+    <string name="nfc_style_vertical">縦向き</string>
+    <string name="offgrid_accept_hint">このデバイスに接続リクエストが表示されたら、「承認」をタップしてください。</string>
+    <string name="offgrid_band_warning">グループは %1$d MHz 上にあります。一部のデバイスでは見つけられない場合があります。</string>
+    <string name="offgrid_bt_available">Wi-Fiに時間がかかっていますか？Bluetoothの準備ができています。遅いですが、必ず接続できます。</string>
+    <string name="offgrid_camera_denied">コードをスキャンするにはカメラの権限が必要です。スマホどうしをタップしてNFCを使うこともできます。</string>
+    <string name="offgrid_confirm_subtitle">%1$d 個のファイル • %2$.1f MB</string>
+    <string name="offgrid_confirm_title">%s があなたにファイルを送ろうとしています</string>
+    <string name="offgrid_connecting_title">接続中…</string>
+    <string name="offgrid_degraded_bt_off">\nBluetooth制御チャンネルがオフです。代替方法が制限されています。</string>
+    <string name="offgrid_degraded_mode">制限モード：基本的なWi-Fi接続のみが有効です。より高速で安定した接続のために、近くのデバイスへのアクセス権限を許可してください。</string>
+    <string name="offgrid_error_all_methods">どの方法でも接続できませんでした。スマホを近づけ、Wi-FiとBluetoothがオンになっているか確認して、再試行してください。</string>
+    <string name="offgrid_error_control_failed">転送を調整する Bluetooth 接続を確立できませんでした。両方のスマホのロックを解除し、1メートル以内に近づけてから再試行してください。</string>
+    <string name="offgrid_error_code_expired">コードの有効期限が切れました。送信側に送信画面を開き直してもらってください。</string>
+    <string name="offgrid_error_connect_failed">接続できませんでした。送信側の画面がまだ開いていることを確認して、再試行してください。</string>
+    <string name="offgrid_error_fallback_failed">直接接続に失敗しました。スマホを近づけたまま、送信側が承認したことを確認して、再試行してください。</string>
+    <string name="offgrid_error_join_failed">送信側のネットワークに参加できませんでした。スマホを近づけたまま、接続の確認に応じて、再試行してください。</string>
+    <string name="offgrid_error_location_off">位置情報がオフです。送信側の直接ネットワークを見つけるには、Androidで位置情報をオンにする必要があります。</string>
+    <string name="offgrid_error_no_files">送信するファイルがありません。</string>
+    <string name="offgrid_error_sender_busy">送信側は別のデバイスでビジー状態です。</string>
+    <string name="offgrid_error_transfer_failed">転送に失敗しました。もう一度コードを表示して再試行してください。</string>
+    <string name="offgrid_error_update_app">このコードはより新しいバージョンで作成されました。受信するにはアプリを更新してください。</string>
+    <string name="offgrid_error_wifi_off">Wi-Fiがオフです。オフグリッド送信を使うにはオンにしてください。</string>
+    <string name="offgrid_error_wifi_off_receiver">Wi-Fiがオフです。受信するにはオンにしてください。インターネット接続は不要です。</string>
+    <string name="offgrid_fallback_permission_rationale">標準の接続がうまくいかないときにアプリが直接接続できるよう、近くのデバイスへのアクセスを許可してください。</string>
+    <string name="offgrid_hce_description">Clipboard Share オフグリッド転送の認証情報</string>
+    <string name="offgrid_join_failed_closer">送信側に到達できませんでした。スマホを近づけ、もう一度コードを表示してもらってから、再試行してください。</string>
+    <string name="offgrid_nfc_off">NFCがオフです。タップして有効にしてください</string>
+    <string name="offgrid_nfc_ready">NFCの準備ができました。タップしてスマホを合わせる位置を確認してください</string>
+    <string name="offgrid_nfc_unavailable">NFCを利用できません。QRのみ</string>
+    <string name="offgrid_permission_miui_hint">\nXiaomi/MIUIでは、アプリ情報 → 権限 で「近くのデバイス」を有効にしてください。</string>
+    <string name="offgrid_permission_permanently_denied">近くのデバイスの権限がブロックされているため、基本的なWi-Fi接続のみが利用できます。より高速で安定した直接接続のために、アプリの設定を開いて有効にしてください。</string>
+    <string name="offgrid_permission_required">オフグリッド送信には近くのデバイスの権限が必要です。</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_receive_title">QR / NFC で受信</string>
+    <string name="offgrid_send_title">NFC / QR で送信</string>
+    <string name="offgrid_session_notification_text">直接接続を維持しています。</string>
+    <string name="offgrid_session_notification_title">オフグリッド転送が有効です</string>
+    <string name="offgrid_status_code_scanned">コードをスキャンしました</string>
+    <string name="offgrid_status_complete">転送完了</string>
+    <string name="offgrid_status_connecting">%s に接続中…</string>
+    <string name="offgrid_status_control_linked">%s とBluetoothでリンクしました。最速の接続を調整中…</string>
+    <string name="offgrid_status_creating_group">直接接続を設定中…</string>
+    <string name="offgrid_status_handshaking">接続を検証中…</string>
+    <string name="offgrid_status_interrupted">接続が切れました。相手のデバイスが再開するのを待っています…</string>
+    <string name="offgrid_status_receiving">ファイルを受信中…</string>
+    <string name="offgrid_status_reestablishing">グループを再確立中…</string>
+    <string name="offgrid_status_rescan_to_resume">接続が閉じられました。再スキャンして再開してください。進捗は転送履歴に保存されています。</string>
+    <string name="offgrid_status_scanning">カメラを送信側のコードに向けてください</string>
+    <string name="offgrid_status_sending">デバイスが接続されました。%1$s に送信中（%2$d 個のファイル）…</string>
+    <string name="offgrid_status_trying_direct">直接接続を試行中… 送信側で確認に応じてください。</string>
+    <string name="offgrid_status_trying_method">接続方法 %1$d / %2$d を試行中…</string>
+    <string name="offgrid_status_waiting_for_scan">スキャンを待っています…</string>
+    <string name="receive_enable_nfc">NFCを有効にする</string>
+    <string name="receive_nfc_listening">NFC受信待機中。スマホどうしを合わせてください</string>
+    <string name="receive_nfc_unavailable_device">このデバイスではNFCを利用できません</string>
+    <string name="receive_open_camera">カメラを開く</string>
+    <string name="receive_title">ファイルを受信</string>
+    <string name="send_to_devices_title">デバイスに送信</string>
+    <string name="send_via_connected_devices">接続されているデバイス</string>
+    <string name="send_via_nfc_qr">NFC / QR</string>
+    <string name="send_via_title">送信方法</string>
+    <string name="action_how_to_use">使い方</string>
+    <string name="discoverable_to_devices">他のデバイスから検出可能</string>
+    <string name="transaction_details_title">転送の詳細</string>
+    <string name="type_text">テキスト</string>
+    <string name="transfer_resume_request_title">再開リクエスト</string>
+    <string name="transfer_resume_request_text">送信側が転送の再開をリクエストしています。タップして表示してください。</string>
+    <string name="transfer_resumable_one">1件の転送を再開できます</string>
+    <string name="transfer_resumable_many">%1$d件の転送を再開できます</string>
+    <string name="transfer_connection_restored">接続が復元されました。タップして再開してください。</string>
+    <string name="transfer_failed_connect_sender">送信側への接続に失敗しました</string>
+    <string name="transfer_sending_resumed_title">送信を再開しました</string>
+    <string name="transfer_sending_resumed_text">一括転送を再開しています...</string>
+    <string name="transfer_resumed_complete">再開された転送が完了しました</string>
+    <string name="transfer_incoming_title">着信転送</string>
+    <string name="transfer_incoming_text">%1$sが%2$d個のファイルを送信しようとしています。</string>
+    <string name="transfer_receiving_title">ファイルを受信中</string>
+    <string name="transfer_receiving_text">%1$sが%2$d個のファイルを送信しています。タップして進捗を表示してください。</string>
+    <string name="applist_version_unknown">不明</string>
+    <string name="applist_app_count">%1$d 個のアプリ</string>
+    <string name="applist_select_count">選択 (%1$d)</string>
+    <string name="applist_app_info">%1$s • v%2$s</string>
+    <string name="clip_clipboard_empty">クリップボードが空です</string>
+    <string name="clip_read_failed">クリップボードの読み取りに失敗しました</string>
+    <string name="status_push_success_title">プッシュに成功しました</string>
+    <string name="status_clipboard_received_title">クリップボードを受信しました</string>
+    <string name="status_channel_service">Clipboard Share サービス</string>
+    <string name="status_channel_alerts">クリップボードアラート</string>
+    <string name="status_channel_pairing">ペアリングリクエスト</string>
+    <string name="status_channel_transfer_progress">ファイル転送の進捗状況</string>
+    <string name="status_channel_incoming_transfers">着信転送</string>
+    <string name="status_mesh_active">メッシュネットワークが有効です</string>
+    <string name="pairing_request_from">送信元: %1$s</string>
+    <string name="status_scanning_devices">デバイスをスキャンしています...</string>
+    <string name="status_connected_devices">%1$d個のペアリング済みデバイスに接続しました</string>
+    <string name="transfer_add_text_hint">追加する内容を入力してください...</string>
+    <string name="transfer_add_text_title">テキストを追加</string>
+    <string name="transfer_add_text_positive">追加</string>
+    <string name="transfer_text_item_name">テキスト %1$d</string>
+    <string name="transfer_tut_file_type">送信するファイルの種類を選択してください：ファイル、メディア、フォルダ、テキスト、またはアプリ。</string>
+    <string name="transfer_tut_files_appear">選択したファイルがここに表示されます。ファイルをタップするとプレビューできます。</string>
+    <string name="transfer_tut_long_press">任意のファイルを長押しすると選択モードに入り、選択した項目を削除できます。</string>
+    <string name="transfer_tut_send_button">ファイルを選択した状態で「送信」をタップし、送信方法を選びます。</string>
+    <string name="transfer_tut_send_via">接続されているデバイスはWi-Fiネットワークを使用します。NFC / QR はどこでも使え、ルーターは不要です。</string>
+    <string name="transfer_tut_pick_devices">1台以上のペアリング済みデバイスを選び、「送信」を押してください。</string>
+    <string name="transfer_tut_offgrid_code">このコードを受信側のスマホに見せるか、スマホどうしをタップしてください。</string>
+    <string name="transfer_tut_history">ここをタップすると転送履歴を表示し、進捗を確認できます。</string>
+    <string name="transfer_tut_next">次へ</string>
+    <string name="transfer_shortcut_short_label">%1$sに送信</string>
+    <string name="transfer_shortcut_long_label">Clipboard Shareで転送</string>
+    <string name="transfer_unknown_file">不明なファイル</string>
+    <string name="history_tutorial_push">ここをタップすると、現在のクリップボードのテキストをすべてのペアリング済みデバイスに即座にプッシュできます。</string>
+    <string name="history_tutorial_accept_switch">他のデバイスからクリップボードの内容を受信したくない場合は、これをオフにしてください。</string>
+    <string name="history_tutorial_next">次へ</string>
+    <string name="history_toast_pushing">クリップボードをメッシュにプッシュしています...</string>
+    <string name="history_toast_empty">クリップボードが空です</string>
+    <string name="history_toast_read_failed">クリップボードの読み取りに失敗しました</string>
+    <string name="history_empty">クリップボードの履歴はまだありません。</string>
+    <string name="history_toast_copied">クリップボードにコピーしました</string>
+    <string name="perm_notifications_required">フォアグラウンドサービスには通知権限が必要です。</string>
+    <string name="perm_storage_required">このAndroidバージョンでは、ストレージ権限がないとファイル転送が失敗する可能性があります。</string>
+    <string name="status_default_device_name">Androidデバイス</string>
+    <string name="menu_restart_toast">Clipboard Share エンジンを再起動しています...</string>
+    <string name="menu_power_off_toast">Clipboard Share をシャットダウンしています...</string>
+    <string name="pairing_requesting_title">ペアリングをリクエスト中</string>
+    <string name="pairing_waiting_subtitle">%1$sの承認を待っています...</string>
+    <string name="pairing_success">%1$sと正常にペアリングしました！</string>
+    <string name="pairing_declined">%1$sによってペアリングが拒否されました。</string>
+    <string name="pairing_timed_out">ペアリングがタイムアウトしました。相手のユーザーが応答しませんでした。</string>
+    <string name="pairing_failed">ペアリングに失敗しました。相手のデバイスが同じネットワーク上にあることを確認してください。</string>
+    <string name="pairing_unknown_device">不明なデバイス</string>
+    <string name="pairing_from_device">送信元: %1$s</string>
+    <string name="pairing_paired_with">%1$sとペアリング済み</string>
+    <string name="perm_notification_granted_toast">通知権限が許可されました！</string>
+    <string name="perm_notification_recommended_toast">最高のエクスペリエンスを得るために通知を推奨します。</string>
+    <string name="perm_notification_already_granted_toast">このAndroidバージョンでは通知権限は既に許可されています。</string>
+    <string name="perm_permission_granted_label">権限付与済み</string>
+    <string name="perm_go_to_settings_label">設定へ進む</string>
+    <string name="perm_request_permission_label">権限をリクエスト</string>
+    <string name="perm_granted_by_default_label">デフォルトで許可</string>
+    <string name="perm_battery_settings_error_toast">バッテリー設定を自動的に開けませんでした。</string>
+    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_toast_could_not_open_browser">ブラウザを開けませんでした</string>
+    <string name="settings_dialog_choose_language">言語の選択</string>
+    <string name="settings_toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>
+    <string name="settings_dialog_privacy_policy">プライバシーポリシー</string>
+    <string name="settings_action_close">閉じる</string>
+    <string name="settings_save_location_selected_folder">選択したフォルダ</string>
+    <string name="settings_default_device_name">Androidデバイス</string>
+    <string name="status_tutorial_discoverable_toggle">他のデバイスから検出されたくない場合は、これをオフにしてください。</string>
+    <string name="status_tutorial_device_name">ここをタップすると、識別しやすいようにデバイスの表示名を変更できます。</string>
+    <string name="status_tutorial_pair_nearby">近くのデバイスで「ペアリング」をタップすると、そのデバイスとペアリングしてファイルの転送を開始できます。</string>
+    <string name="status_tutorial_pair_button">「ペアリング」ボタンをタップすると、このデバイスに接続してファイルの共有を開始できます。</string>
+    <string name="status_action_next">次へ</string>
+    <string name="status_rebooting_engines">エンジンを再起動しています...</string>
+    <string name="status_flushing_cache">ネットワークキャッシュをクリアしています...</string>
+    <string name="status_unpaired_from">%1$sとのペアリングを解除しました</string>
+    <string name="history_pending_accept">承認待ち...</string>
+    <string name="history_session_unavailable">セッションは利用できなくなりました</string>
+    <string name="history_resume_request_sent">%1$sに再開リクエストを送信しました</string>
+    <string name="history_resume_request_failed">再開リクエストの送信に失敗しました</string>
+    <string name="history_resume_no_device_ip">再開リクエストを送信するデバイスIPが見つかりません</string>
+    <string name="status_failed_with_icon">✗ 失敗</string>
+    <string name="status_pending_with_icon">⏳ 保留中</string>
+    <string name="status_cancelled_with_icon">✗ キャンセル済み</string>
+    <string name="history_chooser_open_media">メディアを開く</string>
+    <string name="history_chooser_open_storage">保存場所を開く</string>
+    <string name="history_chooser_open_file">ファイルを開く</string>
+    <string name="history_file_not_found">ファイルが見つかりません</string>
+    <string name="history_cannot_open_file">ファイルを開けません</string>
+    <string name="history_waiting_zero">待機中 (0%)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d個のファイル (%3$s MB)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_more_files_suffix"> 他%1$d件</string>
+    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress_prefixed">%1$s: %2$s</string>
+    <string name="history_filter_all">すべて</string>
+    <string name="history_filter_sent">送信済み</string>
+    <string name="history_filter_received">受信済み</string>
+    <string name="history_filter_completed">完了</string>
+    <string name="history_filter_pending">保留中</string>
+    <string name="history_filter_cancelled">キャンセル済み</string>
+    <string name="history_tutorial_list">ここで最近のファイル転送をすべて確認できます。</string>
+    <string name="history_tutorial_filter">受信、送信、一時停止、キャンセルで絞り込めます。カプセルをタップしてください。</string>
+    <string name="history_tutorial_select">「選択」をタップすると、転送記録を管理および削除できます。</string>
+    <string name="history_tutorial_tap_record">任意の転送記録をタップすると、その詳細と進捗を確認できます。</string>
+    <string name="history_tutorial_open">「開く」ボタンを押すと受信したファイルを開けます。</string>
+    <string name="transfer_incoming_from">送信元: %1$s (%2$d個のファイル)</string>
+    <string name="pairing_declined_simple">ペアリングが拒否されました</string>
+</resources>

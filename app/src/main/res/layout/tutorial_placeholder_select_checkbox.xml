@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheckBox xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="32dp"
+    android:layout_height="32dp"
+    android:button="@null"
+    android:gravity="center"
+    android:background="@drawable/circle_checkbox_selector"
+    android:visibility="visible"
+    android:checked="true" />

@@ -1,0 +1,99 @@
+/* ==========================================================================
+   animations.css — scroll-scrubbed reveal + parallax (driven by --p from
+   reveal.js) plus the few load/loop animations. Only transform / opacity /
+   filter are animated.
+   ========================================================================== */
+
+/* --- Scrubbed reveal: opacity + offset interpolated by --p (0..1) --------- */
+[data-reveal] {
+  opacity: var(--p, 0);
+  transform: translateY(calc((1 - var(--p, 0)) * 22px));
+  transition: opacity 160ms linear, transform 160ms linear;
+  will-change: opacity, transform;
+}
+[data-reveal="left"] {
+  transform: translateX(calc((1 - var(--p, 0)) * -32px));
+}
+[data-reveal="right"] {
+  transform: translateX(calc((1 - var(--p, 0)) * 32px));
+}
+[data-reveal="scale"] {
+  transform: scale(calc(0.94 + var(--p, 0) * 0.06));
+}
+[data-reveal="fade"] {
+  transform: none;
+}
+
+/* --- Parallax: drift by pass-through progress (0.5 = neutral/centered) ----- */
+[data-parallax] {
+  transform: translateY(calc((0.5 - var(--p, 0.5)) * var(--par, 32px)));
+  transition: transform 120ms linear;
+  will-change: transform;
+}
+
+/* --- Hero headline word rise (on load; hero is above the fold) ------------ */
+.word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.5em);
+  animation: word-rise var(--dur-slow) var(--ease) forwards;
+  animation-delay: calc(var(--w, 0) * var(--stagger) + 120ms);
+}
+@keyframes word-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Ambient hero glow ---------------------------------------------------- */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+/* --- Stepper progress line: drawn by the section's own --p ---------------- */
+.stepline__fill {
+  transform: scaleX(var(--p, 0));
+  transform-origin: left center;
+}
+
+/* --- Transport-ladder loop (bento tile) ----------------------------------- */
+.ladder-step {
+  transition: color var(--dur-med) var(--ease-std),
+    background-color var(--dur-med) var(--ease-std),
+    border-color var(--dur-med) var(--ease-std);
+}
+.ladder-step.is-active {
+  color: var(--accent-text);
+  background: var(--accent-muted);
+  border-color: transparent;
+}
+.ladder-step.is-active .ladder-dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px 1px var(--accent-glow);
+}
+
+/* --- Reduced motion: snap everything to its final frame ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [data-parallax] {
+    transform: none !important;
+  }
+  .word {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .stepline__fill {
+    transform: scaleX(1) !important;
+  }
+}

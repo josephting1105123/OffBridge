@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <View
+        android:id="@+id/scanReticle"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/qr_reticle" />
+
+    <FrameLayout
+        android:id="@+id/skeletonCameraContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- NFC receive guide — shown only in nfcMode (PRESENTATION_NFC); GONE by default. A full-screen
+         opaque overlay so the camera preview + reticle beneath it are irrelevant when visible. The
+         identical NFC reader, confirm card, and connect path are reused; only the camera is swapped
+         for this tap-position guide (mirrors the send-side QrDisplayFragment.nfcMode). -->
+    <LinearLayout
+        android:id="@+id/receiveNfcGuideSection"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp"
+        android:background="?attr/appBackgroundColor"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="@string/nfc_guide_title"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/receiveNfcGuideSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/nfc_guide_subtitle_receive"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textSize="15sp"
+            android:gravity="center" />
+
+        <com.EntropicSoftwareLab.ClipboardShare.offgrid.NfcTapGuideView
+            android:id="@+id/receiveNfcGuideView"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="@string/nfc_guide_subtitle_receive" />
+
+        <TextView
+            android:id="@+id/receiveNfcGuideHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="2"
+            android:gravity="center"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="14sp"
+            android:accessibilityLiveRegion="polite"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/receiveNfcDiag"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="11sp"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textIsSelectable="true"
+            android:contentDescription="@string/nfc_diag_label"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/scannerHeaderBlock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp"
+        android:layout_marginTop="32dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/offgrid_receive_title"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:shadowColor="#000000"
+            android:shadowRadius="6" />
+
+        <TextView
+            android:id="@+id/tvScanStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/offgrid_status_scanning"
+            android:textColor="#DDDDDD"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:shadowColor="#000000"
+            android:shadowRadius="6" />
+
+        <TextView
+            android:id="@+id/tvScannerNfcChip"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textSize="13sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/rect_button_bg"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Degraded-mode banner: shown when the strong tiers (T0 credential join /
+         BLE) are unavailable because nearby/Bluetooth permission was denied. -->
+    <LinearLayout
+        android:id="@+id/degradedBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/scannerHeaderBlock"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvDegradedBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnDegradedGrant"
+            style="@style/Widget.App.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:text="@string/action_grant"
+            android:backgroundTint="?attr/appGreen"
+            android:textColor="#000000" />
+    </LinearLayout>
+
+    <!-- Proactive hotspot-on warning: shown only while SCANNING when this device hosts a hotspot
+         (Net.detectHotspotIp != null). Dismissible; auto-hides on payload arrival. Separate from the
+         failure messageCard so the two never collide. -->
+    <LinearLayout
+        android:id="@+id/hotspotWarningBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/degradedBanner"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvHotspotWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/offgrid_warn_hotspot_on"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnHotspotWarningDismiss"
+                style="@style/Widget.App.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="@string/action_close"
+                android:backgroundTint="#333333"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnHotspotWarningSettings"
+                style="@style/Widget.App.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_open_hotspot_settings"
+                android:backgroundTint="?attr/appGreen"
+                android:textColor="#000000" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Permission rationale / retry card -->
+    <LinearLayout
+        android:id="@+id/scannerMessageCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvScannerMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="15sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnScannerMessageAction"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="?attr/appGreen"
+            android:textColor="#000000" />
+    </LinearLayout>
+
+    <!-- Receive confirmation card -->
+    <LinearLayout
+        android:id="@+id/confirmCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/bg_bottom_sheet_rounded"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvConfirmTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvConfirmSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/receiveProgressSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/pbReceive"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="?attr/appGreen" />
+
+            <TextView
+                android:id="@+id/tvReceiveProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnConfirmReceive"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="@string/action_receive"
+            android:backgroundTint="?attr/appGreen"
+            android:textColor="#000000"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnConfirmCancel"
+            style="@style/Widget.App.Button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/action_cancel"
+            android:backgroundTint="#333333"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Connecting overlay: a clear loading screen (matching the pairing flow)
+         shown over the camera while the transport ladder runs, so the user
+         doesn't think the camera is frozen/lagging. -->
+    <LinearLayout
+        android:id="@+id/connectingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/appBackgroundColor"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvConnectingTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/offgrid_connecting_title"
+            android:textColor="?attr/appTextPrimaryColor"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvConnectingStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textSize="15sp"
+            android:gravity="center"
+            android:layout_marginBottom="40dp" />
+
+        <ProgressBar
+            android:id="@+id/pbConnecting"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:indeterminateTint="?attr/appGreen" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/offgrid_diag_hint"
+            android:textColor="?attr/appTextSecondaryColor"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <ScrollView
+            android:id="@+id/diagScroll"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="6dp"
+            android:background="#22000000">
+
+            <TextView
+                android:id="@+id/tvDiag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textIsSelectable="true" />
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Hard block: hotspot ON + connected to another Wi-Fi → receiving can't work. Full-screen scrim
+         + card; the user resolves via either action. Shown/hidden by Kotlin (SCANNING state only).
+         clickable/focusable so taps don't fall through to the scanner behind it. -->
+    <FrameLayout
+        android:id="@+id/receiveBlockedOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="24dp"
+            android:background="@drawable/bg_bottom_sheet_rounded">
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_lock"
+                android:tint="#F59E0B"
+                android:contentDescription="@string/offgrid_blocked_title" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/offgrid_blocked_title"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btnBlockedDisconnectWifi"
+                style="@style/Widget.App.Button"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="20dp"
+                android:text="@string/offgrid_blocked_disconnect_wifi"
+                android:backgroundTint="?attr/appNavBarColor"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#33FFFFFF" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/label_or"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:textSize="13sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#33FFFFFF" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnBlockedTurnOffHotspot"
+                style="@style/Widget.App.Button"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="@string/offgrid_blocked_turn_off_hotspot"
+                android:backgroundTint="?attr/appGreen"
+                android:textColor="#000000"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/offgrid_blocked_body"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.3" />
+        </LinearLayout>
+    </FrameLayout>
+
+</RelativeLayout>

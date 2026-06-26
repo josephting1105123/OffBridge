@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/appBackgroundColor">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/btnOffGridCancel"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/tvOffGridTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/offgrid_send_title"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tvQrStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/offgrid_status_creating_group"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="15sp"
+                android:gravity="center" />
+
+            <FrameLayout
+                android:id="@+id/qrFrame"
+                android:layout_width="280dp"
+                android:layout_height="280dp"
+                android:layout_marginTop="24dp">
+
+                <ImageView
+                    android:id="@+id/ivQrCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#FFFFFF"
+                    android:padding="12dp"
+                    android:visibility="invisible"
+                    android:contentDescription="@string/offgrid_send_title" />
+
+                <FrameLayout
+                    android:id="@+id/skeletonQrContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+
+                <ProgressBar
+                    android:id="@+id/pbQrLoading"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="?attr/appGreen" />
+            </FrameLayout>
+
+            <!-- NFC presentation (shown instead of the QR when sending via NFC). -->
+            <LinearLayout
+                android:id="@+id/sendNfcGuideSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/sendNfcGuideSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="@string/nfc_guide_subtitle_send"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:textSize="15sp" />
+
+                <com.EntropicSoftwareLab.ClipboardShare.offgrid.NfcTapGuideView
+                    android:id="@+id/sendNfcGuideView"
+                    android:layout_width="match_parent"
+                    android:layout_height="320dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/sendNfcGuideHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:minLines="2"
+                    android:accessibilityLiveRegion="polite"
+                    android:textColor="?attr/appTextPrimaryColor"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvNfcChip"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textSize="13sp"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:background="@drawable/rect_button_bg"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvHotspotSetup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:minHeight="36dp"
+                android:includeFontPadding="false"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="@string/offgrid_hotspot_setup_set"
+                android:textColor="?attr/appGreen"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:background="@drawable/rect_button_bg" />
+
+            <TextView
+                android:id="@+id/tvHotspotSpeedTip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/offgrid_hotspot_speed_tip"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvBandWarningChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minHeight="36dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:textSize="13sp"
+                android:textColor="#B45309"
+                android:background="@drawable/rect_button_bg"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvAcceptHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/offgrid_accept_hint"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/progressSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp"
+                android:visibility="gone">
+
+                <ProgressBar
+                    android:id="@+id/pbTransfer"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:progressTint="?attr/appGreen" />
+
+                <TextView
+                    android:id="@+id/tvTransferProgress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="?attr/appTextSecondaryColor"
+                    android:textSize="13sp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnRetryGroup"
+                style="@style/Widget.App.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/action_retry"
+                android:backgroundTint="?attr/appGreen"
+                android:textColor="#000000"
+                android:visibility="gone" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="@string/offgrid_diag_hint"
+                android:textColor="?attr/appTextSecondaryColor"
+                android:textSize="11sp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tvDiag"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:padding="8dp"
+                android:background="#22000000"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textIsSelectable="true" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnOffGridCancel"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="#333333"
+        android:text="@string/action_cancel"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+</RelativeLayout>

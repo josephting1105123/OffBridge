@@ -1,0 +1,29 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+jdk17/
+jdk17.zip
+
+Window Ver/build/
+Window Ver/build2/
+app/release/
+
+# Stray build/daemon logs (machine-specific; may contain absolute paths)
+*.log
+build_info.log
+
+# Machine-local Claude Code permission cache (contains absolute paths)
+/.claude/settings.local.json

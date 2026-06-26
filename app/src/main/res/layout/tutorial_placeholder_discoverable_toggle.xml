@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.switchmaterial.SwitchMaterial xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/discoverable_to_devices"
+    android:textColor="?attr/appTextPrimaryColor"
+    android:textSize="16sp"
+    android:checked="true"
+    android:layout_marginTop="16dp"
+    app:useMaterialThemeColors="false"
+    app:thumbTint="@color/switch_thumb_color"
+    app:trackTint="@color/switch_track_color" />

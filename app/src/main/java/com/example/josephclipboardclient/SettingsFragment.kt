@@ -1,0 +1,301 @@
+package com.EntropicSoftwareLab.ClipboardShare
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.provider.DocumentsContract
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.text.HtmlCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SettingsScreen
+import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+/**
+ * Settings tab. The UI is Compose ([SettingsScreen], hosted via [ComposeView]); this fragment keeps
+ * all logic — the SAF directory launcher, the theme/language/privacy AlertDialogs and the special
+ * hotspot creds flow — and feeds the screen through observable state + callbacks.
+ */
+class SettingsFragment : Fragment() {
+
+    private val themeLabelState = mutableStateOf("")
+    private val languageLabelState = mutableStateOf("")
+    private val saveLocationLabelState = mutableStateOf("")
+    private val hotspotAutoConnectState = mutableStateOf(false)
+    private val acceptClipboardState = mutableStateOf(false)
+    private val discoverableState = mutableStateOf(false)
+
+    private val openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            val contentResolver = requireActivity().contentResolver
+            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(uri, takeFlags)
+
+            val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            prefs.edit().putString("save_location_uri", uri.toString()).apply()
+            updateSaveLocationText(uri)
+
+            // Re-pointing at a folder is the primary recovery trigger after a reinstall (the SAF
+            // grant doesn't survive uninstall): pull any history backup that folder holds.
+            val appCtx = requireContext().applicationContext
+            lifecycleScope.launch {
+                val result = withContext(Dispatchers.IO) {
+                    HistoryBackupManager.restoreFromSaveFolder(appCtx)
+                }
+                if (isAdded && !result.isEmpty) {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.settings_history_recovered, result.clipboardAdded, result.transfersAdded),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                AppTheme {
+                    SettingsScreen(
+                        themeLabel = themeLabelState.value,
+                        languageLabel = languageLabelState.value,
+                        saveLocationLabel = saveLocationLabelState.value,
+                        hotspotAutoConnect = hotspotAutoConnectState.value,
+                        acceptClipboard = acceptClipboardState.value,
+                        discoverable = discoverableState.value,
+                        onChangeTheme = { showThemeDialog() },
+                        onChangeLanguage = { showLanguageDialog() },
+                        onChangeSaveLocation = { openDirectoryLauncher.launch(null) },
+                        onHotspotAutoConnectChange = ::onHotspotAutoConnectChange,
+                        onAcceptClipboardChange = { enabled ->
+                            ClipboardService.isSyncEnabled = enabled
+                            acceptClipboardState.value = enabled
+                        },
+                        onDiscoverableChange = { enabled ->
+                            SecurityVault.setDiscoverable(requireContext(), enabled)
+                            discoverableState.value = enabled
+                        },
+                        onDonate = ::onDonate,
+                        onPrivacyPolicy = { showPrivacyPolicyDialog() },
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Theme / language pill labels.
+        updateThemeButtonText()
+        updateLanguageButtonText()
+
+        // Save-location label.
+        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val savedUriString = prefs.getString("save_location_uri", null)
+        if (savedUriString != null) {
+            updateSaveLocationText(Uri.parse(savedUriString))
+        } else {
+            saveLocationLabelState.value = getString(R.string.settings_save_location_downloads)
+        }
+
+        // Toggles.
+        syncHotspotState()
+        acceptClipboardState.value = ClipboardService.isSyncEnabled
+        discoverableState.value = SecurityVault.isDiscoverable(requireContext())
+    }
+
+    private var hotspotSwitchUpdating = false
+
+    /** Donate: open the Buy-Me-A-Coffee page; toast on failure (e.g. no browser installed). */
+    private fun onDonate() {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://buymeacoffee.com/josephting3")))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), getString(R.string.settings_toast_could_not_open_browser), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Hotspot auto-connect is "on" iff the user has saved their hotspot SSID/password (Android won't
+     * let an app read a manual hotspot's creds). So the switch tracks creds-presence: toggling ON opens
+     * the credentials dialog and the switch re-syncs to the real state when the dialog closes — staying
+     * on if saved, reverting if cancelled; toggling OFF clears the saved creds.
+     */
+    private fun onHotspotAutoConnectChange(isChecked: Boolean) {
+        if (hotspotSwitchUpdating) return
+        if (isChecked) {
+            if (SecurityVault.getHotspotCredentials(requireContext()) == null) {
+                com.EntropicSoftwareLab.ClipboardShare.offgrid.HotspotCredentialsDialog.show(
+                    requireContext(),
+                    onDismiss = { if (isAdded) syncHotspotState() }
+                ) { /* onChanged: the dismiss re-sync already reflects the saved state */ }
+            }
+            // else: creds already saved → auto-connect is already on; reflect that immediately.
+            syncHotspotState()
+        } else {
+            SecurityVault.clearHotspotCredentials(requireContext())
+            syncHotspotState()
+        }
+    }
+
+    /** Reflect the saved-creds state on the Compose switch without re-triggering its change handler. */
+    private fun syncHotspotState() {
+        hotspotSwitchUpdating = true
+        hotspotAutoConnectState.value = SecurityVault.getHotspotCredentials(requireContext()) != null
+        hotspotSwitchUpdating = false
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Keep the duplicated clipboard / discoverable toggles in sync with their other homes.
+        acceptClipboardState.value = ClipboardService.isSyncEnabled
+        discoverableState.value = SecurityVault.isDiscoverable(requireContext())
+        syncHotspotState()
+    }
+
+    // ==================== Theme ====================
+
+    private fun updateThemeButtonText() {
+        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val theme = prefs.getString("theme_mode", "System Default")
+        val displayTheme = when (theme) {
+            "Light" -> getString(R.string.theme_light)
+            "Dark" -> getString(R.string.theme_dark)
+            else -> getString(R.string.theme_system)
+        }
+        themeLabelState.value = displayTheme
+    }
+
+    private fun showThemeDialog() {
+        val themeKeys = arrayOf("System Default", "Light", "Dark")
+        val themeNames = arrayOf(getString(R.string.theme_system), getString(R.string.theme_light), getString(R.string.theme_dark))
+        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val currentTheme = prefs.getString("theme_mode", "System Default")
+        var checkedItem = themeKeys.indexOf(currentTheme)
+        if (checkedItem == -1) checkedItem = 0
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.dialog_title_choose_theme))
+            .setSingleChoiceItems(themeNames, checkedItem) { dialog, which ->
+                val selectedThemeKey = themeKeys[which]
+                prefs.edit().putString("theme_mode", selectedThemeKey).apply()
+
+                val mode = when (selectedThemeKey) {
+                    "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+                    "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+                AppCompatDelegate.setDefaultNightMode(mode)
+                updateThemeButtonText()
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.action_cancel), null)
+            .show()
+    }
+
+    // ==================== Language ====================
+
+    private fun updateLanguageButtonText() {
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val currentTag = if (currentLocales.isEmpty) "" else currentLocales.get(0)?.toLanguageTag() ?: ""
+        val languages = arrayOf("System Default", "English", "简体中文", "繁體中文", "Español", "Français", "日本語", "Deutsch", "Português", "Bahasa Indonesia", "Русский")
+        val localeTags = arrayOf("", "en-US", "zh-CN", "zh-TW", "es", "fr", "ja", "de", "pt", "id", "ru")
+        var index = localeTags.indexOfFirst { it == currentTag }
+        if (index == -1) index = localeTags.indexOfFirst { it.isNotEmpty() && currentTag.contains(it, ignoreCase = true) }
+        if (index == -1) index = localeTags.indexOfFirst { currentTag.startsWith("in") && it == "id" } // fallback for legacy Indonesian
+        if (index == -1) index = 0
+        languageLabelState.value = languages[index]
+    }
+
+    private fun showLanguageDialog() {
+        val languages = arrayOf("System Default", "English", "简体中文", "繁體中文", "Español", "Français", "日本語", "Deutsch", "Português", "Bahasa Indonesia", "Русский")
+        val localeTags = arrayOf("", "en-US", "zh-CN", "zh-TW", "es", "fr", "ja", "de", "pt", "id", "ru")
+        
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val currentTag = if (currentLocales.isEmpty) "" else currentLocales.get(0)?.toLanguageTag() ?: ""
+        var checkedItem = localeTags.indexOfFirst { it == currentTag }
+        if (checkedItem == -1) checkedItem = localeTags.indexOfFirst { it.isNotEmpty() && currentTag.contains(it, ignoreCase = true) }
+        if (checkedItem == -1) checkedItem = localeTags.indexOfFirst { currentTag.startsWith("in") && it == "id" } // fallback for legacy Indonesian
+        if (checkedItem == -1) checkedItem = 0
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.settings_dialog_choose_language))
+            .setSingleChoiceItems(languages, checkedItem) { dialog, which ->
+                val selectedTag = localeTags[which]
+                val activity = requireActivity()
+                val appCtx = activity.applicationContext
+                val locales = if (selectedTag.isEmpty()) androidx.core.os.LocaleListCompat.getEmptyLocaleList() 
+                              else androidx.core.os.LocaleListCompat.forLanguageTags(selectedTag)
+                AppCompatDelegate.setApplicationLocales(locales)
+                dialog.dismiss()
+                
+                android.widget.Toast.makeText(appCtx, appCtx.getString(R.string.settings_toast_rebooting_engine), android.widget.Toast.LENGTH_SHORT).show()
+                try {
+                    val serviceIntent = android.content.Intent(appCtx, ClipboardService::class.java)
+                    appCtx.stopService(serviceIntent)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        appCtx.startForegroundService(serviceIntent)
+                    } else {
+                        appCtx.startService(serviceIntent)
+                    }
+                } catch (e: Exception) { e.printStackTrace() }
+
+                val restartIntent = android.content.Intent(appCtx, SplashActivity::class.java)
+                restartIntent.putExtra("is_rebooting", true)
+                restartIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                appCtx.startActivity(restartIntent)
+                activity.overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
+            }
+            .setNegativeButton(getString(R.string.action_cancel), null)
+            .show()
+    }
+
+    // ==================== Privacy Policy ====================
+
+    private fun showPrivacyPolicyDialog() {
+        val policyText = getString(R.string.privacy_policy_text)
+
+        val scrollView = android.widget.ScrollView(requireContext())
+        val textView = TextView(requireContext()).apply {
+            text = HtmlCompat.fromHtml(policyText, HtmlCompat.FROM_HTML_MODE_COMPACT)
+            textSize = 14f
+            setPadding(48, 32, 48, 32)
+            val tv = android.util.TypedValue()
+            requireContext().theme.resolveAttribute(R.attr.appTextPrimaryColor, tv, true)
+            setTextColor(tv.data)
+        }
+        scrollView.addView(textView)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.settings_dialog_privacy_policy))
+            .setView(scrollView)
+            .setPositiveButton(getString(R.string.settings_action_close), null)
+            .show()
+    }
+
+    // ==================== Save Location ====================
+
+    private fun updateSaveLocationText(uri: Uri) {
+        val selectedFolderLabel = getString(R.string.settings_save_location_selected_folder)
+        val docId = DocumentsContract.getTreeDocumentId(uri)
+        val folderName = docId?.substringAfterLast(':', selectedFolderLabel)?.ifEmpty { selectedFolderLabel }
+        saveLocationLabelState.value = folderName ?: selectedFolderLabel
+    }
+}

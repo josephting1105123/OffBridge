@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- State when selected (Dark Mode) -->
+    <item app:state_selected="true" >
+        <shape android:shape="rectangle">
+            <solid android:color="#808080" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+
+    <!-- Default, unselected state (Dark Mode) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#262626" /> <!-- Dark Grey -->
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+
+</selector>
