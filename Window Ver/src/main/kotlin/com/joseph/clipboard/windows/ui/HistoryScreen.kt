@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInWindow
@@ -36,6 +37,7 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import com.joseph.clipboard.windows.ClipboardAppController
 import com.joseph.clipboard.windows.Screen
+import com.joseph.clipboard.windows.UserMessage
 import com.joseph.clipboard.windows.theme.GreenPrimary
 import com.joseph.clipboard.windows.theme.Dimens
 
@@ -49,12 +51,35 @@ fun HistoryScreen(
 ) {
     val acceptClipboard by appController.acceptIncomingClipboard.collectAsState()
     val clipboardHistory by appController.clipboardHistory.collectAsState()
+    val trustedNodes by appController.trustedNodes.collectAsState()
     val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
 
     var showTutorial by remember { mutableStateOf(false) }
     val tutorialBounds = remember { mutableStateMapOf<String, Rect>() }
     // Tapping a recent-copy card opens a full-text detail overlay (Android parity).
     var detailEntry by remember { mutableStateOf<String?>(null) }
+
+    // Item 3: transient feedback for the manual "Push Current Clipboard" action.
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        appController.userMessages.collect { msg ->
+            val text = when (msg) {
+                is UserMessage.ClipboardPushed -> String.format(
+                    com.joseph.clipboard.windows.storage.TranslationManager.getString("push_pushed_to_devices")
+                        .takeIf { it != "push_pushed_to_devices" } ?: "Pushed to %d device(s)",
+                    msg.count
+                )
+                is UserMessage.NoPairedDevices ->
+                    com.joseph.clipboard.windows.storage.TranslationManager.getString("push_no_paired_devices")
+                        .takeIf { it != "push_no_paired_devices" } ?: "No paired devices yet"
+                is UserMessage.ClipboardEmpty ->
+                    com.joseph.clipboard.windows.storage.TranslationManager.getString("push_clipboard_empty")
+                        .takeIf { it != "push_clipboard_empty" } ?: "Clipboard is empty"
+                else -> null // FileSendFailed is surfaced on the Send screen
+            }
+            if (text != null) snackbarHostState.showSnackbar(text)
+        }
+    }
 
     androidx.compose.runtime.LaunchedEffect(tutorialTrigger) {
         if (tutorialTrigger > 0) showTutorial = true
@@ -88,13 +113,27 @@ fun HistoryScreen(
                 HowToUseChip(onClick = { showTutorial = true })
             }
 
-            // Push Current Clipboard Button
+            // Push Current Clipboard Button — disabled (de-emphasized) until a device is paired.
             Box(modifier = Modifier.onGloballyPositioned { coords ->
                 tutorialBounds["pushButton"] = coords.boundsInWindow()
             }) {
                 AppButton(
                     text = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
                     onClick = { appController.pushCurrentClipboard() },
+                    enabled = trustedNodes.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.spaceLg)
+                )
+            }
+
+            // Empty-state hint: with no paired devices there is nothing to push to — point the user
+            // at the Pairing tab. Sits OUTSIDE the tutorial-bounds Box so the spotlight geometry for
+            // "pushButton" is unchanged.
+            if (trustedNodes.isEmpty()) {
+                Text(
+                    com.joseph.clipboard.windows.storage.TranslationManager.getString("push_pair_first_hint").takeIf { it != "push_pair_first_hint" }
+                        ?: "Pair a device on the Pairing tab to push your clipboard to it.",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.spaceLg)
                 )
             }
@@ -202,6 +241,12 @@ fun HistoryScreen(
                 }
             )
         }
+
+        // Transient push-feedback snackbar (Item 3).
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(Dimens.spaceLg)
+        )
     }
 }
 

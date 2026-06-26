@@ -15,8 +15,11 @@ import com.joseph.clipboard.windows.os.ClipboardManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -67,6 +70,22 @@ data class TransferRecord(
     val transport: String = "lan" // "lan" or "p2p"
 )
 
+/**
+ * One-shot, transient message the UI surfaces as a snackbar/toast. Delivered over a
+ * [kotlinx.coroutines.flow.SharedFlow] (replay = 0), so each event fires exactly once and is
+ * simply dropped if no screen is currently collecting — these are advisory and never persisted.
+ */
+sealed interface UserMessage {
+    /** Current clipboard was pushed to [count] paired device(s). */
+    data class ClipboardPushed(val count: Int) : UserMessage
+    /** Push pressed but there are no paired devices to push to. */
+    object NoPairedDevices : UserMessage
+    /** Push pressed but the clipboard held no text. */
+    object ClipboardEmpty : UserMessage
+    /** A LAN file send could not reach [deviceName] (connect timeout / no acknowledgement). */
+    data class FileSendFailed(val deviceName: String) : UserMessage
+}
+
 class ClipboardAppController {
 
     var onRequestForeground: (() -> Unit)? = null
@@ -96,7 +115,10 @@ class ClipboardAppController {
     // File Transfer State
     // Concurrent: written/removed from per-connection handler coroutines (QR + normal sends).
     private val activeOutgoingFileSessions = java.util.concurrent.ConcurrentHashMap<String, OutgoingFileSession>()
-    private val activeIncomingFileSessions = mutableMapOf<String, IncomingFileSession>()
+    // Item 1: written from the file-daemon handler thread (onOfferReceived) and read from UI
+    // coroutines (accept / resume / cancel). ConcurrentHashMap to match its outgoing sibling and
+    // remove the data race a plain mutableMapOf left open.
+    private val activeIncomingFileSessions = java.util.concurrent.ConcurrentHashMap<String, IncomingFileSession>()
     // Single in-flight off-grid "send via QR" advertising window (Windows = sender).
     // Atomically CLAIMED (getAndSet) by the first scanner that dials in, so two concurrent
     // dial-ins can't both win the same one-shot session. null means "no QR being shown".
@@ -121,7 +143,16 @@ class ClipboardAppController {
     fun clearNavigateToTransferSession() {
         _navigateToTransferSession.value = null
     }
-    
+
+    // One-shot, transient user-facing messages (push confirmations, LAN send failures). A
+    // SharedFlow (not StateFlow) so each event fires once; small buffer + DROP_OLDEST so an emit
+    // from a background coroutine never suspends or throws even if nothing is collecting.
+    private val _userMessages = MutableSharedFlow<UserMessage>(
+        extraBufferCapacity = 16,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+    )
+    val userMessages: SharedFlow<UserMessage> = _userMessages.asSharedFlow()
+
     private val pairingDaemon = PairingDaemon(
         onIncomingPairingRequest = { ip, name, pin, accept, decline ->
             if (!_isDiscoverable.value) {
@@ -245,19 +276,28 @@ class ClipboardAppController {
 
     fun pushCurrentClipboard() {
         val text = com.joseph.clipboard.windows.os.ClipboardManager.readText()
-        if (!text.isNullOrBlank()) {
-            if (_clipboardHistory.value.firstOrNull() != text) {
-                addToHistory(text)
-            }
-            pushClipboardToTrustedNodes(text)
+        if (text.isNullOrBlank()) {
+            // Nothing on the clipboard to send — tell the user instead of silently no-op'ing.
+            _userMessages.tryEmit(UserMessage.ClipboardEmpty)
+            return
         }
+        if (_clipboardHistory.value.firstOrNull() != text) {
+            addToHistory(text)
+        }
+        val recipientCount = pushClipboardToTrustedNodes(text)
+        // Surface the outcome so the manual Push button gives visible feedback.
+        _userMessages.tryEmit(
+            if (recipientCount > 0) UserMessage.ClipboardPushed(recipientCount)
+            else UserMessage.NoPairedDevices
+        )
     }
 
-    private fun pushClipboardToTrustedNodes(text: String) {
+    /** Pushes [text] to every trusted node; returns the number of devices it was sent to. */
+    private fun pushClipboardToTrustedNodes(text: String): Int =
         pushClipboardToSpecificNodes(text, _trustedNodes.value.toList())
-    }
 
-    fun pushClipboardToSpecificNodes(text: String, ips: List<String>) {
+    /** Fires off an (encrypted) clipboard push to each of [ips]; returns the recipient count. */
+    fun pushClipboardToSpecificNodes(text: String, ips: List<String>): Int {
         ips.forEach { ip ->
             scope.launch {
                 try {
@@ -277,6 +317,7 @@ class ClipboardAppController {
                 }
             }
         }
+        return ips.size
     }
 
     fun updateDeviceName(name: String) {
@@ -358,6 +399,10 @@ class ClipboardAppController {
         clipboardDaemon.stop()
         fileTransferDaemon.stop()
         ClipboardManager.stopPolling()
+        // Item 5: flush any debounced progress synchronously so a shutdown right after a
+        // throttled tick can't lose the latest durable state.
+        historyDirty.set(false)
+        TransferHistoryManager.save(_transferHistory.value)
     }
 
     fun initiatePairing(ip: String) {
@@ -448,11 +493,35 @@ class ClipboardAppController {
 
     fun sendFiles(files: List<File>, targetIp: String) {
         scope.launch(Dispatchers.IO) {
-            try {
-                val sessionId = UUID.randomUUID().toString()
-                val session = OutgoingFileSession(sessionId, targetIp, files)
-                activeOutgoingFileSessions[sessionId] = session
+            val sessionId = UUID.randomUUID().toString()
+            // Resolve a friendly name up-front for the record and the failure snackbar.
+            val targetName = _discoveredDevices.value.find { it.ip == targetIp }?.name ?: targetIp
+            val session = OutgoingFileSession(sessionId, targetIp, files)
+            activeOutgoingFileSessions[sessionId] = session
 
+            // Item 4: create the record up-front as "pending" (mirrors the incoming accept path) so a
+            // connect-timeout / no-ack send still shows in Transfer History instead of vanishing
+            // silently. It stays "pending" on success (Android connects back with ACCEPT_OFFER →
+            // streamFilesToSocket, which drives it to transferring/completed) and is flipped to
+            // "failed" by failOutgoingSend() on any failure here.
+            val record = TransferRecord(
+                sessionId = sessionId,
+                deviceName = targetName,
+                direction = "outgoing",
+                fileNames = files.map { it.name },
+                totalBytes = files.sumOf { it.length() },
+                timestamp = System.currentTimeMillis(),
+                status = "pending",
+                filesCompleted = 0,
+                totalFiles = files.size,
+                fileSizes = files.map { it.length() },
+                currentFileOffset = 0L
+            )
+            // H-p1: atomic prepend so a concurrent transfer's progress update isn't clobbered.
+            _transferHistory.update { listOf(record) + it }
+            saveHistory()
+
+            try {
                 // Close our side after the handshake. Android will connect back with ACCEPT_OFFER.
                 // Use an explicit connect timeout: the Socket(host, port) constructor blocks for
                 // the full OS timeout (~minutes) when the target IP is unreachable.
@@ -478,30 +547,28 @@ class ClipboardAppController {
                     val response = Net.readLineUtf8(inStream)
                     if (response != "OFFER_RECEIVED") {
                         System.err.println("Receiver did not acknowledge offer: $response")
-                    } else {
-                        // Create pending TransferRecord
-                        val record = TransferRecord(
-                            sessionId = sessionId,
-                            deviceName = targetIp, // Could look up proper name from discovered nodes
-                            direction = "outgoing",
-                            fileNames = files.map { it.name },
-                            totalBytes = files.sumOf { it.length() },
-                            timestamp = System.currentTimeMillis(),
-                            status = "pending",
-                            filesCompleted = 0,
-                            totalFiles = files.size,
-                            fileSizes = files.map { it.length() },
-                            currentFileOffset = 0L
-                        )
-                        // H-p1: atomic prepend so a concurrent transfer's progress update isn't clobbered.
-                        _transferHistory.update { listOf(record) + it }
-                        saveHistory()
+                        failOutgoingSend(sessionId, targetName)
                     }
+                    // On OFFER_RECEIVED the record stays "pending"; the actual stream starts when the
+                    // peer dials back with ACCEPT_OFFER (onAcceptReceived → streamFilesToSocket).
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                failOutgoingSend(sessionId, targetName)
             }
         }
+    }
+
+    /**
+     * A LAN send never reached the peer (connect timeout / no OFFER_RECEIVED). Flip the up-front
+     * pending record to "failed" — but only if streaming hasn't already begun (guards the rare race
+     * where the peer's ACCEPT_OFFER lands while we were timing out) — drop the dangling outgoing
+     * session, and surface a one-shot "couldn't reach" snackbar so the user isn't left thinking it sent.
+     */
+    private fun failOutgoingSend(sessionId: String, deviceName: String) {
+        updateRecord(sessionId) { r -> if (r.status == "pending") r.copy(status = "failed") else r }
+        activeOutgoingFileSessions.remove(sessionId)
+        _userMessages.tryEmit(UserMessage.FileSendFailed(deviceName))
     }
 
     // --- Off-grid "send via QR" (Windows = sender) ---
@@ -953,6 +1020,7 @@ class ClipboardAppController {
         // from their own IO coroutine; a plain value=f(value) lets a slower writer overwrite a
         // sibling transfer's just-applied progress. update {} retries on a concurrent change.
         var changed = false
+        var meaningful = false
         _transferHistory.update { current ->
             val idx = current.indexOfFirst { it.sessionId == sessionId }
             if (idx == -1) {
@@ -960,14 +1028,51 @@ class ClipboardAppController {
             } else {
                 changed = true
                 val records = current.toMutableList()
-                records[idx] = transform(records[idx])
+                val before = records[idx]
+                val after = transform(before)
+                records[idx] = after
+                // Item 5: a "meaningful" transition (status change or a file completing) gets a
+                // durable write immediately; a bare progress tick (only currentFileOffset advancing,
+                // ~10x/sec from the in-stream copy loop) is coalesced by the debouncer below. The UI
+                // still updates live off the StateFlow either way — only the disk write is throttled.
+                meaningful = before.status != after.status || before.filesCompleted != after.filesCompleted
                 records
             }
         }
-        if (changed && persist) saveHistory()
+        if (changed && persist) {
+            if (meaningful) saveHistory() else scheduleHistorySave()
+        }
     }
 
+    // --- Throttled history persistence (Item 5) ---
+    // The 100ms in-stream progress tick funnels through updateRecord → scheduleHistorySave(). Pure
+    // progress advances are coalesced into at most one full-JSON rewrite per HISTORY_SAVE_DEBOUNCE_MS
+    // (down from ~10/sec per active transfer). Meaningful transitions and record create/delete flush
+    // immediately via saveHistory(); shutdown forces a final synchronous flush in stop().
+    private val historyDirty = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val historyFlushScheduled = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val HISTORY_SAVE_DEBOUNCE_MS = 1500L
+
+    /** Debounced durable write: coalesces rapid progress ticks into a single scheduled flush. */
+    private fun scheduleHistorySave() {
+        historyDirty.set(true)
+        // Keep at most one pending flush in flight; ticks arriving during the window are absorbed by
+        // the dirty flag and captured when the flush reads _transferHistory.value at fire time.
+        if (historyFlushScheduled.compareAndSet(false, true)) {
+            scope.launch(Dispatchers.IO) {
+                delay(HISTORY_SAVE_DEBOUNCE_MS)
+                historyFlushScheduled.set(false)
+                if (historyDirty.getAndSet(false)) {
+                    TransferHistoryManager.save(_transferHistory.value)
+                }
+            }
+        }
+    }
+
+    /** Immediate durable write for meaningful transitions and record create/delete. */
     private fun saveHistory() {
+        // Supersede any pending debounced write — the snapshot we save here already includes it.
+        historyDirty.set(false)
         scope.launch(Dispatchers.IO) {
             TransferHistoryManager.save(_transferHistory.value)
         }

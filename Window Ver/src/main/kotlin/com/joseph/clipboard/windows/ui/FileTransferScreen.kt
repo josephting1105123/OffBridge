@@ -45,6 +45,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 import com.joseph.clipboard.windows.ClipboardAppController
 import com.joseph.clipboard.windows.Screen
+import com.joseph.clipboard.windows.UserMessage
 import com.joseph.clipboard.windows.network.DiscoveredDevice
 import com.joseph.clipboard.windows.os.FileDialogHelper
 import com.joseph.clipboard.windows.theme.GreenPrimary
@@ -89,8 +90,22 @@ fun FileTransferScreen(
     val discoveredDevices by appController.discoveredDevices.collectAsState()
     val trustedNodes by appController.trustedNodes.collectAsState()
     val pairedDevices = discoveredDevices.filter { trustedNodes.contains(it.ip) }
-    
+
     val coroutineScope = rememberCoroutineScope()
+
+    // Item 4: surface LAN file-send failures (connect timeout / no ack) as a transient snackbar so a
+    // send to an unreachable device no longer looks like it succeeded. The matching "failed" row also
+    // appears in Transfer History via the up-front pending record created in sendFiles().
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        appController.userMessages.collect { msg ->
+            if (msg is UserMessage.FileSendFailed) {
+                val template = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_failed_unreachable")
+                    .takeIf { it != "send_failed_unreachable" } ?: "Couldn't reach %s"
+                snackbarHostState.showSnackbar(String.format(template, msg.deviceName))
+            }
+        }
+    }
     
     var chosenFiles by remember { mutableStateOf(listOf<File>()) }
     val selectedFiles = remember { mutableStateListOf<File>() }
@@ -405,6 +420,12 @@ fun FileTransferScreen(
                 }
             )
         }
+
+        // Item 4: send-failure snackbar, lifted above the sticky bottom Send/Delete button.
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
+        )
     }
 
     if (showSendVia) {

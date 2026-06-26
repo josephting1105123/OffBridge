@@ -21,7 +21,10 @@ class TransferDaemon(
     private val deviceNameProvider: () -> String
 ) {
     private val DISCOVERY_PORT = 50001
-    private val EXPIRY_TIME_MS = 8000L // 8 seconds expiry
+    // Item 2: Android's node timeout is 20s and it can broadcast as infrequently as ~every 12s, so an
+    // 8s window pruned quiet Android peers between broadcasts (they flickered out of the list). Match
+    // Android's 20s for a comfortable margin over its 12s max interval. Broadcast cadence is unchanged.
+    private val EXPIRY_TIME_MS = 20000L // 20 seconds expiry (matches Android)
     private val BROADCAST_INTERVAL_MS = 3000L // Broadcast every 3 seconds
 
     companion object {
