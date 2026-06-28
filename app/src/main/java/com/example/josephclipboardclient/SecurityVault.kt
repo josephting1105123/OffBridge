@@ -89,9 +89,43 @@ object SecurityVault {
 
     fun removeTrustedNode(context: Context, ipAddress: String) {
         getEncryptedPrefs(context).edit().remove(ipAddress).apply()
-        // Also drop the cached display name so an unpaired device doesn't linger in the Paired list.
-        getPlainPrefs(context).edit().remove("paired_device_name_$ipAddress").apply()
+        // Also drop the cached display name AND the anti-downgrade pins so an unpaired device
+        // doesn't linger in the Paired list and a fresh re-pair starts from a clean TOFU state.
+        getPlainPrefs(context).edit()
+            .remove("paired_device_name_$ipAddress")
+            .remove(PIN_FILE_GCM_PREFIX + ipAddress)
+            .remove(PIN_CLIP_GCM_PREFIX + ipAddress)
+            .apply()
     }
+
+    // ---- Anti-downgrade pins (TOFU) -------------------------------------------------------
+    // Capability advertisement happens over UNAUTHENTICATED UDP discovery, so an on-path attacker
+    // could strip the GCM1 / FGCM1 token from a peer's advert and force two AEAD-capable peers back
+    // onto the weaker path (malleable CBC clipboard / plaintext file bytes). Once we have actually
+    // negotiated an authenticated channel with a peer we pin that fact here, keyed by IP, and
+    // afterwards refuse to silently downgrade — we fail closed instead. These are non-secret
+    // booleans, so they live in plain prefs; both peers pin independently and enforce on their own
+    // side. Pins are cleared on unpair (removeTrustedNode), so a deliberate re-pair resets TOFU.
+    private const val PIN_FILE_GCM_PREFIX = "file_gcm_pinned_"
+    private const val PIN_CLIP_GCM_PREFIX = "clipboard_gcm_pinned_"
+
+    /** Remember that [ip] negotiated an authenticated (FileSeal/FGCM1) bulk-file stream. */
+    fun pinFileGcm(context: Context, ip: String) {
+        getPlainPrefs(context).edit().putBoolean(PIN_FILE_GCM_PREFIX + ip, true).apply()
+    }
+
+    /** True once [ip] has been seen to support FileSeal — a later loss of FGCM1 is a downgrade attempt. */
+    fun isFileGcmPinned(context: Context, ip: String): Boolean =
+        getPlainPrefs(context).getBoolean(PIN_FILE_GCM_PREFIX + ip, false)
+
+    /** Remember that [ip] negotiated an authenticated (AES-GCM / GCM1) clipboard payload. */
+    fun pinClipboardGcm(context: Context, ip: String) {
+        getPlainPrefs(context).edit().putBoolean(PIN_CLIP_GCM_PREFIX + ip, true).apply()
+    }
+
+    /** True once [ip] has been seen to support authenticated clipboard — a later loss of GCM1 is a downgrade. */
+    fun isClipboardGcmPinned(context: Context, ip: String): Boolean =
+        getPlainPrefs(context).getBoolean(PIN_CLIP_GCM_PREFIX + ip, false)
 
     fun getKeyForNode(context: Context, ipAddress: String): ByteArray? {
         val prefs = getEncryptedPrefs(context)

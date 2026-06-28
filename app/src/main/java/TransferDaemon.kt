@@ -9,6 +9,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
@@ -20,6 +21,13 @@ import java.net.*
 import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * Thrown when a peer that previously negotiated an authenticated (AES-GCM) channel is now offering
+ * only the weaker path — i.e. a capability-strip downgrade attack on the unauthenticated discovery.
+ * The transfer is aborted rather than continued in the clear. See [SecurityVault] anti-downgrade pins.
+ */
+class DowngradeBlockedException(message: String) : Exception(message)
 
 data class DiscoveredDevice(
     val ip: String,
@@ -618,7 +626,36 @@ object TransferDaemon {
      */
     private fun fileKeyIfAead(context: Context, ip: String): ByteArray? {
         val key = SecurityVault.getKeyForNode(context, ip) ?: return null
-        return if (discoveredNodes[ip]?.supportsAuthFile == true) key else null
+        return when (DowngradePolicy.decide(
+            peerOffersAead = discoveredNodes[ip]?.supportsAuthFile == true,
+            pinned = SecurityVault.isFileGcmPinned(context, ip)
+        )) {
+            // TOFU: pin so a later FGCM1-strip on the unauthenticated discovery can't downgrade us.
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(context, ip); key }
+            DowngradePolicy.Decision.PLAINTEXT -> null
+            // Peer dropped FGCM1 after a prior sealed transfer ⇒ downgrade attempt. Fail closed.
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal downgrade blocked for $ip (peer no longer advertises FGCM1)")
+        }
+    }
+
+    /**
+     * Sender-side counterpart to [fileKeyIfAead]: decides whether to seal the outgoing bulk stream.
+     * [fgcmRequested] is true iff the receiver appended "fgcm" to ACCEPT_OFFER / RESUME_REQUEST.
+     * Returns the pairing key to seal with, or null for a legitimate plaintext stream (the peer never
+     * negotiated AEAD). Throws [DowngradeBlockedException] if the receiver dropped "fgcm" after a
+     * prior sealed transfer — refusing to stream in the clear. The trust gate guarantees we hold the key.
+     */
+    private fun senderFileKey(context: Context, ip: String, fgcmRequested: Boolean): ByteArray? {
+        return when (DowngradePolicy.decide(
+            peerOffersAead = fgcmRequested,
+            pinned = SecurityVault.isFileGcmPinned(context, ip)
+        )) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(context, ip); SecurityVault.getKeyForNode(context, ip) }
+            DowngradePolicy.Decision.PLAINTEXT -> null
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal downgrade blocked (sender) for $ip (receiver dropped fgcm)")
+        }
     }
 
     fun resumeIncomingTransfer(context: Context, sessionId: String) {
@@ -670,6 +707,13 @@ object TransferDaemon {
                 outStream.flush()
 
                 executeDownloadStream(context, socket, session, fileKey)
+            } catch (e: DowngradeBlockedException) {
+                // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
+                // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
+                TransportDiag.log("RX: $e")
+                try { socket?.close() } catch (_: Exception) {}
+                session.isPaused = false
+                TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 e.printStackTrace()
@@ -720,6 +764,13 @@ object TransferDaemon {
                 outStream.flush()
 
                 executeDownloadStream(context, socket, session, fileKey)
+            } catch (e: DowngradeBlockedException) {
+                // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
+                // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
+                TransportDiag.log("RX: $e")
+                try { socket?.close() } catch (_: Exception) {}
+                session.isPaused = false
+                TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 e.printStackTrace()
@@ -862,7 +913,12 @@ object TransferDaemon {
                     // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
                     val flags = parts.drop(4)
                     val ackExpected = flags.contains("ack")
-                    val resumeFileKey = if (flags.contains("fgcm")) SecurityVault.getKeyForNode(context, senderIp) else null
+                    val resumeFileKey = try {
+                        senderFileKey(context, senderIp, flags.contains("fgcm"))
+                    } catch (e: DowngradeBlockedException) {
+                        TransportDiag.log("TX: $e — refusing plaintext resume")
+                        socket.close(); return
+                    }
 
                     val session = activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
@@ -945,8 +1001,14 @@ object TransferDaemon {
                     if (session != null && !session.isIncoming) {
                         session.isPaused = false
                         // Receiver appended "fgcm" ⇒ seal the bulk stream with FileSeal under the shared
-                        // pairing key (the trust gate above guarantees we hold it). Absent ⇒ plaintext.
-                        val fileKey = if (parts.drop(2).contains("fgcm")) SecurityVault.getKeyForNode(context, senderIp) else null
+                        // pairing key (the trust gate above guarantees we hold it). Absent ⇒ plaintext,
+                        // unless we'd previously sealed for this peer (pin) → refuse the downgrade.
+                        val fileKey = try {
+                            senderFileKey(context, senderIp, parts.drop(2).contains("fgcm"))
+                        } catch (e: DowngradeBlockedException) {
+                            TransportDiag.log("TX: $e — refusing plaintext stream")
+                            socket.close(); return
+                        }
                         val myGen = session.sendGeneration.incrementAndGet()
                         TransferHistoryManager.updateStatus(context, sessionId, "transferring")
 

@@ -1,21 +1,62 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# R8 / ProGuard rules for the release build (isMinifyEnabled + isShrinkResources).
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Risk profile for THIS app: all wire/persistence JSON goes through org.json with string-literal
+# keys (NO Gson/Moshi/kotlinx-serialization reflection), so R8 field/method renaming cannot corrupt
+# (de)serialization. Room (KSP) and the AndroidX/Compose/CameraX/ML-Kit/Tink libraries ship their
+# own consumer ProGuard rules, so most keeps are handled transitively. The rules below are the
+# defensive minimum on top of getDefaultProguardFile("proguard-android-optimize.txt").
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- Crash deobfuscation -----------------------------------------------------------------------
+# Keep source/line info so release stack traces remain mappable (mapping.txt still required to
+# de-obfuscate type names; this keeps the line numbers meaningful).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+# Generic signatures + annotations — needed by anything doing runtime generic/annotation lookup.
+-keepattributes Signature,*Annotation*,InnerClasses,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Kotlin / Android standard idioms ----------------------------------------------------------
+# Enums accessed via values()/valueOf() (reflection under the hood).
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+# Parcelable CREATOR fields (Parcelize / hand-written Parcelables).
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
+# JNI / native bridges (none today, but cheap and standard).
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- androidx.security.crypto (Tink) — HIGHEST blast radius ------------------------------------
+# EncryptedSharedPreferences backs SecurityVault (paired-node AES keys, hotspot creds). A bad strip
+# here would brick the keyset (re-pair-everything). Tink ships consumer rules, but we pin defensively.
+-keep class com.google.crypto.tink.** { *; }
+-keep class androidx.security.crypto.** { *; }
+-dontwarn com.google.crypto.tink.**
+-dontwarn com.google.api.client.http.**
+-dontwarn org.joda.time.**
+# Tink loads protobuf-lite via reflection.
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
+    <fields>;
+}
+-dontwarn com.google.protobuf.**
+
+# --- ML Kit barcode scanning (bundled model) ---------------------------------------------------
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
+-dontwarn com.google.mlkit.**
+
+# --- ZXing (off-grid QR generation) ------------------------------------------------------------
+-keep class com.google.zxing.** { *; }
+-dontwarn com.google.zxing.**
+
+# --- Room entities/DAOs ------------------------------------------------------------------------
+# Room's generated implementations reference these; the Room consumer rules normally cover them, but
+# entities carry no other references so we keep them (and their no-arg/field shape) defensively.
+-keep @androidx.room.Entity class * { *; }
+-keep class com.EntropicSoftwareLab.ClipboardShare.data.db.entity.** { *; }
+
+# Coroutines ships its own consumer rules; suppress the known benign warnings just in case.
+-dontwarn kotlinx.coroutines.**

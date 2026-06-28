@@ -4,6 +4,7 @@ import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TransferHistoryManager
 import com.joseph.clipboard.windows.network.ClipboardDaemon
 import com.joseph.clipboard.windows.network.DiscoveredDevice
+import com.joseph.clipboard.windows.network.DowngradePolicy
 import com.joseph.clipboard.windows.network.FileTransferDaemon
 import com.joseph.clipboard.windows.network.HotspotController
 import com.joseph.clipboard.windows.network.Net
@@ -33,6 +34,13 @@ import java.io.File
 import java.net.Socket
 import java.io.FileOutputStream
 import java.io.FileInputStream
+
+/**
+ * Thrown when a peer that previously negotiated an authenticated (AES-GCM) channel now offers only
+ * the weaker path — a capability-strip downgrade on the unauthenticated discovery. The transfer is
+ * aborted rather than continued in the clear. Mirrors Android's DowngradeBlockedException.
+ */
+class DowngradeBlockedException(message: String) : Exception(message)
 
 data class OutgoingFileSession(
     val sessionId: String,
@@ -170,9 +178,16 @@ class ClipboardAppController {
             if (session != null) {
                 // Android accepted our offer. Stream files out! (LAN accept never carries the
                 // delivery-ack suffix, so ackExpected = false here.) "fgcm" ⇒ seal the bulk stream
-                // with FileSeal under the shared pairing key.
-                val fileKey = if (fgcm) SecurityVault.getAesKey(session.targetIp) else null
-                streamFilesToSocket(session, socket, 0, 0L, ackExpected = false, fileKey = fileKey)
+                // with FileSeal under the shared pairing key; a pinned peer that dropped fgcm is a
+                // downgrade attempt → refuse the plaintext stream.
+                try {
+                    val fileKey = senderFileKey(session.targetIp, fgcm)
+                    streamFilesToSocket(session, socket, 0, 0L, ackExpected = false, fileKey = fileKey)
+                } catch (e: DowngradeBlockedException) {
+                    System.err.println("TX: ${e.message} — refusing plaintext stream")
+                    updateRecord(sessionId) { it.copy(status = "failed") }
+                    try { socket.close() } catch(e2:Exception){}
+                }
             } else {
                 try { socket.close() } catch(e:Exception){}
             }
@@ -180,8 +195,14 @@ class ClipboardAppController {
         onResumeReceived = { sessionId, fileIndex, offset, ackExpected, fgcm, socket ->
             val session = activeOutgoingFileSessions[sessionId]
             if (session != null) {
-                val fileKey = if (fgcm) SecurityVault.getAesKey(session.targetIp) else null
-                streamFilesToSocket(session, socket, fileIndex, offset, ackExpected, fileKey = fileKey)
+                try {
+                    val fileKey = senderFileKey(session.targetIp, fgcm)
+                    streamFilesToSocket(session, socket, fileIndex, offset, ackExpected, fileKey = fileKey)
+                } catch (e: DowngradeBlockedException) {
+                    System.err.println("TX: ${e.message} — refusing plaintext resume")
+                    updateRecord(sessionId) { it.copy(status = "failed") }
+                    try { socket.close() } catch(e2:Exception){}
+                }
             } else {
                 try { socket.close() } catch(e:Exception){}
             }
@@ -266,18 +287,37 @@ class ClipboardAppController {
                 try {
                     val aesKey = SecurityVault.getAesKey(ip)
                     if (aesKey != null) {
-                        // GCM only for peers that advertised the capability in discovery; everyone
-                        // else (legacy Android, older Windows) gets CBC — safe-by-default, no interop break.
-                        val supportsAuth = transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthClipboard }
-                        val encryptedBase64 = if (supportsAuth)
-                            com.joseph.clipboard.windows.storage.CryptoEngine.encryptStringAuthenticated(text, aesKey)
-                        else com.joseph.clipboard.windows.storage.CryptoEngine.encryptString(text, aesKey)
-                        // Append newline in case receiver uses readLine()
-                        Net.sendString(ip, Ports.CLIPBOARD, encryptedBase64 + "\n")
+                        val encryptedBase64 = sealClipboardForPeer(ip, aesKey, text)
+                        if (encryptedBase64 != null) {
+                            // Append newline in case receiver uses readLine()
+                            Net.sendString(ip, Ports.CLIPBOARD, encryptedBase64 + "\n")
+                        }
                     }
                 } catch (e: Exception) {
                     System.err.println("Failed to push clipboard to $ip: ${e.message}")
                 }
+            }
+        }
+    }
+
+    /**
+     * Seal a clipboard payload for one peer with anti-downgrade enforcement (mirrors Android
+     * sealClipboardForPeer). GCM only for peers that advertised the capability; everyone else (legacy
+     * Android, older Windows) gets CBC — safe-by-default. Once a peer has used GCM we pin it, and a
+     * later loss of GCM1 (a capability-strip on the unauthenticated discovery) makes us skip the peer
+     * (return null) rather than silently downgrade to malleable CBC. Fail closed.
+     */
+    private fun sealClipboardForPeer(ip: String, aesKey: ByteArray, plain: String): String? {
+        val supportsAuth = transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthClipboard }
+        return when (DowngradePolicy.decide(supportsAuth, SecurityVault.isClipboardGcmPinned(ip))) {
+            DowngradePolicy.Decision.SEAL -> {
+                SecurityVault.pinClipboardGcm(ip)
+                com.joseph.clipboard.windows.storage.CryptoEngine.encryptStringAuthenticated(plain, aesKey)
+            }
+            DowngradePolicy.Decision.PLAINTEXT -> com.joseph.clipboard.windows.storage.CryptoEngine.encryptString(plain, aesKey)
+            DowngradePolicy.Decision.BLOCK -> {
+                System.err.println("Clipboard GCM downgrade blocked for $ip — skipping peer")
+                null
             }
         }
     }
@@ -696,7 +736,32 @@ class ClipboardAppController {
      *  its key); null ⇒ plaintext. Mirrors Android TransferDaemon.fileKeyIfAead. */
     private fun fileKeyIfAead(ip: String): ByteArray? {
         val key = SecurityVault.getAesKey(ip) ?: return null
-        return if (transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthFile }) key else null
+        return when (DowngradePolicy.decide(
+            peerOffersAead = transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthFile },
+            pinned = SecurityVault.isFileGcmPinned(ip)
+        )) {
+            // TOFU: pin so a later FGCM1-strip on the unauthenticated discovery can't downgrade us.
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(ip); key }
+            DowngradePolicy.Decision.PLAINTEXT -> null
+            // Peer dropped FGCM1 after a prior sealed transfer ⇒ downgrade attempt. Fail closed.
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal downgrade blocked for $ip (peer no longer advertises FGCM1)")
+        }
+    }
+
+    /**
+     * Sender-side AEAD decision with anti-downgrade enforcement (mirrors Android senderFileKey).
+     * [fgcm] is true iff the receiver requested a sealed stream. Returns the key to seal with, or null
+     * for legitimate plaintext. Throws [DowngradeBlockedException] if the receiver dropped fgcm after a
+     * prior sealed transfer.
+     */
+    private fun senderFileKey(ip: String, fgcm: Boolean): ByteArray? {
+        return when (DowngradePolicy.decide(peerOffersAead = fgcm, pinned = SecurityVault.isFileGcmPinned(ip))) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(ip); SecurityVault.getAesKey(ip) }
+            DowngradePolicy.Decision.PLAINTEXT -> null
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal downgrade blocked (sender) for $ip (receiver dropped fgcm)")
+        }
     }
 
     fun resumeIncomingFileTransfer(sessionId: String) {

@@ -1,0 +1,62 @@
+name: CI
+
+# Build + test both clients on every push/PR. The Windows desktop module (:window-ver) is a pure-JVM
+# Gradle subproject, so it builds on the Linux runner alongside the Android app from the same wrapper.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & test (Android + Windows module)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      # Cross-platform crypto interop golden vectors (FileSeal / ClipboardSeal) — the offline proof
+      # that the Android and Windows clients seal/open byte-identically.
+      - name: Windows-module unit tests (:window-ver)
+        run: ./gradlew :window-ver:test --no-daemon --stacktrace
+
+      - name: Android unit tests
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Android debug build
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      # Validates the R8 / shrinkResources configuration (keep rules in proguard-rules.pro). No
+      # keystore.properties on CI → the release variant falls back to debug signing, which is fine
+      # for a build/shrink validation (a real Play release supplies the keystore out-of-band).
+      - name: Android release build (R8 validation)
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            app/build/reports/tests/
+            "Window Ver/build2/reports/tests/"
+          if-no-files-found: ignore

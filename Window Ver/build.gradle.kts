@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.EntropicSoftwareLab.ClipboardShare"
-version = "3.3.0"
+version = "3.4.0"
 
 layout.buildDirectory.set(file("build2"))
 
@@ -37,7 +37,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             packageName = "Clipboard Share"
-            packageVersion = "3.3.0"
+            packageVersion = "3.4.0"
             windows {
                 menu = true
                 shortcut = true

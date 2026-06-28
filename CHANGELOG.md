@@ -4,6 +4,49 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.4.0 — Android + Windows (downgrade resistance, localization & release hardening)
+
+Both platforms now report **3.4.0**.
+
+### Anti-downgrade pins (security, both platforms)
+- Capability advertisement rides the **unauthenticated** UDP discovery, so an on-path attacker could
+  previously strip the `GCM1` / `FGCM1` token and force two AEAD-capable peers back onto the weaker
+  path (malleable CBC clipboard / plaintext file bytes). We now **pin** a peer (TOFU, keyed by IP)
+  the first time it negotiates an authenticated channel, and afterwards **fail closed** — a pinned
+  peer that later drops the capability is treated as a downgrade attempt and refused, rather than
+  silently downgraded. Clipboard and file streams both enforce it, on both Android and Windows; pins
+  are cleared on unpair so a deliberate re-pair resets the trust-on-first-use state.
+- The seal/plaintext/block decision is a small pure `DowngradePolicy` mirrored byte-for-byte on both
+  clients and covered by host-JVM unit tests.
+
+### Localization (Android)
+- Completed the translation of the **94 previously-untranslated strings** (the first-launch tour,
+  hotspot dialog, NFC guidance, status tiles, paired-devices and verify copy) across **all 9 locales**
+  (de, es, fr, in, ja, pt, ru, zh-rCN, zh-rTW) — each locale now carries the full 504-string set.
+
+### Cross-platform parity & robustness
+- Windows now parses the file-offer `MANIFEST` line on the **last** `:` (extracted to a tested
+  `ManifestCodec`), matching Android's `lastIndexOf(':')` so a filename containing `:` round-trips.
+
+### Build, test & release
+- **R8 enabled** for the Android release build (`isMinifyEnabled` + `isShrinkResources`) with a
+  defensive keep set (Tink/EncryptedSharedPreferences, ML Kit, ZXing, Room). Safe here because all
+  JSON is `org.json` with string-literal keys (no reflective (de)serialization) and there is no
+  dynamic `getIdentifier`/`Class.forName` lookup. *Smoke-test the release variant on a device before a
+  Play upload — R8 stripping can only be fully validated at runtime.*
+- Added a **GitHub Actions CI** workflow that runs the Windows-module golden-vector tests, the Android
+  unit tests, and both the debug and release (R8) Android builds on every push/PR.
+- Repo cleanup: removed unreferenced `empty*.jar` / `empty.txt` / `dummy_app/` and the stale duplicate
+  `installer.iss` (the live installer is `ClipboardShare.iss`).
+
+### Accessibility (Android)
+- Central TalkBack semantics on the shared components: tappable `GlassCard` surfaces (bento tiles,
+  list rows) announce as **buttons**, `SegmentedControl` exposes a **tab** selection group, and the
+  settings switch rows are a single merged **switch** target (label + on/off state). A full
+  screen-by-screen TalkBack sweep of the bespoke screens remains a follow-up.
+
+---
+
 ## 3.3.0 — Android + Windows (security hardening & encrypted file transfer)
 
 Both platforms now report **3.3.0**.

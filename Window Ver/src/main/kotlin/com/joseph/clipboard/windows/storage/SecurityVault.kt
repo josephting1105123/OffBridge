@@ -23,6 +23,12 @@ object SecurityVault {
     private val trustedNodes = ConcurrentHashMap<String, String>()
     // Human-readable name per trusted IP, so the Paired list shows names even when a device is offline.
     private val pairedDeviceNames = ConcurrentHashMap<String, String>()
+    // Anti-downgrade pins (TOFU): IPs we've actually negotiated an authenticated channel with. Once
+    // pinned, we refuse to silently fall back to the weaker path (plaintext file bytes / CBC clipboard)
+    // even if a MITM strips the capability token from the unauthenticated UDP discovery. Mirrors the
+    // Android SecurityVault pins; cleared on unpair.
+    private val fileGcmPinned = ConcurrentHashMap.newKeySet<String>()
+    private val clipboardGcmPinned = ConcurrentHashMap.newKeySet<String>()
 
     // Mirrors the on-disk config.json schema; nodes stays a single "ip:base64key,ip:base64key" string.
     private data class ConfigDto(
@@ -31,7 +37,9 @@ object SecurityVault {
         val language: String? = null,
         val saveLocation: String? = null,
         val nodes: String? = null,
-        val pairedNames: Map<String, String>? = null
+        val pairedNames: Map<String, String>? = null,
+        val fileGcmPinned: List<String>? = null,
+        val clipboardGcmPinned: List<String>? = null
     )
 
     init {
@@ -69,6 +77,8 @@ object SecurityVault {
                 }
             }
             dto.pairedNames?.let { pairedDeviceNames.putAll(it) }
+            dto.fileGcmPinned?.let { fileGcmPinned.addAll(it) }
+            dto.clipboardGcmPinned?.let { clipboardGcmPinned.addAll(it) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -79,7 +89,7 @@ object SecurityVault {
     private fun save() {
         try {
             val nodesStr = trustedNodes.map { "${it.key}:${it.value}" }.joinToString(",")
-            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap())
+            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList())
             // M-16: atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
@@ -158,8 +168,24 @@ object SecurityVault {
     fun removeTrustedNode(ipAddress: String) {
         trustedNodes.remove(ipAddress)
         pairedDeviceNames.remove(ipAddress)
+        // Drop the anti-downgrade pins too, so a deliberate re-pair starts from a clean TOFU state.
+        fileGcmPinned.remove(ipAddress)
+        clipboardGcmPinned.remove(ipAddress)
         save()
     }
+
+    // ---- Anti-downgrade pins (TOFU) — mirrors Android SecurityVault ------------------------
+    /** Remember that [ipAddress] negotiated an authenticated (FileSeal/FGCM1) bulk-file stream. */
+    fun pinFileGcm(ipAddress: String) { if (fileGcmPinned.add(ipAddress)) save() }
+
+    /** True once [ipAddress] supported FileSeal — a later loss of FGCM1 is a downgrade attempt. */
+    fun isFileGcmPinned(ipAddress: String): Boolean = fileGcmPinned.contains(ipAddress)
+
+    /** Remember that [ipAddress] negotiated an authenticated (AES-GCM/GCM1) clipboard payload. */
+    fun pinClipboardGcm(ipAddress: String) { if (clipboardGcmPinned.add(ipAddress)) save() }
+
+    /** True once [ipAddress] supported authenticated clipboard — a later loss of GCM1 is a downgrade. */
+    fun isClipboardGcmPinned(ipAddress: String): Boolean = clipboardGcmPinned.contains(ipAddress)
 
     fun isTrusted(ipAddress: String): Boolean {
         return trustedNodes.containsKey(ipAddress)

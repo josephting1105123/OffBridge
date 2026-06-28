@@ -70,19 +70,9 @@ class FileTransferDaemon(
                         val sessionId = parts[1]
                         val deviceName = parts[2]
                         val manifestLine = Net.readLineUtf8(inputStream)
-                        
-                        val manifest = mutableListOf<Pair<String, Long>>()
-                        if (manifestLine.startsWith("MANIFEST|")) {
-                            val items = manifestLine.substringAfter("MANIFEST|").split("|").filter { it.isNotBlank() }
-                            for (item in items) {
-                                val split = item.split(":")
-                                if (split.size >= 2) {
-                                    val name = split[0]
-                                    val size = split[1].toLongOrNull() ?: 0L
-                                    manifest.add(Pair(name, size))
-                                }
-                            }
-                        }
+                        // Split each entry on the LAST ':' so a name containing ':' is preserved —
+                        // byte-for-byte parity with Android (see ManifestCodec / TransferDaemon).
+                        val manifest = ManifestCodec.parse(manifestLine).toMutableList()
                         
                         clientSocket.getOutputStream().write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))
                         clientSocket.getOutputStream().flush()

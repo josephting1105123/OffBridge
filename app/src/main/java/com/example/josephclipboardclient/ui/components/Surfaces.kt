@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 
 /** Glass card on the app's card colour — tint sheen + hairline border, 16dp radius. */
@@ -50,7 +51,10 @@ fun GlassCard(
     val base = if (onClick != null) {
         Modifier
             .pressScale(interaction)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            // role = Button so TalkBack announces the whole tappable card/tile as a button (clickable
+            // already merges the card's text descendants into this one node). Central a11y fix for
+            // every GlassCard-based surface (bento tiles, tappable list rows).
+            .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
     } else {
         Modifier
     }

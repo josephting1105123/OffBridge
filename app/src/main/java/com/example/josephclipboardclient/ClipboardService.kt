@@ -24,6 +24,7 @@ import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.NotificationCompat
+import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -159,6 +160,26 @@ class ClipboardService : Service() {
         broadcastClipboardText(text, true, targetIps)
     }
 
+    /**
+     * Seal a clipboard payload for one peer with anti-downgrade enforcement. We pin a peer the first
+     * time it negotiates authenticated (AES-GCM) clipboard so a later GCM1-strip on the unauthenticated
+     * UDP discovery can't push us back to malleable CBC. A pinned peer that no longer advertises GCM1
+     * is a downgrade attempt → skip it (return null) rather than send the weaker mode. Fail closed.
+     */
+    private fun sealClipboardForPeer(ip: String, supportsAuthClipboard: Boolean, aesKey: ByteArray, plain: String): String? {
+        return when (DowngradePolicy.decide(supportsAuthClipboard, SecurityVault.isClipboardGcmPinned(applicationContext, ip))) {
+            DowngradePolicy.Decision.SEAL -> {
+                SecurityVault.pinClipboardGcm(applicationContext, ip)
+                CryptoEngine.encryptStringAuthenticated(plain, aesKey)
+            }
+            DowngradePolicy.Decision.PLAINTEXT -> CryptoEngine.encryptString(plain, aesKey)
+            DowngradePolicy.Decision.BLOCK -> {
+                Log.w("ClipboardService", "Clipboard GCM downgrade blocked for $ip — skipping peer")
+                null
+            }
+        }
+    }
+
     private fun executeNetworkDelete(text: String) {
         serviceScope.launch(Dispatchers.IO) {
             val payload = "CMD_DELETE|$text"
@@ -166,9 +187,7 @@ class ClipboardService : Service() {
             for (node in pairedNodes) {
                 try {
                     val aesKey = SecurityVault.getKeyForNode(applicationContext, node.ip) ?: continue
-                    val encryptedPayload = if (node.supportsAuthClipboard)
-                        CryptoEngine.encryptStringAuthenticated(payload, aesKey)
-                    else CryptoEngine.encryptString(payload, aesKey)
+                    val encryptedPayload = sealClipboardForPeer(node.ip, node.supportsAuthClipboard, aesKey, payload) ?: continue
                     val textBytes = encryptedPayload.toByteArray(Charsets.UTF_8)
 
                     Net.sendBytes(node.ip, Ports.CLIPBOARD, textBytes)
@@ -471,9 +490,7 @@ class ClipboardService : Service() {
             for (node in pairedNodes) {
                 try {
                     val aesKey = SecurityVault.getKeyForNode(applicationContext, node.ip) ?: continue
-                    val encryptedPayload = if (node.supportsAuthClipboard)
-                        CryptoEngine.encryptStringAuthenticated(text, aesKey)
-                    else CryptoEngine.encryptString(text, aesKey)
+                    val encryptedPayload = sealClipboardForPeer(node.ip, node.supportsAuthClipboard, aesKey, text) ?: continue
                     val textBytes = encryptedPayload.toByteArray(Charsets.UTF_8)
 
                     if (Net.sendBytes(node.ip, Ports.CLIPBOARD, textBytes)) successCount++

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -300,6 +302,9 @@ private fun SettingSwitchRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = dimens.touchTarget)
+            // The whole row is one toggle target (Role.Switch) so TalkBack announces label + on/off
+            // as a single control; the Switch below mirrors state with onCheckedChange = null.
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(bottom = dimens.spaceMd),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -312,7 +317,7 @@ private fun SettingSwitchRow(
         )
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = colors.green,

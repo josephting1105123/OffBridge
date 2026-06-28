@@ -28,8 +28,8 @@ android {
         applicationId = "com.EntropicSoftwareLab.ClipboardShare"
         minSdk = 29
         targetSdk = 36
-        versionCode = 14
-        versionName = "3.3.0"
+        versionCode = 15
+        versionName = "3.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -47,7 +47,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 code shrinking/obfuscation + resource shrinking. Safe here: all JSON is org.json
+            // (string-literal keys, no reflective (de)serialization) and there is no getIdentifier/
+            // Class.forName dynamic lookup, so shrinking can't strip a referenced symbol/resource.
+            // See proguard-rules.pro for the defensive keep set (Tink, ML Kit, ZXing, Room).
+            isMinifyEnabled = true
+            isShrinkResources = true
             // Sign with the real release key when keystore.properties is present; otherwise leave
             // the default (debug) signing so local/debug builds still work.
             if (keystorePropertiesFile.exists()) {
