@@ -4,6 +4,33 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.3.0 — Android + Windows (security hardening & encrypted file transfer)
+
+Both platforms now report **3.3.0**.
+
+### Encrypted LAN file transfer (new)
+- **`FileSeal`** seals the bulk LAN file stream with **AES-256-GCM per 64 KiB chunk** (HKDF
+  `file-aead-v1`; record `[u32be len][12B nonce][ct]`; AAD = chunk index), closing the gap where file
+  bytes previously crossed the wire in the clear (clipboard text was already authenticated).
+- Negotiated out-of-OFFER: peers advertise `FGCM1` in discovery and the receiver opts in with an
+  `fgcm` flag on `ACCEPT_OFFER` / `RESUME_REQUEST`. Legacy peers and the off-grid (ECDH-token) path
+  stay plaintext, so nothing breaks. Ported byte-identically to Windows and pinned by a shared
+  cross-platform golden vector (`FileSealTest` / `FileSealVectorTest`).
+
+### Security & robustness (Android)
+- `ClipboardReaderActivity` / `ClipboardProxyActivity` are no longer `exported` — closes a hole that
+  let any local app trigger a clipboard read-and-push. Removed the unused `REQUEST_INSTALL_PACKAGES`
+  permission, un-exported `BootReceiver`, and enabled `supportsRtl`.
+- `TransferDaemon.stop()` / `PairingDaemon.stop()` release the wake / Wi-Fi / multicast locks on
+  Power Off (previously held for the whole process lifetime). Plus `@Volatile` cross-thread fixes, a
+  guarded `unregisterReceiver`, and a carrier-aware auto-resume guard for off-grid sessions.
+
+### Build & UX
+- Release **signing-config** scaffold (gitignored `keystore.properties`).
+- Localized several hardcoded UI strings and added TalkBack `Role` semantics to shared controls.
+
+---
+
 ## 3.2.0 — Android + Windows (release alignment & repo cleanup)
 
 Version-alignment release: Android and Windows now both report **3.2.0**. Previously the

@@ -67,7 +67,9 @@ class ClipboardService : Service() {
         // Marks clips this app wrote itself (received sync / programmatic clear) so we can tell them
         // apart from user copies.
         const val CLIPBOARD_SOURCE_TAG = "com.example.josephclipboardclient.PROGRAMMATIC_COPY"
-        var isSyncEnabled = true
+        // Toggled on the main thread (UI), read on IO coroutines (receive loop, notification loop);
+        // @Volatile gives the cross-thread visibility a plain var lacks.
+        @Volatile var isSyncEnabled = true
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -449,8 +451,9 @@ class ClipboardService : Service() {
                     }
                 }
             } catch (e: Exception) {
+                Log.w("ClipboardService", "Incoming clipboard handling failed: ${e.message}")
             } finally {
-                socket.close()
+                try { socket.close() } catch (_: Exception) {}
             }
         }
     }
@@ -487,7 +490,9 @@ class ClipboardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(pairingNotificationReceiver)
+        // Guard like the adjacent socket close: if registration never completed, unregisterReceiver
+        // throws IllegalArgumentException ("Receiver not registered") and would crash teardown.
+        try { unregisterReceiver(pairingNotificationReceiver) } catch (e: IllegalArgumentException) {}
         try { serverSocket?.close() } catch (e: Exception) {} // best-effort close on shutdown
         serviceJob.cancel()
     }

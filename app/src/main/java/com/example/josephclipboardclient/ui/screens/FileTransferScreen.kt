@@ -196,7 +196,7 @@ fun FileTransferScreen(
                 ) {
                     if (selectionMode) {
                         Text(
-                            "${selectedIndices.size} selected",
+                            stringResource(R.string.format_selected_count, selectedIndices.size),
                             style = MaterialTheme.typography.titleMedium,
                             color = colors.textPrimary,
                             fontWeight = FontWeight.Bold,

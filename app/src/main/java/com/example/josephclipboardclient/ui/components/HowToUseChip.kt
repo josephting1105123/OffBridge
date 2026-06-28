@@ -17,7 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 
 /**
@@ -31,7 +34,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 @Composable
 fun HowToUseChip(
     onClick: () -> Unit,
-    text: String = "How to use",
+    text: String = stringResource(R.string.action_how_to_use),
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -39,7 +42,7 @@ fun HowToUseChip(
         modifier = Modifier
             .clip(RoundedCornerShape(dimens.radiusSm))
             .background(colors.green.copy(alpha = 0.15f))
-            .clickable { onClick() }
+            .clickable(role = Role.Button) { onClick() }
             .height(32.dp)
             .padding(horizontal = dimens.spaceMd),
         verticalAlignment = Alignment.CenterVertically,

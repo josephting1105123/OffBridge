@@ -165,20 +165,23 @@ class ClipboardAppController {
             _incomingFileOffer.value = session
             onRequestForeground?.invoke()
         },
-        onAcceptReceived = { sessionId, socket ->
+        onAcceptReceived = { sessionId, fgcm, socket ->
             val session = activeOutgoingFileSessions[sessionId]
             if (session != null) {
                 // Android accepted our offer. Stream files out! (LAN accept never carries the
-                // delivery-ack suffix, so ackExpected = false here.)
-                streamFilesToSocket(session, socket, 0, 0L, ackExpected = false)
+                // delivery-ack suffix, so ackExpected = false here.) "fgcm" ⇒ seal the bulk stream
+                // with FileSeal under the shared pairing key.
+                val fileKey = if (fgcm) SecurityVault.getAesKey(session.targetIp) else null
+                streamFilesToSocket(session, socket, 0, 0L, ackExpected = false, fileKey = fileKey)
             } else {
                 try { socket.close() } catch(e:Exception){}
             }
         },
-        onResumeReceived = { sessionId, fileIndex, offset, ackExpected, socket ->
+        onResumeReceived = { sessionId, fileIndex, offset, ackExpected, fgcm, socket ->
             val session = activeOutgoingFileSessions[sessionId]
             if (session != null) {
-                streamFilesToSocket(session, socket, fileIndex, offset, ackExpected)
+                val fileKey = if (fgcm) SecurityVault.getAesKey(session.targetIp) else null
+                streamFilesToSocket(session, socket, fileIndex, offset, ackExpected, fileKey = fileKey)
             } else {
                 try { socket.close() } catch(e:Exception){}
             }
@@ -652,10 +655,13 @@ class ClipboardAppController {
         scope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
+                // "fgcm" requests an authenticated (FileSeal) bulk stream when the sender advertised
+                // FGCM1 and we hold its pairing key; legacy senders ignore it and stream plaintext.
+                val fileKey = fileKeyIfAead(session.senderIp)
                 socket = Socket(session.senderIp, Ports.FILE_TRANSFER)
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
-                val acceptCmd = "ACCEPT_OFFER|${sessionId}\n"
+                val acceptCmd = if (fileKey != null) "ACCEPT_OFFER|${sessionId}|fgcm\n" else "ACCEPT_OFFER|${sessionId}\n"
                 outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
@@ -678,12 +684,19 @@ class ClipboardAppController {
                 _transferHistory.update { listOf(record) + it }
                 saveHistory()
 
-                receiveFilesFromSocket(session, socket, sessionId, 0, 0L)
+                receiveFilesFromSocket(session, socket, sessionId, 0, 0L, fileKey)
             } catch (e: Exception) {
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
             }
         }
+    }
+
+    /** Pairing key for [ip] iff a FileSeal stream should be used (peer advertised FGCM1 AND we hold
+     *  its key); null ⇒ plaintext. Mirrors Android TransferDaemon.fileKeyIfAead. */
+    private fun fileKeyIfAead(ip: String): ByteArray? {
+        val key = SecurityVault.getAesKey(ip) ?: return null
+        return if (transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthFile }) key else null
     }
 
     fun resumeIncomingFileTransfer(sessionId: String) {
@@ -695,12 +708,16 @@ class ClipboardAppController {
         scope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
+                val fileKey = fileKeyIfAead(session.senderIp)
                 socket = Socket(session.senderIp, Ports.FILE_TRANSFER)
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
                 val startFileIndex = record.filesCompleted
                 var trueOffset = 0L
-                if (startFileIndex < session.manifest.size) {
+                if (fileKey == null && startFileIndex < session.manifest.size) {
+                    // Plaintext resume recomputes from the .part length. AEAD resume restarts the
+                    // in-progress file at chunk 0 (FileSeal records aren't byte-seekable), so offset
+                    // stays 0 and the receiver reopens the .part fresh.
                     val (name, _) = session.manifest[startFileIndex]
                     val saveDir = File(SecurityVault.getSaveLocation())
                     val partFile = File(saveDir, "$name.part")
@@ -708,12 +725,14 @@ class ClipboardAppController {
                         trueOffset = partFile.length()
                     }
                 }
-                
-                val resumeCmd = "RESUME_REQUEST|${sessionId}|${startFileIndex}|${trueOffset}\n"
+
+                val resumeCmd = if (fileKey != null)
+                    "RESUME_REQUEST|${sessionId}|${startFileIndex}|${trueOffset}|fgcm\n"
+                else "RESUME_REQUEST|${sessionId}|${startFileIndex}|${trueOffset}\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
-                
-                receiveFilesFromSocket(session, socket, sessionId, startFileIndex, trueOffset)
+
+                receiveFilesFromSocket(session, socket, sessionId, startFileIndex, trueOffset, fileKey)
             } catch (e: Exception) {
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
@@ -739,7 +758,7 @@ class ClipboardAppController {
         return cleaned.ifBlank { "received_file" }
     }
 
-    private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long) {
+    private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long, fileKey: ByteArray? = null) {
         try {
             activeFileTransferSockets[sessionId] = socket
 
@@ -750,6 +769,9 @@ class ClipboardAppController {
 
             val inputStream = socket.getInputStream()
             val buffer = ByteArray(8192)
+            // Non-null fileKey ⇒ the bulk stream is FileSeal-sealed; decrypt per chunk.
+            val fs = com.joseph.clipboard.windows.storage.FileSeal
+            val aeadKeySpec = fileKey?.let { fs.keySpec(fs.deriveKey(it)) }
 
             for (i in startFileIndex until session.manifest.size) {
                 val (name, size) = session.manifest[i]
@@ -767,18 +789,36 @@ class ClipboardAppController {
                 var lastUpdateTime = System.currentTimeMillis()
 
                 FileOutputStream(partFile, isResumingThisFile).use { fos ->
-                    while (remaining > 0) {
-                        val toRead = if (remaining > buffer.size) buffer.size else remaining.toInt()
-                        val bytesRead = inputStream.read(buffer, 0, toRead)
-                        if (bytesRead == -1) break
-                        fos.write(buffer, 0, bytesRead)
-                        remaining -= bytesRead
-                        currentOffset += bytesRead
+                    if (aeadKeySpec != null) {
+                        // AEAD: read GCM records, decrypt, append plaintext until the file's bytes are
+                        // all on disk. AEAD resume restarts the file, so currentOffset is 0 here.
+                        var chunkIndex = currentOffset / fs.CHUNK_SIZE
+                        while (remaining > 0) {
+                            val pt = fs.openChunk(aeadKeySpec, inputStream, chunkIndex, remaining)
+                            fos.write(pt)
+                            remaining -= pt.size
+                            currentOffset += pt.size
+                            chunkIndex++
+                            val now = System.currentTimeMillis()
+                            if (now - lastUpdateTime > 100) {
+                                lastUpdateTime = now
+                                updateRecord(sessionId) { it.copy(currentFileOffset = currentOffset) }
+                            }
+                        }
+                    } else {
+                        while (remaining > 0) {
+                            val toRead = if (remaining > buffer.size) buffer.size else remaining.toInt()
+                            val bytesRead = inputStream.read(buffer, 0, toRead)
+                            if (bytesRead == -1) break
+                            fos.write(buffer, 0, bytesRead)
+                            remaining -= bytesRead
+                            currentOffset += bytesRead
 
-                        val now = System.currentTimeMillis()
-                        if (now - lastUpdateTime > 100) {
-                            lastUpdateTime = now
-                            updateRecord(sessionId) { it.copy(currentFileOffset = currentOffset) }
+                            val now = System.currentTimeMillis()
+                            if (now - lastUpdateTime > 100) {
+                                lastUpdateTime = now
+                                updateRecord(sessionId) { it.copy(currentFileOffset = currentOffset) }
+                            }
                         }
                     }
                     fos.flush()
@@ -818,7 +858,7 @@ class ClipboardAppController {
         }
     }
 
-    private fun streamFilesToSocket(session: OutgoingFileSession, socket: Socket, startFileIndex: Int, startOffset: Long, ackExpected: Boolean) {
+    private fun streamFilesToSocket(session: OutgoingFileSession, socket: Socket, startFileIndex: Int, startOffset: Long, ackExpected: Boolean, fileKey: ByteArray? = null) {
         scope.launch(Dispatchers.IO) {
             // When the receiver honours the delivery ack we only declare success once it confirms,
             // and keep the session around on failure so its resume can reconnect to it.
@@ -827,6 +867,9 @@ class ClipboardAppController {
                 activeFileTransferSockets[session.sessionId] = socket
                 val outStream = socket.getOutputStream()
                 val buffer = ByteArray(8192)
+                // Non-null fileKey ⇒ seal the bulk stream per-chunk with FileSeal; else plaintext.
+                val fs = com.joseph.clipboard.windows.storage.FileSeal
+                val aeadKeySpec = fileKey?.let { fs.keySpec(fs.deriveKey(it)) }
 
                 for (i in startFileIndex until session.files.size) {
                     val file = session.files[i]
@@ -848,16 +891,45 @@ class ClipboardAppController {
                             }
                             if (toSkip > 0) throw Exception("Failed to skip to resume offset $startOffset for ${file.name}")
                         }
-                        while (true) {
-                            val read = fileIn.read(buffer)
-                            if (read == -1) break
-                            outStream.write(buffer, 0, read)
-                            currentOffset += read
+                        if (aeadKeySpec != null) {
+                            // AEAD: seal the file as GCM records sized from the file; the receiver
+                            // bounds by the manifest size. AEAD resume restarts the file (offset 0).
+                            val plainLen = file.length()
+                            var remaining = plainLen - currentOffset
+                            var chunkIndex = currentOffset / fs.CHUNK_SIZE
+                            val cbuf = ByteArray(fs.CHUNK_SIZE)
+                            while (remaining > 0) {
+                                val want = if (remaining > fs.CHUNK_SIZE) fs.CHUNK_SIZE else remaining.toInt()
+                                var filled = 0
+                                while (filled < want) {
+                                    val r = fileIn.read(cbuf, filled, want - filled)
+                                    if (r == -1) break
+                                    filled += r
+                                }
+                                if (filled == 0) break
+                                outStream.write(fs.sealChunk(aeadKeySpec, cbuf, filled, chunkIndex))
+                                currentOffset += filled
+                                remaining -= filled
+                                chunkIndex++
 
-                            val now = System.currentTimeMillis()
-                            if (now - lastUpdateTime > 100) {
-                                lastUpdateTime = now
-                                updateRecord(session.sessionId) { it.copy(currentFileOffset = currentOffset) }
+                                val now = System.currentTimeMillis()
+                                if (now - lastUpdateTime > 100) {
+                                    lastUpdateTime = now
+                                    updateRecord(session.sessionId) { it.copy(currentFileOffset = currentOffset) }
+                                }
+                            }
+                        } else {
+                            while (true) {
+                                val read = fileIn.read(buffer)
+                                if (read == -1) break
+                                outStream.write(buffer, 0, read)
+                                currentOffset += read
+
+                                val now = System.currentTimeMillis()
+                                if (now - lastUpdateTime > 100) {
+                                    lastUpdateTime = now
+                                    updateRecord(session.sessionId) { it.copy(currentFileOffset = currentOffset) }
+                                }
                             }
                         }
                     }
@@ -865,6 +937,11 @@ class ClipboardAppController {
                     updateRecord(session.sessionId) {
                         it.copy(
                             filesCompleted = it.filesCompleted + 1,
+                            // Mirror the receive side (:791): zero the offset in the SAME update as the
+                            // filesCompleted bump, so the next file's row doesn't briefly render with the
+                            // previous file's stale (large) offset — which made the bar snap to ~100% then
+                            // drop back to 0% at every multi-file boundary ("numbers jumping").
+                            currentFileOffset = 0L,
                             // Defer "completed" to the delivery ack when the receiver will send one.
                             status = if (i == session.files.size - 1 && !ackExpected) "completed" else "transferring"
                         )

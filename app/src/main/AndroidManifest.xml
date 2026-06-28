@@ -16,7 +16,6 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- V3.0 off-grid transport (Wi-Fi Direct + QR + NFC HCE) -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -64,7 +63,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="false"
+        android:supportsRtl="true"
         android:theme="@style/Theme.JosephClipboardClient"
         android:localeConfig="@xml/locales_config"
         tools:targetApi="31"
@@ -106,7 +105,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity android:name=".ClipboardReaderActivity" android:exported="true" android:excludeFromRecents="true" android:taskAffinity=".ClipboardReaderTask" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <activity android:name=".ClipboardReaderActivity" android:exported="false" android:excludeFromRecents="true" android:taskAffinity=".ClipboardReaderTask" android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <activity
             android:name=".PairingActivity"
             android:exported="false"
@@ -119,7 +118,7 @@
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:excludeFromRecents="true" />
-        <activity android:name=".ClipboardProxyActivity" android:exported="true" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
+        <activity android:name=".ClipboardProxyActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
         <activity android:name=".WindowsVersionActivity" android:exported="false" />
         <activity android:name=".AppSelectionActivity" android:exported="false" />
         <activity android:name=".offgrid.OffGridSendActivity" android:exported="false" />
@@ -151,7 +150,9 @@
             </intent-filter>
         </service>
         <activity android:name="com.EntropicSoftwareLab.ClipboardShare.TransferRequestActivity" android:exported="false" android:showOnLockScreen="true" android:turnScreenOn="true" android:excludeFromRecents="true"/>
-        <receiver android:name=".BootReceiver" android:exported="true">
+        <!-- BOOT_COMPLETED is a protected system broadcast, so the OS still delivers it to a
+             non-exported receiver; exported=false removes the needless external attack surface. -->
+        <receiver android:name=".BootReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

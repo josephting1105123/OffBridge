@@ -35,6 +35,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -141,7 +142,7 @@ private fun ListView(
     // Header / selection banner
     Row(modifier = Modifier.fillMaxWidth().padding(bottom = dimens.spaceLg), verticalAlignment = Alignment.CenterVertically) {
         if (isSelectMode) {
-            Text("${selectedSessionIds.size} selected", style = MaterialTheme.typography.titleMedium, color = colors.textPrimary, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.format_selected_count, selectedSessionIds.size), style = MaterialTheme.typography.titleMedium, color = colors.textPrimary, modifier = Modifier.weight(1f))
             CapsuleButton(stringResource(R.string.action_delete), filled = true, enabled = selectedSessionIds.isNotEmpty(), fill = colors.error, textColor = Color.White, onClick = onDeleteSelected)
             Spacer(Modifier.width(dimens.spaceSm))
             CapsuleButton(stringResource(R.string.action_cancel), filled = false, fill = colors.card, textColor = colors.textPrimary, onClick = { onSelectModeChange(false) })
@@ -165,7 +166,7 @@ private fun ListView(
                 modifier = Modifier
                     .clip(RoundedCornerShape(dimens.radiusPill))
                     .background(if (selected) colors.green else colors.card)
-                    .clickable { onFilterSelected(option) }
+                    .clickable(role = Role.Button) { onFilterSelected(option) }
                     .padding(horizontal = dimens.spaceMd, vertical = dimens.spaceSm),
             )
         }
@@ -389,7 +390,7 @@ private fun CapsuleButton(
             .clip(shape)
             .background(bg)
             .border(dimens.hairlineWidth, border, shape)
-            .then(if (enabled) Modifier.clickable { onClick() } else Modifier)
+            .then(if (enabled) Modifier.clickable(role = Role.Button) { onClick() } else Modifier)
             .padding(horizontal = dimens.spaceLg, vertical = dimens.spaceSm),
     ) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = if (enabled) textColor else colors.textSecondary, fontWeight = FontWeight.Bold)

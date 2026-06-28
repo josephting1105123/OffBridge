@@ -10,10 +10,13 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             val serviceIntent = Intent(context, ClipboardService::class.java)
-            // ClipboardService is a connectedDevice FGS, which is allowed from
-            // BOOT_COMPLETED. The try/catch degrades gracefully (instead of
-            // crashing boot with ForegroundServiceStartNotAllowedException) if a
-            // future policy shift ever restricts this start.
+            // NOTE: ClipboardService is a `connectedDevice` FGS, and on Android 14+ (API 34+)
+            // that type is NOT permitted to be started from BOOT_COMPLETED — the start throws
+            // ForegroundServiceStartNotAllowedException. The try/catch below swallows it so boot
+            // never crashes; the practical effect on modern devices is that the daemon instead
+            // starts the next time the user opens the app (MainActivity/SplashActivity call
+            // TransferDaemon.start). Reliable boot autostart on 14+ would need a boot-allowed FGS
+            // type (e.g. specialUse, with a Play Console declaration) and on-device verification.
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(serviceIntent)

@@ -18,9 +18,11 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
 
 object PairingDaemon {
-    private val daemonJob = Job()
-    private val daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
-    var isRunning = false
+    // var so [stop] can cancel and [start] can rebuild (a cancelled scope can't relaunch).
+    private var daemonJob = Job()
+    private var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+    @Volatile var isRunning = false
+    @Volatile private var registeredContext: Context? = null
 
     const val ACTION_PAIRING_ACCEPTED = "com.EntropicSoftwareLab.ClipboardShare.PAIRING_ACCEPTED"
     const val ACTION_PAIRING_DECLINED = "com.EntropicSoftwareLab.ClipboardShare.PAIRING_DECLINED"
@@ -53,16 +55,24 @@ object PairingDaemon {
     fun start(context: Context) {
         if (isRunning) return
         isRunning = true
+        if (!daemonScope.isActive) {
+            daemonJob = Job()
+            daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+        }
 
         val filter = IntentFilter().apply {
             addAction(ACTION_PAIRING_ACCEPTED)
             addAction(ACTION_PAIRING_DECLINED)
         }
 
+        // Register on (and remember) the application context so [stop] can unregister it later
+        // without holding an Activity/Service reference.
+        val appCtx = context.applicationContext
+        registeredContext = appCtx
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(confirmationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            appCtx.registerReceiver(confirmationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
-            context.registerReceiver(confirmationReceiver, filter)
+            appCtx.registerReceiver(confirmationReceiver, filter)
         }
 
         daemonScope.launch {
@@ -89,6 +99,19 @@ object PairingDaemon {
                 serverSocket?.close()
             }
         }
+    }
+
+    /**
+     * Counterpart to [start]: cancels the pairing accept loop and unregisters the confirmation
+     * receiver so neither outlives the process intent. Idempotent; a later [start] rebinds cleanly.
+     * Call on a genuine app shutdown (Power Off).
+     */
+    fun stop() {
+        if (!isRunning) return
+        isRunning = false
+        try { daemonScope.cancel() } catch (_: Exception) {}
+        try { registeredContext?.unregisterReceiver(confirmationReceiver) } catch (_: Exception) {}
+        registeredContext = null
     }
 
     private fun handleIncomingPairing(context: Context, socket: Socket) {

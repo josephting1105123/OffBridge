@@ -8,8 +8,8 @@ import kotlin.concurrent.thread
 
 class FileTransferDaemon(
     private val onOfferReceived: (ip: String, sessionId: String, deviceName: String, manifest: List<Pair<String, Long>>) -> Unit,
-    private val onAcceptReceived: (sessionId: String, socket: Socket) -> Unit,
-    private val onResumeReceived: (sessionId: String, fileIndex: Int, offset: Long, ackExpected: Boolean, socket: Socket) -> Unit,
+    private val onAcceptReceived: (sessionId: String, fgcm: Boolean, socket: Socket) -> Unit,
+    private val onResumeReceived: (sessionId: String, fileIndex: Int, offset: Long, ackExpected: Boolean, fgcm: Boolean, socket: Socket) -> Unit,
     private val onCancelReceived: (sessionId: String) -> Unit = {},
     /** An Android scanner dialed in for off-grid "send via QR"; the handler owns the socket. */
     private val onP2pHelloReceived: (socket: Socket, header: String) -> Unit = { s, _ -> try { s.close() } catch (_: Exception) {} }
@@ -91,18 +91,24 @@ class FileTransferDaemon(
                     }
                     clientSocket.close()
                 } else if (header.startsWith("ACCEPT_OFFER|")) {
-                    val sessionId = header.split("|")[1]
+                    val parts = header.split("|")
+                    val sessionId = parts[1]
+                    // Receiver appended "fgcm" ⇒ it wants the bulk stream FileSeal-sealed.
+                    val fgcm = parts.drop(2).contains("fgcm")
                     // Hand off socket to app controller to stream files out
-                    onAcceptReceived(sessionId, clientSocket)
+                    onAcceptReceived(sessionId, fgcm, clientSocket)
                 } else if (header.startsWith("RESUME_REQUEST|")) {
                     val parts = header.split("|")
                     if (parts.size >= 4) {
                         val sessionId = parts[1]
                         val fileIndex = parts[2].toIntOrNull() ?: 0
                         val offset = parts[3].toLongOrNull() ?: 0L
-                        // A COMPLETION_ACK-capable receiver appends "|ack" (parts[4]).
-                        val ackExpected = parts.getOrNull(4) == "ack"
-                        onResumeReceived(sessionId, fileIndex, offset, ackExpected, clientSocket)
+                        // Receiver flags after the offset, order-independent: "ack" (COMPLETION_ACK)
+                        // and/or "fgcm" (FileSeal-sealed bulk stream).
+                        val flags = parts.drop(4)
+                        val ackExpected = flags.contains("ack")
+                        val fgcm = flags.contains("fgcm")
+                        onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, clientSocket)
                     } else {
                         clientSocket.close()
                     }

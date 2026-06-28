@@ -14,7 +14,10 @@ data class DiscoveredDevice(
     var lastSeen: Long,
     /** Peer advertised [TransferDaemon.CLIPBOARD_GCM_CAP] → can decrypt authenticated (AES-GCM)
      * clipboard payloads. Defaults false so legacy Android + older Windows builds stay on CBC. */
-    var supportsAuthClipboard: Boolean = false
+    var supportsAuthClipboard: Boolean = false,
+    /** Peer advertised [TransferDaemon.FILE_GCM_CAP] → can seal/open authenticated (AES-GCM) bulk
+     * file streams via FileSeal. Defaults false so legacy peers stay plaintext. */
+    var supportsAuthFile: Boolean = false
 )
 
 class TransferDaemon(
@@ -28,6 +31,13 @@ class TransferDaemon(
         /** Optional 5th discovery field; presence means the peer can decrypt AES-GCM clipboard
          * payloads ([com.joseph.clipboard.windows.storage.ClipboardSeal]). Mirrors Android's token. */
         const val CLIPBOARD_GCM_CAP = "GCM1"
+
+        /** File-stream AEAD token (FileSeal). Advertised comma-joined with [CLIPBOARD_GCM_CAP] in the
+         * optional 5th field (`...|Windows|GCM1,FGCM1`). Mirrors Android's FILE_GCM_CAP. */
+        const val FILE_GCM_CAP = "FGCM1"
+
+        /** Capability list advertised in discovery — comma-joined, parsed by `contains`. */
+        private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP"
     }
 
     private val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
@@ -104,7 +114,7 @@ class TransferDaemon(
             val localIp = getLocalIpAddress()
             // Trailing |GCM1 advertises authenticated-clipboard support; older peers parse with
             // parts.size >= 4 and ignore the extra field, so this stays wire-compatible.
-            val message = "FILEBRIDGE_DISCOVERY|${deviceNameProvider()}|$localIp|Windows|$CLIPBOARD_GCM_CAP"
+            val message = "FILEBRIDGE_DISCOVERY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS"
             val data = message.toByteArray(Charsets.UTF_8)
             val packet = DatagramPacket(
                 data,
@@ -125,7 +135,9 @@ class TransferDaemon(
             val declaredIp = parts[2] // Can use senderIp if declared is empty/invalid
             val os = parts[3]
             // Optional trailing capability field; absent for older Android + Windows builds.
-            val supportsAuth = (parts.getOrNull(4) ?: "").split(",").contains(CLIPBOARD_GCM_CAP)
+            val caps = (parts.getOrNull(4) ?: "").split(",")
+            val supportsAuth = caps.contains(CLIPBOARD_GCM_CAP)
+            val supportsFile = caps.contains(FILE_GCM_CAP)
 
             val ipToTrack = if (declaredIp.isNotBlank()) declaredIp else senderIp
 
@@ -137,8 +149,9 @@ class TransferDaemon(
             if (existing != null) {
                 existing.lastSeen = now
                 existing.supportsAuthClipboard = supportsAuth
+                existing.supportsAuthFile = supportsFile
             } else {
-                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth)
+                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile)
             }
         }
     }

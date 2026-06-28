@@ -9,6 +9,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
@@ -27,7 +28,10 @@ data class DiscoveredDevice(
     val lastSeen: Long = 0,
     /** Peer advertised the [TransferDaemon.CLIPBOARD_GCM_CAP] token → it can decrypt authenticated
      * (AES-GCM) clipboard payloads. Defaults false so legacy Android + the Windows client stay on CBC. */
-    val supportsAuthClipboard: Boolean = false
+    val supportsAuthClipboard: Boolean = false,
+    /** Peer advertised the [TransferDaemon.FILE_GCM_CAP] token → it can seal/open authenticated
+     * (AES-GCM) bulk file streams via [FileSeal]. Defaults false so legacy peers stay plaintext. */
+    val supportsAuthFile: Boolean = false
 )
 
 data class TransferSession(
@@ -93,8 +97,8 @@ class P2pAdvertisingContext(
 )
 
 object TransferDaemon {
-    var isRunning = false
-    var customDeviceName: String = run {
+    @Volatile var isRunning = false
+    @Volatile var customDeviceName: String = run {
         val manufacturer = Build.MANUFACTURER?.trim() ?: ""
         val model = Build.MODEL?.trim() ?: ""
         if (model.startsWith(manufacturer, ignoreCase = true)) model
@@ -117,8 +121,10 @@ object TransferDaemon {
     @Volatile
     var p2pContext: P2pAdvertisingContext? = null
 
-    private val daemonJob = Job()
-    private val daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+    // var (not val) so [stop] can cancel the scope and a later [start] can rebuild it — a cancelled
+    // CoroutineScope cannot relaunch, so the daemon needs a fresh Job/scope on restart.
+    private var daemonJob = Job()
+    private var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
 
     private var multicastLock: WifiManager.MulticastLock? = null
     private var wakeLock: PowerManager.WakeLock? = null
@@ -135,6 +141,12 @@ object TransferDaemon {
     fun start(context: Context) {
         if (isRunning) return
         isRunning = true
+        // A prior stop() cancelled daemonScope; a cancelled scope can't relaunch, so rebuild the
+        // Job + scope before starting fresh after a shutdown.
+        if (!daemonScope.isActive) {
+            daemonJob = Job()
+            daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+        }
         wakeDiscovery()
 
         PairingDaemon.start(context)
@@ -167,7 +179,7 @@ object TransferDaemon {
                         // Trailing |GCM1 advertises authenticated-clipboard support. Older Android and
                         // the Windows client parse with parts.size >= 4 and ignore the extra field, so
                         // this stays wire-compatible while letting two updated peers negotiate AES-GCM.
-                        val message = "FILEBRIDGE_DISCOVERY|$customDeviceName|$myIp|Android|$CLIPBOARD_GCM_CAP".toByteArray(Charsets.UTF_8)
+                        val message = "FILEBRIDGE_DISCOVERY|$customDeviceName|$myIp|Android|$DISCOVERY_CAPS".toByteArray(Charsets.UTF_8)
 
                         val broadcastAddresses = getAllBroadcastAddresses(context)
                         for (address in broadcastAddresses) {
@@ -227,14 +239,16 @@ object TransferDaemon {
                             val remoteName = parts[1]
                             val remoteOs = parts[3]
                             // Optional trailing capability field (parts[4]); absent for legacy Android + Windows.
-                            val supportsAuth = (parts.getOrNull(4) ?: "").split(",").contains(CLIPBOARD_GCM_CAP)
+                            val caps = (parts.getOrNull(4) ?: "").split(",")
+                            val supportsAuth = caps.contains(CLIPBOARD_GCM_CAP)
+                            val supportsFile = caps.contains(FILE_GCM_CAP)
                             val actualIp = senderIp // Always trust the packet's source IP over the payload IP
 
                             if (!isMyOwnIp(actualIp)) {
                                 // A peer we hadn't seen (or one that had expired and returned) snaps the
                                 // broadcaster back to the fast cadence so mutual discovery completes quickly.
                                 val isNewNode = !discoveredNodes.containsKey(actualIp)
-                                discoveredNodes[actualIp] = DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth)
+                                discoveredNodes[actualIp] = DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile)
                                 if (isNewNode) wakeDiscovery()
 
                                 // Reply to discovery packets via unicast to bypass hotspot broadcast restrictions
@@ -243,7 +257,7 @@ object TransferDaemon {
                                         try {
                                             val replySocket = DatagramSocket()
                                             val myIp = getMyIpAddress()
-                                            val replyMsg = "FILEBRIDGE_REPLY|$customDeviceName|$myIp|Android|$CLIPBOARD_GCM_CAP".toByteArray(Charsets.UTF_8)
+                                            val replyMsg = "FILEBRIDGE_REPLY|$customDeviceName|$myIp|Android|$DISCOVERY_CAPS".toByteArray(Charsets.UTF_8)
                                             val replyPacket = DatagramPacket(replyMsg, replyMsg.size, InetSocketAddress(senderIp, Ports.DISCOVERY))
                                             replySocket.send(replyPacket)
                                             replySocket.close()
@@ -376,15 +390,42 @@ object TransferDaemon {
         }
     }
 
-    fun executeDownloadStream(context: Context, socket: Socket, session: TransferSession) {
-        executeDownloadStream(context, SocketConnection(socket), session)
+    /**
+     * Full shutdown — the counterpart [start] never had. Cancels the discovery / TCP-server /
+     * resume coroutines and releases the three radio/CPU locks [start] acquires. Without this the
+     * PARTIAL_WAKE_LOCK + Wi-Fi lock + multicast lock stayed held for the entire process lifetime
+     * (pinning the CPU awake and the radio in high-power mode) with no way for the user to release
+     * them short of force-stop. Idempotent; safe to call when not running. Call only on a genuine
+     * app shutdown (Power Off) — the daemon is a shared singleton many screens [start]; a later
+     * [start] rebuilds the scope.
+     */
+    fun stop() {
+        if (!isRunning) return
+        isRunning = false
+        try { daemonScope.cancel() } catch (_: Exception) {}
+        releaseLocks()
+    }
+
+    private fun releaseLocks() {
+        try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
+        try { if (wifiLock?.isHeld == true) wifiLock?.release() } catch (_: Exception) {}
+        try { if (multicastLock?.isHeld == true) multicastLock?.release() } catch (_: Exception) {}
+        wakeLock = null
+        wifiLock = null
+        multicastLock = null
+    }
+
+    fun executeDownloadStream(context: Context, socket: Socket, session: TransferSession, fileKey: ByteArray? = null) {
+        executeDownloadStream(context, SocketConnection(socket), session, fileKey)
     }
 
     /**
      * V4 §2: the carrier-neutral download path. Protocol bytes are identical
      * over TCP and Bluetooth; only the duplex-stream carrier differs.
+     * A non-null [fileKey] (the shared pairing key) means the bulk stream is FileSeal-sealed and is
+     * decrypted here; null keeps the legacy plaintext read (off-grid + legacy peers).
      */
-    fun executeDownloadStream(context: Context, connection: TransportConnection, session: TransferSession) {
+    fun executeDownloadStream(context: Context, connection: TransportConnection, session: TransferSession, fileKey: ByteArray? = null) {
         val manifest = session.manifest
 
         daemonScope.launch(Dispatchers.IO) {
@@ -400,6 +441,7 @@ object TransferDaemon {
                 connection.setReadTimeout(10000) // 10 second network timeout (no-op on BT)
                 val inputStream = connection.input
                 val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
+                val aeadKeySpec = fileKey?.let { FileSeal.keySpec(FileSeal.deriveKey(it)) }
 
                 if (session.localFileNames.isEmpty()) {
                     for (m in manifest) {
@@ -452,14 +494,29 @@ object TransferDaemon {
                     }
                     
                     outputStream?.use { out ->
-                        var remainingBytes = fsize - session.currentOffset
-                        while (remainingBytes > 0) {
-                            val toRead = if (remainingBytes > buffer.size) buffer.size else remainingBytes.toInt()
-                            val read = inputStream.read(buffer, 0, toRead)
-                            if (read == -1) throw java.io.IOException("Stream closed unexpectedly")
-                            out.write(buffer, 0, read)
-                            session.currentOffset += read
-                            remainingBytes -= read
+                        if (aeadKeySpec != null) {
+                            // AEAD: read GCM records, decrypt, and append plaintext until we have the
+                            // file's plaintext bytes. AEAD resume restarts the file (currentOffset==0).
+                            var remaining = fsize - session.currentOffset
+                            var chunkIndex = session.currentOffset / FileSeal.CHUNK_SIZE
+                            while (remaining > 0) {
+                                if (session.isCancelled) throw Exception("Transfer cancelled")
+                                val pt = FileSeal.openChunk(aeadKeySpec, inputStream, chunkIndex, remaining)
+                                out.write(pt)
+                                session.currentOffset += pt.size
+                                remaining -= pt.size
+                                chunkIndex++
+                            }
+                        } else {
+                            var remainingBytes = fsize - session.currentOffset
+                            while (remainingBytes > 0) {
+                                val toRead = if (remainingBytes > buffer.size) buffer.size else remainingBytes.toInt()
+                                val read = inputStream.read(buffer, 0, toRead)
+                                if (read == -1) throw java.io.IOException("Stream closed unexpectedly")
+                                out.write(buffer, 0, read)
+                                session.currentOffset += read
+                                remainingBytes -= read
+                            }
                         }
                     }
 
@@ -471,7 +528,12 @@ object TransferDaemon {
                     partFile?.let { pf ->
                         val finalFile = java.io.File(pf.parentFile, finalName)
                         if (finalFile.exists()) finalFile.delete()
-                        pf.renameTo(finalFile)
+                        if (pf.renameTo(finalFile)) {
+                            // Raw File writes into Download never register the file in MediaStore,
+                            // so images/videos land on disk but show up in no gallery. Poke the media
+                            // scanner to create that entry now (best-effort).
+                            indexForGallery(context, finalFile)
+                        }
                     }
                     session.currentFileIndex = i + 1
                     session.currentOffset = 0
@@ -524,6 +586,41 @@ object TransferDaemon {
         }
     }
 
+    /**
+     * Make a finished download visible to the gallery / Files app. The receiver writes to Download
+     * via the raw File API, which never inserts a MediaStore row — so images and videos sit on disk
+     * but appear in no gallery until some eventual system scan. Hand the file to the media scanner
+     * explicitly to create that row now. It infers the MIME from the file (so non-media files are
+     * harmless) and keys on the path (so re-scanning the same file is idempotent). No storage
+     * permission is needed since we own the file we just wrote. Best-effort: indexing must never
+     * fail the transfer.
+     *
+     * Only covers the default Download path. A user-chosen SAF location writes through the documents
+     * provider and has no stable absolute path to scan, so it keeps its existing behaviour.
+     */
+    private fun indexForGallery(context: Context, file: java.io.File) {
+        try {
+            android.media.MediaScannerConnection.scanFile(
+                context.applicationContext,
+                arrayOf(file.absolutePath),
+                null,
+                null
+            )
+        } catch (_: Exception) { }
+    }
+
+    /**
+     * Returns the shared pairing key for [ip] iff a FileSeal (AES-GCM) bulk-file stream should be
+     * used: the peer advertised the FGCM1 capability AND we hold its pairing key. Null ⇒ fall back to
+     * the plaintext stream. The receiver calls this to decide whether to request "fgcm" on
+     * ACCEPT_OFFER / RESUME_REQUEST. (Off-grid never reaches here — it uses an ECDH token key, not a
+     * stored pairing key, so it stays plaintext by construction.)
+     */
+    private fun fileKeyIfAead(context: Context, ip: String): ByteArray? {
+        val key = SecurityVault.getKeyForNode(context, ip) ?: return null
+        return if (discoveredNodes[ip]?.supportsAuthFile == true) key else null
+    }
+
     fun resumeIncomingTransfer(context: Context, sessionId: String) {
         val session = activeSessions[sessionId] ?: return
         if (!session.isIncoming || !session.isPaused) return
@@ -534,11 +631,18 @@ object TransferDaemon {
         daemonScope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
+                val fileKey = fileKeyIfAead(context, session.targetIp)
                 socket = Socket(session.targetIp, Ports.FILE_TRANSFER)
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
                 var trueOffset = session.currentOffset
-                if (session.currentFileIndex < session.localFileNames.size) {
+                if (fileKey != null) {
+                    // FileSeal records are not byte-seekable, so an AEAD resume restarts the
+                    // in-progress file from chunk 0 (already-completed files are promoted out of the
+                    // .part and are kept). offset 0 makes executeDownloadStream reopen the .part in
+                    // overwrite mode, discarding the partial plaintext.
+                    trueOffset = 0L
+                } else if (session.currentFileIndex < session.localFileNames.size) {
                     val finalName = session.localFileNames[session.currentFileIndex]
                     val prefs = context.getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
                     val saveLocationUriString = prefs.getString("save_location_uri", null)
@@ -558,11 +662,14 @@ object TransferDaemon {
                 }
                 session.currentOffset = trueOffset
 
-                val resumeCmd = "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}\n"
+                val resumeCmd = if (fileKey != null)
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|fgcm\n"
+                else
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
-                
-                executeDownloadStream(context, socket, session)
+
+                executeDownloadStream(context, socket, session, fileKey)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 e.printStackTrace()
@@ -602,14 +709,17 @@ object TransferDaemon {
         daemonScope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
+                val fileKey = fileKeyIfAead(context, session.targetIp)
                 socket = Socket(session.targetIp, Ports.FILE_TRANSFER)
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
-                val acceptCmd = "ACCEPT_OFFER|${session.sessionId}\n"
+                // Request authenticated (FileSeal) file bytes when both peers support it; "fgcm" tells
+                // the sender to seal. Legacy senders ignore the extra field and stream plaintext.
+                val acceptCmd = if (fileKey != null) "ACCEPT_OFFER|${session.sessionId}|fgcm\n" else "ACCEPT_OFFER|${session.sessionId}\n"
                 outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                executeDownloadStream(context, socket, session)
+                executeDownloadStream(context, socket, session, fileKey)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 e.printStackTrace()
@@ -748,9 +858,11 @@ object TransferDaemon {
                     val fileIndex = parts[2].toIntOrNull()
                     val offset = parts[3].toLongOrNull()
                     if (fileIndex == null || offset == null) { socket.close(); return }
-                    // A COMPLETION_ACK-capable receiver appends "|ack" — wait for its delivery
-                    // confirmation before declaring the resumed transfer complete.
-                    val ackExpected = parts.getOrNull(4) == "ack"
+                    // Receiver flags after the offset, order-independent: "ack" → wait for the delivery
+                    // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
+                    val flags = parts.drop(4)
+                    val ackExpected = flags.contains("ack")
+                    val resumeFileKey = if (flags.contains("fgcm")) SecurityVault.getKeyForNode(context, senderIp) else null
 
                     val session = activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
@@ -789,7 +901,7 @@ object TransferDaemon {
                                     .build()
                                 notifMgr.notify(65435, senderNotif)
 
-                                streamSessionFiles(context, session, outStream)
+                                streamSessionFiles(context, session, outStream, resumeFileKey)
 
                                 if (ackExpected && !awaitCompletionAck(socket, sessionId)) {
                                     // Resent bytes never confirmed — pause and keep the session so
@@ -832,13 +944,16 @@ object TransferDaemon {
                     val session = activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
                         session.isPaused = false
+                        // Receiver appended "fgcm" ⇒ seal the bulk stream with FileSeal under the shared
+                        // pairing key (the trust gate above guarantees we hold it). Absent ⇒ plaintext.
+                        val fileKey = if (parts.drop(2).contains("fgcm")) SecurityVault.getKeyForNode(context, senderIp) else null
                         val myGen = session.sendGeneration.incrementAndGet()
                         TransferHistoryManager.updateStatus(context, sessionId, "transferring")
 
                         daemonScope.launch(Dispatchers.IO) {
                             try {
                                 val outStream = socket.getOutputStream()
-                                streamSessionFiles(context, session, outStream)
+                                streamSessionFiles(context, session, outStream, fileKey)
                                 activeSessions.remove(sessionId)
                                 TransferHistoryManager.updateStatus(context, sessionId, "completed", session.fileUris.size)
                             } catch (e: Exception) {
@@ -1231,7 +1346,11 @@ object TransferDaemon {
         return mac.doFinal(message)
     }
 
-    private fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream) {
+    private fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null) {
+        // Non-null fileKey ⇒ seal the bulk stream per-chunk with FileSeal (negotiated via the FGCM1
+        // capability + the "fgcm" ACCEPT/RESUME flag); otherwise bytes go in the clear (legacy peers
+        // and the off-grid ECDH path, which both pass null).
+        val aeadKeySpec = fileKey?.let { FileSeal.keySpec(FileSeal.deriveKey(it)) }
         for (i in session.currentFileIndex until session.fileUris.size) {
             val uri = android.net.Uri.parse(session.fileUris[i])
             context.contentResolver.openInputStream(uri)?.use { fileIn ->
@@ -1253,13 +1372,37 @@ object TransferDaemon {
                         }
                     }
                 }
-                val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
-                while (true) {
-                    if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
-                    val read = fileIn.read(buffer)
-                    if (read == -1) break
-                    outStream.write(buffer, 0, read)
-                    session.currentOffset += read
+                if (aeadKeySpec != null) {
+                    // AEAD: emit the file as GCM records sized from the manifest; the reader bounds by
+                    // the same size. AEAD resume restarts the file, so currentOffset is 0 here and the
+                    // chunk index starts at 0 (kept general via currentOffset/CHUNK_SIZE).
+                    val plainLen = session.manifest.getOrNull(i)?.second ?: 0L
+                    val buffer = ByteArray(FileSeal.CHUNK_SIZE)
+                    var remaining = plainLen - session.currentOffset
+                    var chunkIndex = session.currentOffset / FileSeal.CHUNK_SIZE
+                    while (remaining > 0) {
+                        if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
+                        val want = if (remaining > FileSeal.CHUNK_SIZE) FileSeal.CHUNK_SIZE else remaining.toInt()
+                        var filled = 0
+                        while (filled < want) {
+                            val r = fileIn.read(buffer, filled, want - filled)
+                            if (r == -1) throw java.io.IOException("File shorter than its manifest size")
+                            filled += r
+                        }
+                        outStream.write(FileSeal.sealChunk(aeadKeySpec, buffer, filled, chunkIndex))
+                        session.currentOffset += filled
+                        remaining -= filled
+                        chunkIndex++
+                    }
+                } else {
+                    val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
+                    while (true) {
+                        if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
+                        val read = fileIn.read(buffer)
+                        if (read == -1) break
+                        outStream.write(buffer, 0, read)
+                        session.currentOffset += read
+                    }
                 }
             }
             outStream.flush()
@@ -1302,6 +1445,17 @@ object TransferDaemon {
      */
     const val CLIPBOARD_GCM_CAP = "GCM1"
 
+    /**
+     * File-stream AEAD capability token, advertised comma-joined with [CLIPBOARD_GCM_CAP] in the
+     * optional 5th discovery field (`...|Android|GCM1,FGCM1`). Presence means the peer can seal/open
+     * authenticated bulk file streams via [FileSeal]; a peer that omits it keeps the plaintext stream.
+     * Parsed into [DiscoveredDevice.supportsAuthFile].
+     */
+    const val FILE_GCM_CAP = "FGCM1"
+
+    /** Capability list advertised in discovery — comma-joined, order-stable, parsed by `contains`. */
+    private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP"
+
     private const val DISCOVERY_INTERVAL_MIN_MS = 3000L
     private const val DISCOVERY_INTERVAL_MAX_MS = 12000L
     private const val DISCOVERY_WAKE_WINDOW_MS = 20000L
@@ -1323,6 +1477,15 @@ object TransferDaemon {
      */
     private fun scheduleAutoResume(context: Context, session: TransferSession): Boolean {
         if (session.isCancelled) return false
+        // Off-grid (Wi-Fi Direct / SoftAP) sessions can't be auto-resumed here: resumeIncomingTransfer
+        // re-dials a plain default-network Socket to session.targetIp, which has no route to the
+        // off-grid sender once its live TransportRoute is gone. Spending the bounded retry budget on
+        // dials that can never connect only delays the paused state, so leave p2p sessions for a
+        // route-aware manual resume from the off-grid scan screen instead.
+        if (session.transport == "p2p") {
+            TransportDiag.log("RX: auto-resume skipped for off-grid (p2p) session ${session.sessionId} — needs route-aware manual resume")
+            return false
+        }
         // Progress since the last attempt → the link is alive and moving; forgive prior failures.
         if (session.currentOffset > session.lastResumeOffset) {
             session.autoResumeAttempts = 0

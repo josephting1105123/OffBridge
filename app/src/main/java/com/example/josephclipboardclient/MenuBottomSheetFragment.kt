@@ -86,6 +86,11 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
         btnPowerOff.setOnClickListener {
             Toast.makeText(requireContext(), getString(R.string.menu_power_off_toast), Toast.LENGTH_SHORT).show()
             try {
+                // Full shutdown: release the daemon's wakelock / Wi-Fi / multicast locks and cancel
+                // its coroutines BEFORE stopping the service, so "Power Off" actually frees the CPU
+                // and radio instead of leaving them pinned for the rest of the process lifetime.
+                TransferDaemon.stop()
+                PairingDaemon.stop()
                 val serviceIntent = Intent(requireContext(), ClipboardService::class.java)
                 requireContext().stopService(serviceIntent)
             } catch (e: Exception) { e.printStackTrace() }
