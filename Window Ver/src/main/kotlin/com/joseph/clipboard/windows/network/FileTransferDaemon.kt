@@ -150,7 +150,7 @@ class FileTransferDaemon(
                             val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
                                 try { java.util.Base64.getDecoder().decode(proofLine.removePrefix("OFFER_PROOF|")) } catch (_: Exception) { null }
                             } else null
-                            val expected = hmacSha256(pairingKey, nonce)
+                            val expected = com.joseph.clipboard.windows.network.control.SessionCrypto.hmacSha256(pairingKey, nonce)
                             if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
                                 // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key.
                                 // Drop the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer
@@ -220,11 +220,4 @@ class FileTransferDaemon(
         }
     }
 
-    /** HMAC-SHA256(key, message). Same construction as the unpair proof in ClipboardAppController and
-     * OffGridQrSender, and byte-identical to Android's TransferDaemon.hmacSha256 for the same inputs. */
-    private fun hmacSha256(key: ByteArray, message: ByteArray): ByteArray {
-        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-        mac.init(javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"))
-        return mac.doFinal(message)
-    }
 }

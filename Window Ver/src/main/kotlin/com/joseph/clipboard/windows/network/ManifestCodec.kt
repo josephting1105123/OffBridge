@@ -9,6 +9,19 @@ package com.joseph.clipboard.windows.network
  * dependency-free so it is unit-testable on the host JVM.
  */
 object ManifestCodec {
+    /**
+     * Builds the wire MANIFEST line for [entries] (name to OFFER-time size), including the
+     * historical trailing pipe AND the terminating newline: `MANIFEST|a:1|b:2|\n`. Both platforms'
+     * parsers tolerate the trailing pipe but older peers were only ever sent this exact shape, so
+     * it is frozen wire format — do not "clean it up".
+     */
+    fun encode(entries: List<Pair<String, Long>>): String {
+        val sb = StringBuilder("MANIFEST|")
+        for ((name, size) in entries) sb.append(name).append(':').append(size).append('|')
+        sb.append('\n')
+        return sb.toString()
+    }
+
     fun parse(manifestLine: String): List<Pair<String, Long>> {
         if (!manifestLine.startsWith("MANIFEST|")) return emptyList()
         val items = manifestLine.substringAfter("MANIFEST|").split("|").filter { it.isNotBlank() }

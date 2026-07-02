@@ -7,8 +7,11 @@ import com.joseph.clipboard.windows.network.DiscoveredDevice
 import com.joseph.clipboard.windows.network.DowngradePolicy
 import com.joseph.clipboard.windows.network.FileTransferDaemon
 import com.joseph.clipboard.windows.network.HotspotController
+import com.joseph.clipboard.windows.network.ManifestCodec
 import com.joseph.clipboard.windows.network.Net
 import com.joseph.clipboard.windows.network.OffGridQrSender
+import com.joseph.clipboard.windows.network.WireFrames
+import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.network.control.BleControlPeripheral
@@ -512,15 +515,13 @@ class ClipboardAppController {
                     socket.connect(java.net.InetSocketAddress(ip, Ports.PAIRING), 2000)
                     val writer = java.io.PrintWriter(socket.getOutputStream(), true)
                     val reader = java.io.BufferedReader(java.io.InputStreamReader(socket.getInputStream()))
-                    writer.println("UNPAIR_REQ|")
+                    writer.println(WireFrames.unpairReq())
                     if (key != null) {
                         val challenge = reader.readLine()
                         if (challenge != null && challenge.startsWith("UNPAIR_CHALLENGE|")) {
                             val nonce = java.util.Base64.getDecoder().decode(challenge.removePrefix("UNPAIR_CHALLENGE|"))
-                            val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-                            mac.init(javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"))
-                            val proof = mac.doFinal(nonce)
-                            writer.println("UNPAIR_PROOF|${java.util.Base64.getEncoder().encodeToString(proof)}")
+                            val proof = SessionCrypto.hmacSha256(key, nonce)
+                            writer.println(WireFrames.unpairProof(java.util.Base64.getEncoder().encodeToString(proof)))
                         }
                     }
                 }
@@ -580,14 +581,12 @@ class ClipboardAppController {
                     val inStream = socket.getInputStream()
 
                     val deviceName = SecurityVault.getDeviceName()
-                    val offerHeader = "OFFER|$sessionId|$deviceName|${files.size}\n"
-                    var manifestStr = "MANIFEST|"
+                    val offerHeader = WireFrames.offerLine(sessionId, deviceName, files.size)
                     // Use the session's OFFER-time length snapshot so the wire MANIFEST and the byte
                     // count streamFilesToSocket commits to are guaranteed identical.
-                    for ((idx, f) in files.withIndex()) {
-                        manifestStr += "${f.name}:${session.fileSizes[idx]}|"
-                    }
-                    manifestStr += "\n"
+                    val manifestStr = ManifestCodec.encode(
+                        files.mapIndexed { idx, f -> f.name to session.fileSizes[idx] }
+                    )
 
                     outStream.write(offerHeader.toByteArray(Charsets.UTF_8))
                     outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
@@ -605,10 +604,8 @@ class ClipboardAppController {
                         val nonce = java.util.Base64.getDecoder().decode(response.removePrefix("OFFER_CHALLENGE|"))
                         val pairingKey = SecurityVault.getAesKey(targetIp)
                             ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
-                        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-                        mac.init(javax.crypto.spec.SecretKeySpec(pairingKey, "HmacSHA256"))
-                        val proof = mac.doFinal(nonce)
-                        outStream.write("OFFER_PROOF|${java.util.Base64.getEncoder().encodeToString(proof)}\n".toByteArray(Charsets.UTF_8))
+                        val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
+                        outStream.write(WireFrames.offerProofLine(java.util.Base64.getEncoder().encodeToString(proof)).toByteArray(Charsets.UTF_8))
                         outStream.flush()
                         response = Net.readLineUtf8(inStream)
                     }

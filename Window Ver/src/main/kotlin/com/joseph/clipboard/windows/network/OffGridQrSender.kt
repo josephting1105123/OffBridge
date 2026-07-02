@@ -1,14 +1,13 @@
 package com.joseph.clipboard.windows.network
 
 import com.google.gson.GsonBuilder
+import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.storage.CryptoEngine
 import com.joseph.clipboard.windows.storage.EcdhSession
 import java.io.File
 import java.net.Socket
 import java.security.MessageDigest
 import java.util.Base64
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 
 /**
  * Windows-side "send via QR" off-grid host.
@@ -165,21 +164,19 @@ object OffGridQrSender {
             return HandshakeResult.REJECTED
         }
 
-        if (!MessageDigest.isEqual(helloHmac, hmacSha256(sharedKey, token))) return HandshakeResult.REJECTED
+        if (!MessageDigest.isEqual(helloHmac, SessionCrypto.hmacSha256(sharedKey, token))) return HandshakeResult.REJECTED
 
         val out = socket.getOutputStream()
 
         // P2P_WELCOME is the gate: the receiver aborts unless HMAC(K, token‖"ack") verifies.
-        val ack = hmacSha256(sharedKey, token + "ack".toByteArray(Charsets.UTF_8))
+        val ack = SessionCrypto.hmacSha256(sharedKey, token + "ack".toByteArray(Charsets.UTF_8))
         out.write("P2P_WELCOME|${session.sessionId}|${Base64.getEncoder().encodeToString(ack)}\n".toByteArray(Charsets.UTF_8))
 
         // Existing single-socket sequence: OFFER then MANIFEST (basenames; trailing '|').
-        val offer = "OFFER|${session.sessionId}|${session.deviceName}|${session.files.size}\n"
-        val manifest = StringBuilder("MANIFEST|")
-        for (f in session.files) manifest.append("${f.name}:${f.length()}|")
-        manifest.append("\n")
+        val offer = WireFrames.offerLine(session.sessionId, session.deviceName, session.files.size)
+        val manifest = ManifestCodec.encode(session.files.map { it.name to it.length() })
         out.write(offer.toByteArray(Charsets.UTF_8))
-        out.write(manifest.toString().toByteArray(Charsets.UTF_8))
+        out.write(manifest.toByteArray(Charsets.UTF_8))
         out.flush()
 
         // Receiver confirms on the same socket before any bytes flow. A COMPLETION_ACK-capable
@@ -202,9 +199,4 @@ object OffGridQrSender {
         }
     }
 
-    private fun hmacSha256(key: ByteArray, message: ByteArray): ByteArray {
-        val mac = Mac.getInstance("HmacSHA256")
-        mac.init(SecretKeySpec(key, "HmacSHA256"))
-        return mac.doFinal(message)
-    }
 }

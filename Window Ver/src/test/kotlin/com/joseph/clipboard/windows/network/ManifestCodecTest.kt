@@ -38,4 +38,34 @@ class ManifestCodecTest {
     fun emptyForNonManifestLine() {
         assertEquals(emptyList<Pair<String, Long>>(), ManifestCodec.parse("OFFER|sid|name|1"))
     }
+
+    // --- encode: golden wire bytes. These literals are the frozen cross-platform format ---
+
+    @Test
+    fun encodeEmitsTrailingPipeAndNewline() {
+        assertEquals("MANIFEST|a.txt:10|b.bin:2048|\n", ManifestCodec.encode(listOf("a.txt" to 10L, "b.bin" to 2048L)))
+    }
+
+    @Test
+    fun encodeEmptyManifest() {
+        assertEquals("MANIFEST|\n", ManifestCodec.encode(emptyList()))
+    }
+
+    @Test
+    fun encodePreservesColonInName() {
+        assertEquals("MANIFEST|10:30:report.txt:512|\n", ManifestCodec.encode(listOf("10:30:report.txt" to 512L)))
+    }
+
+    @Test
+    fun parseRoundTripsEncode() {
+        val entries = listOf("a.txt" to 10L, "10:30:report.txt" to 512L, "b.bin" to 0L)
+        assertEquals(entries, ManifestCodec.parse(ManifestCodec.encode(entries).trimEnd('\n')))
+    }
+
+    @Test
+    fun parseAcceptsEncodedLineWithNewline() {
+        // readLineUtf8 strips the newline in practice, but parse must tolerate it either way.
+        val entries = listOf("x.dat" to 7L)
+        assertEquals(entries, ManifestCodec.parse(ManifestCodec.encode(entries)))
+    }
 }
