@@ -144,7 +144,7 @@
         </service>
 
         <service android:name=".ClipboardService" android:exported="false" android:foregroundServiceType="connectedDevice" />
-        <service android:name=".ClipboardTileService" android:exported="true" android:label="Push to PC" android:icon="@drawable/ic_launcher_foreground" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+        <service android:name=".ClipboardTileService" android:exported="true" android:label="@string/tile_push_to_pc" android:icon="@drawable/ic_launcher_foreground" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>

@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.EntropicSoftwareLab.ClipboardShare.Net
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.applyModalPolish
 import com.EntropicSoftwareLab.ClipboardShare.spaceButtons
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
 
@@ -139,6 +140,7 @@ object HotspotCredentialsDialog {
             }
         }
         dialog.setOnDismissListener { onDismiss() }
+        dialog.applyModalPolish()
         dialog.show()
     }
 }

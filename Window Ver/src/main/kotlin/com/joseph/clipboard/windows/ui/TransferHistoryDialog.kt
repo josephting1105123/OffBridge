@@ -1,5 +1,8 @@
 package com.joseph.clipboard.windows.ui
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -79,6 +82,7 @@ fun TransferHistoryDialog(
     val selectedItemDetails =
         (if (tutorialMode) historyList + fakeRecords else historyList).find { it.sessionId == selectedSessionId }
 
+    BackdropEffect()
     Dialog(onDismissRequest = {
         if (showTutorialOverlay) {
             // Don't let outside-clicks kill the tutorial mid-flow — treat them as "Next"
@@ -91,7 +95,7 @@ fun TransferHistoryDialog(
             shape = RoundedCornerShape(Dimens.radiusLg),
             color = MaterialTheme.colors.background,
             elevation = Dimens.elevModal,
-            modifier = Modifier.width(500.dp).height(600.dp)
+            modifier = Modifier.width(500.dp).height(600.dp).modalPopIn()
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize().padding(Dimens.spaceXl)) {
@@ -397,15 +401,24 @@ fun TransferHistoryDialog(
                             modifier = Modifier.fillMaxWidth().weight(1f),
                             verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
                         ) {
-                            items(record.fileNames.size) { i ->
+                            items(record.fileNames.size, key = { i -> "${record.sessionId}:$i" }) { i ->
                                 val fileName = record.fileNames[i]
                                 val fileSize = if (i < record.fileSizes.size) record.fileSizes[i] else 0L
                                 val fileMb = String.format("%.1f", fileSize / (1024f * 1024f))
                                 val isCompleted = i < record.filesCompleted
                                 val isCurrent = i == record.filesCompleted
-                                // Clamp to [0,1]: currentFileOffset can exceed fileSize (e.g. stale/over-reported
+                                // Clamp: currentFileOffset can exceed fileSize (e.g. stale/over-reported
                                 // offset), which made LinearProgressIndicator mis-render and pct print >100%.
-                                val progress = if (isCompleted) 1f else if (isCurrent) (record.currentFileOffset.toFloat() / fileSize.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f) else 0f
+                                // Count the displayed bytes toward each ~100ms offset update instead of stepping,
+                                // so the bar and the pct/MB text flow (mirrors Android's DetailFileItem).
+                                val targetBytes = if (isCompleted) fileSize
+                                    else if (isCurrent) record.currentFileOffset.coerceIn(0L, fileSize)
+                                    else 0L
+                                val animBytes by animateFloatAsState(
+                                    targetValue = targetBytes.toFloat(),
+                                    animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+                                )
+                                val progress = (animBytes / fileSize.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
                                 
                                 Row(
                                     modifier = Modifier
@@ -426,8 +439,7 @@ fun TransferHistoryDialog(
                                             backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
                                         )
                                         Spacer(modifier = Modifier.height(Dimens.spaceXs))
-                                        val currentBytes = if (isCompleted) fileSize else if (isCurrent) record.currentFileOffset else 0L
-                                        val currentMb = String.format("%.1f", currentBytes / (1024f * 1024f))
+                                        val currentMb = String.format("%.1f", animBytes / (1024f * 1024f))
                                         val pct = (progress * 100).toInt()
                                         Text("$pct% ($currentMb MB / $fileMb MB)", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f))
                                     }

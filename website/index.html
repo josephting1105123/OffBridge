@@ -8,10 +8,27 @@
   <meta name="theme-color" content="#141414" />
   <meta name="color-scheme" content="dark light" />
 
+  <!-- Canonical + social. These need an ABSOLUTE url — replace REPLACE_SITE_URL
+       with the deployed origin (e.g. https://owner.github.io/repo) before launch.
+       Everything else on the page stays relative; see website/README.md. -->
+  <link rel="canonical" href="https://REPLACE_SITE_URL/" />
+
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Clipboard Share" />
+  <meta property="og:url" content="https://REPLACE_SITE_URL/" />
   <meta property="og:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
   <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
+  <meta property="og:image" content="https://REPLACE_SITE_URL/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Clipboard Share — off-grid clipboard sync and file transfer for Android and Windows" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
+  <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
+  <meta name="twitter:image" content="https://REPLACE_SITE_URL/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="site.webmanifest" />
@@ -29,6 +46,21 @@
   <link rel="stylesheet" href="css/device.css" />
   <link rel="stylesheet" href="css/sections.css" />
   <link rel="stylesheet" href="css/animations.css" />
+
+  <!-- Structured data for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Clipboard Share",
+    "operatingSystem": "Android, Windows",
+    "applicationCategory": "UtilitiesApplication",
+    "softwareVersion": "3.5.0",
+    "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
+  }
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -161,13 +193,13 @@
             <div class="device device--phone" data-parallax style="--par:36px">
               <div class="device__screen">
                 <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.jpg" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="1280" height="2772" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="" width="1280" height="2772" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
             <div class="device device--desktop" data-parallax style="--par:18px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-main-dark.png" alt="Clipboard Share on Windows — System Status showing paired devices" width="1900" height="1040" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-main-light.png" alt="" width="1900" height="1040" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/windows-main-dark.png" alt="Clipboard Share on Windows — System Status showing paired devices" width="1600" height="848" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/windows-main-light.png" alt="Clipboard Share on Windows — System Status showing paired devices" width="1600" height="848" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -193,7 +225,7 @@
           </div>
           <div class="trust__cell" data-reveal>
             <div class="trust__num"><span class="tnum" data-countup="5">5</span></div>
-            <div class="trust__label">Transport fallbacks</div>
+            <div class="trust__label">Ways to connect</div>
           </div>
         </div>
       </div>
@@ -219,7 +251,7 @@
             <div class="device device--phone" data-parallax style="--par:42px">
               <div class="device__screen">
                 <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.jpg" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -246,14 +278,14 @@
           <div class="device-stage">
             <div class="device device--desktop" data-parallax style="--par:18px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-transfer-dark.png" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1900" height="1040" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-transfer-light.png" alt="" width="1900" height="1040" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/windows-transfer-dark.png" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1600" height="851" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/windows-transfer-light.png" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1600" height="851" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
             <div class="device device--phone" data-parallax style="--par:40px">
               <div class="device__screen">
                 <img class="shot shot--dark" src="assets/screenshots/android-transfer-dark.jpg" alt="Android transfer in progress showing percentage and size transferred" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-transfer-light.jpg" alt="" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--light" src="assets/screenshots/android-transfer-light.jpg" alt="Android transfer in progress showing percentage and size transferred" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -282,7 +314,7 @@
             <div class="ladder">
               <div class="ladder-step"><span class="ladder-dot"></span> LAN (same Wi-Fi) <span class="speed">fastest</span></div>
               <div class="ladder-step"><span class="ladder-dot"></span> Wi-Fi Direct / Hotspot <span class="speed">no router</span></div>
-              <div class="ladder-step"><span class="ladder-dot"></span> Bluetooth (BLE) <span class="speed">anywhere</span></div>
+              <div class="ladder-step"><span class="ladder-dot"></span> QR / NFC off-grid <span class="speed">no network</span></div>
             </div>
           </article>
 
@@ -376,7 +408,7 @@
           <div class="device device--phone" data-parallax style="--par:30px;margin-top:var(--s-32)">
             <div class="device__screen">
               <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-              <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.jpg" alt="" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+              <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
             </div>
           </div>
         </div>
@@ -390,7 +422,7 @@
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
-            <p>Authenticated encryption for clipboard and files. Nothing travels in the clear.</p>
+            <p>Every clipboard payload and file is AES-256 encrypted in flight — clipboard with authenticated AES-GCM. Nothing travels in the clear.</p>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg></div>
@@ -421,7 +453,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
               <h3>Android</h3>
-              <span class="badge">v3.2.0</span>
+              <span class="badge">v3.5.0</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -437,7 +469,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
               <h3>Windows</h3>
-              <span class="badge">v3.2.0</span>
+              <span class="badge">v3.5.0</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -469,7 +501,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg></div>
             <h3>Android</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.2.0</span>
+              <span class="badge" data-dl-version>v3.4.0</span>
               <span class="badge badge--muted" data-dl-type>APK</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -486,7 +518,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg></div>
             <h3>Windows</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.2.0</span>
+              <span class="badge" data-dl-version>v3.4.0</span>
               <span class="badge badge--muted" data-dl-type>Installer</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -499,8 +531,7 @@
           </article>
         </div>
 
-        <p class="dl-todo">Setup note: download links aren't wired yet. Add your release URLs in
-          <strong>js/config.js</strong> — see the website README.</p>
+        <p class="dl-todo">Builds are being published — check back shortly.</p>
       </div>
     </section>
 
@@ -549,7 +580,7 @@
           <p>Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, no telemetry — by EntropicSoftwareLab.</p>
         </div>
         <div class="footer__col">
-          <h4>Product</h4>
+          <h3>Product</h3>
           <ul>
             <li><a href="#features">Features</a></li>
             <li><a href="#how">How it works</a></li>
@@ -558,11 +589,17 @@
           </ul>
         </div>
         <div class="footer__col">
-          <h4>Versions</h4>
+          <h3>Versions</h3>
           <ul>
-            <li><a href="#download">Android 3.2.0</a></li>
-            <li><a href="#download">Windows 3.2.0</a></li>
+            <li><a href="#download">Android 3.5.0</a></li>
+            <li><a href="#download">Windows 3.5.0</a></li>
             <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="privacy.html">Privacy Policy</a></li>
           </ul>
         </div>
       </div>

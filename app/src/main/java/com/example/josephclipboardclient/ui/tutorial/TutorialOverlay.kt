@@ -46,6 +46,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -54,6 +55,10 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.BackdropState
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.drawFrostedBackdrop
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberFrostLayer
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
@@ -139,6 +144,8 @@ fun TutorialOverlay(
     boundsMap: Map<String, Rect>,
     onDismiss: () -> Unit,
     onComplete: () -> Unit,
+    /** Screen content captured via Modifier.backdropSource — enables the frosted (blurred) scrim. */
+    backdrop: BackdropState? = null,
 ) {
     if (steps.isEmpty()) return
     var currentIndex by remember { mutableStateOf(0) }
@@ -191,6 +198,15 @@ fun TutorialOverlay(
     }
     val slidePx = with(density) { 10.dp.toPx() }
 
+    // Native-feel backdrop: frosted copy of the page under the dim (holes stay sharp — the Clear
+    // punch below clears frost + dim together), fading in as one unit so the overlay never pops.
+    val motion = AppThemeTokens.motion
+    val frost = rememberFrostLayer(AppThemeTokens.glass.enableBlur && backdrop != null)
+    val scrimAlpha = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        scrimAlpha.animateTo(1f, animationSpec = tween(motion.dur(180), easing = motion.standard))
+    }
+
     fun advance() {
         if (isLastStep) onComplete() else currentIndex++
     }
@@ -205,9 +221,12 @@ fun TutorialOverlay(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
+                    alpha = scrimAlpha.value
+                }
         ) {
-            drawRect(Color.Black.copy(alpha = 0.6f))
+            drawFrostedBackdrop(backdrop, frost)
             if (stepReady && hole != null) {
                 drawRoundRect(
                     color = Color.Transparent,
@@ -278,6 +297,10 @@ fun TutorialOverlay(
                         .graphicsLayer {
                             alpha = contentAlpha.value
                             translationY = (1f - contentAlpha.value) * slidePx
+                            // Scale 0.95 → 1 so the bubble reads as placed in front, not teleported in.
+                            val scale = 0.95f + 0.05f * contentAlpha.value
+                            scaleX = scale
+                            scaleY = scale
                         }
                         .pointerInput(Unit) { detectTapGestures { } },
                 ) {
@@ -302,7 +325,7 @@ fun TutorialOverlay(
                         ) {
                             if (!step.hideSkipButton) {
                                 TextButton(onClick = onDismiss) {
-                                    Text("Skip", color = Color.Gray, fontSize = 13.sp)
+                                    Text(stringResource(R.string.tutorial_skip), color = Color.Gray, fontSize = 13.sp)
                                 }
                             } else {
                                 Spacer(Modifier.width(1.dp))
@@ -313,7 +336,7 @@ fun TutorialOverlay(
                                 shape = RoundedCornerShape(50),
                             ) {
                                 Text(
-                                    step.buttonLabel ?: if (isLastStep) "Done" else "Next",
+                                    step.buttonLabel ?: if (isLastStep) stringResource(R.string.tutorial_done) else stringResource(R.string.action_next),
                                     color = Color.Black,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,

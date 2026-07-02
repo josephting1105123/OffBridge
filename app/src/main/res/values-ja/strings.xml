@@ -94,7 +94,7 @@
     <string name="receiving_files_title">ファイルを受信中</string>
     <string name="save_to_folder_downloads">保存先フォルダ：Downloads</string>
     <string name="action_cancel">キャンセル</string>
-    <string name="action_close_with_check">✓ 閉じる</string>
+    <string name="action_close_with_check">閉じる</string>
     <string name="incoming_transfer_title">着信転送</string>
     <string name="default_device_name">デバイス名</string>
     <string name="action_accept_files">ファイルを受け入れる</string>
@@ -106,9 +106,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share Windows版</string>
     <string name="desktop_app_in_development_desc">コンパニオンのデスクトップアプリは現在開発中であり、間もなく利用可能になります。</string>
     <string name="menu_title">メニュー</string>
-    <string name="menu_windows_version">💻 Windows バージョン</string>
-    <string name="menu_restart_services">🔄 サービスを再起動</string>
-    <string name="menu_power_off">🔌 電源オフ</string>
+    <string name="menu_windows_version">Windows バージョン</string>
+    <string name="menu_restart_services">サービスを再起動</string>
+    <string name="menu_power_off">電源オフ</string>
     <string name="action_pair">ペアリング</string>
     <string name="action_unpair">ペアリング解除</string>
     <string name="send_files_title">ファイルを送信</string>
@@ -121,7 +121,7 @@
     <string name="select_trusted_recipients_title">接続されているデバイス</string>
     <string name="action_send">送信</string>
     <string name="history_and_push_title">クリップボードとプッシュ</string>
-    <string name="action_push_current_clipboard">📤 現在のクリップボードをプッシュ</string>
+    <string name="action_push_current_clipboard">現在のクリップボードをプッシュ</string>
     <string name="recent_copies_hint">最近のコピー（タップしてコピー）</string>
     <string name="required_permissions_title">必要な権限</string>
     <string name="battery_optimization_title">バッテリー最適化</string>
@@ -143,9 +143,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">その他</string>
     <string name="support_setting">サポート</string>
-    <string name="action_donate">☕ 寄付</string>
+    <string name="action_donate">寄付</string>
     <string name="privacy_policy_setting">プライバシーポリシー</string>
-    <string name="action_read_privacy_policy">📄 読む</string>
+    <string name="action_read_privacy_policy">読む</string>
     <string name="system_status_title">システムステータス</string>
     <string name="status_checking">ステータス：確認中...</string>
     <string name="accept_incoming_clipboard">着信クリップボードを許可</string>
@@ -365,6 +365,7 @@
     <string name="send_via_connected_devices">接続されているデバイス</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">送信方法</string>
+    <string name="send_via_size_selected">選択中のファイル: %1$s</string>
     <string name="action_how_to_use">使い方</string>
     <string name="discoverable_to_devices">他のデバイスから検出可能</string>
     <string name="transaction_details_title">転送の詳細</string>
@@ -587,4 +588,14 @@
     <string name="receive_nfc">NFC 受信</string>
     <string name="offgrid_send_title_qr">QR で送信</string>
     <string name="offgrid_send_title_nfc">NFC で送信</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">スキップ</string>
+    <string name="tutorial_done">完了</string>
+    <string name="scanner_tutorial_step">送信側の QR コードにカメラを向けると、ローカルネットワーク経由で受信できます。</string>
+    <string name="tile_push_to_pc">PC に送信</string>
+    <string name="a11y_menu">メニュー</string>
+    <string name="a11y_push_clipboard">クリップボードを送信</string>
+    <string name="a11y_transfer_file">ファイルを転送</string>
+    <string name="action_remove_file">ファイルを削除</string>
 </resources>

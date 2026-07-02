@@ -1,7 +1,7 @@
 # Design Tokens — Source of Truth
 
-Slate + emerald "glass" design system (Linear/Vercel aesthetic). This file is the **single human-readable
-source of truth**. The same tokens are encoded on three parallel surfaces that must stay in lockstep —
+Emerald accent on a neutral near-black grey (dark) / light slate (light) base — "glass" design system
+(Linear/Vercel aesthetic). This file is the **single human-readable source of truth**. The same tokens are encoded on three parallel surfaces that must stay in lockstep —
 diff them against this table whenever a value changes:
 
 1. **Android Compose** — `ui/theme/Color.kt`, `AppColors.kt`, `Dimens.kt`, `Elevation.kt`, `Motion.kt`, `Glass.kt`
@@ -16,28 +16,28 @@ diff them against this table whenever a value changes:
 
 | Token | Light | Dark | Compose val | XML attr |
 |---|---|---|---|---|
-| background | `#F8FAFC` | `#0F172A` | `*Background` | `appBackgroundColor` |
-| card | `#FFFFFF` | `#1B2336` | `*Card` | `appCardColor` |
-| surfaceElevated | `#F8FAFC` | `#222C42` | `*SurfaceElevated` | `appSurfaceElevated` |
-| textPrimary | `#0F172A` | `#F1F5F9` | `*TextPrimary` | `appTextPrimaryColor` |
-| textSecondary | `#475569` | `#94A3B8` | `*TextSecondary` | `appTextSecondaryColor` |
-| divider | `#E2E8F0` | `#2A3448` | `*Divider` | `appDividerColor` |
+| background | `#F8FAFC` | `#141414` | `*Background` | `appBackgroundColor` |
+| card | `#FFFFFF` | `#1F1F1F` | `*Card` | `appCardColor` |
+| surfaceElevated | `#F8FAFC` | `#2A2A2A` | `*SurfaceElevated` | `appSurfaceElevated` |
+| textPrimary | `#0F172A` | `#F5F5F5` | `*TextPrimary` | `appTextPrimaryColor` |
+| textSecondary | `#475569` | `#A3A3A3` | `*TextSecondary` | `appTextSecondaryColor` |
+| divider | `#E2E8F0` | `#303030` | `*Divider` | `appDividerColor` |
 | hairline | `#0F172A @6%` (`0x0F0F172A`) | `#FFFFFF @8%` (`0x14FFFFFF`) | `*Hairline` | `appHairline` |
-| scrim | `#0F172A @40%` (`0x660F172A`) | `#0F172A @72%` (`0xB80F172A`) | `*Scrim` | `appScrim` |
-| navBar | `#FFFFFF` | `#131A2C` | `*NavBar` | `appNavBarColor` |
-| navIcon | `#475569` | `#94A3B8` | `*NavIcon` | `appNavIconColor` |
-| bottomSheet | `#FFFFFF` | `#1B2336` | `*BottomSheet` | `appBottomSheetColor` |
-| gradientTop | `#FFFFFF` | `#111A2E` | `*GradientTop` | — (Compose-only) |
-| gradientBottom | `#F1F5F9` | `#0C1322` | `*GradientBottom` | — (Compose-only) |
-| green (fill) | `#16A34A` | `#22C55E` | `*Green` | `appGreen` |
-| greenText (WCAG) | `#15803D` | `#4ADE88` | `*GreenText` | `appGreenText` |
-| accentMuted | `#16A34A @10%` (`0x1A16A34A`) | `#22C55E @14%` (`0x2422C55E`) | `*AccentMuted` | — (Compose-only) |
-| success | `#15803D` | `#34D399` | `*Success` | `appSuccess` |
+| scrim | `#000000 @40%` (`0x66000000`) | `#000000 @72%` (`0xB8000000`) | `*Scrim` | `appScrim` |
+| navBar | `#FFFFFF` | `#171717` | `*NavBar` | `appNavBarColor` |
+| navIcon | `#475569` | `#A3A3A3` | `*NavIcon` | `appNavIconColor` |
+| bottomSheet | `#FFFFFF` | `#1F1F1F` | `*BottomSheet` | `appBottomSheetColor` |
+| gradientTop | `#FFFFFF` | `#1A1A1A` | `*GradientTop` | — (Compose-only) |
+| gradientBottom | `#F1F5F9` | `#0D0D0D` | `*GradientBottom` | — (Compose-only) |
+| green (fill) | `#34D399` | `#22C55E` | `*Green` | `appGreen` |
+| greenText (WCAG) | `#047857` | `#4ADE88` | `*GreenText` | `appGreenText` |
+| accentMuted | `#34D399 @10%` (`0x1A34D399`) | `#22C55E @14%` (`0x2422C55E`) | `*AccentMuted` | — (Compose-only) |
+| success | `#047857` | `#34D399` | `*Success` | `appSuccess` |
 | info | `#1D4ED8` | `#60A5FA` | `*Info` | `appInfo` |
 | warning | `#B45309` | `#FBBF24` | `*Warning` | `appWarning` |
 | error / destructive | `#DC2626` | `#EF4444` | `*Error` | `appError` |
 
-**Brand mark only:** `#34D399` (launcher icon / logo). UI fill green is `#16A34A` (light) / `#22C55E` (dark).
+**Green fills:** the light fill `#34D399` doubles as the brand mark (launcher icon / logo); dark fill `#22C55E`.
 **Green discipline:** `green` = fill (white/dark text ON it); `greenText` = text/link/small-icon green (≥4.5:1).
 
 ## Dimens
@@ -67,12 +67,16 @@ drive the same flag from a Settings toggle (Phase 2).
 Optional background-layer `Modifier.blur(glass.blurRadius)` gated by `glass.enableBlur` (Android 12+/`SDK_INT>=31`);
 the flat tint + hairline is the load-bearing fallback.
 
-## Typography (`Type.kt`) — Roboto (platform default)
+## Typography (`Type.kt`) — two voices: Plex content, Geist controls
 
-All text uses **Roboto** (the platform default). Inter/Geist were trialled and removed per user preference.
+Content text (display/headline/title/body slots) uses **IBM Plex Sans** (`res/font/ibm_plex_sans_variable`,
+Latin + Cyrillic); control text (label* slots, buttons, chips) stays **Geist** (`res/font/geist_variable`).
+Mirrored on the Windows client (`theme/Type.kt`). History: Roboto → Geist everywhere → this split
+(Geist-everywhere read as the generic AI-product look).
 
-- `AppTypography` (no explicit fontFamily → Roboto): headlineSmall 24 Bold · titleMedium 18 Bold ·
-  bodyLarge 15 Normal · labelLarge 14 Medium · bodySmall 12 Normal. Mirrored in XML by `TextAppearance.App.*`.
-- `TabularFigures = TextStyle(fontFeatureSettings = "tnum")` — merge onto a base style for pure-number fields so
-  ticking values don't reflow; for mixed strings use `String.withInterNumerals()` (`MixedTypeText.kt`, now Roboto+tnum).
-- The `inter_variable` / `geist_variable` font resources remain in `res/font/` but are unused.
+- `AppTypography`: headlineSmall 24 Bold · titleMedium 18 Bold · bodyLarge 15 Normal (Plex) ·
+  labelLarge 14 Medium (Geist) · bodySmall 12 Normal (Plex). Mirrored in XML by `TextAppearance.App.*`
+  (Label = Geist, rest = Plex); theme default fontFamily = Plex; `Widget.App.Button`/`Widget.App.HowToUse` = Geist.
+- `TabularFigures = TextStyle(fontFamily = PlexSans, fontFeatureSettings = "tnum")` — merge onto a base style for
+  pure-number fields so ticking values don't reflow; for mixed strings use `String.withInterNumerals()` (`MixedTypeText.kt`).
+- `inter_variable` stays bundled in `res/font/` as a one-line swap candidate.

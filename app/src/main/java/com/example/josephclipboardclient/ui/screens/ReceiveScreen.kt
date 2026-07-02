@@ -41,6 +41,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialStep
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 
@@ -62,6 +64,7 @@ fun ReceiveScreen(
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val anchors = rememberTutorialAnchors()
+    val backdrop = rememberBackdropState()
     val focusManager = LocalFocusManager.current
 
     Box(
@@ -73,6 +76,7 @@ fun ReceiveScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .backdropSource(backdrop)
                 .verticalScroll(rememberScrollState())
                 .padding(dimens.spaceXl),
         ) {
@@ -161,6 +165,7 @@ fun ReceiveScreen(
                 boundsMap = anchors,
                 onDismiss = onTutorialDismiss,
                 onComplete = onTutorialDismiss,
+                backdrop = backdrop,
             )
         }
     }

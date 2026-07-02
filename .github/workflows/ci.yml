@@ -5,6 +5,7 @@ name: CI
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -22,11 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -46,8 +47,8 @@ jobs:
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
       # Validates the R8 / shrinkResources configuration (keep rules in proguard-rules.pro). No
-      # keystore.properties on CI → the release variant falls back to debug signing, which is fine
-      # for a build/shrink validation (a real Play release supplies the keystore out-of-band).
+      # keystore.properties on CI → the release variant is UNSIGNED, which is fine for a build/shrink
+      # validation but not distributable (a real Play release supplies the keystore out-of-band).
       - name: Android release build (R8 validation)
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
@@ -58,5 +59,5 @@ jobs:
           name: test-reports
           path: |
             app/build/reports/tests/
-            "Window Ver/build2/reports/tests/"
+            Window Ver/build2/reports/tests/
           if-no-files-found: ignore

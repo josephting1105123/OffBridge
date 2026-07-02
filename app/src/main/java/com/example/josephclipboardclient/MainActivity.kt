@@ -85,22 +85,11 @@ class MainActivity : AppCompatActivity() {
                 .start()
         }
 
-        // Pre-warm the LayoutInflater cache for tutorial layouts so "How to use" is instant
+        // Pre-warm the LayoutInflater cache for the tutorial tooltip so "How to use" is instant
         window.decorView.post {
             try {
                 val inflater = android.view.LayoutInflater.from(this)
                 inflater.inflate(R.layout.layout_tutorial_tooltip, null)
-                inflater.inflate(R.layout.tutorial_placeholder_device, null)
-                inflater.inflate(R.layout.tutorial_placeholder_device_with_pair, null)
-                inflater.inflate(R.layout.tutorial_placeholder_files, null)
-                inflater.inflate(R.layout.tutorial_placeholder_files_selected, null)
-                inflater.inflate(R.layout.tutorial_placeholder_connected_devices, null)
-                inflater.inflate(R.layout.tutorial_placeholder_offgrid_qr, null)
-
-                // Pre-warm History Bottom Sheet and its list items (Step 9 to 10)
-                inflater.inflate(R.layout.bottom_sheet_transfer_history, null)
-                inflater.inflate(R.layout.item_transfer_history, null)
-                inflater.inflate(R.layout.item_history_file, null)
             } catch (e: Exception) {} // best-effort layout pre-warm; ignore inflation failures
         }
 
@@ -379,8 +368,17 @@ class MainActivity : AppCompatActivity() {
             targetView = itemView,
             text = getString(spec.textRes),
             hideSkipButton = true,
-            tooltipAboveSpotlight = true,
+            // The closer spotlights the top-right chip, so let the tooltip auto-place (below it);
+            // the nav-item steps keep the tooltip above the bottom bar.
+            tooltipAboveSpotlight = !isLast,
             buttonLabel = if (isLast) null else getString(R.string.history_tutorial_next),
+            // Steps 1-5: keep the hole inside the nav bar and off the neighbouring items.
+            spotlightScale = if (index < 5) 0.95f else 1f,
+            // Step 6: spotlight the Send screen's "How to use" chip (Compose — no View of its own),
+            // falling back to the nav item if its bounds aren't available yet.
+            targetBoundsProvider = if (isLast) {
+                { (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.howToUseChipBounds }
+            } else null,
         )
         overlay.start(
             listOf(step),

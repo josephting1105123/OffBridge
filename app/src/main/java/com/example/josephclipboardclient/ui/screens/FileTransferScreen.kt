@@ -50,6 +50,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,7 +61,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.TransferItem
+import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
+import com.EntropicSoftwareLab.ClipboardShare.ui.formatTotalSize
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialPlaceholderFiles
@@ -68,6 +72,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialRevealConnecte
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialRevealNfc
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialRevealQr
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialStep
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 
@@ -85,6 +91,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 fun FileTransferScreen(
     selectedFiles: List<TransferItem>,
     sendEnabled: Boolean,
+    totalSizeBytes: Long,
     onSelectFile: () -> Unit,
     onSelectMedia: () -> Unit,
     onSelectFolder: () -> Unit,
@@ -101,20 +108,27 @@ fun FileTransferScreen(
     onDeleteSelected: () -> Unit,
     onSend: () -> Unit,
     onHowToUse: () -> Unit,
+    /** Window bounds of the "How to use" chip — the forced first-launch tour spotlights it. */
+    onHowToUseChipBounds: (androidx.compose.ui.geometry.Rect) -> Unit = {},
     onTransferHistory: () -> Unit,
     showTutorial: Boolean,
     onTutorialDismiss: () -> Unit,
     onTutorialComplete: () -> Unit,
+    showSendVia: Boolean,
+    nfcUnavailable: Boolean,
+    onSendViaChoose: (String) -> Unit,
+    onSendViaDismiss: () -> Unit,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val anchors = rememberTutorialAnchors()
+    val backdrop = rememberBackdropState()
     // Step 4 spotlights the Send button; force its enabled (green) look while that step shows so the
     // tutorial reads clearly even with no files queued. Never enables the real tap (gated on sendEnabled).
     var tutorialForceSend by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().backdropSource(backdrop)) {
             // Pinned header — send icon + title + how-to-use chip + transfer-history button.
             Row(
                 modifier = Modifier
@@ -139,7 +153,10 @@ fun FileTransferScreen(
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                HowToUseChip(onClick = onHowToUse)
+                HowToUseChip(
+                    onClick = onHowToUse,
+                    modifier = Modifier.onGloballyPositioned { onHowToUseChipBounds(it.boundsInWindow()) },
+                )
                 Spacer(Modifier.width(dimens.spaceSm))
                 Box(
                     modifier = Modifier
@@ -216,8 +233,12 @@ fun FileTransferScreen(
                             style = MaterialTheme.typography.titleMedium,
                             color = colors.textPrimary,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
+                        Spacer(Modifier.width(dimens.spaceSm))
+                        TotalSizeBox(totalSizeBytes)
+                        Spacer(Modifier.weight(1f))
                         CapsuleButton(stringResource(R.string.action_select), filled = false, enabled = selectedFiles.isNotEmpty(), fill = colors.card, textColor = colors.textPrimary, onClick = { onToggleSelectMode(true) })
                     }
                 }
@@ -280,6 +301,17 @@ fun FileTransferScreen(
             }
         }
 
+        // Send-Via chooser overlay: scrim + card sliding up from behind the bottom nav bar. Rendered
+        // before the tutorial block so the tutorial overlay keeps top z-order.
+        SendViaOverlay(
+            visible = showSendVia,
+            nfcUnavailable = nfcUnavailable,
+            totalSizeBytes = totalSizeBytes,
+            onChoose = onSendViaChoose,
+            onDismiss = onSendViaDismiss,
+            backdrop = backdrop,
+        )
+
         if (showTutorial) {
             val steps = listOf(
                 TutorialStep(
@@ -320,7 +352,9 @@ fun FileTransferScreen(
                     text = stringResource(R.string.transfer_tut_send_via),
                     fullScreenContent = {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                            TutorialPlaceholderSendVia()
+                            // With real files queued, the fake sheet shows their real total size.
+                            if (selectedFiles.isEmpty()) TutorialPlaceholderSendVia()
+                            else TutorialPlaceholderSendVia(totalSizeBytes = totalSizeBytes)
                         }
                     },
                     forceTooltipAbove = true,
@@ -357,6 +391,7 @@ fun FileTransferScreen(
                 boundsMap = anchors,
                 onDismiss = onTutorialDismiss,
                 onComplete = onTutorialComplete,
+                backdrop = backdrop,
             )
         }
     }
@@ -713,6 +748,28 @@ private fun folderName(context: android.content.Context, uri: Uri): String {
 private fun shortName(displayPath: String): String {
     val parts = displayPath.split("/")
     return if (parts.size > 1) "${parts[0]}/.../${parts.last()}" else parts.last()
+}
+
+/** Pill box beside the "Selected files" title showing the queued total ("0 MB" when nothing is queued). */
+@Composable
+private fun TotalSizeBox(totalSizeBytes: Long) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    val shape = RoundedCornerShape(dimens.radiusPill)
+    Box(
+        modifier = Modifier
+            .clip(shape)
+            .background(colors.card)
+            .border(dimens.hairlineWidth, colors.divider, shape)
+            .padding(horizontal = dimens.spaceSm, vertical = dimens.spaceXxs),
+    ) {
+        Text(
+            formatTotalSize(totalSizeBytes),
+            style = MaterialTheme.typography.labelMedium,
+            color = colors.textSecondary,
+            maxLines = 1,
+        )
+    }
 }
 
 @Composable

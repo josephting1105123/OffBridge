@@ -20,6 +20,9 @@ object Net {
         return try {
             Socket().use { socket ->
                 socket.connect(InetSocketAddress(ip, port), connectTimeoutMs)
+                // Bound the exchange so a peer that accepts then stops reading (TCP zero
+                // window) can't block the write forever and burn a Dispatchers.IO thread.
+                socket.soTimeout = connectTimeoutMs
                 socket.getOutputStream().run {
                     write(payload.toByteArray(Charsets.UTF_8))
                     flush()

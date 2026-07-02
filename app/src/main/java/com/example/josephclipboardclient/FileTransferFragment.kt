@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
+import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -31,13 +32,16 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridSendActivity
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendToDevicesFragment
-import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaBottomSheetFragment
+import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaChoice
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.TransferItemArgs
+import com.EntropicSoftwareLab.ClipboardShare.sendvia.TransferItemExpander
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FileTransferScreen
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class TransferItem(val uri: Uri, val relativePath: String?, val isFolder: Boolean = false)
@@ -51,6 +55,9 @@ class FileTransferFragment : Fragment() {
     // Compose-observable mirrors of the selection state.
     private val selectedFilesState = mutableStateOf<List<TransferItem>>(emptyList())
     private val sendEnabledState = mutableStateOf(false)
+    // Total bytes queued (folders DFS-expanded); recomputed off the main thread per selection change.
+    private val totalSizeBytesState = mutableStateOf(0L)
+    private var totalSizeJob: Job? = null
     // Multi-select (delete) mode for the queued-files grid. Entered via the "Select" capsule; long-press
     // stays drag-reorder. Indices are valid only while in selection mode (no add/reorder happens then).
     private val selectionModeState = mutableStateOf(false)
@@ -58,6 +65,13 @@ class FileTransferFragment : Fragment() {
 
     /** Drives the Compose Send-Files tutorial overlay (item 1: migrated off the legacy View overlay). */
     private val showSendTutorialState = mutableStateOf(false)
+
+    /** Window bounds of the header "How to use" chip — the forced tour's closer step spotlights it. */
+    var howToUseChipBounds: android.graphics.Rect? = null
+        private set
+
+    /** Drives the in-screen Send-Via chooser overlay (slides up from behind the bottom nav bar). */
+    private val showSendViaState = mutableStateOf(false)
 
     // M-11: this Job is cancelled in onDestroyView; if the view is re-created the old
     // scope would stay cancelled and silently no-op launches. Recreated in onViewCreated.
@@ -122,6 +136,8 @@ class FileTransferFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        // A present-but-disabled adapter stays enabled; the downstream NFC flow guides turning it on.
+        val nfcUnavailable = NfcAdapter.getDefaultAdapter(requireContext()) == null
         return ComposeView(requireContext()).apply{
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -129,6 +145,7 @@ class FileTransferFragment : Fragment() {
                     FileTransferScreen(
                         selectedFiles = selectedFilesState.value,
                         sendEnabled = sendEnabledState.value,
+                        totalSizeBytes = totalSizeBytesState.value,
                         onSelectFile = ::onSelectFile,
                         onSelectMedia = ::onSelectMedia,
                         onSelectFolder = ::onSelectFolder,
@@ -145,10 +162,19 @@ class FileTransferFragment : Fragment() {
                         onDeleteSelected = ::deleteSelectedFiles,
                         onSend = ::showSendViaChooser,
                         onHowToUse = { showSendTutorialState.value = true },
+                        onHowToUseChipBounds = { r ->
+                            howToUseChipBounds = android.graphics.Rect(
+                                r.left.toInt(), r.top.toInt(), r.right.toInt(), r.bottom.toInt(),
+                            )
+                        },
                         onTransferHistory = ::openTransferHistory,
                         showTutorial = showSendTutorialState.value,
                         onTutorialDismiss = { showSendTutorialState.value = false },
                         onTutorialComplete = ::onSendTutorialComplete,
+                        showSendVia = showSendViaState.value,
+                        nfcUnavailable = nfcUnavailable,
+                        onSendViaChoose = ::onSendViaChoose,
+                        onSendViaDismiss = { showSendViaState.value = false },
                     )
                 }
             }
@@ -165,26 +191,15 @@ class FileTransferFragment : Fragment() {
             uiScope = CoroutineScope(Dispatchers.Main + fragmentJob)
         }
 
-        // "Send Via" chooser result → route to the chosen transport
-        parentFragmentManager.setFragmentResultListener(
-            SendViaBottomSheetFragment.REQUEST_KEY, viewLifecycleOwner
-        ) { _, bundle ->
-            when (bundle.getString(SendViaBottomSheetFragment.RESULT_CHOICE)) {
-                SendViaBottomSheetFragment.CHOICE_DEVICES -> openSendToDevices()
-                SendViaBottomSheetFragment.CHOICE_QR ->
-                    gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
-                SendViaBottomSheetFragment.CHOICE_NFC ->
-                    gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_NFC)
-            }
-        }
-
-        // Clear the selection once the devices screen reports a completed send
+        // Clear the selection once the devices screen reports a queued send, then jump to the
+        // outgoing record's history detail so the sender watches its progress there.
         parentFragmentManager.setFragmentResultListener(
             SendToDevicesFragment.RESULT_KEY, viewLifecycleOwner
         ) { _, bundle ->
             if (bundle.getBoolean(SendToDevicesFragment.RESULT_SENT)) {
                 selectedFiles.clear()
                 handleMultipleFilesSelection(selectedFiles)
+                bundle.getString(SendToDevicesFragment.RESULT_SESSION_ID)?.let(::openTransferHistoryDetail)
             }
         }
 
@@ -267,6 +282,7 @@ class FileTransferFragment : Fragment() {
             .setNegativeButton(getString(R.string.action_cancel)) { dialog, _ -> dialog.dismiss() }
             .create()
         addTextDialog.setOnShowListener { addTextDialog.spaceButtons() }
+        addTextDialog.applyModalPolish()
         addTextDialog.show()
     }
 
@@ -350,9 +366,30 @@ class FileTransferFragment : Fragment() {
         }
     }
 
+    /** Open the history sheet at [sessionId]'s detail, reusing an already-open sheet like MainActivity does. */
+    private fun openTransferHistoryDetail(sessionId: String) {
+        val existing = parentFragmentManager.findFragmentByTag(TransferHistoryBottomSheet.TAG) as? TransferHistoryBottomSheet
+        if (existing != null && existing.isAdded) {
+            existing.openSession(sessionId)
+            return
+        }
+        TransferHistoryBottomSheet.newInstance(sessionId).show(parentFragmentManager, TransferHistoryBottomSheet.TAG)
+    }
+
     private fun showSendViaChooser() {
         if (selectedFiles.isEmpty()) return
-        SendViaBottomSheetFragment().show(parentFragmentManager, "send_via")
+        showSendViaState.value = true
+    }
+
+    /** Routes the Send-Via overlay's choice to the chosen transport. */
+    private fun onSendViaChoose(choice: String) {
+        if (!showSendViaState.value) return   // double-fire guard
+        showSendViaState.value = false
+        when (choice) {
+            SendViaChoice.DEVICES -> openSendToDevices()
+            SendViaChoice.QR -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
+            SendViaChoice.NFC -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_NFC)
+        }
     }
 
     private fun openSendToDevices() {
@@ -400,7 +437,13 @@ class FileTransferFragment : Fragment() {
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
-        if (!hidden) maybeAutoShowTutorial()
+        if (hidden) {
+            // Tabs are hide()/show()n, so the hidden composition stays alive: close the Send-Via
+            // overlay or its still-enabled BackHandler would eat back presses on other tabs.
+            showSendViaState.value = false
+        } else {
+            maybeAutoShowTutorial()
+        }
     }
 
     /** One-shot: the full send tutorial fires the first time this tab is opened after install. */
@@ -448,6 +491,28 @@ class FileTransferFragment : Fragment() {
     private fun syncSelectionState() {
         selectedFilesState.value = selectedFiles.toList()
         sendEnabledState.value = selectedFiles.isNotEmpty()
+        recomputeTotalSize()
+    }
+
+    /**
+     * Recomputes the queued total off the main thread (folder items are DFS-expanded, so a large
+     * tree can take a moment); a newer selection change supersedes any in-flight pass.
+     */
+    private fun recomputeTotalSize() {
+        totalSizeJob?.cancel()
+        val items = selectedFiles.toList()
+        if (items.isEmpty()) {
+            totalSizeBytesState.value = 0L
+            return
+        }
+        val appContext = context?.applicationContext ?: return
+        totalSizeJob = uiScope.launch {
+            val total = withContext(Dispatchers.IO) {
+                TransferItemExpander.expand(appContext, items)
+                    .sumOf { TransferItemExpander.getFileSize(appContext, it.uri) }
+            }
+            totalSizeBytesState.value = total
+        }
     }
 
     private fun getFileName(uri: Uri): String {

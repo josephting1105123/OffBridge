@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  FIREWALL NOTE / DISTRIBUTION FLAG: unlike the Inno installer (ClipboardShare.iss), this MSI/EXE
+  adds NO inbound firewall rule for TCP 65433, so off-grid file transfer is silently blocked by
+  Windows Defender Firewall on a fresh install done via the MSI/EXE. A WiX util:FirewallException
+  is not added here on purpose: the compose packageName produces a per-user (perUser) install with
+  no guaranteed elevation, and per-user firewall writes are unreliable/fragile. RECOMMENDATION: ship
+  Windows exclusively through the Inno lane (ClipboardShare.iss), which adds the rule elevated via
+  netsh. If the MSI/EXE must ship, first make the install per-machine + elevated, THEN add a
+  util:FirewallException mirroring the .iss rule (dir=in, TCP, localport=65433, profile=any).
+-->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
@@ -124,7 +134,10 @@
       <Custom Action="LaunchApp" After="InstallFinalize">NOT Installed</Custom>
     </InstallExecuteSequence>
 
-    <CustomAction Id="LaunchApp" Directory="INSTALLDIR" ExeCommand="[INSTALLDIR]$(var.JpAppName).exe" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
+    <!-- Quote the full exe path: JpAppName is "Clipboard Share" (contains a space), so the resolved
+         path C:\...\Clipboard Share\Clipboard Share.exe must be wrapped in quotes or the launcher
+         mis-parses it. &quot; emits a literal double-quote into the ExeCommand string. -->
+    <CustomAction Id="LaunchApp" Directory="INSTALLDIR" ExeCommand="&quot;[INSTALLDIR]$(var.JpAppName).exe&quot;" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
 
   </Product>
 </Wix>

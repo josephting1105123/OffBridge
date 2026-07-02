@@ -16,16 +16,16 @@ website/
 │   ├── theme.js        # light/dark toggle (loaded early to avoid flash)
 │   ├── main.js         # nav, mobile menu, decorative QR, transport-ladder loop
 │   ├── reveal.js       # IntersectionObserver scroll-reveal + count-ups
-│   ├── platform.js     # OS auto-detect + download-card wiring from config.js
-│   └── sequences.js    # the three animated device-mockup timelines
+│   └── platform.js     # OS auto-detect + download-card wiring from config.js
 ├── fonts/geist_variable.ttf
-├── assets/favicon.svg
-├── site.webmanifest · robots.txt · .nojekyll
+├── assets/favicon.svg · assets/og-image.png · assets/screenshots/
+├── site.webmanifest · robots.txt · sitemap.xml · .nojekyll
 ```
 
-The app UI shown in the page is **recreated in HTML/CSS/SVG** (no screenshots),
-animated with compositor-only properties, and everything respects
-`prefers-reduced-motion`.
+The app UI shown in the page uses **real screenshots** (light + dark variants
+under `assets/screenshots/`), framed in CSS device mockups and animated with
+compositor-only properties (parallax + IntersectionObserver scroll-reveal).
+Everything respects `prefers-reduced-motion`.
 
 ## 1. Wire the download buttons (the only required edit)
 
@@ -57,6 +57,13 @@ setup notice appears in the Download section. No other file needs editing.
 Paths are all **relative**, so the site works at a project sub-path
 (`user.github.io/repo/`) with no changes — don't add a `<base>` tag or absolute
 paths. The empty `.nojekyll` file tells Pages to serve the folder verbatim.
+
+> **One absolute-URL edit for SEO/social.** The canonical link, Open Graph /
+> Twitter tags (in `index.html` `<head>`), `sitemap.xml`, and `robots.txt` each
+> contain a `REPLACE_SITE_URL` placeholder — these four are the only things that
+> must be absolute. Replace it with your deployed origin (e.g.
+> `https://owner.github.io/repo`) so link previews and search indexing resolve.
+> The social-card image lives at `assets/og-image.png` (1200×630).
 
 **Option A — GitHub Actions (recommended, keeps the `website/` folder):**
 add `.github/workflows/pages.yml` to the repo root:

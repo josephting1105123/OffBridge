@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.EntropicSoftwareLab.ClipboardShare"
-version = "3.4.1"
+version = "3.5.0"
 
 layout.buildDirectory.set(file("build2"))
 
@@ -23,9 +23,15 @@ dependencies {
     implementation(compose.foundation)
     implementation(compose.materialIconsExtended)
 
-    implementation("com.google.code.gson:gson:2.10.1")
-    // QR generation for off-grid "send via QR" (pure-JVM, no Android deps)
-    implementation("com.google.zxing:core:3.5.3")
+    // JSON persistence (transfer history, config) — routed through the shared version catalog so
+    // both clients pin one gson version.
+    implementation(libs.gson)
+    // QR generation for off-grid "send via QR" (pure-JVM, no Android deps) — routed through the shared
+    // version catalog (zxing 3.5.3, same alias :app uses) so both clients pin one zxing version.
+    implementation(libs.zxing.core)
+    // Windows DPAPI (Crypt32) for encrypting pairing keys at rest in config.json. Windows-only;
+    // SecurityVault degrades to plaintext on non-Windows (e.g. Linux CI) so tests still run.
+    implementation(libs.jna.platform)
 
     testImplementation(libs.junit)
 }
@@ -37,7 +43,9 @@ compose.desktop {
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             packageName = "Clipboard Share"
-            packageVersion = "3.4.1"
+            packageVersion = "3.5.0"
+            description = "Off-grid file transfer and clipboard sync between Windows and Android"
+            vendor = "EntropicSoftwareLab" // must match the Inno installer's MyAppPublisher
             windows {
                 menu = true
                 shortcut = true
@@ -45,6 +53,10 @@ compose.desktop {
                 perUserInstall = true
                 dirChooser = true
                 upgradeUuid = "12255bbe-e53b-408b-8866-27ab965d1394"
+                // No iconFile is set (the repo has no .ico asset yet), so the packaged app and its
+                // Start Menu/desktop shortcuts use the generic default icon. When an app.ico lands,
+                // wire it with:
+                //   iconFile.set(project.file("src/main/resources/windows/app.ico"))
             }
         }
         buildTypes.release.proguard {

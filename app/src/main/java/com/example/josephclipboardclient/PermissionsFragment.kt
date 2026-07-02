@@ -38,8 +38,7 @@ class PermissionsFragment : Fragment() {
     }
 
     private val requestBatteryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        updateBatteryButtonState()
-        checkAllPermissions()
+        refreshPermissionStates()
     }
 
     private val requestNearbyLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -53,6 +52,7 @@ class PermissionsFragment : Fragment() {
             openAppSettings()
         }
         updateNearbyButtonState()
+        checkAllPermissions()
     }
 
     override fun onAttach(context: Context) {
@@ -129,6 +129,44 @@ class PermissionsFragment : Fragment() {
         updateNotificationButtonState()
         updateNearbyButtonState()
         checkAllPermissions()
+        if (!isBatteryOptimizationDisabled()) scheduleBatteryRechecks()
+    }
+
+    /**
+     * [PowerManager.isIgnoringBatteryOptimizations] can still return the old value for a short
+     * window after the user flips the setting and comes back — the instant refresh on resume then
+     * paints a stale state that only corrects on the next unrelated UI event. Re-poll a few times
+     * so the exemption is picked up as soon as the system commits it.
+     */
+    private val batteryRecheckDelaysMs = longArrayOf(500L, 1500L, 3000L)
+    private val batteryRecheckRunnables = mutableListOf<Runnable>()
+
+    private fun scheduleBatteryRechecks() {
+        val v = view ?: return
+        cancelBatteryRechecks()
+        for (delay in batteryRecheckDelaysMs) {
+            val recheck = Runnable {
+                if (view == null || context == null) return@Runnable
+                if (isBatteryOptimizationDisabled()) {
+                    cancelBatteryRechecks()
+                    updateBatteryButtonState()
+                    checkAllPermissions()
+                }
+            }
+            batteryRecheckRunnables.add(recheck)
+            v.postDelayed(recheck, delay)
+        }
+    }
+
+    private fun cancelBatteryRechecks() {
+        val v = view
+        batteryRecheckRunnables.forEach { v?.removeCallbacks(it) }
+        batteryRecheckRunnables.clear()
+    }
+
+    override fun onDestroyView() {
+        cancelBatteryRechecks()
+        super.onDestroyView()
     }
 
     private fun nearbyPermission(): String =
@@ -185,7 +223,7 @@ class PermissionsFragment : Fragment() {
 
     private fun checkAllPermissions() {
         val finishButton = view?.findViewById<Button>(R.id.btn_finish) ?: return
-        finishButton.isEnabled = isBatteryOptimizationDisabled() && hasNotificationPermission()
+        finishButton.isEnabled = isBatteryOptimizationDisabled() && hasNotificationPermission() && hasNearbyPermission()
     }
 
     private fun hasNotificationPermission(): Boolean {

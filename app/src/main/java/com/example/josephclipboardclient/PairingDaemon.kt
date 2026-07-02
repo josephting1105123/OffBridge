@@ -151,18 +151,38 @@ object PairingDaemon {
 
                 if (request != null && request.startsWith("PAIR_REQ|")) {
                     val parts = request.split("|")
+                    // A malformed PAIR_REQ (missing name or key field) must not crash the handler
+                    // coroutine — close the socket and bail instead of throwing on parts[1]/parts[2].
+                    if (parts.size < 3) { runCatching { socket.close() }; return@launch }
                     val senderName = parts[1]
                     val peerPubKey = Base64.decode(parts[2], Base64.NO_WRAP)
+                    // v2 PIN only when the initiator advertised pv2. Fields after index 2 are
+                    // tolerated (older initiators send none) — absence => v1 fallback.
+                    val initiatorV2 = parts.drop(3).contains("pv2")
 
                     val ecdh = EcdhSession()
                     val myPubKey = ecdh.getPublicKey()
-                    val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey)
+                    val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, initiatorV2)
 
-                    writer.println("PAIR_ACK|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}")
+                    // 3.5.0 always advertises pv2; the PIN it displays is v2 only if the initiator
+                    // also asked for it (initiatorV2), so both sides stay in agreement.
+                    writer.println("PAIR_ACK|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}|pv2")
 
                     // A second PAIR_REQ from the same IP overwrites the map entry; close the
                     // previously parked writer/socket so it isn't leaked forever.
                     pendingConfirmations.put(senderIp, writer)?.let { try { it.close() } catch (_: Exception) {} }
+
+                    // Expire a parked confirmation after the same human-accept window the initiator
+                    // waits (see initiatePairing). If the user never responds, drop and close this
+                    // entry so the socket isn't held open indefinitely. remove(key, value) only
+                    // fires when THIS writer is still parked (accept/decline or a newer PAIR_REQ
+                    // will have replaced it), avoiding a race with the confirmation broadcast.
+                    daemonScope.launch {
+                        delay(120000)
+                        if (pendingConfirmations.remove(senderIp, writer)) {
+                            runCatching { socket.close() }
+                        }
+                    }
 
                     triggerPairingNotificationBroadcast(context, senderName, senderIp, aesKey, visualPin)
                 }
@@ -170,7 +190,9 @@ object PairingDaemon {
                 // pendingConfirmations until the user accepts/declines, so do NOT finally-close here.
             } catch (e: Exception) {
                 e.printStackTrace()
-                socket.close()
+                // close() can itself throw; on the plain-Job daemon scope an uncaught throw here
+                // would cancel the scope and kill the whole pairing loop, so swallow it.
+                runCatching { socket.close() }
             }
         }
     }
@@ -233,14 +255,24 @@ object PairingDaemon {
             val ecdh = EcdhSession()
             val myPubKey = ecdh.getPublicKey()
 
-            writer.println("PAIR_REQ|$myDeviceName|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}")
+            // "pv2" advertises PIN-v2 support. Older peers omit it and ignore our extra field, so
+            // both sides fall back to v1 (see receiver). The AES key is identical either way.
+            writer.println("PAIR_REQ|$myDeviceName|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}|pv2")
 
             val ackResponse = reader.readLine()
             if (ackResponse != null && ackResponse.startsWith("PAIR_ACK|")) {
-                val peerPubKey = Base64.decode(ackResponse.split("|")[1], Base64.NO_WRAP)
-                val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey)
+                val ackParts = ackResponse.split("|")
+                val peerPubKey = Base64.decode(ackParts[1], Base64.NO_WRAP)
+                // v2 PIN only when the ACK also advertises pv2 (i.e. both peers are 3.5.0+). Extra
+                // fields after index 1 are tolerated; an ACK without pv2 (old peer) => v1.
+                val useV2 = ackParts.drop(2).contains("pv2")
+                val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
                 onPin(visualPin)   // surface the MITM-verification code while we wait for the peer to accept
 
+                // The peer parks this connection until a human taps Accept/Decline, so the final
+                // read must allow a real human accept window. A shorter timeout here would make the
+                // initiator give up ("TIMEOUT") while the acceptor still saves trust — one-sided.
+                socket.soTimeout = 120000
                 val finalResponse = reader.readLine()
                 if (finalResponse == "PAIR_ACCEPT") {
                     SecurityVault.saveTrustedNode(context, targetIp, aesKey)

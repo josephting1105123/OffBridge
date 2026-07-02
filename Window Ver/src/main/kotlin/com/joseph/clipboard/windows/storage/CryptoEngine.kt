@@ -16,6 +16,7 @@ import javax.crypto.Cipher
 import javax.crypto.CipherInputStream
 import javax.crypto.CipherOutputStream
 import javax.crypto.KeyAgreement
+import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
@@ -35,7 +36,13 @@ class EcdhSession {
         return keyPair.public.encoded
     }
 
-    fun deriveSecrets(peerPublicKeyBytes: ByteArray): Pair<ByteArray, String> {
+    // [useV2Pin] selects how the out-of-band verification PIN is derived. The AES key is UNCHANGED
+    // in both cases — SHA-256(sharedSecret). v1 (default) derives the PIN from the AES key's first
+    // 4 bytes, which leaks ~20 bits of the key; v2 derives it from an independent HKDF label so the
+    // displayed code no longer leaks key material. v2 is negotiated per-pairing via the "pv2" token
+    // (see PairingDaemon / ClipboardAppController); the default stays false so QR/off-grid callers
+    // are unaffected.
+    fun deriveSecrets(peerPublicKeyBytes: ByteArray, useV2Pin: Boolean = false): Pair<ByteArray, String> {
         val kf = KeyFactory.getInstance("EC")
         val x509Spec = X509EncodedKeySpec(peerPublicKeyBytes)
         val peerPublicKey = kf.generatePublic(x509Spec)
@@ -48,12 +55,55 @@ class EcdhSession {
         val digest = MessageDigest.getInstance("SHA-256")
         val aesKey = digest.digest(sharedSecret)
 
-        // Extract the exact same 6-digit visual PIN, matching C#'s Little Endian format
-        val buffer = ByteBuffer.wrap(aesKey).order(ByteOrder.LITTLE_ENDIAN)
-        val pinInt = buffer.int and 0x7FFFFFFF
-        val visualPin = String.format("%06d", pinInt % 1000000)
+        val visualPin = if (useV2Pin) {
+            pinV2FromSecret(sharedSecret)
+        } else {
+            // v1: 6-digit PIN from the AES key's first 4 bytes, Little Endian (matches C#).
+            val buffer = ByteBuffer.wrap(aesKey).order(ByteOrder.LITTLE_ENDIAN)
+            val pinInt = buffer.int and 0x7FFFFFFF
+            String.format("%06d", pinInt % 1000000)
+        }
 
         return Pair(aesKey, visualPin)
+    }
+
+    companion object {
+        // UTF-8 label for the v2 PIN HKDF — must be byte-identical to the Android client.
+        private val PIN_V2_INFO = "clipshare-pair-pin-v2".toByteArray(Charsets.UTF_8)
+
+        // v2 verification PIN: 6 digits from HKDF-SHA256(sharedSecret, "clipshare-pair-pin-v2", 4),
+        // interpreted Little Endian to match the v1/C# convention. Independent of the AES key, so it
+        // no longer leaks key bits. Exposed as an internal seam so the host test can pin the value.
+        internal fun pinV2FromSecret(sharedSecret: ByteArray): String {
+            val pinBytes = hkdfSha256(sharedSecret, PIN_V2_INFO, 4)
+            val pinInt = ByteBuffer.wrap(pinBytes).order(ByteOrder.LITTLE_ENDIAN).int and 0x7FFFFFFF
+            return String.format("%06d", pinInt % 1000000)
+        }
+
+        // RFC 5869 HKDF-SHA256, zero-length salt — byte-for-byte identical to Android
+        // SessionCrypto.hkdfSha256 and the private FileSeal/ClipboardSeal helpers. Replicated here
+        // (rather than reused) to keep FileSeal/ClipboardSeal untouched.
+        private fun hkdfSha256(ikm: ByteArray, info: ByteArray, length: Int): ByteArray {
+            val mac = Mac.getInstance("HmacSHA256")
+            mac.init(SecretKeySpec(ByteArray(32), "HmacSHA256")) // salt = zeros
+            val prk = mac.doFinal(ikm)
+            val out = ByteArray(length)
+            var t = ByteArray(0)
+            var copied = 0
+            var counter = 1
+            while (copied < length) {
+                mac.init(SecretKeySpec(prk, "HmacSHA256"))
+                mac.update(t)
+                mac.update(info)
+                mac.update(counter.toByte())
+                t = mac.doFinal()
+                val n = minOf(t.size, length - copied)
+                System.arraycopy(t, 0, out, copied, n)
+                copied += n
+                counter++
+            }
+            return out
+        }
     }
 }
 
@@ -84,14 +134,20 @@ object CryptoEngine {
         return CipherInputStream(inStream, cipher)
     }
 
-    // Authenticated discrete payload (AES-256-GCM via ClipboardSeal) — preferred for clipboard text
-    // with peers that advertise the GCM capability. Output is standard Base64 of the sealed blob,
-    // matching Android's encryptStringAuthenticated (android.util.Base64.NO_WRAP).
+    // Authenticated discrete payload (AES-256-GCM via ClipboardSeal) — the only clipboard cipher
+    // since the CBC retirement in 3.5.0. Output is standard Base64 of the sealed blob, matching
+    // Android's encryptStringAuthenticated (android.util.Base64.NO_WRAP).
     fun encryptStringAuthenticated(plainText: String, key: ByteArray): String {
         val blob = ClipboardSeal.seal(key, plainText.toByteArray(Charsets.UTF_8), System.currentTimeMillis())
         return Base64.getEncoder().encodeToString(blob)
     }
 
+    // RETIRED in 3.5.0: the unauthenticated AES/CBC clipboard path is no longer sent or accepted.
+    // Kept only so the primitive isn't silently reintroduced; ERROR so any new call site won't compile.
+    @Deprecated(
+        "Unauthenticated CBC clipboard was retired in 3.5.0 — use encryptStringAuthenticated.",
+        level = DeprecationLevel.ERROR
+    )
     fun encryptString(plainText: String, key: ByteArray): String {
         val iv = generateRandomBytes(IV_SIZE)
         val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
@@ -108,7 +164,10 @@ object CryptoEngine {
         return Base64.getEncoder().encodeToString(combined)
     }
 
-    fun decryptString(cipherTextBase64: String, key: ByteArray): String {
+    // Receive side of the 3.5.0 CBC retirement: only sealed (AES-GCM) payloads are accepted; any
+    // non-sealed payload is refused outright — no pin check, because there is no legacy branch left
+    // to fall back to. [senderIp] only names the peer in the rejection error.
+    fun decryptString(cipherTextBase64: String, key: ByteArray, senderIp: String? = null): String {
         val cleanBase64 = cipherTextBase64.replace(Regex("\\s+"), "")
         // Validate before slicing: a hostile/truncated payload would otherwise throw an
         // opaque NegativeArraySizeException (combined.size - IV_SIZE < 0) or an
@@ -127,21 +186,8 @@ object CryptoEngine {
             return String(plain, Charsets.UTF_8)
         }
 
-        // Legacy unauthenticated AES/CBC format (older Android + Windows builds).
-        require(combined.size > IV_SIZE) { "Ciphertext too short: ${combined.size} bytes" }
-
-        val iv = ByteArray(IV_SIZE)
-        val encryptedBytes = ByteArray(combined.size - IV_SIZE)
-
-        System.arraycopy(combined, 0, iv, 0, IV_SIZE)
-        System.arraycopy(combined, IV_SIZE, encryptedBytes, 0, encryptedBytes.size)
-
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val secretKeySpec = SecretKeySpec(key, "AES")
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivSpec)
-
-        val decryptedBytes = cipher.doFinal(encryptedBytes)
-        return String(decryptedBytes, Charsets.UTF_8)
+        // The unauthenticated AES/CBC clipboard path was retired in 3.5.0. Any non-sealed payload is a
+        // pre-GCM peer (which must update) or a tamper/downgrade attempt — reject it, never decrypt CBC.
+        throw IllegalArgumentException("Unauthenticated (non-GCM) clipboard from ${senderIp ?: "peer"} rejected — CBC path retired in 3.5.0")
     }
 }

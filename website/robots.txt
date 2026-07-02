@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+
+# Replace REPLACE_SITE_URL with the deployed origin before launch.
+Sitemap: https://REPLACE_SITE_URL/sitemap.xml

@@ -1,6 +1,7 @@
 package com.joseph.clipboard.windows.storage
 
 import java.nio.ByteBuffer
+import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.Mac
@@ -18,8 +19,8 @@ import kotlin.math.abs
  *   key  = HKDF-SHA256(pair_key, info = "clip-aead-v1")
  *   AAD  = MAGIC
  *
- * Only sent to peers that advertise the GCM capability in discovery, so legacy Android and older
- * Windows builds (which speak AES/CBC) are never handed this format.
+ * Since the CBC retirement in 3.5.0 this is the only clipboard format sent or accepted — even peers
+ * that never advertised the GCM capability receive it, and must update to open it.
  */
 object ClipboardSeal {
     private val MAGIC = byteArrayOf(0x43, 0x53, 0x31, 0x00) // "CS1 "
@@ -28,8 +29,23 @@ object ClipboardSeal {
     private const val TS_LEN = 8
     private val INFO = "clip-aead-v1".toByteArray(Charsets.UTF_8)
 
-    /** Replay/staleness bound; generous to tolerate device clock skew. */
+    /** Replay/staleness bound; generous to tolerate device clock skew. The per-peer nonce cache below tightens it. */
     const val FRESHNESS_WINDOW_MS = 600_000L // 10 minutes
+
+    /** Cap on remembered nonces per peer — bounds memory for a hostile/chatty sender. */
+    private const val MAX_NONCES_PER_PEER = 512
+
+    /**
+     * Receiver-local replay guard: nonces of blobs already accepted from a given peer, with the time
+     * they were seen. A random 12-byte nonce is effectively unique per legitimate message, so a repeat
+     * within the freshness window is a replay and is rejected. This is purely local state — it does not
+     * touch the wire format or the meaning of [FRESHNESS_WINDOW_MS]. Keyed by a fingerprint of the pair
+     * key so raw key bytes are not held as map keys. Guarded by [seenLock]; entries older than the
+     * freshness window are pruned lazily since they can no longer be replayed anyway. Mirrors the
+     * Android ClipboardSeal nonce cache.
+     */
+    private val seenNonces = HashMap<String, LinkedHashMap<String, Long>>()
+    private val seenLock = Any()
 
     fun isSealed(blob: ByteArray): Boolean =
         blob.size >= MAGIC.size && MAGIC.indices.all { blob[it] == MAGIC[it] }
@@ -60,10 +76,45 @@ object ClipboardSeal {
             if (body.size < TS_LEN) return null
             val ts = ByteBuffer.wrap(body, 0, TS_LEN).long
             if (abs(nowMs - ts) > windowMs) return null // stale / replayed
+            // Authenticated + fresh: reject if this exact nonce was already accepted from this peer
+            // inside the window (a straight replay of a still-fresh, still-valid blob).
+            if (!recordNonce(peerKey(pairKey), nonce, nowMs, windowMs)) return null
             body.copyOfRange(TS_LEN, body.size)
         } catch (_: Exception) {
             null
         }
+    }
+
+    /**
+     * Records [nonce] as seen for [peer] at [nowMs]. Returns false if it was already seen within
+     * [windowMs] (a replay). Prunes stale entries and bounds the per-peer set to [MAX_NONCES_PER_PEER].
+     */
+    private fun recordNonce(peer: String, nonce: ByteArray, nowMs: Long, windowMs: Long): Boolean {
+        val key = nonce.joinToString("") { "%02x".format(it) }
+        synchronized(seenLock) {
+            val forPeer = seenNonces.getOrPut(peer) {
+                object : LinkedHashMap<String, Long>(64, 0.75f, false) {
+                    override fun removeEldestEntry(eldest: Map.Entry<String, Long>): Boolean =
+                        size > MAX_NONCES_PER_PEER
+                }
+            }
+            // Drop entries that have aged out of the window; they can no longer be replayed.
+            forPeer.entries.iterator().let { it ->
+                while (it.hasNext()) {
+                    if (abs(nowMs - it.next().value) > windowMs) it.remove()
+                }
+            }
+            val prev = forPeer[key]
+            if (prev != null && abs(nowMs - prev) <= windowMs) return false
+            forPeer[key] = nowMs
+            return true
+        }
+    }
+
+    /** Stable, non-reversible handle for a peer's pair key, used only as a local cache key. */
+    private fun peerKey(pairKey: ByteArray): String {
+        val h = MessageDigest.getInstance("SHA-256").digest(pairKey)
+        return h.copyOfRange(0, 16).joinToString("") { "%02x".format(it) }
     }
 
     private fun subKey(pairKey: ByteArray): SecretKeySpec =

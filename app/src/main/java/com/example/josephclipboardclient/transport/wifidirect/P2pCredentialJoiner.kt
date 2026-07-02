@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.wifi.p2p.WifiP2pConfig
+import android.net.wifi.p2p.WifiP2pGroup
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.os.Handler
@@ -48,6 +49,7 @@ class P2pCredentialJoiner(context: Context) {
     private var channel: WifiP2pManager.Channel? = null
     private var receiver: BroadcastReceiver? = null
     private var listener: Listener? = null
+    private var targetSsid: String = ""
 
     @Volatile private var finished = false
 
@@ -69,6 +71,7 @@ class P2pCredentialJoiner(context: Context) {
         }
         finished = false
         this.listener = listener
+        this.targetSsid = ssid
 
         val ch = mgr.initialize(appContext, Looper.getMainLooper()) { failOnce() }
         channel = ch
@@ -110,9 +113,18 @@ class P2pCredentialJoiner(context: Context) {
                 mgr.requestConnectionInfo(ch) { info: WifiP2pInfo ->
                     if (finished) return@requestConnectionInfo
                     val go = info.groupOwnerAddress
-                    // We must have come up as CLIENT of the sender's group.
+                    // We must have come up as CLIENT of the sender's group. CONNECTION_CHANGED is a
+                    // sticky broadcast, so a leftover pre-existing client group can be delivered the
+                    // instant we register — confirm the joined group is actually the one we asked for
+                    // (networkName == requested SSID) before reporting success, otherwise we'd hand the
+                    // caller the wrong GO address.
                     if (info.groupFormed && !info.isGroupOwner && go != null) {
-                        succeedOnce(go)
+                        mgr.requestGroupInfo(ch) { group: WifiP2pGroup? ->
+                            if (finished) return@requestGroupInfo
+                            if (group != null && group.networkName == targetSsid) {
+                                succeedOnce(go)
+                            }
+                        }
                     }
                 }
             }

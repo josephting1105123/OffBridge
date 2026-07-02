@@ -181,6 +181,14 @@ fun TutorialOverlay(
     }
     val slidePx = with(density) { 10.dp.toPx() }
 
+    // Entrance: fade the scrim in as one unit so the overlay never pops on. (Unlike Android, the
+    // scrim stays dim-only at 60% — Compose 1.6 has no content-capture API, so a blurred backdrop
+    // can't keep the punched hole sharp; the heavier dim carries the layer separation instead.)
+    val scrimAlpha = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        scrimAlpha.animateTo(1f, animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+    }
+
     fun advance() {
         if (isLastStep) onComplete() else currentIndex++
     }
@@ -204,7 +212,10 @@ fun TutorialOverlay(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
+                    alpha = scrimAlpha.value
+                }
         ) {
             drawRect(Color.Black.copy(alpha = 0.6f)) // 60% black, matches Android 0x99000000
             if (stepReady && hole != null) {
@@ -278,6 +289,10 @@ fun TutorialOverlay(
                         .graphicsLayer {
                             alpha = contentAlpha.value
                             translationY = (1f - contentAlpha.value) * slidePx
+                            // Scale 0.95 → 1 so the bubble reads as placed in front, not teleported in.
+                            val scale = 0.95f + 0.05f * contentAlpha.value
+                            scaleX = scale
+                            scaleY = scale
                         }
                         // Consume taps inside the bubble so they don't advance the step
                         .pointerInput(Unit) { detectTapGestures { } }
@@ -408,7 +423,7 @@ private fun computeSpotlightRect(
             bottom = cy + side / 2f
         }
 
-        // M-21: vertical inset + bottom/width trims on thin anchors can push
+        // Vertical inset + bottom/width trims on thin anchors can push
         // bottom above top (or right left of left), yielding a degenerate,
         // negative-size Rect that mis-places the tooltip or draws nothing.
         // Clamp so the Rect is always non-negative in size.

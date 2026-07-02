@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Transfer history persistence, schema v2 (§3.2 of the V3.0 plan).
+ * Transfer history persistence, schema v2.
  *
  * Write path always emits v2: per-file facts live in a `files` array of
  * {i, n, s} entries; per-session facts (plus the deliberate totalFiles /
@@ -51,7 +51,7 @@ object TransferHistoryManager {
             for (record in records) {
                 array.add(recordToJson(record))
             }
-            // M-16: write atomically so a crash/partial write can't corrupt the
+            // Write atomically so a crash/partial write can't corrupt the
             // history and wipe it on next parse. Write to a temp file in the same
             // directory, then move it into place (atomic when supported, else
             // a non-atomic replace as fallback).
@@ -111,7 +111,7 @@ object TransferHistoryManager {
                 json.getAsJsonArray("fileSizes").map { it.asLong }
             } else List(names.size) { 0L }
         }
-        // M-1: guard required fields with has()/!isJsonNull so a record missing a
+        // Guard required fields with has()/!isJsonNull so a record missing a
         // field or carrying a JSON null doesn't throw (the per-element try in
         // load() still drops genuinely broken records); resilient to schema drift.
         fun str(key: String): String =

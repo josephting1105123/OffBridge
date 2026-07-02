@@ -89,15 +89,15 @@
         &lt;b&gt;CONTÁCTENOS&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Si tiene alguna pregunta sobre esta Política de Privacidad, contáctenos en:&lt;br&gt;
         entropic.software.lab@gmail.com</string>
-    <string name="apps_apk_title">Apps (APK)</string>
+    <string name="apps_apk_title">Aplicaciones (APK)</string>
     <string name="search_hint">Buscar</string>
-    <string name="zero_apps_count">0 Apps</string>
+    <string name="zero_apps_count">0 aplicaciones</string>
     <string name="select_multiple_apps">Seleccionar múltiples Apps</string>
     <string name="action_select">Seleccionar</string>
     <string name="receiving_files_title">Recibiendo Archivos</string>
     <string name="save_to_folder_downloads">Guardar en carpeta: Downloads</string>
     <string name="action_cancel">Cancelar</string>
-    <string name="action_close_with_check">✓ Cerrar</string>
+    <string name="action_close_with_check">Cerrar</string>
     <string name="incoming_transfer_title">Transferencia Entrante</string>
     <string name="default_device_name">Nombre del Dispositivo</string>
     <string name="action_accept_files">Aceptar Archivos</string>
@@ -109,9 +109,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share para Windows</string>
     <string name="desktop_app_in_development_desc">La aplicación de escritorio complementaria está actualmente en desarrollo y estará disponible pronto.</string>
     <string name="menu_title">Menú</string>
-    <string name="menu_windows_version">💻 Versión de Windows</string>
-    <string name="menu_restart_services">🔄 Reiniciar Servicios</string>
-    <string name="menu_power_off">🔌 Apagar</string>
+    <string name="menu_windows_version">Versión de Windows</string>
+    <string name="menu_restart_services">Reiniciar Servicios</string>
+    <string name="menu_power_off">Apagar</string>
     <string name="action_pair">Emparejar</string>
     <string name="action_unpair">Desvincular</string>
     <string name="send_files_title">Enviar Archivos</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
     <string name="history_and_push_title">Portapapeles y Enviar</string>
-    <string name="action_push_current_clipboard">📤 Enviar Portapapeles Actual</string>
+    <string name="action_push_current_clipboard">Enviar Portapapeles Actual</string>
     <string name="recent_copies_hint">Copias Recientes (Toca para copiar)</string>
     <string name="required_permissions_title">Permisos Requeridos</string>
     <string name="battery_optimization_title">Optimización de Batería</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">OTROS</string>
     <string name="support_setting">Soporte</string>
-    <string name="action_donate">☕ Donar</string>
+    <string name="action_donate">Donar</string>
     <string name="privacy_policy_setting">Política de Privacidad</string>
-    <string name="action_read_privacy_policy">📄 Leer</string>
+    <string name="action_read_privacy_policy">Leer</string>
     <string name="system_status_title">Estado del Sistema</string>
     <string name="status_checking">Estado: Comprobando...</string>
     <string name="accept_incoming_clipboard">Aceptar Portapapeles Entrante</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Dispositivos Conectados</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Enviar Vía</string>
+    <string name="send_via_size_selected">%1$s de archivos seleccionados</string>
     <string name="action_how_to_use">Cómo usar</string>
     <string name="discoverable_to_devices">Visible para otros dispositivos</string>
     <string name="transaction_details_title">Detalles de la transacción</string>
@@ -386,7 +387,7 @@
     <string name="transfer_receiving_title">Recibiendo Archivos</string>
     <string name="transfer_receiving_text">%1$s te está enviando %2$d archivo(s). Toca para ver el progreso.</string>
     <string name="applist_version_unknown">Desconocido</string>
-    <string name="applist_app_count">%1$d Apps</string>
+    <string name="applist_app_count">%1$d aplicaciones</string>
     <string name="applist_select_count">Seleccionar (%1$d)</string>
     <string name="applist_app_info">%1$s • v%2$s</string>
     <string name="clip_clipboard_empty">El portapapeles está vacío</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">Recepción por NFC</string>
     <string name="offgrid_send_title_qr">Enviar vía QR</string>
     <string name="offgrid_send_title_nfc">Enviar vía NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Omitir</string>
+    <string name="tutorial_done">Listo</string>
+    <string name="scanner_tutorial_step">Apunta la cámara al código QR del remitente para recibir a través de la red local.</string>
+    <string name="tile_push_to_pc">Enviar al PC</string>
+    <string name="a11y_menu">Menú</string>
+    <string name="a11y_push_clipboard">Enviar portapapeles</string>
+    <string name="a11y_transfer_file">Transferir archivo</string>
+    <string name="action_remove_file">Quitar archivo</string>
 </resources>

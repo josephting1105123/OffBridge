@@ -95,6 +95,11 @@ fun FileTransferScreen(
     var chosenFiles by remember { mutableStateOf(listOf<File>()) }
     val selectedFiles = remember { mutableStateListOf<File>() }
 
+    // Total bytes queued (folders walked recursively), computed off the UI thread per list change.
+    val totalSizeBytes by produceState(0L, chosenFiles) {
+        value = withContext(Dispatchers.IO) { totalSizeOf(chosenFiles) }
+    }
+
     // #1: Keep the "select all" checkbox in sync with the actual selection.
     // chosenFiles can change after select-all (add/remove/reorder/delete),
     // so recompute selectAllFiles from the current state instead of leaving
@@ -215,9 +220,22 @@ fun FileTransferScreen(
                 Text(
                     selectedFilesTitle,
                     style = MaterialTheme.typography.subtitle1,
-                    color = MaterialTheme.colors.onBackground,
-                    modifier = Modifier.weight(1f)
+                    color = MaterialTheme.colors.onBackground
                 )
+                Spacer(modifier = Modifier.width(Dimens.spaceSm))
+                // Pill box with the queued total ("0 MB" when nothing is queued) — matches Android.
+                Box(
+                    modifier = Modifier
+                        .glassSurface(RoundedCornerShape(Dimens.radiusPill))
+                        .padding(horizontal = Dimens.spaceSm, vertical = Dimens.spaceXxs)
+                ) {
+                    Text(
+                        formatTotalSize(totalSizeBytes),
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 Checkbox(
                     checked = selectAllFiles,
                     onCheckedChange = { isChecked ->
@@ -409,6 +427,7 @@ fun FileTransferScreen(
 
     if (showSendVia) {
         SendViaDialog(
+            totalSizeBytes = totalSizeBytes,
             onConnectedDevices = {
                 showSendVia = false
                 showSendToDevices = true
@@ -434,12 +453,20 @@ fun FileTransferScreen(
             files = chosenFiles,
             devices = pairedDevices,
             onSend = { recipients ->
+                var firstSessionId: String? = null
                 for (recipient in recipients) {
-                    appController.sendFiles(chosenFiles, recipient.ip)
+                    val sessionId = appController.sendFiles(chosenFiles, recipient.ip)
+                    if (firstSessionId == null) firstSessionId = sessionId
                 }
                 chosenFiles = emptyList()
                 selectedFiles.clear()
                 showSendToDevices = false
+                // Jump straight to the (first) outgoing record's history detail so the sender
+                // watches its progress there. Additional recipients are one Back away.
+                if (firstSessionId != null) {
+                    preselectedSessionId = firstSessionId
+                    showTransferHistory = true
+                }
             },
             onDismiss = { showSendToDevices = false }
         )
@@ -469,12 +496,13 @@ fun FileTransferScreen(
     }
 
     if (showTextDialog) {
+        BackdropEffect()
         androidx.compose.ui.window.Dialog(onDismissRequest = { showTextDialog = false }) {
             Surface(
                 shape = RoundedCornerShape(Dimens.radiusLg),
                 color = MaterialTheme.colors.background,
                 elevation = Dimens.elevModal,
-                modifier = Modifier.width(360.dp).padding(Dimens.spaceLg)
+                modifier = Modifier.width(360.dp).padding(Dimens.spaceLg).modalPopIn()
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(Dimens.spaceXl)

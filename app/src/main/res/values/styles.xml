@@ -7,23 +7,24 @@
     <style name="TextAppearance.App.Headline" parent="TextAppearance.Material3.HeadlineSmall">
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">@font/ibm_plex_sans_variable</item>
+        <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
 
     <style name="TextAppearance.App.Title" parent="TextAppearance.Material3.TitleMedium">
         <item name="android:textSize">18sp</item>
         <item name="android:textStyle">bold</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">@font/ibm_plex_sans_variable</item>
+        <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
 
     <style name="TextAppearance.App.Body" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:textSize">15sp</item>        <item name="android:textColor">?attr/appTextPrimaryColor</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">@font/ibm_plex_sans_variable</item>
+        <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
 
+    <!-- Control voice stays Geist (matches the Compose label* slots); content styles use Plex. -->
     <style name="TextAppearance.App.Label" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textSize">14sp</item>        <item name="android:textColor">?attr/appTextSecondaryColor</item>
         <item name="android:fontFamily">@font/geist_variable</item>
@@ -32,8 +33,8 @@
 
     <style name="TextAppearance.App.Caption" parent="TextAppearance.Material3.BodySmall">
         <item name="android:textSize">12sp</item>        <item name="android:textColor">?attr/appTextSecondaryColor</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">@font/ibm_plex_sans_variable</item>
+        <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
 
     <!-- Shared "How to use" pill so the button is identical (size + position) across all interfaces. -->
@@ -55,5 +56,12 @@
         <item name="android:foreground">?attr/selectableItemBackground</item>
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Centered-dialog window motion: scale 0.95 -> 1 + fade in ~180ms (see ModalPolish.kt).
+         Bottom sheets keep their native slide and only take the backdrop treatment. -->
+    <style name="ModalWindowAnimation">
+        <item name="android:windowEnterAnimation">@anim/modal_pop_in</item>
+        <item name="android:windowExitAnimation">@anim/modal_pop_out</item>
     </style>
 </resources>

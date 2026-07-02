@@ -24,11 +24,46 @@ object SecurityVault {
     // Human-readable name per trusted IP, so the Paired list shows names even when a device is offline.
     private val pairedDeviceNames = ConcurrentHashMap<String, String>()
     // Anti-downgrade pins (TOFU): IPs we've actually negotiated an authenticated channel with. Once
-    // pinned, we refuse to silently fall back to the weaker path (plaintext file bytes / CBC clipboard)
-    // even if a MITM strips the capability token from the unauthenticated UDP discovery. Mirrors the
-    // Android SecurityVault pins; cleared on unpair.
+    // pinned, a peer that stops advertising the capability is treated as a downgrade attempt — file
+    // transfers refuse the plaintext stream and clipboard sends skip the peer — even if a MITM strips
+    // the capability token from the unauthenticated UDP discovery. Mirrors the Android SecurityVault
+    // pins; cleared on unpair.
     private val fileGcmPinned = ConcurrentHashMap.newKeySet<String>()
     private val clipboardGcmPinned = ConcurrentHashMap.newKeySet<String>()
+
+    // DPAPI (Windows Data Protection API) wraps each pairing key at rest so config.json no longer holds
+    // recoverable key material (Android keeps the equivalents in the Keystore). Windows-only; on any
+    // other platform (e.g. Linux CI) we fall back to legacy plaintext base64 so the module still loads.
+    // New entries carry [ENC_PREFIX]; legacy plaintext entries are re-wrapped on first load.
+    private const val ENC_PREFIX = "p1_"  // note: '_' is not in the standard base64 alphabet, so this
+                                          // never collides with a legacy base64 value or the ip ':' split
+    private val dpapiAvailable: Boolean = try { com.sun.jna.Platform.isWindows() } catch (e: Throwable) { false }
+
+    /** Raw-key base64 (the in-memory form) -> the string persisted in config.json. */
+    private fun encodeKeyForDisk(base64Raw: String): String {
+        if (!dpapiAvailable) return base64Raw
+        return try {
+            val raw = Base64.getDecoder().decode(base64Raw)
+            val wrapped = com.sun.jna.platform.win32.Crypt32Util.cryptProtectData(raw)
+            ENC_PREFIX + Base64.getEncoder().encodeToString(wrapped)
+        } catch (e: Throwable) {
+            base64Raw // never lose a key over an encryption failure
+        }
+    }
+
+    /** Persisted config.json value -> raw-key base64 (the in-memory form), or null if unreadable. */
+    private fun decodeKeyFromDisk(stored: String): String? {
+        return try {
+            if (stored.startsWith(ENC_PREFIX)) {
+                val wrapped = Base64.getDecoder().decode(stored.substring(ENC_PREFIX.length))
+                Base64.getEncoder().encodeToString(com.sun.jna.platform.win32.Crypt32Util.cryptUnprotectData(wrapped))
+            } else {
+                stored // legacy plaintext base64(key)
+            }
+        } catch (e: Throwable) {
+            null // corrupt / not decryptable by this user -> drop the node (peer must re-pair)
+        }
+    }
 
     // Mirrors the on-disk config.json schema; nodes stays a single "ip:base64key,ip:base64key" string.
     private data class ConfigDto(
@@ -61,16 +96,22 @@ object SecurityVault {
             dto.isDiscoverable?.let { isDiscoverable = it }
             dto.language?.let { language = it }
             dto.saveLocation?.let { saveLocation = it }
+            var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
                 if (nodesStr.isNotBlank()) {
                     nodesStr.split(",").forEach { pair ->
-                        // M-15: split on the LAST ':' only so IPv6 peers (whose address
-                        // contains ':') are parsed correctly; base64 keys never contain ':'.
+                        // Split on the LAST ':' only so IPv6 peers (whose address
+                        // contains ':') are parsed correctly; stored values never contain ':'.
                         if (pair.contains(":")) {
                             val ip = pair.substringBeforeLast(":")
-                            val key = pair.substringAfterLast(":")
-                            if (ip.isNotEmpty() && key.isNotEmpty()) {
-                                trustedNodes[ip] = key
+                            val stored = pair.substringAfterLast(":")
+                            if (ip.isNotEmpty() && stored.isNotEmpty()) {
+                                val base64Raw = decodeKeyFromDisk(stored)
+                                if (base64Raw != null) {
+                                    trustedNodes[ip] = base64Raw
+                                    // A legacy plaintext entry (no DPAPI prefix) is re-wrapped on save.
+                                    if (dpapiAvailable && !stored.startsWith(ENC_PREFIX)) legacyKeysPresent = true
+                                }
                             }
                         }
                     }
@@ -79,18 +120,20 @@ object SecurityVault {
             dto.pairedNames?.let { pairedDeviceNames.putAll(it) }
             dto.fileGcmPinned?.let { fileGcmPinned.addAll(it) }
             dto.clipboardGcmPinned?.let { clipboardGcmPinned.addAll(it) }
+            // One-time migration: rewrite config.json so legacy plaintext keys become DPAPI-wrapped.
+            if (legacyKeysPresent) save()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    // M-16: @Synchronized serializes concurrent writers so two saves can't interleave.
+    // @Synchronized serializes concurrent writers so two saves can't interleave.
     @Synchronized
     private fun save() {
         try {
-            val nodesStr = trustedNodes.map { "${it.key}:${it.value}" }.joinToString(",")
+            val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
             val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList())
-            // M-16: atomic write — write to a temp file then move it into place so a
+            // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
             tmpFile.writeText(gson.toJson(dto), Charsets.UTF_8)
@@ -116,7 +159,10 @@ object SecurityVault {
     fun getDeviceName(): String = deviceName
 
     fun setDeviceName(name: String) {
-        deviceName = name
+        // The name is embedded between '|' delimiters in OFFER, discovery and P2P_HELLO frames;
+        // strip '|'/newlines so a user-set name can't break the peer's positional parse (parity
+        // with the Android name setter).
+        deviceName = name.replace('|', ' ').replace('\n', ' ').replace('\r', ' ').trim()
         save()
     }
 

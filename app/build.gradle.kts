@@ -9,8 +9,10 @@ plugins {
 
 // Release signing reads from a gitignored keystore.properties at the repo root (never committed):
 //   storeFile / storePassword / keyAlias / keyPassword
-// When absent (fresh clone / CI without secrets) the release build falls back to the default debug
-// signing so local dev still works; a real Play release must supply this file.
+// When absent (fresh clone / CI without secrets) no release signingConfig is created and none is
+// applied below, so assembleRelease produces an UNSIGNED APK — usable for R8/CI shrink validation
+// only, not for distribution. A real Play release must supply this file (there is no debug-signing
+// fallback; installing an unsigned release APK will fail).
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) load(FileInputStream(keystorePropertiesFile))
@@ -28,8 +30,8 @@ android {
         applicationId = "com.EntropicSoftwareLab.ClipboardShare"
         minSdk = 29
         targetSdk = 36
-        versionCode = 16
-        versionName = "3.4.1"
+        versionCode = 17
+        versionName = "3.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,8 +55,9 @@ android {
             // See proguard-rules.pro for the defensive keep set (Tink, ML Kit, ZXing, Room).
             isMinifyEnabled = true
             isShrinkResources = true
-            // Sign with the real release key when keystore.properties is present; otherwise leave
-            // the default (debug) signing so local/debug builds still work.
+            // Sign with the real release key when keystore.properties is present; otherwise no
+            // signingConfig is applied and the release APK is UNSIGNED (R8/CI validation only, not
+            // installable/distributable).
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -69,10 +72,11 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    // AGP 9's built-in Kotlin (KGP 2.2.10) auto-supplies the matching Compose compiler when this is
-    // enabled — no need to apply org.jetbrains.kotlin.plugin.compose (and the catalog alias for it is
-    // pinned to 2.0.0, which would mismatch the built-in Kotlin). Incremental adoption: Compose and
-    // the existing XML Views coexist via ComposeView / AndroidView interop.
+    // The compose-compiler plugin (org.jetbrains.kotlin.plugin.compose) IS applied via the catalog
+    // alias in the plugins {} block above; it is pinned to the "kotlin" version (2.0.0 in the
+    // catalog). Whether that pin matches AGP 9's built-in Kotlin needs a validated bump — see the
+    // FLAG note. Incremental adoption: Compose and the existing XML Views coexist via
+    // ComposeView / AndroidView interop.
     buildFeatures {
         compose = true
     }
@@ -83,6 +87,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.constraintlayout)
 
     // Jetpack Compose (incremental adoption alongside the existing XML Views)
@@ -99,7 +104,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("androidx.security:security-crypto:1.1.0")
+    implementation(libs.androidx.security.crypto)
 
     // V3.0 off-grid transport
     implementation(libs.androidx.camera.core)

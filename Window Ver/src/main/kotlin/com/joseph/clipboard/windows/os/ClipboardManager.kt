@@ -6,6 +6,8 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.FlavorListener
 import java.awt.datatransfer.FlavorEvent
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
 object ClipboardManager {
@@ -14,10 +16,17 @@ object ClipboardManager {
     private var lastClipboardText: String = ""
     @Volatile
     private var isPolling = false
-    private val listeners = mutableListOf<(String) -> Unit>()
+    // Copy-on-write so notifyListeners (background thread) can iterate while add/removeListener mutate
+    // concurrently without a ConcurrentModificationException.
+    private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
 
     private var pollingThread: Thread? = null
     private var flavorListenerRegistered = false
+    // FlavorListener fires on the AWT EDT (the Compose render thread). The settle-delay + readText retry
+    // loop can block for ~1s, so hand the work to a single background thread instead of sleeping on the EDT.
+    private val flavorWorker = Executors.newSingleThreadExecutor { r ->
+        Thread(r, "Clipboard-Flavor-Worker").apply { isDaemon = true }
+    }
 
     fun startPolling() {
         if (isPolling) return
@@ -31,9 +40,13 @@ object ClipboardManager {
             try {
                 clipboard.addFlavorListener(object : FlavorListener {
                     override fun flavorsChanged(e: FlavorEvent?) {
-                        // Small delay to let the clipboard content settle after Ctrl+C
-                        try { Thread.sleep(80) } catch (_: InterruptedException) {}
-                        handleClipboardChange()
+                        // Runs on the AWT EDT (Compose render thread) — do NOT sleep/read here. Hand the
+                        // settle-delay + clipboard read off to a background worker so the UI never stalls.
+                        flavorWorker.execute {
+                            // Small delay to let the clipboard content settle after Ctrl+C
+                            try { Thread.sleep(80) } catch (_: InterruptedException) {}
+                            handleClipboardChange()
+                        }
                     }
                 })
                 flavorListenerRegistered = true

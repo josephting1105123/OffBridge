@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Policy — Clipboard Share</title>
+  <meta name="description" content="Privacy Policy for Clipboard Share — the off-grid, peer-to-peer clipboard sync and file transfer app. No servers, no accounts, no data collection. Available in 10 languages." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://REPLACE_SITE_URL/privacy.html" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="preload" href="fonts/geist_variable.ttf" as="font" type="font/ttf" crossorigin />
+
+  <!-- Theme applied before paint to avoid a flash -->
+  <script src="js/theme.js"></script>
+
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <style>
+    .legal-nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+      padding:1rem 0;border-bottom:1px solid var(--border,rgba(128,128,128,.2));flex-wrap:wrap}
+    .legal-nav .brand{font-weight:600;text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:.5rem}
+    .legal-lang{display:flex;align-items:center;gap:.5rem}
+    .legal-lang select{padding:.45rem .7rem;border-radius:.6rem;border:1px solid var(--border,rgba(128,128,128,.3));
+      background:var(--card,transparent);color:inherit;font:inherit;cursor:pointer}
+    .policy{max-width:760px;margin:2.5rem auto 4rem;line-height:1.7;font-size:1rem}
+    .policy__body{word-wrap:break-word}
+    .policy__title{font-size:1.6em;line-height:1.25;margin:0 0 .25em}
+    .policy__body h2{display:block;margin-top:1.4em;margin-bottom:.2em;font-size:1.2em;line-height:1.3}
+    .legal-foot{max-width:760px;margin:0 auto 3rem;padding-top:1.5rem;
+      border-top:1px solid var(--border,rgba(128,128,128,.2));font-size:.9rem;opacity:.8;
+      display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+    .legal-foot a{color:inherit}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="legal-nav" aria-label="Privacy page">
+      <a class="brand" href="index.html">&larr;&nbsp;Clipboard&nbsp;Share</a>
+      <label class="legal-lang">
+        <span class="sr-only" style="position:absolute;left:-9999px">Language</span>
+        <select id="lang-select" aria-label="Choose language">
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="pt">Português</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="ru">Русский</option>
+        <option value="ja">日本語</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="zh-TW">繁體中文</option>
+        </select>
+      </label>
+    </nav>
+
+    <main id="main">
+      <section class="policy" lang="en" data-lang="en">
+        <div class="policy__body"><h1 class="policy__title">Privacy Policy for Clipboard Share</h1>
+        
+        Effective Date: 22/6/2026<br><br>
+        Thank you for using Clipboard Share ("the App"). This Privacy Policy explains our principles regarding the collection, use, and disclosure of information. Our core philosophy is simple: your data is yours, and we do not want it.<br><br>
+        <h2>THE CORE PRINCIPLE: WE DO NOT COLLECT YOUR DATA</h2>
+        
+        Clipboard Share is designed from the ground up with your privacy as the highest priority. The App facilitates direct, peer-to-peer (P2P) communication between your devices over your local Wi-Fi network.<br><br>
+        We do not have servers that collect, store, or process your personal data. All of your data remains on your devices and on your local network.<br><br>
+        Specifically, we DO NOT collect, receive, or share:<br>
+        • The content of your clipboard.<br>
+        • The files you transfer.<br>
+        • Your name, email address, or any other personal identifiers.<br>
+        • Your contacts, location, or any other sensitive device information.<br><br>
+        The App functions without requiring you to create an account or sign in.<br><br>
+        <h2>INFORMATION THE APP STORES LOCALLY ON YOUR DEVICE</h2>
+        
+        To function correctly, Clipboard Share stores a small amount of data exclusively on your device's local storage. This data is under your control and never leaves your device to be sent to us. This includes:<br><br>
+        • <b>Cryptographic Keys:</b> After you explicitly pair two devices, a unique AES-256 encryption key is generated and stored securely on each device. This key is used to encrypt all communication between those two paired devices and is essential for the App's security.<br><br>
+        • <b>Paired Device Information:</b> The App stores the local IP address and user-chosen device name of devices you have paired with. This is used to identify and connect to them on your local network.<br><br>
+        • <b>Clipboard History:</b> The App maintains a local history of clipboard items you have copied for your convenience. This history is stored only on your device and can be cleared by you at any time from within the App.<br><br>
+        • <b>Device Name:</b> The name you choose for your device in the App's settings is stored locally to identify it to other devices on your network.<br><br>
+        <h2>HOW YOUR DATA IS TRANSFERRED</h2>
+        
+        All data transfers (both clipboard and files) occur directly between your paired devices over your local Wi-Fi network. Your data does not pass through our servers or any third-party servers. All transfers are protected with strong, end-to-end AES-256 encryption using the keys generated during the pairing process.<br><br>
+        <h2>DEVICE DISCOVERY ON YOUR LOCAL NETWORK</h2>
+        
+        To let your devices find each other automatically, the App periodically broadcasts a small discovery message on your local Wi-Fi or hotspot network. This message contains only your chosen device name, your device's local IP address, and its operating system type (for example, "Android"). These broadcasts are sent only on your local network so that nearby devices can offer to pair or connect. They are never sent to us, to the internet, or to any third party, and no internet connection is used for discovery. Unlike your clipboard and file transfers, which are encrypted end-to-end and exchanged only between paired devices, these discovery messages are not encrypted and are visible to other devices on the same local network. For this reason, we recommend using the App on trusted, private networks. You can stop these broadcasts at any time by turning off "Discoverable to other devices" in Settings.<br><br>
+        <h2>WHICH FEATURES USE WHICH PERMISSIONS</h2>
+        
+        So it is clear what each feature does, here is how the App uses your network and permissions:<br><br>
+        • <b>Finding nearby devices:</b> Uses your local Wi-Fi or hotspot network, and on some Android versions the Location and Nearby Devices permission. It does not use your mobile (cellular) data.<br>
+        • <b>Pairing two devices:</b> Uses your local Wi-Fi network, or the camera (to scan a QR code) or NFC (to tap), to exchange the encryption key.<br>
+        • <b>Syncing clipboard text:</b> Uses your local Wi-Fi network to send copied text to your paired devices.<br>
+        • <b>Transferring files on the same network:</b> Uses your local Wi-Fi network.<br>
+        • <b>Off-grid transfers (no router or internet):</b> Uses Wi-Fi Direct and Bluetooth to form a direct device-to-device connection, started with a QR code (camera) or an NFC tap. Needs the Location, Nearby Devices and Bluetooth permissions.<br>
+        • <b>Installing a received app:</b> Uses the install permission, and only after you confirm it.<br>
+        • <b>Staying ready in the background:</b> Uses a foreground service and notification to keep listening for incoming clipboard items and transfers.<br><br>
+        In short, the App uses your local Wi-Fi, a hotspot, or a direct device-to-device connection for everything. It does not use your mobile (cellular) data for discovery or transfers, and it does not connect to the internet.<br><br>
+        <h2>PERMISSIONS REQUESTED IN THE APP</h2>
+        
+        Clipboard Share requests certain permissions to enable its features. Here is why we need them:<br><br>
+        • <b>Network Access</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Required to discover other devices and transfer data over your local Wi-Fi network.<br><br>
+        • <b>Location and Nearby Devices</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Some Android versions require this permission before an app can scan for and connect to nearby devices over Wi-Fi Direct, which the App uses for off-grid transfers. We do not collect it, but the feature cannot find nearby devices without it. The App does not read, store, or share your physical location.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Used to help set up a direct, off-grid connection with a nearby device. We do not collect any data through it, and it is never used to track you.<br><br>
+        • <b>Camera and NFC</b> (CAMERA, NFC): The camera is used only to scan a QR code, and NFC only to start a connection when you tap two devices together, for pairing and off-grid transfers. This information is processed on your device and is never stored or sent anywhere.<br><br>
+        • <b>Installing a Received App</b> (REQUEST_INSTALL_PACKAGES): Used only so that, with your explicit confirmation, you can install an app (APK) that you received through a transfer. The App never installs anything on its own.<br><br>
+        • <b>Foreground Service and Notifications</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Required to run the service that listens for incoming connections and to show a persistent notification indicating the App is active and protecting your connection.<br><br>
+        • <b>Run at Startup</b> (RECEIVE_BOOT_COMPLETED): Allows the App to restart its service when you reboot your device, ensuring it is always ready to connect.<br><br>
+        • <b>Full-Screen Intent</b> (USE_FULL_SCREEN_INTENT): Used to show you urgent, full-screen alerts for incoming pairing requests or file transfers so you do not miss them.<br><br>
+        • <b>Ignore Battery Optimizations</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Strongly recommended to prevent the Android operating system from shutting down the App's background service, which would interrupt clipboard syncing and file transfers.<br><br>
+        • <b>External Storage</b> (WRITE_EXTERNAL_STORAGE): On older Android versions (SDK 28 and below), this is required to save received files to your device's storage.<br><br>
+        <h2>THIRD-PARTY SERVICES</h2>
+        
+        Clipboard Share does not use any third-party services for analytics, advertising, or any other purpose that would involve sharing your data.<br><br>
+        <h2>CHILDREN'S PRIVACY</h2>
+        
+        The App is not intended for use by children under the age of 13. We do not knowingly collect any information from children. As we do not collect any personal data in the first place, we do not have a mechanism to verify the age of our users.<br><br>
+        <h2>CHANGES TO THIS PRIVACY POLICY</h2>
+        
+        We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy at the same URL. You are advised to review this Privacy Policy periodically for any changes.<br><br>
+        <h2>CONTACT US</h2>
+        
+        If you have any questions about this Privacy Policy, please contact us at:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="es" data-lang="es" hidden>
+        <div class="policy__body"><h1 class="policy__title">Política de Privacidad de Clipboard Share</h1>
+        
+        Fecha de vigencia: 22/6/2026<br><br>
+        Gracias por usar Clipboard Share ("la Aplicación"). Esta Política de Privacidad explica nuestros principios con respecto a la recopilación, uso y divulgación de información. Nuestra filosofía principal es simple: sus datos son suyos y no los queremos.<br><br>
+        <h2>EL PRINCIPIO BÁSICO: NO RECOPILAMOS SUS DATOS</h2>
+        
+        Clipboard Share está diseñada desde cero con su privacidad como la máxima prioridad. La Aplicación facilita la comunicación directa de punto a punto (P2P) entre sus dispositivos a través de su red Wi-Fi local.<br><br>
+        No tenemos servidores que recopilen, almacenen o procesen sus datos personales. Todos sus datos permanecen en sus dispositivos y en su red local.<br><br>
+        Específicamente, NO recopilamos, recibimos ni compartimos:<br>
+        • El contenido de su portapapeles.<br>
+        • Los archivos que transfiere.<br>
+        • Su nombre, dirección de correo electrónico o cualquier otro identificador personal.<br>
+        • Sus contactos, ubicación o cualquier otra información confidencial del dispositivo.<br><br>
+        La Aplicación funciona sin requerir que cree una cuenta o inicie sesión.<br><br>
+        <h2>INFORMACIÓN QUE LA APLICACIÓN ALMACENA LOCALMENTE EN SU DISPOSITIVO</h2>
+        
+        Para funcionar correctamente, Clipboard Share almacena una pequeña cantidad de datos exclusivamente en el almacenamiento local de su dispositivo. Estos datos están bajo su control y nunca salen de su dispositivo para ser enviados a nosotros. Esto incluye:<br><br>
+        • <b>Claves Criptográficas:</b> Después de emparejar explícitamente dos dispositivos, se genera una clave de cifrado AES-256 única y se almacena de forma segura en cada dispositivo. Esta clave se utiliza para cifrar toda la comunicación entre esos dos dispositivos emparejados y es esencial para la seguridad de la Aplicación.<br><br>
+        • <b>Información del Dispositivo Emparejado:</b> La Aplicación almacena la dirección IP local y el nombre del dispositivo elegido por el usuario de los dispositivos con los que se ha emparejado. Esto se utiliza para identificarlos y conectarse a ellos en su red local.<br><br>
+        • <b>Historial del Portapapeles:</b> La Aplicación mantiene un historial local de los elementos del portapapeles que ha copiado para su comodidad. Este historial se almacena solo en su dispositivo y puede ser borrado por usted en cualquier momento desde dentro de la Aplicación.<br><br>
+        • <b>Nombre del Dispositivo:</b> El nombre que elija para su dispositivo en la configuración de la Aplicación se almacena localmente para identificarlo ante otros dispositivos en su red.<br><br>
+        <h2>CÓMO SE TRANSFIEREN SUS DATOS</h2>
+        
+        Todas las transferencias de datos (tanto del portapapeles como de archivos) ocurren directamente entre sus dispositivos emparejados a través de su red Wi-Fi local. Sus datos no pasan a través de nuestros servidores ni de servidores de terceros. Todas las transferencias están protegidas con un fuerte cifrado de extremo a extremo AES-256 utilizando las claves generadas durante el proceso de emparejamiento.<br><br>
+        <h2>DESCUBRIMIENTO DE DISPOSITIVOS EN SU RED LOCAL</h2>
+        
+        Para que sus dispositivos se encuentren automáticamente, la Aplicación difunde periódicamente un pequeño mensaje de descubrimiento en su red Wi-Fi o de punto de acceso local. Este mensaje contiene únicamente el nombre de dispositivo que usted eligió, la dirección IP local de su dispositivo y su tipo de sistema operativo (por ejemplo, "Android"). Estas difusiones se envían solo en su red local para que los dispositivos cercanos puedan ofrecerse a emparejarse o conectarse. Nunca se nos envían a nosotros, a internet ni a ningún tercero, y no se utiliza ninguna conexión a internet para el descubrimiento. A diferencia de sus transferencias de portapapeles y archivos, que están cifradas de extremo a extremo y se intercambian solo entre dispositivos emparejados, estos mensajes de descubrimiento no están cifrados y son visibles para otros dispositivos en la misma red local. Por esta razón, recomendamos usar la Aplicación en redes privadas y de confianza. Puede detener estas difusiones en cualquier momento desactivando "Visible para otros dispositivos" en Configuración.<br><br>
+        <h2>QUÉ FUNCIONES USAN QUÉ PERMISOS</h2>
+        
+        Para que quede claro lo que hace cada función, así es como la Aplicación usa su red y sus permisos:<br><br>
+        • <b>Encontrar dispositivos cercanos:</b> Usa su red Wi-Fi o de punto de acceso local y, en algunas versiones de Android, el permiso de Ubicación y Dispositivos Cercanos. No usa sus datos móviles.<br>
+        • <b>Emparejar dos dispositivos:</b> Usa su red Wi-Fi local, o la cámara (para escanear un código QR) o NFC (para acercarlos), para intercambiar la clave de cifrado.<br>
+        • <b>Sincronizar texto del portapapeles:</b> Usa su red Wi-Fi local para enviar el texto copiado a sus dispositivos emparejados.<br>
+        • <b>Transferir archivos en la misma red:</b> Usa su red Wi-Fi local.<br>
+        • <b>Transferencias sin conexión (sin router ni internet):</b> Usa Wi-Fi Direct y Bluetooth para formar una conexión directa entre dispositivos, iniciada con un código QR (cámara) o un toque NFC. Necesita los permisos de Ubicación, Dispositivos Cercanos y Bluetooth.<br>
+        • <b>Instalar una aplicación recibida:</b> Usa el permiso de instalación, y solo después de que usted lo confirme.<br>
+        • <b>Permanecer lista en segundo plano:</b> Usa un servicio en primer plano y una notificación para seguir escuchando los elementos del portapapeles y las transferencias entrantes.<br><br>
+        En resumen, la Aplicación usa su Wi-Fi local, un punto de acceso o una conexión directa entre dispositivos para todo. No usa sus datos móviles para el descubrimiento ni las transferencias, y no se conecta a internet.<br><br>
+        <h2>PERMISOS SOLICITADOS EN LA APLICACIÓN</h2>
+        
+        Clipboard Share solicita ciertos permisos para habilitar sus funciones. Aquí está el por qué los necesitamos:<br><br>
+        • <b>Acceso a la Red</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Necesario para descubrir otros dispositivos y transferir datos a través de su red Wi-Fi local.<br><br>
+        • <b>Ubicación y Dispositivos Cercanos</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Algunas versiones de Android requieren este permiso para que una aplicación pueda buscar y conectarse a dispositivos cercanos mediante Wi-Fi Direct, que la Aplicación usa para transferencias sin conexión. No la recopilamos, pero la función no puede encontrar dispositivos cercanos sin él. La Aplicación no lee, almacena ni comparte su ubicación física.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Se utiliza para ayudar a establecer una conexión directa y sin conexión con un dispositivo cercano. No recopilamos ningún dato a través de él y nunca se usa para rastrearlo.<br><br>
+        • <b>Cámara y NFC</b> (CAMERA, NFC): La cámara se utiliza solo para escanear un código QR, y NFC solo para iniciar una conexión cuando acerca dos dispositivos, para el emparejamiento y las transferencias sin conexión. Esta información se procesa en su dispositivo y nunca se almacena ni se envía a ningún lugar.<br><br>
+        • <b>Instalar una Aplicación Recibida</b> (REQUEST_INSTALL_PACKAGES): Se utiliza solo para que, con su confirmación explícita, pueda instalar una aplicación (APK) que haya recibido a través de una transferencia. La Aplicación nunca instala nada por sí sola.<br><br>
+        • <b>Servicio en Primer Plano y Notificaciones</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Necesario para ejecutar el servicio que escucha las conexiones entrantes y para mostrar una notificación persistente que indica que la Aplicación está activa y protegiendo su conexión.<br><br>
+        • <b>Ejecutar al Inicio</b> (RECEIVE_BOOT_COMPLETED): Permite que la Aplicación reinicie su servicio cuando reinicia su dispositivo, asegurando que siempre esté lista para conectarse.<br><br>
+        • <b>Intención de Pantalla Completa</b> (USE_FULL_SCREEN_INTENT): Se utiliza para mostrarle alertas urgentes a pantalla completa de solicitudes de emparejamiento entrantes o transferencias de archivos para que no se las pierda.<br><br>
+        • <b>Ignorar Optimizaciones de Batería</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Muy recomendado para evitar que el sistema operativo Android cierre el servicio en segundo plano de la Aplicación, lo que interrumpiría la sincronización del portapapeles y las transferencias de archivos.<br><br>
+        • <b>Almacenamiento Externo</b> (WRITE_EXTERNAL_STORAGE): En versiones anteriores de Android (SDK 28 y anteriores), esto es necesario para guardar los archivos recibidos en el almacenamiento de su dispositivo.<br><br>
+        <h2>SERVICIOS DE TERCEROS</h2>
+        
+        Clipboard Share no utiliza ningún servicio de terceros para análisis, publicidad o cualquier otro propósito que implique compartir sus datos.<br><br>
+        <h2>PRIVACIDAD DE LOS NIÑOS</h2>
+        
+        La Aplicación no está destinada a ser utilizada por niños menores de 13 años. No recopilamos a sabiendas ninguna información de niños. Como en primer lugar no recopilamos ningún dato personal, no tenemos un mecanismo para verificar la edad de nuestros usuarios.<br><br>
+        <h2>CAMBIOS EN ESTA POLÍTICA DE PRIVACIDAD</h2>
+        
+        Podemos actualizar nuestra Política de Privacidad de vez en cuando. Le notificaremos cualquier cambio publicando la nueva Política de Privacidad en la misma URL. Se le aconseja revisar esta Política de Privacidad periódicamente para detectar cualquier cambio.<br><br>
+        <h2>CONTÁCTENOS</h2>
+        
+        Si tiene alguna pregunta sobre esta Política de Privacidad, contáctenos en:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="fr" data-lang="fr" hidden>
+        <div class="policy__body"><h1 class="policy__title">Politique de confidentialité de Clipboard Share</h1>
+        
+        Date d'entrée en vigueur : 22/06/2026<br><br>
+        Merci d'utiliser Clipboard Share (« l'Application »). Cette politique de confidentialité explique nos principes concernant la collecte, l'utilisation et la divulgation d'informations. Notre philosophie fondamentale est simple : vos données vous appartiennent et nous n'en voulons pas.<br><br>
+        <h2>LE PRINCIPE FONDAMENTAL : NOUS NE COLLECTONS PAS VOS DONNÉES</h2>
+        
+        Clipboard Share est conçue dès le départ en faisant de votre confidentialité la priorité absolue. L'Application facilite la communication directe de pair à pair (P2P) entre vos appareils sur votre réseau Wi-Fi local.<br><br>
+        Nous n'avons pas de serveurs qui collectent, stockent ou traitent vos données personnelles. Toutes vos données restent sur vos appareils et sur votre réseau local.<br><br>
+        Plus précisément, nous NE collectons PAS, NE recevons PAS et NE partageons PAS :<br>
+        • Le contenu de votre presse-papiers.<br>
+        • Les fichiers que vous transférez.<br>
+        • Votre nom, votre adresse e-mail ou tout autre identifiant personnel.<br>
+        • Vos contacts, votre emplacement ou toute autre information sensible de l'appareil.<br><br>
+        L'Application fonctionne sans vous obliger à créer un compte ou à vous connecter.<br><br>
+        <h2>INFORMATIONS QUE L'APPLICATION STOCKE LOCALEMENT SUR VOTRE APPAREIL</h2>
+        
+        Pour fonctionner correctement, Clipboard Share stocke une petite quantité de données exclusivement sur le stockage local de votre appareil. Ces données sont sous votre contrôle et ne quittent jamais votre appareil pour nous être envoyées. Cela comprend :<br><br>
+        • <b>Clés cryptographiques :</b> Après avoir explicitement couplé deux appareils, une clé de cryptage AES-256 unique est générée et stockée en toute sécurité sur chaque appareil. Cette clé est utilisée pour crypter toutes les communications entre ces deux appareils couplés et est essentielle à la sécurité de l'Application.<br><br>
+        • <b>Informations sur les appareils couplés :</b> L'Application stocke l'adresse IP locale et le nom d'appareil choisi par l'utilisateur des appareils avec lesquels vous vous êtes couplé. Cela sert à les identifier et à s'y connecter sur votre réseau local.<br><br>
+        • <b>Historique du presse-papiers :</b> L'Application conserve un historique local des éléments du presse-papiers que vous avez copiés pour votre commodité. Cet historique est stocké uniquement sur votre appareil et peut être effacé par vous à tout moment depuis l'Application.<br><br>
+        • <b>Nom de l'appareil :</b> Le nom que vous choisissez pour votre appareil dans les paramètres de l'Application est stocké localement pour l'identifier auprès des autres appareils de votre réseau.<br><br>
+        <h2>COMMENT VOS DONNÉES SONT TRANSFÉRÉES</h2>
+        
+        Tous les transferts de données (presse-papiers et fichiers) s'effectuent directement entre vos appareils couplés sur votre réseau Wi-Fi local. Vos données ne transitent pas par nos serveurs ou par des serveurs tiers. Tous les transferts sont protégés par un cryptage fort AES-256 de bout en bout à l'aide des clés générées pendant le processus de couplage.<br><br>
+        <h2>DÉTECTION DES APPAREILS SUR VOTRE RÉSEAU LOCAL</h2>
+        
+        Pour permettre à vos appareils de se trouver automatiquement, l'Application diffuse périodiquement un petit message de détection sur votre réseau Wi-Fi ou point d'accès local. Ce message contient uniquement le nom d'appareil que vous avez choisi, l'adresse IP locale de votre appareil et son type de système d'exploitation (par exemple, "Android"). Ces diffusions ne sont envoyées que sur votre réseau local afin que les appareils à proximité puissent proposer de s'appairer ou de se connecter. Elles ne nous sont jamais envoyées, ni à internet, ni à un tiers, et aucune connexion internet n'est utilisée pour la détection. Contrairement à vos transferts de presse-papiers et de fichiers, qui sont chiffrés de bout en bout et échangés uniquement entre appareils appairés, ces messages de détection ne sont pas chiffrés et sont visibles par les autres appareils du même réseau local. Pour cette raison, nous recommandons d'utiliser l'Application sur des réseaux privés et de confiance. Vous pouvez arrêter ces diffusions à tout moment en désactivant "Visible par les autres appareils" dans les Paramètres.<br><br>
+        <h2>QUELLES FONCTIONNALITÉS UTILISENT QUELLES AUTORISATIONS</h2>
+        
+        Pour que vous sachiez exactement ce que fait chaque fonctionnalité, voici comment l'Application utilise votre réseau et vos autorisations :<br><br>
+        • <b>Trouver des appareils à proximité :</b> Utilise votre réseau Wi-Fi ou point d'accès local et, sur certaines versions d'Android, l'autorisation Localisation et Appareils à proximité. N'utilise pas vos données mobiles.<br>
+        • <b>Appairer deux appareils :</b> Utilise votre réseau Wi-Fi local, ou la caméra (pour scanner un code QR) ou le NFC (pour le rapprochement), afin d'échanger la clé de chiffrement.<br>
+        • <b>Synchroniser le texte du presse-papiers :</b> Utilise votre réseau Wi-Fi local pour envoyer le texte copié à vos appareils appairés.<br>
+        • <b>Transférer des fichiers sur le même réseau :</b> Utilise votre réseau Wi-Fi local.<br>
+        • <b>Transferts hors connexion (sans routeur ni internet) :</b> Utilise le Wi-Fi Direct et le Bluetooth pour créer une connexion directe entre appareils, lancée par un code QR (caméra) ou une touche NFC. Nécessite les autorisations Localisation, Appareils à proximité et Bluetooth.<br>
+        • <b>Installer une application reçue :</b> Utilise l'autorisation d'installation, et uniquement après votre confirmation.<br>
+        • <b>Rester prête en arrière-plan :</b> Utilise un service de premier plan et une notification pour continuer à écouter les éléments du presse-papiers et les transferts entrants.<br><br>
+        En résumé, l'Application utilise votre Wi-Fi local, un point d'accès ou une connexion directe entre appareils pour tout. Elle n'utilise pas vos données mobiles pour la détection ou les transferts, et elle ne se connecte pas à internet.<br><br>
+        <h2>AUTORISATIONS DEMANDÉES DANS L'APPLICATION</h2>
+        
+        Clipboard Share demande certaines autorisations pour activer ses fonctionnalités. Voici pourquoi nous en avons besoin :<br><br>
+        • <b>Accès au réseau</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE) : Requis pour découvrir d'autres appareils et transférer des données sur votre réseau Wi-Fi local.<br><br>
+        • <b>Localisation et Appareils à Proximité</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES) : Certaines versions d'Android exigent cette autorisation pour qu'une application puisse rechercher et se connecter aux appareils à proximité via Wi-Fi Direct, ce que l'Application utilise pour les transferts hors connexion. Nous ne la collectons pas, mais la fonctionnalité ne peut pas trouver les appareils à proximité sans elle. L'Application ne lit, ne stocke ni ne partage votre position physique.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT) : Utilisé pour aider à établir une connexion directe et hors connexion avec un appareil à proximité. Nous ne collectons aucune donnée par ce biais et il n'est jamais utilisé pour vous suivre.<br><br>
+        • <b>Caméra et NFC</b> (CAMERA, NFC) : La caméra sert uniquement à scanner un code QR, et le NFC uniquement à démarrer une connexion lorsque vous rapprochez deux appareils, pour l'appairage et les transferts hors connexion. Ces informations sont traitées sur votre appareil et ne sont jamais stockées ni envoyées où que ce soit.<br><br>
+        • <b>Installer une Application Reçue</b> (REQUEST_INSTALL_PACKAGES) : Utilisé uniquement pour que, avec votre confirmation explicite, vous puissiez installer une application (APK) que vous avez reçue via un transfert. L'Application n'installe jamais rien d'elle-même.<br><br>
+        • <b>Service de premier plan et notifications</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS) : Requis pour exécuter le service qui écoute les connexions entrantes et pour afficher une notification persistante indiquant que l'Application est active et protège votre connexion.<br><br>
+        • <b>Exécuter au démarrage</b> (RECEIVE_BOOT_COMPLETED) : Permet à l'Application de redémarrer son service lorsque vous redémarrez votre appareil, s'assurant qu'elle est toujours prête à se connecter.<br><br>
+        • <b>Intention plein écran</b> (USE_FULL_SCREEN_INTENT) : Utilisé pour vous montrer des alertes urgentes en plein écran pour les demandes de couplage ou de transferts de fichiers entrants afin de ne pas les manquer.<br><br>
+        • <b>Ignorer les optimisations de la batterie</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) : Fortement recommandé pour empêcher le système d'exploitation Android de fermer le service en arrière-plan de l'Application, ce qui interromprait la synchronisation du presse-papiers et les transferts de fichiers.<br><br>
+        • <b>Stockage externe</b> (WRITE_EXTERNAL_STORAGE) : Sur les anciennes versions d'Android (SDK 28 et versions antérieures), cela est nécessaire pour enregistrer les fichiers reçus sur le stockage de votre appareil.<br><br>
+        <h2>SERVICES TIERS</h2>
+        
+        Clipboard Share n'utilise aucun service tiers à des fins d'analyse, de publicité ou à toute autre fin impliquant le partage de vos données.<br><br>
+        <h2>CONFIDENTIALITÉ DES ENFANTS</h2>
+        
+        L'Application n'est pas destinée à être utilisée par des enfants de moins de 13 ans. Nous ne collectons sciemment aucune information auprès des enfants. Comme nous ne collectons aucune donnée personnelle en premier lieu, nous n'avons aucun mécanisme pour vérifier l'âge de nos utilisateurs.<br><br>
+        <h2>MODIFICATIONS DE CETTE POLITIQUE DE CONFIDENTIALITÉ</h2>
+        
+        Nous pouvons mettre à jour notre politique de confidentialité de temps à autre. Nous vous informerons de tout changement en publiant la nouvelle politique de confidentialité à la même URL. Il vous est conseillé de consulter périodiquement cette politique de confidentialité pour tout changement.<br><br>
+        <h2>NOUS CONTACTER</h2>
+        
+        Si vous avez des questions sur cette politique de confidentialité, veuillez nous contacter à :<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="de" data-lang="de" hidden>
+        <div class="policy__body"><h1 class="policy__title">Datenschutzerklärung für Clipboard Share</h1>
+        
+        Gültigkeitsdatum: 22.6.2026<br><br>
+        Vielen Dank, dass Sie Clipboard Share („die App“) verwenden. Diese Datenschutzerklärung erläutert unsere Grundsätze zur Erfassung, Verwendung und Offenlegung von Informationen. Unsere Kernphilosophie ist einfach: Ihre Daten gehören Ihnen, und wir wollen sie nicht.<br><br>
+        <h2>DAS GRUNDPRINZIP: WIR ERFASSEN IHRE DATEN NICHT</h2>
+        
+        Clipboard Share wurde von Grund auf mit dem Schutz Ihrer Privatsphäre als oberste Priorität entwickelt. Die App ermöglicht die direkte Peer-to-Peer-Kommunikation (P2P) zwischen Ihren Geräten über Ihr lokales WLAN-Netzwerk.<br><br>
+        Wir haben keine Server, die Ihre personenbezogenen Daten erfassen, speichern oder verarbeiten. Alle Ihre Daten verbleiben auf Ihren Geräten und in Ihrem lokalen Netzwerk.<br><br>
+        Insbesondere erfassen, empfangen oder teilen wir Folgendes nicht:<br>
+        • Den Inhalt Ihrer Zwischenablage.<br>
+        • Die von Ihnen übertragenen Dateien.<br>
+        • Ihren Namen, Ihre E-Mail-Adresse oder andere persönliche Identifikatoren.<br>
+        • Ihre Kontakte, Ihren Standort oder andere vertrauliche Geräteinformationen.<br><br>
+        Die App funktioniert, ohne dass Sie ein Konto erstellen oder sich anmelden müssen.<br><br>
+        <h2>INFORMATIONEN, DIE DIE APP LOKAL AUF IHREM GERÄT SPEICHERT</h2>
+        
+        Um ordnungsgemäß zu funktionieren, speichert Clipboard Share eine kleine Datenmenge ausschließlich auf dem lokalen Speicher Ihres Geräts. Diese Daten unterliegen Ihrer Kontrolle und verlassen Ihr Gerät niemals, um an uns gesendet zu werden. Dies umfasst:<br><br>
+        • <b>Kryptografische Schlüssel:</b> Nachdem Sie zwei Geräte explizit gekoppelt haben, wird ein einzigartiger AES-256-Verschlüsselungsschlüssel generiert und sicher auf jedem Gerät gespeichert. Dieser Schlüssel wird verwendet, um die gesamte Kommunikation zwischen diesen beiden gekoppelten Geräten zu verschlüsseln, und ist für die Sicherheit der App unerlässlich.<br><br>
+        • <b>Informationen zu gekoppelten Geräten:</b> Die App speichert die lokale IP-Adresse und den vom Benutzer gewählten Gerätenamen von Geräten, mit denen Sie gekoppelt haben. Dies wird verwendet, um sie in Ihrem lokalen Netzwerk zu identifizieren und eine Verbindung zu ihnen herzustellen.<br><br>
+        • <b>Verlauf der Zwischenablage:</b> Die App führt einen lokalen Verlauf der Zwischenablage-Elemente, die Sie für Ihre Bequemlichkeit kopiert haben. Dieser Verlauf wird nur auf Ihrem Gerät gespeichert und kann von Ihnen jederzeit innerhalb der App gelöscht werden.<br><br>
+        • <b>Gerätename:</b> Der Name, den Sie in den Einstellungen der App für Ihr Gerät auswählen, wird lokal gespeichert, um ihn anderen Geräten in Ihrem Netzwerk gegenüber zu identifizieren.<br><br>
+        <h2>WIE IHRE DATEN ÜBERTRAGEN WERDEN</h2>
+        
+        Alle Datenübertragungen (sowohl Zwischenablage als auch Dateien) erfolgen direkt zwischen Ihren gekoppelten Geräten über Ihr lokales WLAN-Netzwerk. Ihre Daten werden weder über unsere Server noch über Server von Drittanbietern geleitet. Alle Übertragungen sind mit einer starken End-to-End-AES-256-Verschlüsselung mithilfe der während des Kopplungsprozesses generierten Schlüssel geschützt.<br><br>
+        <h2>GERÄTEERKENNUNG IN IHREM LOKALEN NETZWERK</h2>
+        
+        Damit sich Ihre Geräte automatisch finden können, sendet die App in regelmäßigen Abständen eine kleine Erkennungsnachricht über Ihr lokales WLAN- oder Hotspot-Netzwerk. Diese Nachricht enthält nur den von Ihnen gewählten Gerätenamen, die lokale IP-Adresse Ihres Geräts und dessen Betriebssystemtyp (zum Beispiel "Android"). Diese Sendungen werden nur in Ihrem lokalen Netzwerk verbreitet, damit Geräte in der Nähe eine Kopplung oder Verbindung anbieten können. Sie werden niemals an uns, an das Internet oder an Dritte gesendet, und für die Erkennung wird keine Internetverbindung verwendet. Anders als Ihre Zwischenablage- und Dateiübertragungen, die Ende-zu-Ende verschlüsselt sind und nur zwischen gekoppelten Geräten ausgetauscht werden, sind diese Erkennungsnachrichten nicht verschlüsselt und für andere Geräte im selben lokalen Netzwerk sichtbar. Aus diesem Grund empfehlen wir, die App in vertrauenswürdigen, privaten Netzwerken zu verwenden. Sie können diese Sendungen jederzeit stoppen, indem Sie "Für andere Geräte sichtbar" in den Einstellungen deaktivieren.<br><br>
+        <h2>WELCHE FUNKTIONEN WELCHE BERECHTIGUNGEN NUTZEN</h2>
+        
+        Damit klar ist, was jede Funktion tut, erfahren Sie hier, wie die App Ihr Netzwerk und Ihre Berechtigungen nutzt:<br><br>
+        • <b>Geräte in der Nähe finden:</b> Nutzt Ihr lokales WLAN- oder Hotspot-Netzwerk und auf einigen Android-Versionen die Berechtigung Standort und Geräte in der Nähe. Es werden keine mobilen Daten verwendet.<br>
+        • <b>Zwei Geräte koppeln:</b> Nutzt Ihr lokales WLAN-Netzwerk oder die Kamera (zum Scannen eines QR-Codes) bzw. NFC (zum Aneinanderhalten), um den Verschlüsselungsschlüssel auszutauschen.<br>
+        • <b>Zwischenablage-Text synchronisieren:</b> Nutzt Ihr lokales WLAN-Netzwerk, um kopierten Text an Ihre gekoppelten Geräte zu senden.<br>
+        • <b>Dateien im selben Netzwerk übertragen:</b> Nutzt Ihr lokales WLAN-Netzwerk.<br>
+        • <b>Offline-Übertragungen (ohne Router oder Internet):</b> Nutzt Wi-Fi Direct und Bluetooth, um eine direkte Verbindung zwischen Geräten herzustellen, gestartet per QR-Code (Kamera) oder NFC-Berührung. Benötigt die Berechtigungen Standort, Geräte in der Nähe und Bluetooth.<br>
+        • <b>Eine empfangene App installieren:</b> Nutzt die Installationsberechtigung und nur, nachdem Sie es bestätigt haben.<br>
+        • <b>Im Hintergrund bereitbleiben:</b> Nutzt einen Vordergrunddienst und eine Benachrichtigung, um weiter auf eingehende Zwischenablage-Elemente und Übertragungen zu warten.<br><br>
+        Kurz gesagt: Die App nutzt für alles Ihr lokales WLAN, einen Hotspot oder eine direkte Verbindung zwischen Geräten. Sie verwendet weder für die Erkennung noch für Übertragungen Ihre mobilen Daten und stellt keine Internetverbindung her.<br><br>
+        <h2>IN DER APP ANGEFORDERTE BERECHTIGUNGEN</h2>
+        
+        Clipboard Share fordert bestimmte Berechtigungen an, um seine Funktionen zu aktivieren. Hier ist der Grund, warum wir sie benötigen:<br><br>
+        • <b>Netzwerkzugriff</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Erforderlich, um andere Geräte zu erkennen und Daten über Ihr lokales WLAN-Netzwerk zu übertragen.<br><br>
+        • <b>Standort und Geräte in der Nähe</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Einige Android-Versionen erfordern diese Berechtigung, damit eine App über Wi-Fi Direct nach Geräten in der Nähe suchen und sich mit ihnen verbinden kann, was die App für Offline-Übertragungen nutzt. Wir erfassen ihn nicht, aber die Funktion kann ohne ihn keine Geräte in der Nähe finden. Die App liest, speichert oder teilt Ihren physischen Standort nicht.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Wird verwendet, um eine direkte Offline-Verbindung mit einem Gerät in der Nähe herzustellen. Wir erfassen darüber keine Daten, und es wird niemals zur Nachverfolgung verwendet.<br><br>
+        • <b>Kamera und NFC</b> (CAMERA, NFC): Die Kamera wird nur zum Scannen eines QR-Codes verwendet und NFC nur, um eine Verbindung zu starten, wenn Sie zwei Geräte aneinander halten, zum Koppeln und für Offline-Übertragungen. Diese Informationen werden auf Ihrem Gerät verarbeitet und niemals gespeichert oder irgendwohin gesendet.<br><br>
+        • <b>Installieren einer empfangenen App</b> (REQUEST_INSTALL_PACKAGES): Wird nur verwendet, damit Sie mit Ihrer ausdrücklichen Bestätigung eine App (APK) installieren können, die Sie über eine Übertragung erhalten haben. Die App installiert niemals etwas von selbst.<br><br>
+        • <b>Vordergrunddienst und Benachrichtigungen</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Erforderlich, um den Dienst auszuführen, der auf eingehende Verbindungen wartet, und um eine dauerhafte Benachrichtigung anzuzeigen, die darauf hinweist, dass die App aktiv ist und Ihre Verbindung schützt.<br><br>
+        • <b>Beim Start ausführen</b> (RECEIVE_BOOT_COMPLETED): Ermöglicht es der App, ihren Dienst neu zu starten, wenn Sie Ihr Gerät neu starten, und stellt sicher, dass sie immer verbindungsbereit ist.<br><br>
+        • <b>Vollbild-Intent</b> (USE_FULL_SCREEN_INTENT): Wird verwendet, um Ihnen dringende Vollbildwarnungen für eingehende Kopplungsanfragen oder Dateiübertragungen anzuzeigen, damit Sie diese nicht verpassen.<br><br>
+        • <b>Akku-Optimierungen ignorieren</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Dringend empfohlen, um zu verhindern, dass das Android-Betriebssystem den Hintergrunddienst der App herunterfährt, was die Synchronisierung der Zwischenablage und die Dateiübertragungen unterbrechen würde.<br><br>
+        • <b>Externer Speicher</b> (WRITE_EXTERNAL_STORAGE): Auf älteren Android-Versionen (SDK 28 und niedriger) ist dies erforderlich, um empfangene Dateien im Speicher Ihres Geräts zu speichern.<br><br>
+        <h2>DIENSTE VON DRITTANBIETERN</h2>
+        
+        Clipboard Share verwendet keine Dienste von Drittanbietern für Analysen, Werbung oder andere Zwecke, die die Weitergabe Ihrer Daten beinhalten würden.<br><br>
+        <h2>DATENSCHUTZ FÜR KINDER</h2>
+        
+        Die App ist nicht für die Nutzung durch Kinder unter 13 Jahren vorgesehen. Wir erfassen wissentlich keine Informationen von Kindern. Da wir von vornherein keine personenbezogenen Daten erfassen, haben wir keinen Mechanismus zur Überprüfung des Alters unserer Nutzer.<br><br>
+        <h2>ÄNDERUNGEN AN DIESER DATENSCHUTZERKLÄRUNG</h2>
+        
+        Wir können unsere Datenschutzerklärung von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzerklärung unter derselben URL veröffentlichen. Es wird empfohlen, diese Datenschutzerklärung regelmäßig auf Änderungen zu überprüfen.<br><br>
+        <h2>KONTAKTIEREN SIE UNS</h2>
+        
+        Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte unter:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="pt" data-lang="pt" hidden>
+        <div class="policy__body"><h1 class="policy__title">Política de Privacidade do Clipboard Share</h1>
+        
+        Data de Vigência: 22/6/2026<br><br>
+        Obrigado por usar o Clipboard Share ("o Aplicativo"). Esta Política de Privacidade explica nossos princípios em relação à coleta, uso e divulgação de informações. Nossa filosofia central é simples: seus dados são seus, e nós não os queremos.<br><br>
+        <h2>O PRINCÍPIO CENTRAL: NÃO COLETAMOS SEUS DADOS</h2>
+        
+        O Clipboard Share foi projetado desde o início com sua privacidade como prioridade máxima. O Aplicativo facilita a comunicação direta ponto a ponto (P2P) entre seus dispositivos na sua rede Wi-Fi local.<br><br>
+        Não possuímos servidores que coletam, armazenam ou processam seus dados pessoais. Todos os seus dados permanecem em seus dispositivos e na sua rede local.<br><br>
+        Especificamente, NÃO coletamos, recebemos ou compartilhamos:<br>
+        • O conteúdo da sua área de transferência.<br>
+        • Os arquivos que você transfere.<br>
+        • Seu nome, endereço de e-mail ou quaisquer outros identificadores pessoais.<br>
+        • Seus contatos, localização ou qualquer outra informação sensível do dispositivo.<br><br>
+        O Aplicativo funciona sem exigir que você crie uma conta ou faça login.<br><br>
+        <h2>INFORMAÇÕES QUE O APLICATIVO ARMAZENA LOCALMENTE EM SEU DISPOSITIVO</h2>
+        
+        Para funcionar corretamente, o Clipboard Share armazena uma pequena quantidade de dados exclusivamente no armazenamento local do seu dispositivo. Esses dados estão sob seu controle e nunca saem do seu dispositivo para serem enviados a nós. Isso inclui:<br><br>
+        • <b>Chaves Criptográficas:</b> Após você emparelhar explicitamente dois dispositivos, uma chave de criptografia AES-256 única é gerada e armazenada de forma segura em cada dispositivo. Esta chave é usada para criptografar toda a comunicação entre esses dois dispositivos emparelhados e é essencial para a segurança do Aplicativo.<br><br>
+        • <b>Informações de Dispositivos Emparelhados:</b> O Aplicativo armazena o endereço IP local e o nome do dispositivo escolhido pelo usuário com o qual você foi emparelhado. Isso é usado para identificá-los e conectar-se a eles na sua rede local.<br><br>
+        • <b>Histórico da Área de Transferência:</b> O Aplicativo mantém um histórico local dos itens da área de transferência que você copiou para sua conveniência. Este histórico é armazenado apenas no seu dispositivo e pode ser limpo por você a qualquer momento dentro do Aplicativo.<br><br>
+        • <b>Nome do Dispositivo:</b> O nome que você escolhe para o seu dispositivo nas configurações do Aplicativo é armazenado localmente para identificá-lo para outros dispositivos na sua rede.<br><br>
+        <h2>COMO SEUS DADOS SÃO TRANSFERIDOS</h2>
+        
+        Todas as transferências de dados (tanto da área de transferência quanto de arquivos) ocorrem diretamente entre seus dispositivos emparelhados através da sua rede Wi-Fi local. Seus dados não passam por nossos servidores ou quaisquer servidores de terceiros. Todas as transferências são protegidas com forte criptografia de ponta a ponta AES-256 usando as chaves geradas durante o processo de emparelhamento.<br><br>
+        <h2>DESCOBERTA DE DISPOSITIVOS NA SUA REDE LOCAL</h2>
+        
+        Para permitir que seus dispositivos se encontrem automaticamente, o Aplicativo transmite periodicamente uma pequena mensagem de descoberta na sua rede Wi-Fi ou de ponto de acesso local. Essa mensagem contém apenas o nome de dispositivo que você escolheu, o endereço IP local do seu dispositivo e o tipo de sistema operacional dele (por exemplo, "Android"). Essas transmissões são enviadas somente na sua rede local para que dispositivos próximos possam se oferecer para emparelhar ou conectar. Elas nunca são enviadas para nós, para a internet ou para terceiros, e nenhuma conexão com a internet é usada para a descoberta. Ao contrário das suas transferências de área de transferência e de arquivos, que são criptografadas de ponta a ponta e trocadas apenas entre dispositivos emparelhados, essas mensagens de descoberta não são criptografadas e ficam visíveis para outros dispositivos na mesma rede local. Por esse motivo, recomendamos usar o Aplicativo em redes privadas e confiáveis. Você pode interromper essas transmissões a qualquer momento desativando "Visível para outros dispositivos" nas Configurações.<br><br>
+        <h2>QUAIS RECURSOS USAM QUAIS PERMISSÕES</h2>
+        
+        Para que fique claro o que cada recurso faz, veja como o Aplicativo usa sua rede e suas permissões:<br><br>
+        • <b>Encontrar dispositivos próximos:</b> Usa sua rede Wi-Fi ou de ponto de acesso local e, em algumas versões do Android, a permissão de Localização e Dispositivos Próximos. Não usa seus dados móveis.<br>
+        • <b>Emparelhar dois dispositivos:</b> Usa sua rede Wi-Fi local, ou a câmera (para ler um código QR) ou o NFC (para aproximar), para trocar a chave de criptografia.<br>
+        • <b>Sincronizar o texto da área de transferência:</b> Usa sua rede Wi-Fi local para enviar o texto copiado aos seus dispositivos emparelhados.<br>
+        • <b>Transferir arquivos na mesma rede:</b> Usa sua rede Wi-Fi local.<br>
+        • <b>Transferências off-line (sem roteador ou internet):</b> Usa Wi-Fi Direct e Bluetooth para formar uma conexão direta entre dispositivos, iniciada por um código QR (câmera) ou um toque NFC. Precisa das permissões de Localização, Dispositivos Próximos e Bluetooth.<br>
+        • <b>Instalar um aplicativo recebido:</b> Usa a permissão de instalação, e somente após você confirmar.<br>
+        • <b>Permanecer pronto em segundo plano:</b> Usa um serviço em primeiro plano e uma notificação para continuar ouvindo itens da área de transferência e transferências recebidas.<br><br>
+        Em resumo, o Aplicativo usa seu Wi-Fi local, um ponto de acesso ou uma conexão direta entre dispositivos para tudo. Ele não usa seus dados móveis para descoberta ou transferências e não se conecta à internet.<br><br>
+        <h2>PERMISSÕES SOLICITADAS NO APLICATIVO</h2>
+        
+        O Clipboard Share solicita certas permissões para habilitar seus recursos. Eis por que precisamos delas:<br><br>
+        • <b>Acesso à Rede</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Necessário para descobrir outros dispositivos e transferir dados através da sua rede Wi-Fi local.<br><br>
+        • <b>Localização e Dispositivos Próximos</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Algumas versões do Android exigem essa permissão para que um aplicativo possa procurar e se conectar a dispositivos próximos via Wi-Fi Direct, o que o Aplicativo usa para transferências off-line. Não a coletamos, mas o recurso não consegue encontrar dispositivos próximos sem ela. O Aplicativo não lê, armazena nem compartilha sua localização física.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Usado para ajudar a estabelecer uma conexão direta e off-line com um dispositivo próximo. Não coletamos nenhum dado por meio dele e ele nunca é usado para rastrear você.<br><br>
+        • <b>Câmera e NFC</b> (CAMERA, NFC): A câmera é usada apenas para ler um código QR, e o NFC apenas para iniciar uma conexão quando você aproxima dois dispositivos, para emparelhamento e transferências off-line. Essas informações são processadas no seu dispositivo e nunca são armazenadas ou enviadas para qualquer lugar.<br><br>
+        • <b>Instalar um Aplicativo Recebido</b> (REQUEST_INSTALL_PACKAGES): Usado apenas para que, com a sua confirmação explícita, você possa instalar um aplicativo (APK) que recebeu por meio de uma transferência. O Aplicativo nunca instala nada por conta própria.<br><br>
+        • <b>Serviço em Primeiro Plano e Notificações</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Necessário para executar o serviço que escuta conexões de entrada e para mostrar uma notificação persistente indicando que o Aplicativo está ativo e protegendo sua conexão.<br><br>
+        • <b>Executar na Inicialização</b> (RECEIVE_BOOT_COMPLETED): Permite que o Aplicativo reinicie seu serviço quando você reinicia seu dispositivo, garantindo que ele esteja sempre pronto para conectar.<br><br>
+        • <b>Intenção de Tela Cheia</b> (USE_FULL_SCREEN_INTENT): Usado para mostrar a você alertas urgentes em tela cheia para solicitações de emparelhamento ou transferências de arquivos de entrada para que você não os perca.<br><br>
+        • <b>Ignorar Otimizações de Bateria</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Fortemente recomendado para evitar que o sistema operacional Android encerre o serviço em segundo plano do Aplicativo, o que interromperia a sincronização da área de transferência e transferências de arquivos.<br><br>
+        • <b>Armazenamento Externo</b> (WRITE_EXTERNAL_STORAGE): Em versões mais antigas do Android (SDK 28 e inferior), isso é necessário para salvar os arquivos recebidos no armazenamento do seu dispositivo.<br><br>
+        <h2>SERVIÇOS DE TERCEIROS</h2>
+        
+        O Clipboard Share não usa nenhum serviço de terceiros para análises, publicidade ou qualquer outro propósito que envolveria o compartilhamento de seus dados.<br><br>
+        <h2>PRIVACIDADE DE CRIANÇAS</h2>
+        
+        O Aplicativo não se destina ao uso por crianças menores de 13 anos. Não coletamos intencionalmente nenhuma informação de crianças. Como não coletamos dados pessoais em primeiro lugar, não temos um mecanismo para verificar a idade de nossos usuários.<br><br>
+        <h2>ALTERAÇÕES NESTA POLÍTICA DE PRIVACIDADE</h2>
+        
+        Podemos atualizar nossa Política de Privacidade de tempos em tempos. Notificaremos você sobre quaisquer alterações postando a nova Política de Privacidade no mesmo URL. É aconselhável revisar esta Política de Privacidade periodicamente para quaisquer alterações.<br><br>
+        <h2>CONTATE-NOS</h2>
+        
+        Se você tiver alguma dúvida sobre esta Política de Privacidade, entre em contato conosco em:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="id" data-lang="id" hidden>
+        <div class="policy__body"><h1 class="policy__title">Kebijakan Privasi untuk Clipboard Share</h1>
+        
+        Tanggal Efektif: 22/6/2026<br><br>
+        Terima kasih telah menggunakan Clipboard Share ("Aplikasi"). Kebijakan Privasi ini menjelaskan prinsip kami terkait pengumpulan, penggunaan, dan pengungkapan informasi. Filosofi inti kami sederhana: data Anda adalah milik Anda, dan kami tidak menginginkannya.<br><br>
+        <h2>PRINSIP INTI: KAMI TIDAK MENGUMPULKAN DATA ANDA</h2>
+        
+        Clipboard Share dirancang sejak awal dengan menjadikan privasi Anda sebagai prioritas utama. Aplikasi memfasilitasi komunikasi langsung, peer-to-peer (P2P) antar perangkat Anda melalui jaringan Wi-Fi lokal.<br><br>
+        Kami tidak memiliki server yang mengumpulkan, menyimpan, atau memproses data pribadi Anda. Semua data Anda tetap berada di perangkat Anda dan di jaringan lokal Anda.<br><br>
+        Secara khusus, kami TIDAK mengumpulkan, menerima, atau membagikan:<br>
+        • Konten papan klip Anda.<br>
+        • File yang Anda transfer.<br>
+        • Nama, alamat email, atau pengenal pribadi lainnya milik Anda.<br>
+        • Kontak, lokasi, atau informasi perangkat sensitif lainnya.<br><br>
+        Aplikasi berfungsi tanpa mengharuskan Anda membuat akun atau masuk.<br><br>
+        <h2>INFORMASI YANG DISIMPAN APLIKASI SECARA LOKAL DI PERANGKAT ANDA</h2>
+        
+        Agar berfungsi dengan benar, Clipboard Share menyimpan sejumlah kecil data secara eksklusif di penyimpanan lokal perangkat Anda. Data ini berada di bawah kendali Anda dan tidak pernah meninggalkan perangkat Anda untuk dikirim kepada kami. Ini termasuk:<br><br>
+        • <b>Kunci Kriptografi:</b> Setelah Anda menyandingkan dua perangkat secara eksplisit, kunci enkripsi AES-256 unik dibuat dan disimpan dengan aman di setiap perangkat. Kunci ini digunakan untuk mengenkripsi semua komunikasi antara dua perangkat yang disandingkan tersebut dan sangat penting untuk keamanan Aplikasi.<br><br>
+        • <b>Informasi Perangkat Tersanding:</b> Aplikasi menyimpan alamat IP lokal dan nama perangkat pilihan pengguna dari perangkat yang telah Anda sandingkan. Hal ini digunakan untuk mengidentifikasi dan terhubung dengan mereka di jaringan lokal Anda.<br><br>
+        • <b>Riwayat Papan Klip:</b> Aplikasi menyimpan riwayat lokal item papan klip yang telah Anda salin untuk kenyamanan Anda. Riwayat ini hanya disimpan di perangkat Anda dan dapat dihapus oleh Anda kapan saja dari dalam Aplikasi.<br><br>
+        • <b>Nama Perangkat:</b> Nama yang Anda pilih untuk perangkat Anda di pengaturan Aplikasi disimpan secara lokal untuk mengidentifikasinya ke perangkat lain di jaringan Anda.<br><br>
+        <h2>BAGAIMANA DATA ANDA DITRANSFER</h2>
+        
+        Semua transfer data (baik papan klip maupun file) terjadi secara langsung antara perangkat Anda yang disandingkan melalui jaringan Wi-Fi lokal Anda. Data Anda tidak melewati server kami atau server pihak ketiga mana pun. Semua transfer dilindungi dengan enkripsi AES-256 ujung-ke-ujung (end-to-end) yang kuat menggunakan kunci yang dihasilkan selama proses penyandingan.<br><br>
+        <h2>PENEMUAN PERANGKAT DI JARINGAN LOKAL ANDA</h2>
+        
+        Agar perangkat Anda dapat saling menemukan secara otomatis, Aplikasi secara berkala menyiarkan pesan penemuan kecil di jaringan Wi-Fi atau hotspot lokal Anda. Pesan ini hanya berisi nama perangkat yang Anda pilih, alamat IP lokal perangkat Anda, dan jenis sistem operasinya (misalnya, "Android"). Siaran ini hanya dikirim di jaringan lokal Anda agar perangkat di sekitar dapat menawarkan untuk menyandingkan atau terhubung. Siaran ini tidak pernah dikirim kepada kami, ke internet, atau ke pihak ketiga mana pun, dan tidak ada koneksi internet yang digunakan untuk penemuan. Tidak seperti transfer papan klip dan file Anda, yang dienkripsi ujung-ke-ujung dan hanya dipertukarkan antara perangkat yang disandingkan, pesan penemuan ini tidak dienkripsi dan terlihat oleh perangkat lain di jaringan lokal yang sama. Karena itu, kami menyarankan untuk menggunakan Aplikasi di jaringan pribadi yang tepercaya. Anda dapat menghentikan siaran ini kapan saja dengan menonaktifkan "Dapat ditemukan perangkat lain" di Pengaturan.<br><br>
+        <h2>FITUR MANA MENGGUNAKAN IZIN MANA</h2>
+        
+        Agar jelas apa yang dilakukan setiap fitur, berikut cara Aplikasi menggunakan jaringan dan izin Anda:<br><br>
+        • <b>Menemukan perangkat terdekat:</b> Menggunakan jaringan Wi-Fi atau hotspot lokal Anda, dan pada beberapa versi Android izin Lokasi dan Perangkat Terdekat. Tidak menggunakan data seluler Anda.<br>
+        • <b>Menyandingkan dua perangkat:</b> Menggunakan jaringan Wi-Fi lokal Anda, atau kamera (untuk memindai kode QR) atau NFC (untuk menyentuhkan), guna bertukar kunci enkripsi.<br>
+        • <b>Menyinkronkan teks papan klip:</b> Menggunakan jaringan Wi-Fi lokal Anda untuk mengirim teks yang disalin ke perangkat yang disandingkan.<br>
+        • <b>Mentransfer file di jaringan yang sama:</b> Menggunakan jaringan Wi-Fi lokal Anda.<br>
+        • <b>Transfer luar jaringan (tanpa router atau internet):</b> Menggunakan Wi-Fi Direct dan Bluetooth untuk membentuk koneksi langsung antar perangkat, dimulai dengan kode QR (kamera) atau sentuhan NFC. Memerlukan izin Lokasi, Perangkat Terdekat, dan Bluetooth.<br>
+        • <b>Memasang aplikasi yang diterima:</b> Menggunakan izin pemasangan, dan hanya setelah Anda mengonfirmasinya.<br>
+        • <b>Tetap siap di latar belakang:</b> Menggunakan layanan latar depan dan notifikasi untuk terus mendengarkan item papan klip dan transfer masuk.<br><br>
+        Singkatnya, Aplikasi menggunakan Wi-Fi lokal, hotspot, atau koneksi langsung antar perangkat untuk semuanya. Aplikasi tidak menggunakan data seluler Anda untuk penemuan atau transfer, dan tidak terhubung ke internet.<br><br>
+        <h2>IZIN YANG DIMINTA DALAM APLIKASI</h2>
+        
+        Clipboard Share meminta izin tertentu untuk mengaktifkan fitur-fiturnya. Inilah alasan mengapa kami membutuhkannya:<br><br>
+        • <b>Akses Jaringan</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Diperlukan untuk menemukan perangkat lain dan mentransfer data melalui jaringan Wi-Fi lokal Anda.<br><br>
+        • <b>Lokasi dan Perangkat Terdekat</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Beberapa versi Android memerlukan izin ini agar aplikasi dapat memindai dan terhubung ke perangkat terdekat melalui Wi-Fi Direct, yang digunakan Aplikasi untuk transfer luar jaringan. Kami tidak mengumpulkannya, tetapi fitur ini tidak dapat menemukan perangkat terdekat tanpanya. Aplikasi tidak membaca, menyimpan, atau membagikan lokasi fisik Anda.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Digunakan untuk membantu menyiapkan koneksi langsung luar jaringan dengan perangkat terdekat. Kami tidak mengumpulkan data apa pun melaluinya dan tidak pernah digunakan untuk melacak Anda.<br><br>
+        • <b>Kamera dan NFC</b> (CAMERA, NFC): Kamera hanya digunakan untuk memindai kode QR, dan NFC hanya untuk memulai koneksi saat Anda menyentuhkan dua perangkat, untuk penyandingan dan transfer luar jaringan. Informasi ini diproses di perangkat Anda dan tidak pernah disimpan atau dikirim ke mana pun.<br><br>
+        • <b>Memasang Aplikasi yang Diterima</b> (REQUEST_INSTALL_PACKAGES): Digunakan hanya agar, dengan konfirmasi eksplisit Anda, Anda dapat memasang aplikasi (APK) yang Anda terima melalui transfer. Aplikasi tidak pernah memasang apa pun dengan sendirinya.<br><br>
+        • <b>Layanan Latar Depan dan Notifikasi</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Diperlukan untuk menjalankan layanan yang mendengarkan koneksi masuk dan menampilkan notifikasi persisten yang menunjukkan bahwa Aplikasi aktif dan melindungi koneksi Anda.<br><br>
+        • <b>Jalankan saat Startup</b> (RECEIVE_BOOT_COMPLETED): Memungkinkan Aplikasi memulai ulang layanannya saat Anda me-reboot perangkat, memastikannya selalu siap untuk terhubung.<br><br>
+        • <b>Inten Layar Penuh</b> (USE_FULL_SCREEN_INTENT): Digunakan untuk menampilkan peringatan layar penuh yang mendesak untuk permintaan penyandingan masuk atau transfer file sehingga Anda tidak melewatkannya.<br><br>
+        • <b>Abaikan Pengoptimalan Baterai</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Sangat disarankan untuk mencegah sistem operasi Android mematikan layanan latar belakang Aplikasi, yang akan mengganggu sinkronisasi papan klip dan transfer file.<br><br>
+        • <b>Penyimpanan Eksternal</b> (WRITE_EXTERNAL_STORAGE): Pada versi Android yang lebih lama (SDK 28 ke bawah), ini diperlukan untuk menyimpan file yang diterima ke penyimpanan perangkat Anda.<br><br>
+        <h2>LAYANAN PIHAK KETIGA</h2>
+        
+        Clipboard Share tidak menggunakan layanan pihak ketiga mana pun untuk analitik, iklan, atau tujuan lain apa pun yang melibatkan berbagi data Anda.<br><br>
+        <h2>PRIVASI ANAK-ANAK</h2>
+        
+        Aplikasi tidak ditujukan untuk digunakan oleh anak-anak di bawah usia 13 tahun. Kami tidak dengan sengaja mengumpulkan informasi apa pun dari anak-anak. Karena pada dasarnya kami tidak mengumpulkan data pribadi apa pun, kami tidak memiliki mekanisme untuk memverifikasi usia pengguna kami.<br><br>
+        <h2>PERUBAHAN PADA KEBIJAKAN PRIVASI INI</h2>
+        
+        Kami dapat memperbarui Kebijakan Privasi kami dari waktu ke waktu. Kami akan memberi tahu Anda tentang perubahan apa pun dengan memposting Kebijakan Privasi baru di URL yang sama. Anda disarankan untuk meninjau Kebijakan Privasi ini secara berkala untuk melihat adanya perubahan.<br><br>
+        <h2>HUBUNGI KAMI</h2>
+        
+        Jika Anda memiliki pertanyaan tentang Kebijakan Privasi ini, silakan hubungi kami di:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="ru" data-lang="ru" hidden>
+        <div class="policy__body"><h1 class="policy__title">Политика конфиденциальности Clipboard Share</h1>
+        
+        Дата вступления в силу: 22/6/2026<br><br>
+        Благодарим вас за использование Clipboard Share («Приложение»). Настоящая Политика конфиденциальности объясняет наши принципы в отношении сбора, использования и раскрытия информации. Наша основная философия проста: ваши данные принадлежат вам, и они нам не нужны.<br><br>
+        <h2>ОСНОВНОЙ ПРИНЦИП: МЫ НЕ СОБИРАЕМ ВАШИ ДАННЫЕ</h2>
+        
+        Clipboard Share с самого начала разрабатывалось так, чтобы ваша конфиденциальность была главным приоритетом. Приложение обеспечивает прямую одноранговую (P2P) связь между вашими устройствами в локальной сети Wi-Fi.<br><br>
+        У нас нет серверов, которые собирают, хранят или обрабатывают ваши личные данные. Все ваши данные остаются на ваших устройствах и в вашей локальной сети.<br><br>
+        В частности, мы НЕ собираем, НЕ получаем и НЕ передаём третьим лицам:<br>
+        • Содержимому вашего буфера обмена.<br>
+        • Файлам, которые вы передаете.<br>
+        • Вашему имени, адресу электронной почты или любым другим личным идентификаторам.<br>
+        • Вашим контактам, местоположению или любой другой конфиденциальной информации об устройстве.<br><br>
+        Приложение работает без необходимости создания учетной записи или входа в систему.<br><br>
+        <h2>ИНФОРМАЦИЯ, КОТОРУЮ ПРИЛОЖЕНИЕ ХРАНИТ ЛОКАЛЬНО НА ВАШЕМ УСТРОЙСТВЕ</h2>
+        
+        Для правильной работы Clipboard Share хранит небольшой объем данных исключительно в локальном хранилище вашего устройства. Эти данные находятся под вашим контролем и никогда не покидают ваше устройство для отправки нам. К ним относятся:<br><br>
+        • <b>Криптографические ключи:</b> После явного сопряжения двух устройств генерируется уникальный ключ шифрования AES-256, который надежно сохраняется на каждом устройстве. Этот ключ используется для шифрования всех сообщений между этими двумя сопряженными устройствами и необходим для безопасности Приложения.<br><br>
+        • <b>Информация о сопряженном устройстве:</b> Приложение хранит локальный IP-адрес и выбранное пользователем имя устройств, с которыми вы выполнили сопряжение. Это используется для их идентификации и подключения к ним в вашей локальной сети.<br><br>
+        • <b>История буфера обмена:</b> Для вашего удобства Приложение хранит локальную историю элементов буфера обмена, которые вы скопировали. Эта история хранится только на вашем устройстве и может быть удалена вами в любое время из Приложения.<br><br>
+        • <b>Имя устройства:</b> Имя, которое вы выбираете для своего устройства в настройках Приложения, сохраняется локально для идентификации его другим устройствам в вашей сети.<br><br>
+        <h2>КАК ПЕРЕДАЮТСЯ ВАШИ ДАННЫЕ</h2>
+        
+        Все передачи данных (как буфера обмена, так и файлов) происходят непосредственно между вашими сопряженными устройствами по локальной сети Wi-Fi. Ваши данные не проходят через наши серверы или какие-либо сторонние серверы. Все передачи защищены надежным сквозным шифрованием AES-256 с использованием ключей, сгенерированных в процессе сопряжения.<br><br>
+        <h2>ОБНАРУЖЕНИЕ УСТРОЙСТВ В ВАШЕЙ ЛОКАЛЬНОЙ СЕТИ</h2>
+        
+        Чтобы ваши устройства могли автоматически находить друг друга, Приложение периодически рассылает небольшое сообщение обнаружения в вашей локальной сети Wi-Fi или точки доступа. Это сообщение содержит только выбранное вами имя устройства, локальный IP-адрес вашего устройства и тип его операционной системы (например, "Android"). Эти рассылки отправляются только в вашей локальной сети, чтобы находящиеся рядом устройства могли предложить сопряжение или подключение. Они никогда не отправляются нам, в интернет или каким-либо третьим лицам, и для обнаружения не используется интернет-соединение. В отличие от передач буфера обмена и файлов, которые защищены сквозным шифрованием и передаются только между сопряжёнными устройствами, эти сообщения обнаружения не шифруются и видны другим устройствам в той же локальной сети. По этой причине мы рекомендуем использовать Приложение в доверенных частных сетях. Вы можете в любой момент остановить эти рассылки, отключив "Видимо для других устройств" в Настройках.<br><br>
+        <h2>КАКИЕ ФУНКЦИИ ИСПОЛЬЗУЮТ КАКИЕ РАЗРЕШЕНИЯ</h2>
+        
+        Чтобы было понятно, что делает каждая функция, вот как Приложение использует вашу сеть и разрешения:<br><br>
+        • <b>Поиск устройств поблизости:</b> Использует вашу локальную сеть Wi-Fi или точки доступа, а на некоторых версиях Android — разрешение «Местоположение и устройства поблизости». Не использует мобильный интернет.<br>
+        • <b>Сопряжение двух устройств:</b> Использует вашу локальную сеть Wi-Fi, либо камеру (для сканирования QR-кода) или NFC (для прикосновения), чтобы обменяться ключом шифрования.<br>
+        • <b>Синхронизация текста буфера обмена:</b> Использует вашу локальную сеть Wi-Fi для отправки скопированного текста на ваши сопряжённые устройства.<br>
+        • <b>Передача файлов в той же сети:</b> Использует вашу локальную сеть Wi-Fi.<br>
+        • <b>Автономные передачи (без роутера и интернета):</b> Использует Wi-Fi Direct и Bluetooth для создания прямого соединения между устройствами, запускаемого QR-кодом (камера) или касанием NFC. Требует разрешений «Местоположение», «Устройства поблизости» и Bluetooth.<br>
+        • <b>Установка полученного приложения:</b> Использует разрешение на установку и только после вашего подтверждения.<br>
+        • <b>Готовность в фоновом режиме:</b> Использует службу переднего плана и уведомление, чтобы продолжать принимать входящие элементы буфера обмена и передачи.<br><br>
+        Коротко: для всего Приложение использует вашу локальную сеть Wi-Fi, точку доступа или прямое соединение между устройствами. Оно не использует мобильный интернет для обнаружения или передач и не подключается к интернету.<br><br>
+        <h2>РАЗРЕШЕНИЯ, ЗАПРАШИВАЕМЫЕ В ПРИЛОЖЕНИИ</h2>
+        
+        Clipboard Share запрашивает определенные разрешения для работы своих функций. Вот почему они нам нужны:<br><br>
+        • <b>Доступ к сети</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Требуется для обнаружения других устройств и передачи данных по локальной сети Wi-Fi.<br><br>
+        • <b>Местоположение и устройства поблизости</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Некоторые версии Android требуют это разрешение, чтобы приложение могло искать и подключаться к ближайшим устройствам через Wi-Fi Direct, что Приложение использует для автономных передач. Мы его не собираем, но без него функция не может находить устройства поблизости. Приложение не считывает, не хранит и не передаёт ваше физическое местоположение.<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Используется для установки прямого автономного соединения с ближайшим устройством. Мы не собираем через него никаких данных, и оно никогда не используется для отслеживания.<br><br>
+        • <b>Камера и NFC</b> (CAMERA, NFC): Камера используется только для сканирования QR-кода, а NFC — только для начала соединения, когда вы прикладываете два устройства друг к другу, для сопряжения и автономных передач. Эта информация обрабатывается на вашем устройстве и никогда не сохраняется и никуда не отправляется.<br><br>
+        • <b>Установка полученного приложения</b> (REQUEST_INSTALL_PACKAGES): Используется только для того, чтобы с вашего явного подтверждения вы могли установить приложение (APK), полученное при передаче. Приложение никогда ничего не устанавливает самостоятельно.<br><br>
+        • <b>Служба переднего плана и уведомления</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS): Требуется для запуска службы, ожидающей входящих подключений, и для отображения постоянного уведомления о том, что Приложение активно и защищает ваше соединение.<br><br>
+        • <b>Запуск при загрузке</b> (RECEIVE_BOOT_COMPLETED): Позволяет Приложению перезапускать свою службу при перезагрузке устройства, гарантируя, что оно всегда готово к подключению.<br><br>
+        • <b>Полноэкранное намерение</b> (USE_FULL_SCREEN_INTENT): Используется для отображения срочных полноэкранных оповещений о входящих запросах на сопряжение или передаче файлов, чтобы вы их не пропустили.<br><br>
+        • <b>Игнорировать оптимизацию батареи</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Настоятельно рекомендуется, чтобы операционная система Android не завершала работу фоновой службы Приложения, что привело бы к прерыванию синхронизации буфера обмена и передачи файлов.<br><br>
+        • <b>Внешнее хранилище</b> (WRITE_EXTERNAL_STORAGE): В старых версиях Android (SDK 28 и ниже) это требуется для сохранения полученных файлов в хранилище вашего устройства.<br><br>
+        <h2>СТОРОННИЕ СЕРВИСЫ</h2>
+        
+        Clipboard Share не использует никакие сторонние сервисы для аналитики, рекламы или любых других целей, связанных с обменом вашими данными.<br><br>
+        <h2>КОНФИДЕНЦИАЛЬНОСТЬ ДЕТЕЙ</h2>
+        
+        Приложение не предназначено для использования детьми младше 13 лет. Мы сознательно не собираем информацию о детях. Поскольку мы изначально не собираем никаких личных данных, у нас нет механизма проверки возраста наших пользователей.<br><br>
+        <h2>ИЗМЕНЕНИЯ В ДАННОЙ ПОЛИТИКЕ КОНФИДЕНЦИАЛЬНОСТИ</h2>
+        
+        Мы можем время от времени обновлять нашу Политику конфиденциальности. Мы уведомим вас о любых изменениях, опубликовав новую Политику конфиденциальности по тому же URL-адресу. Рекомендуется периодически просматривать настоящую Политику конфиденциальности на предмет изменений.<br><br>
+        <h2>СВЯЖИТЕСЬ С НАМИ</h2>
+        
+        Если у вас есть какие-либо вопросы по поводу настоящей Политики конфиденциальности, свяжитесь с нами по адресу:<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="ja" data-lang="ja" hidden>
+        <div class="policy__body"><h1 class="policy__title">Clipboard Shareのプライバシーポリシー</h1>
+        
+        発効日：2026年6月22日<br><br>
+        Clipboard Share（以下「本アプリ」）をご利用いただきありがとうございます。このプライバシーポリシーは、情報の収集、使用、開示に関する当社の原則を説明するものです。当社の基本理念はシンプルです：あなたのデータはあなたのものであり、私たちはそれを必要としません。<br><br>
+        <h2>基本原則：当社はあなたのデータを収集しません</h2>
+        
+        Clipboard Shareは、あなたのプライバシーを最優先事項としてゼロから設計されています。本アプリは、ローカルWi-Fiネットワーク上のデバイス間の直接のピアツーピア（P2P）通信を容易にします。<br><br>
+        当社には、あなたの個人データを収集、保存、または処理するサーバーはありません。すべてのデータはあなたのデバイスおよびローカルネットワーク上に残ります。<br><br>
+        具体的には、当社が以下のものを収集、受信、または共有することはありません：<br>
+        • クリップボードの内容。<br>
+        • 転送するファイル。<br>
+        • 名前、メールアドレス、その他の個人識別情報。<br>
+        • 連絡先、位置情報、その他の機密性の高いデバイス情報。<br><br>
+        本アプリは、アカウントの作成やサインインを必要とせずに機能します。<br><br>
+        <h2>本アプリがデバイスにローカルで保存する情報</h2>
+        
+        正しく機能するために、Clipboard Shareは少量のデータをデバイスのローカルストレージに排他的に保存します。このデータはあなたの管理下にあり、デバイスを離れて当社に送信されることは決してありません。これには以下が含まれます：<br><br>
+        • <b>暗号化キー：</b> 2つのデバイスを明示的にペアリングした後、固有のAES-256暗号化キーが生成され、各デバイスに安全に保存されます。このキーは、ペアリングされた2つのデバイス間のすべての通信を暗号化するために使用され、本アプリのセキュリティに不可欠です。<br><br>
+        • <b>ペアリングされたデバイス情報：</b> 本アプリは、ペアリングしたデバイスのローカルIPアドレスとユーザーが選択したデバイス名を保存します。これは、ローカルネットワーク上でそれらを識別して接続するために使用されます。<br><br>
+        • <b>クリップボード履歴：</b> 本アプリは、利便性のためにコピーしたクリップボードアイテムのローカル履歴を保持します。この履歴はデバイスにのみ保存され、アプリ内からいつでも消去できます。<br><br>
+        • <b>デバイス名：</b> アプリの設定でデバイスに選択した名前は、ネットワーク上の他のデバイスに識別させるためにローカルに保存されます。<br><br>
+        <h2>データの転送方法</h2>
+        
+        すべてのデータ転送（クリップボードとファイルの両方）は、ローカルWi-Fiネットワークを介してペアリングされたデバイス間で直接行われます。データは当社のサーバーやサードパーティのサーバーを通過しません。すべての転送は、ペアリングプロセス中に生成されたキーを使用して、強力なエンドツーエンドのAES-256暗号化で保護されます。<br><br>
+        <h2>ローカルネットワークでのデバイス検出</h2>
+        
+        お使いのデバイスが自動的に互いを見つけられるように、アプリはローカルのWi-Fiまたはホットスポットネットワーク上で、小さな検出メッセージを定期的にブロードキャストします。このメッセージには、あなたが選んだデバイス名、デバイスのローカルIPアドレス、およびオペレーティングシステムの種類（例："Android"）のみが含まれます。これらのブロードキャストは、近くのデバイスがペアリングや接続を提案できるようにするためだけに、ローカルネットワーク上にのみ送信されます。当社、インターネット、または第三者に送信されることは一切なく、検出にインターネット接続は使用されません。エンドツーエンドで暗号化され、ペアリングされたデバイス間でのみやり取りされるクリップボードおよびファイルの転送とは異なり、これらの検出メッセージは暗号化されておらず、同じローカルネットワーク上の他のデバイスから見える状態になります。このため、信頼できるプライベートなネットワークでアプリを使用することをお勧めします。設定で「他のデバイスから検出可能」をオフにすることで、いつでもこれらのブロードキャストを停止できます。<br><br>
+        <h2>どの機能がどの権限を使用するか</h2>
+        
+        各機能が何を行うかを明確にするため、本アプリがあなたのネットワークと権限をどのように使用するかを以下に示します：<br><br>
+        • <b>付近のデバイスを探す：</b> ローカルのWi-Fiまたはホットスポットネットワークを使用し、一部のAndroidバージョンでは「位置情報と付近のデバイス」権限を使用します。モバイルデータは使用しません。<br>
+        • <b>2つのデバイスをペアリングする：</b> ローカルのWi-Fiネットワーク、またはカメラ（QRコードのスキャン）やNFC（タッチ）を使用して、暗号化キーを交換します。<br>
+        • <b>クリップボードのテキストを同期する：</b> ローカルのWi-Fiネットワークを使用して、コピーしたテキストをペアリング済みのデバイスに送信します。<br>
+        • <b>同じネットワークでファイルを転送する：</b> ローカルのWi-Fiネットワークを使用します。<br>
+        • <b>オフライン転送（ルーターやインターネットなし）：</b> Wi-Fi DirectとBluetoothを使用してデバイス間の直接接続を確立し、QRコード（カメラ）またはNFCタッチで開始します。「位置情報」「付近のデバイス」「Bluetooth」の権限が必要です。<br>
+        • <b>受信したアプリをインストールする：</b> インストール権限を使用し、あなたが確認した後にのみ実行されます。<br>
+        • <b>バックグラウンドで待機する：</b> フォアグラウンドサービスと通知を使用して、受信するクリップボード項目や転送を待ち受けます。<br><br>
+        要するに、本アプリはすべてにローカルのWi-Fi、ホットスポット、またはデバイス間の直接接続を使用します。検出や転送にモバイルデータを使用することはなく、インターネットに接続することもありません。<br><br>
+        <h2>アプリでリクエストされる権限</h2>
+        
+        Clipboard Shareは、機能を有効にするために特定の権限をリクエストします。その理由は以下の通りです：<br><br>
+        • <b>ネットワークアクセス</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：他のデバイスを検出し、ローカルWi-Fiネットワークを介してデータを転送するために必要です。<br><br>
+        • <b>位置情報と付近のデバイス</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：一部のAndroidバージョンでは、アプリがWi-Fi Direct経由で付近のデバイスを検索して接続するためにこの権限が必要であり、本アプリはこれをオフライン転送に使用します。当社はこれを収集しませんが、この権限がないと付近のデバイスを見つけられません。本アプリがあなたの物理的な位置情報を読み取ったり、保存したり、共有したりすることはありません。<br><br>
+        • <b>Bluetooth</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：付近のデバイスとの直接的なオフライン接続を確立するために使用されます。これを通じてデータを収集することはなく、あなたを追跡するために使用されることもありません。<br><br>
+        • <b>カメラとNFC</b> (CAMERA, NFC)：カメラはQRコードのスキャンのみに、NFCは2つのデバイスを近づけたときに接続を開始するためのみに、ペアリングとオフライン転送に使用されます。この情報はあなたのデバイス上で処理され、保存されたりどこかに送信されたりすることは一切ありません。<br><br>
+        • <b>受信したアプリのインストール</b> (REQUEST_INSTALL_PACKAGES)：転送で受信したアプリ（APK）を、あなたの明示的な確認のもとでインストールできるようにするためのみに使用されます。本アプリが自動的に何かをインストールすることはありません。<br><br>
+        • <b>フォアグラウンドサービスと通知</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS)：着信接続をリッスンするサービスを実行し、アプリがアクティブで接続を保護していることを示す永続的な通知を表示するために必要です。<br><br>
+        • <b>起動時の実行</b> (RECEIVE_BOOT_COMPLETED)：デバイスを再起動したときにアプリがサービスを再起動できるようにし、常に接続できる状態を確保します。<br><br>
+        • <b>全画面インテント</b> (USE_FULL_SCREEN_INTENT)：見逃さないように、ペアリングリクエストやファイル転送の着信に関する緊急の全画面アラートを表示するために使用されます。<br><br>
+        • <b>バッテリー最適化の無視</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：Androidオペレーティングシステムがアプリのバックグラウンドサービスをシャットダウンしてクリップボードの同期やファイル転送を中断するのを防ぐために、強く推奨されます。<br><br>
+        • <b>外部ストレージ</b> (WRITE_EXTERNAL_STORAGE)：古いAndroidバージョン（SDK 28以下）では、受信したファイルをデバイスのストレージに保存するために必要です。<br><br>
+        <h2>サードパーティサービス</h2>
+        
+        Clipboard Shareは、分析、広告、またはデータの共有を伴うその他の目的でサードパーティのサービスを使用しません。<br><br>
+        <h2>子供のプライバシー</h2>
+        
+        本アプリは13歳未満の子供による使用を意図していません。子供から意図的に情報を収集することはありません。そもそも個人データを収集しないため、ユーザーの年齢を確認するメカニズムはありません。<br><br>
+        <h2>このプライバシーポリシーの変更</h2>
+        
+        当社は随時プライバシーポリシーを更新することがあります。変更があった場合は、同じURLに新しいプライバシーポリシーを掲載してお知らせします。変更がないか、定期的にこのプライバシーポリシーを確認することをお勧めします。<br><br>
+        <h2>お問い合わせ</h2>
+        
+        このプライバシーポリシーについてご質問がある場合は、以下までお問い合わせください：<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="zh-Hans" data-lang="zh-CN" hidden>
+        <div class="policy__body"><h1 class="policy__title">Clipboard Share 隐私政策</h1>
+        
+        生效日期：22/6/2026<br><br>
+        感谢您使用 Clipboard Share（以下简称“本应用”）。本隐私政策阐明了我们在收集、使用和披露信息方面的原则。我们的核心理念很简单：您的数据属于您，我们不需要它。<br><br>
+        <h2>核心原则：我们不收集您的数据</h2>
+        
+        Clipboard Share 从设计之初就将您的隐私放在首位。本应用可促进您的设备在本地 Wi-Fi 网络上进行直接的端到端 (P2P) 通信。<br><br>
+        我们没有收集、存储或处理您个人数据的服务器。您的所有数据都保留在您的设备和本地网络上。<br><br>
+        具体而言，我们不会收集、接收或共享：<br>
+        • 您的剪贴板内容。<br>
+        • 您传输的文件。<br>
+        • 您的姓名、电子邮件地址或任何其他个人标识符。<br>
+        • 您的联系人、位置或任何其他敏感的设备信息。<br><br>
+        本应用无需您创建帐户或登录即可使用。<br><br>
+        <h2>应用程序在您设备上本地存储的信息</h2>
+        
+        为了正常运行，Clipboard Share 仅在您设备的本地存储中保存少量数据。这些数据由您控制，绝不会离开您的设备发送给我们。这包括：<br><br>
+        • <b>加密密钥：</b>在您明确配对两台设备后，每台设备上会生成并安全存储一个唯一的 AES-256 加密密钥。此密钥用于加密这两台配对设备之间的所有通信，对本应用的安全性至关重要。<br><br>
+        • <b>配对设备信息：</b>本应用会存储您配对设备的本地 IP 地址和用户选择的设备名称。这用于在本地网络上识别并连接它们。<br><br>
+        • <b>剪贴板历史记录：</b>本应用会保留您复制的剪贴板项目的本地历史记录以方便您使用。此历史记录仅存储在您的设备上，您可随时在应用内将其清除。<br><br>
+        • <b>设备名称：</b>您在本应用设置中为设备选择的名称会存储在本地，以便网络上的其他设备识别。<br><br>
+        <h2>您的数据如何传输</h2>
+        
+        所有数据传输（剪贴板和文件）都直接通过本地 Wi-Fi 网络在配对设备之间进行。您的数据不会经过我们的服务器或任何第三方服务器。所有传输都使用配对过程中生成的密钥进行强大的端到端 AES-256 加密保护。<br><br>
+        <h2>在您本地网络上的设备发现</h2>
+        
+        为了让您的设备能够自动相互发现，本应用会定期在您的本地 Wi-Fi 或热点网络上广播一条小的发现消息。该消息仅包含您所选择的设备名称、设备的本地 IP 地址及其操作系统类型（例如"Android"）。这些广播仅在您的本地网络上发送，以便附近的设备可以提出配对或连接。它们绝不会发送给我们、发送到互联网或任何第三方，并且发现过程不使用任何互联网连接。与您的剪贴板和文件传输（采用端到端加密，且仅在已配对的设备之间交换）不同，这些发现消息未经加密，同一本地网络上的其他设备均可看到。因此，我们建议在受信任的专用网络中使用本应用。您可以随时在设置中关闭"可被其他设备发现"来停止这些广播。<br><br>
+        <h2>哪些功能使用哪些权限</h2>
+        
+        为了让您清楚每项功能的作用，以下说明本应用如何使用您的网络和权限：<br><br>
+        • <b>查找附近设备：</b> 使用您的本地 Wi-Fi 或热点网络，在某些 Android 版本上还会使用位置和附近设备权限。不会使用您的移动数据。<br>
+        • <b>配对两台设备：</b> 使用您的本地 Wi-Fi 网络，或相机（扫描二维码）或 NFC（贴近）来交换加密密钥。<br>
+        • <b>同步剪贴板文本：</b> 使用您的本地 Wi-Fi 网络将复制的文本发送到您已配对的设备。<br>
+        • <b>在同一网络中传输文件：</b> 使用您的本地 Wi-Fi 网络。<br>
+        • <b>离网传输（无路由器或互联网）：</b> 使用 Wi-Fi Direct 和蓝牙建立设备间的直接连接，通过二维码（相机）或 NFC 贴近启动。需要位置、附近设备和蓝牙权限。<br>
+        • <b>安装收到的应用：</b> 使用安装权限，且仅在您确认后才会进行。<br>
+        • <b>在后台保持就绪：</b> 使用前台服务和通知，以持续监听传入的剪贴板项目和传输。<br><br>
+        简而言之，本应用的所有功能都使用您的本地 Wi-Fi、热点或设备间的直接连接。它不会使用您的移动数据进行发现或传输，也不会连接到互联网。<br><br>
+        <h2>应用程序请求的权限</h2>
+        
+        Clipboard Share 请求某些权限以启用其功能。原因如下：<br><br>
+        • <b>网络访问权限</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：需要通过本地 Wi-Fi 网络发现其他设备并传输数据。<br><br>
+        • <b>位置和附近设备</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：某些 Android 版本要求应用获得此权限，才能通过 Wi-Fi Direct 扫描并连接附近的设备，本应用将其用于离网传输。我们不会收集它，但没有它，此功能就无法找到附近的设备。本应用不会读取、存储或共享您的实际位置。<br><br>
+        • <b>蓝牙</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：用于帮助与附近设备建立直接的离网连接。我们不会通过它收集任何数据，也绝不会用它来追踪您。<br><br>
+        • <b>相机和 NFC</b> (CAMERA, NFC)：相机仅用于扫描二维码，NFC 仅用于在您将两台设备贴近时启动连接，用于配对和离网传输。这些信息在您的设备上处理，绝不会被存储或发送到任何地方。<br><br>
+        • <b>安装收到的应用</b> (REQUEST_INSTALL_PACKAGES)：仅用于在您明确确认的情况下，安装您通过传输收到的应用 (APK)。本应用绝不会自行安装任何内容。<br><br>
+        • <b>前台服务和通知</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS)：需要运行监听传入连接的服务，并显示持续通知以指示应用程序处于活动状态且正在保护您的连接。<br><br>
+        • <b>开机启动</b> (RECEIVE_BOOT_COMPLETED)：允许应用在您重启设备时重新启动其服务，确保随时可以连接。<br><br>
+        • <b>全屏意图</b> (USE_FULL_SCREEN_INTENT)：用于向您显示传入配对请求或文件传输的紧急全屏警报，以免您错过。<br><br>
+        • <b>忽略电池优化</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：强烈建议使用，以防止 Android 操作系统关闭应用的后台服务，否则会中断剪贴板同步和文件传输。<br><br>
+        • <b>外部存储</b> (WRITE_EXTERNAL_STORAGE)：在旧版 Android（SDK 28 及更低版本）上，需要此权限才能将接收到的文件保存到设备存储中。<br><br>
+        <h2>第三方服务</h2>
+        
+        Clipboard Share 不使用任何第三方服务进行分析、广告或任何其他涉及共享您数据的目的。<br><br>
+        <h2>儿童隐私</h2>
+        
+        本应用不适合 13 岁以下儿童使用。我们不会有意收集儿童的任何信息。由于我们首先不收集任何个人数据，因此我们没有机制来验证用户的年龄。<br><br>
+        <h2>本隐私政策的变更</h2>
+        
+        我们可能会不时更新我们的隐私政策。我们将通过在同一 URL 发布新的隐私政策来通知您任何更改。建议您定期查看本隐私政策以了解任何变更。<br><br>
+        <h2>联系我们</h2>
+        
+        如果您对本隐私政策有任何疑问，请联系我们：<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+      <section class="policy" lang="zh-Hant" data-lang="zh-TW" hidden>
+        <div class="policy__body"><h1 class="policy__title">Clipboard Share 隱私權政策</h1>
+        
+        生效日期：22/6/2026<br><br>
+        感謝您使用 Clipboard Share（以下簡稱「本應用程式」）。本隱私權政策闡明了我們在收集、使用和披露資訊方面的原則。我們的核心理念很簡單：您的資料屬於您，我們不需要它。<br><br>
+        <h2>核心原則：我們不收集您的資料</h2>
+        
+        Clipboard Share 從設計之初就將您的隱私放在首位。本應用程式可促進您的裝置在區域 Wi-Fi 網路上進行直接的端對端 (P2P) 通訊。<br><br>
+        我們沒有收集、儲存或處理您個人資料的伺服器。您的所有資料都保留在您的裝置和區域網路上。<br><br>
+        具體而言，我們不會收集、接收或共享：<br>
+        • 您的剪貼簿內容。<br>
+        • 您傳輸的檔案。<br>
+        • 您的姓名、電子郵件地址或任何其他個人識別碼。<br>
+        • 您的聯絡人、位置或任何其他敏感的裝置資訊。<br><br>
+        本應用程式無需您建立帳戶或登入即可使用。<br><br>
+        <h2>應用程式在您裝置上本機儲存的資訊</h2>
+        
+        為了正常運作，Clipboard Share 僅在您裝置的本機儲存空間中儲存少量資料。這些資料由您控制，絕不會離開您的裝置傳送給我們。這包括：<br><br>
+        • <b>加密金鑰：</b>在您明確配對兩部裝置後，每部裝置上會產生並安全地儲存一個唯一的 AES-256 加密金鑰。此金鑰用於加密這兩部配對裝置之間的所有通訊，對本應用程式的安全性至關重要。<br><br>
+        • <b>配對裝置資訊：</b>本應用程式會儲存您配對裝置的區域 IP 位址和使用者選擇的裝置名稱。這用於在區域網路上識別並連接它們。<br><br>
+        • <b>剪貼簿歷史記錄：</b>本應用程式會保留您複製的剪貼簿項目的本機歷史記錄以方便您使用。此歷史記錄僅儲存在您的裝置上，您可隨時在應用程式內將其清除。<br><br>
+        • <b>裝置名稱：</b>您在本應用程式設定中為裝置選擇的名稱會儲存在本機，以便網路上的其他裝置識別。<br><br>
+        <h2>您的資料如何傳輸</h2>
+        
+        所有資料傳輸（剪貼簿和檔案）都直接透過區域 Wi-Fi 網路上在配對裝置之間進行。您的資料不會經過我們的伺服器或任何第三方伺服器。所有傳輸都使用配對過程中產生的金鑰進行強大的端對端 AES-256 加密保護。<br><br>
+        <h2>在您區域網路上的裝置探索</h2>
+        
+        為了讓您的裝置能夠自動互相尋找，本應用程式會定期在您的區域 Wi-Fi 或熱點網路上廣播一則小型的探索訊息。此訊息僅包含您所選擇的裝置名稱、裝置的本機 IP 位址及其作業系統類型（例如"Android"）。這些廣播僅在您的區域網路上傳送，以便附近的裝置可以提出配對或連線。它們絕不會傳送給我們、傳送至網際網路或任何第三方，且探索過程不使用任何網際網路連線。與您的剪貼簿和檔案傳輸（採用端對端加密，且僅在已配對的裝置之間交換）不同，這些探索訊息未經加密，同一區域網路上的其他裝置皆可看到。因此，我們建議在受信任的私人網路中使用本應用程式。您可以隨時在設定中關閉"可被其他裝置發現"來停止這些廣播。<br><br>
+        <h2>哪些功能使用哪些權限</h2>
+        
+        為了讓您清楚每項功能的作用，以下說明本應用程式如何使用您的網路和權限：<br><br>
+        • <b>尋找附近裝置：</b> 使用您的區域 Wi-Fi 或熱點網路，在某些 Android 版本上還會使用位置和附近裝置權限。不會使用您的行動數據。<br>
+        • <b>配對兩台裝置：</b> 使用您的區域 Wi-Fi 網路，或相機（掃描 QR code）或 NFC（貼近）來交換加密金鑰。<br>
+        • <b>同步剪貼簿文字：</b> 使用您的區域 Wi-Fi 網路將複製的文字傳送到您已配對的裝置。<br>
+        • <b>在同一網路中傳輸檔案：</b> 使用您的區域 Wi-Fi 網路。<br>
+        • <b>離網傳輸（無路由器或網際網路）：</b> 使用 Wi-Fi Direct 和藍牙建立裝置間的直接連線，透過 QR code（相機）或 NFC 貼近啟動。需要位置、附近裝置和藍牙權限。<br>
+        • <b>安裝收到的應用程式：</b> 使用安裝權限，且僅在您確認後才會進行。<br>
+        • <b>在背景保持就緒：</b> 使用前景服務和通知，以持續監聽傳入的剪貼簿項目和傳輸。<br><br>
+        簡而言之，本應用程式的所有功能都使用您的區域 Wi-Fi、熱點或裝置間的直接連線。它不會使用您的行動數據進行探索或傳輸，也不會連線到網際網路。<br><br>
+        <h2>應用程式請求的權限</h2>
+        
+        Clipboard Share 請求某些權限以啟用其功能。原因如下：<br><br>
+        • <b>網路存取權限</b> (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：需要透過區域 Wi-Fi 網路尋找其他裝置並傳輸資料。<br><br>
+        • <b>位置和附近裝置</b> (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：某些 Android 版本要求應用程式取得此權限，才能透過 Wi-Fi Direct 掃描並連線至附近的裝置，本應用程式將其用於離網傳輸。我們不會收集它，但若沒有它，此功能就無法找到附近的裝置。本應用程式不會讀取、儲存或共享您的實際位置。<br><br>
+        • <b>藍牙</b> (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：用於協助與附近裝置建立直接的離網連線。我們不會透過它收集任何資料，也絕不會用它來追蹤您。<br><br>
+        • <b>相機和 NFC</b> (CAMERA, NFC)：相機僅用於掃描 QR code，NFC 僅用於在您將兩台裝置貼近時啟動連線，用於配對和離網傳輸。這些資訊在您的裝置上處理，絕不會被儲存或傳送到任何地方。<br><br>
+        • <b>安裝收到的應用程式</b> (REQUEST_INSTALL_PACKAGES)：僅用於在您明確確認的情況下，安裝您透過傳輸收到的應用程式 (APK)。本應用程式絕不會自行安裝任何內容。<br><br>
+        • <b>前景服務和通知</b> (FOREGROUND_SERVICE, POST_NOTIFICATIONS)：需要執行監聽傳入連線的服務，並顯示持續通知以指示應用程式處於活動狀態且正在保護您的連線。<br><br>
+        • <b>開機啟動</b> (RECEIVE_BOOT_COMPLETED)：允許應用程式在您重啟裝置時重新啟動其服務，確保隨時可以連線。<br><br>
+        • <b>全螢幕意圖</b> (USE_FULL_SCREEN_INTENT)：用於向您顯示傳入配對請求或檔案傳輸的緊急全螢幕警報，以免您錯過。<br><br>
+        • <b>忽略電池最佳化</b> (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：強烈建議使用，以防止 Android 作業系統關閉應用程式的背景服務，否則會中斷剪貼簿同步和檔案傳輸。<br><br>
+        • <b>外部儲存空間</b> (WRITE_EXTERNAL_STORAGE)：在舊版 Android（SDK 28 及更低版本）上，需要此權限才能將接收到的檔案儲存到裝置儲存空間中。<br><br>
+        <h2>第三方服務</h2>
+        
+        Clipboard Share 不使用任何第三方服務進行分析、廣告或任何其他涉及共享您資料的目的。<br><br>
+        <h2>兒童隱私</h2>
+        
+        本應用程式不適合 13 歲以下兒童使用。我們不會有意收集兒童的任何資訊。由於我們先不收集任何個人資料，因此我們沒有機制來驗證使用者的年齡。<br><br>
+        <h2>本隱私權政策的變更</h2>
+        
+        我們可能會不時更新我們的隱私權政策。我們將透過在同一 URL 發布新的隱私權政策來通知您任何變更。建議您定期查看本隱私權政策以了解任何變更。<br><br>
+        <h2>聯絡我們</h2>
+        
+        如果您對本隱私權政策有任何疑問，請聯絡我們：<br>
+        entropic.software.lab@gmail.com</div>
+      </section>
+    </main>
+
+    <div class="legal-foot">
+      <span>&copy; <span id="year">2026</span> EntropicSoftwareLab &middot; Clipboard Share</span>
+      <a href="index.html">Back to home</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var sel = document.getElementById('lang-select');
+      var secs = Array.prototype.slice.call(document.querySelectorAll('.policy'));
+      var avail = {}; secs.forEach(function (s) { avail[s.getAttribute('data-lang')] = true; });
+      function show(code) {
+        secs.forEach(function (s) { s.hidden = (s.getAttribute('data-lang') !== code); });
+        var active = document.querySelector('.policy[data-lang="' + code + '"]');
+        if (active) { document.documentElement.lang = active.getAttribute('lang'); }
+        sel.value = code;
+        try { localStorage.setItem('cs_priv_lang', code); } catch (e) {}
+      }
+      function pick() {
+        var saved; try { saved = localStorage.getItem('cs_priv_lang'); } catch (e) {}
+        if (saved && avail[saved]) return saved;
+        var n = navigator.language || 'en';
+        if (avail[n]) return n;
+        var base = n.split('-')[0];
+        if (base === 'zh') { var l = n.toLowerCase(); return (l.indexOf('tw') > -1 || l.indexOf('hant') > -1 || l.indexOf('hk') > -1) ? 'zh-TW' : 'zh-CN'; }
+        if (avail[base]) return base;
+        return 'en';
+      }
+      sel.addEventListener('change', function () { show(sel.value); });
+      var y = document.getElementById('year'); if (y) { /* keep static 2026 */ }
+      show(pick());
+    })();
+  </script>
+</body>
+</html>

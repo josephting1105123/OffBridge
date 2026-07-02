@@ -69,13 +69,12 @@
 
         <ImageButton
             android:id="@+id/btnCancelFile"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="top|end"
-            android:layout_marginTop="@dimen/space_xs"
-            android:layout_marginEnd="@dimen/space_xs"
+            android:padding="12dp"
             android:background="@android:color/transparent"
-            android:contentDescription="Remove file"
+            android:contentDescription="@string/action_remove_file"
             android:scaleType="centerInside"
             android:src="@drawable/ic_cancel"
             android:visibility="visible"/>

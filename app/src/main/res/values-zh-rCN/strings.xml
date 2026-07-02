@@ -84,7 +84,7 @@
     <string name="receiving_files_title">正在接收文件</string>
     <string name="save_to_folder_downloads">保存到文件夹：Downloads</string>
     <string name="action_cancel">取消</string>
-    <string name="action_close_with_check">✓ 关闭</string>
+    <string name="action_close_with_check">关闭</string>
     <string name="incoming_transfer_title">传入的传输</string>
     <string name="default_device_name">设备名称</string>
     <string name="action_accept_files">接收文件</string>
@@ -96,9 +96,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share Windows版</string>
     <string name="desktop_app_in_development_desc">配套的桌面应用程序目前正在开发中，即将推出。</string>
     <string name="menu_title">菜单</string>
-    <string name="menu_windows_version">💻 Windows 版本</string>
-    <string name="menu_restart_services">🔄 重启服务</string>
-    <string name="menu_power_off">🔌 关闭电源</string>
+    <string name="menu_windows_version">Windows 版本</string>
+    <string name="menu_restart_services">重启服务</string>
+    <string name="menu_power_off">关闭电源</string>
     <string name="action_pair">配对</string>
     <string name="action_unpair">取消配对</string>
     <string name="send_files_title">发送文件</string>
@@ -111,7 +111,7 @@
     <string name="select_trusted_recipients_title">已连接设备</string>
     <string name="action_send">发送</string>
     <string name="history_and_push_title">剪贴板与推送</string>
-    <string name="action_push_current_clipboard">📤 推送当前剪贴板</string>
+    <string name="action_push_current_clipboard">推送当前剪贴板</string>
     <string name="recent_copies_hint">最近复制内容（点击以复制）</string>
     <string name="required_permissions_title">所需权限</string>
     <string name="battery_optimization_title">电池优化</string>
@@ -133,9 +133,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">其他</string>
     <string name="support_setting">支持</string>
-    <string name="action_donate">☕ 捐赠</string>
+    <string name="action_donate">捐赠</string>
     <string name="privacy_policy_setting">隐私政策</string>
-    <string name="action_read_privacy_policy">📄 阅读</string>
+    <string name="action_read_privacy_policy">阅读</string>
     <string name="system_status_title">系统状态</string>
     <string name="status_checking">状态：检查中...</string>
     <string name="accept_incoming_clipboard">接受传入的剪贴板</string>
@@ -355,6 +355,7 @@
     <string name="send_via_connected_devices">已连接设备</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">发送方式</string>
+    <string name="send_via_size_selected">已选择 %1$s 的文件</string>
     <string name="action_how_to_use">使用帮助</string>
     <string name="discoverable_to_devices">可被其他设备发现</string>
     <string name="transaction_details_title">传输详情</string>
@@ -577,4 +578,14 @@
     <string name="receive_nfc">NFC 接收</string>
     <string name="offgrid_send_title_qr">通过 QR 发送</string>
     <string name="offgrid_send_title_nfc">通过 NFC 发送</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">跳过</string>
+    <string name="tutorial_done">完成</string>
+    <string name="scanner_tutorial_step">将摄像头对准发送方的二维码，即可通过本地网络接收。</string>
+    <string name="tile_push_to_pc">推送到电脑</string>
+    <string name="a11y_menu">菜单</string>
+    <string name="a11y_push_clipboard">推送剪贴板</string>
+    <string name="a11y_transfer_file">传输文件</string>
+    <string name="action_remove_file">移除文件</string>
 </resources>

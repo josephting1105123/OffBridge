@@ -12,13 +12,17 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * Windows port of the Android `transport.FileSeal` — authenticated (AES-256-GCM) bulk-file-stream
  * crypto for the LAN file path. MUST stay byte-identical to the Android version (same HKDF info,
- * record framing, AAD = chunkIndex, nonce layout); the shared golden vector in `FileSealVectorTest`
- * fails if either side drifts.
+ * record framing, AAD layout, nonce layout); the shared golden vectors in `FileSealVectorTest`
+ * fail if either side drifts.
  *
  *   record = [u32be ctLen][12B nonce][ct]              ct = GCM(chunk) incl the 16-byte tag
  *   chunk  = up to [CHUNK_SIZE] plaintext bytes, indexed 0,1,2,… per file
- *   key    = HKDF-SHA256(pairKey, info "file-aead-v1")
- *   AAD    = u64be(chunkIndex)                         (binds position → truncation/reorder rejected)
+ *   v1: key = HKDF-SHA256(pairKey, "file-aead-v1")
+ *       AAD = u64be(chunkIndex)                        (binds position → truncation/reorder rejected)
+ *   v2: key = HKDF-SHA256(pairKey, "file-aead-v2" || sessionId)   — per-session sub-key
+ *       AAD = sessionId || u64be(fileIndex) || u64be(chunkIndex)  (also binds session + file →
+ *             records can't be replayed across sessions or spliced across files; negotiated via
+ *             the FGCM2 discovery token, used only when both peers advertise it, else v1)
  *
  * Only used between paired peers that both advertise the FGCM1 capability; legacy peers keep the
  * plaintext stream for back-compat.
@@ -31,10 +35,26 @@ object FileSeal {
     private const val TAG_BYTES = TAG_BITS / 8
     private const val LEN_PREFIX = 4
     private val INFO = "file-aead-v1".toByteArray(Charsets.UTF_8)
+    private val INFO_V2 = "file-aead-v2".toByteArray(Charsets.UTF_8)
 
     fun deriveKey(pairKey: ByteArray): ByteArray = hkdfSha256(pairKey, INFO, 32)
 
-    fun sealStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L) {
+    /**
+     * v2 per-session sub-key: HKDF-SHA256(pairKey, "file-aead-v2" || sessionId, 32). Distinct per
+     * transfer session, so a record authentic under one session's key can't be replayed into another.
+     */
+    fun deriveKeyV2(pairKey: ByteArray, sessionId: String): ByteArray =
+        hkdfSha256(pairKey, INFO_V2 + sessionId.toByteArray(Charsets.UTF_8), 32)
+
+    /**
+     * v2 AAD prefix binding session + file identity: sessionIdBytes || u64be(fileIndex). Combined with
+     * the per-chunk suffix the full v2 AAD is sessionIdBytes || u64be(fileIndex) || u64be(chunkIndex),
+     * so a record can no longer be spliced across files or transfers.
+     */
+    fun v2AadPrefix(sessionId: String, fileIndex: Long): ByteArray =
+        sessionId.toByteArray(Charsets.UTF_8) + java.nio.ByteBuffer.allocate(8).putLong(fileIndex).array()
+
+    fun sealStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L, aadPrefix: ByteArray = ByteArray(0)) {
         val keySpec = SecretKeySpec(subKey, "AES")
         val buf = ByteArray(CHUNK_SIZE)
         var remaining = plainLen
@@ -47,19 +67,19 @@ object FileSeal {
                 if (r == -1) throw java.io.IOException("Source ended early: wanted $want at chunk $chunkIndex")
                 filled += r
             }
-            output.write(sealChunk(keySpec, buf, filled, chunkIndex))
+            output.write(sealChunk(keySpec, buf, filled, chunkIndex, aadPrefix = aadPrefix))
             remaining -= filled
             chunkIndex++
         }
         output.flush()
     }
 
-    fun openStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L) {
+    fun openStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L, aadPrefix: ByteArray = ByteArray(0)) {
         val keySpec = SecretKeySpec(subKey, "AES")
         var remaining = plainLen
         var chunkIndex = startChunkIndex
         while (remaining > 0) {
-            val pt = openChunk(keySpec, input, chunkIndex, remaining)
+            val pt = openChunk(keySpec, input, chunkIndex, remaining, aadPrefix)
             output.write(pt)
             remaining -= pt.size
             chunkIndex++
@@ -68,14 +88,14 @@ object FileSeal {
     }
 
     /** Reads + decrypts ONE record for [chunkIndex]; lets the caller update progress per chunk. */
-    fun openChunk(keySpec: SecretKeySpec, input: InputStream, chunkIndex: Long, maxPlain: Long): ByteArray {
+    fun openChunk(keySpec: SecretKeySpec, input: InputStream, chunkIndex: Long, maxPlain: Long, aadPrefix: ByteArray = ByteArray(0)): ByteArray {
         val ctLen = readU32(input)
         if (ctLen <= TAG_BYTES || ctLen > CHUNK_SIZE + TAG_BYTES) throw java.io.IOException("Bad record length $ctLen")
         val nonce = readFully(input, NONCE_LEN)
         val ct = readFully(input, ctLen)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, keySpec, GCMParameterSpec(TAG_BITS, nonce))
-        cipher.updateAAD(aad(chunkIndex))
+        cipher.updateAAD(aad(chunkIndex, aadPrefix))
         val pt = cipher.doFinal(ct) // throws on tamper / wrong key / wrong index
         if (pt.isEmpty() || pt.size.toLong() > maxPlain) throw java.io.IOException("Chunk plaintext overflow at $chunkIndex")
         return pt
@@ -89,17 +109,21 @@ object FileSeal {
         len: Int,
         chunkIndex: Long,
         nonce: ByteArray = ByteArray(NONCE_LEN).also { SecureRandom().nextBytes(it) },
+        aadPrefix: ByteArray = ByteArray(0),
     ): ByteArray {
         require(nonce.size == NONCE_LEN) { "nonce must be $NONCE_LEN bytes" }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, GCMParameterSpec(TAG_BITS, nonce))
-        cipher.updateAAD(aad(chunkIndex))
+        cipher.updateAAD(aad(chunkIndex, aadPrefix))
         val ct = cipher.doFinal(plain, 0, len)
         return ByteBuffer.allocate(LEN_PREFIX + NONCE_LEN + ct.size)
             .putInt(ct.size).put(nonce).put(ct).array()
     }
 
-    private fun aad(chunkIndex: Long): ByteArray = ByteBuffer.allocate(8).putLong(chunkIndex).array()
+    // aadPrefix defaults to empty ⇒ v1 AAD is exactly u64be(chunkIndex), byte-identical to the
+    // original scheme. v2 supplies a non-empty prefix (sessionId || u64be(fileIndex)) via v2AadPrefix.
+    private fun aad(chunkIndex: Long, aadPrefix: ByteArray): ByteArray =
+        aadPrefix + ByteBuffer.allocate(8).putLong(chunkIndex).array()
 
     private fun readU32(input: InputStream): Int {
         val b = readFully(input, LEN_PREFIX)

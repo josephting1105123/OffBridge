@@ -60,12 +60,13 @@ fun SendToDevicesDialog(
         }
     }
 
+    BackdropEffect()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(Dimens.radiusLg),
             color = MaterialTheme.colors.background,
             elevation = Dimens.elevModal,
-            modifier = Modifier.width(500.dp).height(600.dp)
+            modifier = Modifier.width(500.dp).height(600.dp).modalPopIn()
         ) {
             Column(modifier = Modifier.fillMaxSize().padding(Dimens.spaceXl)) {
                 // Header

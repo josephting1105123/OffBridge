@@ -39,7 +39,16 @@ data class DiscoveredDevice(
     val supportsAuthClipboard: Boolean = false,
     /** Peer advertised the [TransferDaemon.FILE_GCM_CAP] token → it can seal/open authenticated
      * (AES-GCM) bulk file streams via [FileSeal]. Defaults false so legacy peers stay plaintext. */
-    val supportsAuthFile: Boolean = false
+    val supportsAuthFile: Boolean = false,
+    /** Peer advertised the [TransferDaemon.FILE_GCM_CAP_V2] token → it supports the FileSeal v2 AEAD
+     * (per-session key + session/file-bound AAD). Orthogonal to [supportsAuthFile]: v2 is used only
+     * when BOTH peers advertise it, otherwise the negotiation falls back to v1. Defaults false. */
+    val supportsAuthFileV2: Boolean = false,
+    /** Peer advertised the [TransferDaemon.OFFER_AUTH_CAP] token → it will answer an OFFER_CHALLENGE
+     * with an HMAC proof of the shared pairing key before we show its incoming-file popup. The receiver
+     * only issues the challenge to a sender with this flag set; senders that omit it keep today's
+     * direct OFFER_RECEIVED handshake. Defaults false so un-updated peers are byte-identical. */
+    val supportsAuth2: Boolean = false
 )
 
 data class TransferSession(
@@ -72,7 +81,21 @@ data class TransferSession(
      * but keeps moving never exhausts its budget while a genuinely-dead route gives up after a bound.
      */
     @Volatile var autoResumeAttempts: Int = 0,
-    @Volatile var lastResumeOffset: Long = -1L
+    @Volatile var lastResumeOffset: Long = -1L,
+    /**
+     * Set on the receiver once this incoming session's bytes have been negotiated as FileSeal
+     * (AES-GCM) sealed. The name-based resume watcher uses it as a security gate: a session that was
+     * authenticated once must never be silently re-dialed against an IP that isn't FGCM-pinned (a
+     * same-display-name impostor on the LAN), which would be a downgrade to an unauthenticated peer.
+     */
+    @Volatile var fileGcmNegotiated: Boolean = false,
+    /**
+     * Set on the receiver once this incoming session's FileSeal bytes have been negotiated as v2
+     * (both peers advertised FGCM2 → the receiver sent "fgcm2"). The receive loop reads this to
+     * derive the v2 per-session key and bind the v2 AAD prefix; false keeps the v1 FileSeal path.
+     * Orthogonal to [fileGcmNegotiated] (which stays true for both v1 and v2 authenticated streams).
+     */
+    @Volatile var fileV2Negotiated: Boolean = false
 ) {
     /**
      * Bumped when a new outgoing send attempt starts. A stale send coroutine — still blocked on a dead
@@ -80,6 +103,14 @@ data class TransferSession(
      * fails it can't overwrite a fresh resume's "transferring" status back to "paused".
      */
     val sendGeneration = java.util.concurrent.atomic.AtomicInteger(0)
+
+    /**
+     * The live outgoing streaming socket for a sender-side session, if one is currently active.
+     * A CANCEL_TRANSFER closes it so a write blocked on a dead socket is interrupted immediately
+     * instead of hanging until the ~20 s TCP write timeout. Set when streaming starts, cleared when
+     * it ends.
+     */
+    @Volatile var activeSendSocket: Socket? = null
 }
 
 /**
@@ -113,6 +144,12 @@ object TransferDaemon {
         else if (manufacturer.isNotEmpty()) "${manufacturer.replaceFirstChar { it.uppercase() }} $model"
         else model.ifEmpty { "Android Device" }
     }
+        // The name is embedded between '|' delimiters in FILEBRIDGE_DISCOVERY/REPLY, OFFER and
+        // P2P_HELLO frames; a '|' or newline in a user-set name would break the peer's positional
+        // parse (Windows conforms to the same rule). Strip them once at the setter.
+        set(value) {
+            field = value.replace('|', ' ').replace('\n', ' ').replace('\r', ' ').trim()
+        }
     val myDeviceId = UUID.randomUUID().toString()
 
     val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
@@ -129,10 +166,20 @@ object TransferDaemon {
     @Volatile
     var p2pContext: P2pAdvertisingContext? = null
 
+    // A failed child (uncaught exception) must not tear down its siblings — one dead discovery/
+    // transfer coroutine should never silently kill the whole daemon. SupervisorJob isolates
+    // failures; the handler logs the escape so it isn't swallowed without trace.
+    private val daemonExceptionHandler = CoroutineExceptionHandler { _, e ->
+        if (e !is CancellationException) {
+            e.printStackTrace()
+            try { TransportDiag.log("Daemon coroutine crashed: ${e.javaClass.simpleName} ${e.message ?: ""}") } catch (_: Exception) {}
+        }
+    }
+
     // var (not val) so [stop] can cancel the scope and a later [start] can rebuild it — a cancelled
     // CoroutineScope cannot relaunch, so the daemon needs a fresh Job/scope on restart.
-    private var daemonJob = Job()
-    private var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+    private var daemonJob = SupervisorJob()
+    private var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob + daemonExceptionHandler)
 
     private var multicastLock: WifiManager.MulticastLock? = null
     private var wakeLock: PowerManager.WakeLock? = null
@@ -152,8 +199,8 @@ object TransferDaemon {
         // A prior stop() cancelled daemonScope; a cancelled scope can't relaunch, so rebuild the
         // Job + scope before starting fresh after a shutdown.
         if (!daemonScope.isActive) {
-            daemonJob = Job()
-            daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
+            daemonJob = SupervisorJob()
+            daemonScope = CoroutineScope(Dispatchers.IO + daemonJob + daemonExceptionHandler)
         }
         wakeDiscovery()
 
@@ -167,8 +214,12 @@ object TransferDaemon {
 
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JosephClipboardClient:TransferDaemonWakeLock")
-            wakeLock?.acquire()
+            // Bounded acquire so a missed release() (e.g. process killed before stop()) can't pin the
+            // CPU/radio awake for the whole process life — the lock auto-releases after the timeout.
+            wakeLock?.acquire(WAKELOCK_TIMEOUT_MS)
 
+            // WifiLock has no timed acquire() overload; the CPU wake lock (above) carries the bounded
+            // safety timeout, and the Wi-Fi lock is released alongside it in releaseLocks().
             wifiLock = wifiManager.createWifiLock(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF, "JosephClipboardClient:TransferDaemonWifiLock")
             wifiLock?.acquire()
         } catch (e: Exception) {
@@ -176,9 +227,11 @@ object TransferDaemon {
         }
 
         daemonScope.launch {
-            val udpSocket = DatagramSocket()
+            var udpSocket: DatagramSocket? = null
             try {
-                udpSocket.broadcast = true
+                val sock = DatagramSocket()
+                udpSocket = sock
+                sock.broadcast = true
                 var interval = DISCOVERY_INTERVAL_MIN_MS
                 var lastNodeCount = -1
                 while (isActive) {
@@ -193,7 +246,7 @@ object TransferDaemon {
                         for (address in broadcastAddresses) {
                             try {
                                 val packet = DatagramPacket(message, message.size, InetSocketAddress(address, Ports.DISCOVERY))
-                                udpSocket.send(packet)
+                                sock.send(packet)
                             } catch (e: Exception) {
                                 // Ignore send errors for individual interfaces
                             }
@@ -215,20 +268,23 @@ object TransferDaemon {
                     delay(interval)
                 }
             } catch (e: Exception) { e.printStackTrace() } finally {
-                try { udpSocket.close() } catch (_: Exception) {}
+                try { udpSocket?.close() } catch (_: Exception) {}
             }
         }
 
         daemonScope.launch {
-            val udpSocket = DatagramSocket(null)
+            var udpSocket: DatagramSocket? = null
             try {
-                udpSocket.reuseAddress = true
-                udpSocket.bind(InetSocketAddress("0.0.0.0", Ports.DISCOVERY))
+                val sock = DatagramSocket(null)
+                udpSocket = sock
+                sock.reuseAddress = true
+                sock.bind(InetSocketAddress("0.0.0.0", Ports.DISCOVERY))
                 val buffer = ByteArray(1024)
 
                 while (isActive) {
+                  try {
                     val packet = DatagramPacket(buffer, buffer.size)
-                    udpSocket.receive(packet)
+                    sock.receive(packet)
                     // hostAddress can be null; skip rather than letting a null key poison discoveredNodes
                     val senderIp = packet.address.hostAddress ?: continue
                     val msg = String(packet.data, 0, packet.length).trim()
@@ -250,25 +306,28 @@ object TransferDaemon {
                             val caps = (parts.getOrNull(4) ?: "").split(",")
                             val supportsAuth = caps.contains(CLIPBOARD_GCM_CAP)
                             val supportsFile = caps.contains(FILE_GCM_CAP)
+                            val supportsFileV2 = caps.contains(FILE_GCM_CAP_V2)
+                            val supportsAuth2 = caps.contains(OFFER_AUTH_CAP)
                             val actualIp = senderIp // Always trust the packet's source IP over the payload IP
 
                             if (!isMyOwnIp(actualIp)) {
                                 // A peer we hadn't seen (or one that had expired and returned) snaps the
                                 // broadcaster back to the fast cadence so mutual discovery completes quickly.
                                 val isNewNode = !discoveredNodes.containsKey(actualIp)
-                                discoveredNodes[actualIp] = DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile)
+                                discoveredNodes[actualIp] = DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2)
                                 if (isNewNode) wakeDiscovery()
 
                                 // Reply to discovery packets via unicast to bypass hotspot broadcast restrictions
                                 if (!isReply) {
                                     daemonScope.launch {
                                         try {
-                                            val replySocket = DatagramSocket()
-                                            val myIp = getMyIpAddress()
-                                            val replyMsg = "FILEBRIDGE_REPLY|$customDeviceName|$myIp|Android|$DISCOVERY_CAPS".toByteArray(Charsets.UTF_8)
-                                            val replyPacket = DatagramPacket(replyMsg, replyMsg.size, InetSocketAddress(senderIp, Ports.DISCOVERY))
-                                            replySocket.send(replyPacket)
-                                            replySocket.close()
+                                            // .use{} so a send() failure can't leak the socket fd.
+                                            DatagramSocket().use { replySocket ->
+                                                val myIp = getMyIpAddress()
+                                                val replyMsg = "FILEBRIDGE_REPLY|$customDeviceName|$myIp|Android|$DISCOVERY_CAPS".toByteArray(Charsets.UTF_8)
+                                                val replyPacket = DatagramPacket(replyMsg, replyMsg.size, InetSocketAddress(senderIp, Ports.DISCOVERY))
+                                                replySocket.send(replyPacket)
+                                            }
                                         } catch (e: Exception) {} // best-effort unicast reply
                                     }
                                 }
@@ -299,23 +358,31 @@ object TransferDaemon {
                     }
 
                     discoveredNodes.entries.removeIf { now - it.value.lastSeen > DISCOVERY_NODE_TIMEOUT_MS }
+                  } catch (e: Exception) {
+                    // A single malformed packet or transient receive() error must not kill the whole
+                    // discovery listener; log and keep looping (mirrors the TCP accept loop below).
+                    if (!isActive || sock.isClosed) break
+                    e.printStackTrace()
+                  }
                 }
             } catch (e: Exception) { e.printStackTrace() } finally {
-                try { udpSocket.close() } catch (_: Exception) {}
+                try { udpSocket?.close() } catch (_: Exception) {}
             }
         }
 
         daemonScope.launch {
-            val serverSocket = ServerSocket()
+            var serverSocket: ServerSocket? = null
             try {
-                serverSocket.reuseAddress = true
+                val server = ServerSocket()
+                serverSocket = server
+                server.reuseAddress = true
                 // Advertise a large TCP window in the handshake so accepted sockets inherit it.
-                runCatching { serverSocket.receiveBufferSize = SOCKET_BUFFER_BYTES }
-                serverSocket.bind(InetSocketAddress("0.0.0.0", Ports.FILE_TRANSFER))
+                runCatching { server.receiveBufferSize = SOCKET_BUFFER_BYTES }
+                server.bind(InetSocketAddress("0.0.0.0", Ports.FILE_TRANSFER))
 
                 while (isActive) {
                     try {
-                        val clientSocket = serverSocket.accept()
+                        val clientSocket = server.accept()
                         clientSocket.tuneForBulkTransfer()
                         // Bound the connection so a peer that connects but never sends a
                         // newline can't pin a handler forever; 30s of total silence on a
@@ -326,12 +393,12 @@ object TransferDaemon {
                     } catch (e: Exception) {
                         // A transient accept() error (e.g. EMFILE) must not permanently kill
                         // the listener; only stop when the socket itself is closed.
-                        if (!isActive || serverSocket.isClosed) break
+                        if (!isActive || server.isClosed) break
                         e.printStackTrace()
                     }
                 }
             } catch (e: Exception) { e.printStackTrace() } finally {
-                try { serverSocket.close() } catch (_: Exception) {}
+                try { serverSocket?.close() } catch (_: Exception) {}
             }
         }
 
@@ -341,14 +408,24 @@ object TransferDaemon {
 
             while (isActive) {
                 delay(1000)
+              try {
                 val now = System.currentTimeMillis()
-                
+
                 var newlyResumableCount = 0
                 var totalResumableCount = 0
 
                 for ((sessionId, session) in activeSessions) {
                     if (session.isPaused && session.isIncoming) {
+                        // SECURITY: the sender is resolved purely by display name, which any host on
+                        // the LAN can spoof. Only auto-dial a paired peer (we hold its key); and if the
+                        // session was authenticated (AES-GCM) once, refuse an IP that isn't FGCM-pinned
+                        // so a same-name impostor can't force an unauthenticated downgrade. A blocked
+                        // match is treated as "sender not present" — the session stays paused.
                         val senderIp = discoveredNodes.entries.find { it.value.name == session.senderName }?.key
+                            ?.takeIf { ip ->
+                                SecurityVault.getKeyForNode(context, ip) != null &&
+                                    (!session.fileGcmNegotiated || SecurityVault.isFileGcmPinned(context, ip))
+                            }
                         if (senderIp != null) {
                             session.targetIp = senderIp // Update IP in case it changed
                             val firstSeen = pendingReconnects.getOrPut(sessionId) { now }
@@ -394,6 +471,11 @@ object TransferDaemon {
 
                     notificationManager.notify(65436, notification)
                 }
+              } catch (e: Exception) {
+                // One bad iteration (e.g. a notification build failure) must not kill the whole
+                // resume watcher; log and keep polling.
+                e.printStackTrace()
+              }
             }
         }
     }
@@ -449,7 +531,12 @@ object TransferDaemon {
                 connection.setReadTimeout(10000) // 10 second network timeout (no-op on BT)
                 val inputStream = connection.input
                 val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
-                val aeadKeySpec = fileKey?.let { FileSeal.keySpec(FileSeal.deriveKey(it)) }
+                // v2 (session.fileV2Negotiated, set when we sent "fgcm2") uses the per-session key and
+                // the session/file-bound AAD prefix; v1 keeps deriveKey + empty prefix. Must mirror the
+                // sender's streamSessionFiles derivation exactly or the AEAD tag fails.
+                val aeadKeySpec = fileKey?.let {
+                    FileSeal.keySpec(if (session.fileV2Negotiated) FileSeal.deriveKeyV2(it, session.sessionId) else FileSeal.deriveKey(it))
+                }
 
                 if (session.localFileNames.isEmpty()) {
                     for (m in manifest) {
@@ -507,9 +594,11 @@ object TransferDaemon {
                             // file's plaintext bytes. AEAD resume restarts the file (currentOffset==0).
                             var remaining = fsize - session.currentOffset
                             var chunkIndex = session.currentOffset / FileSeal.CHUNK_SIZE
+                            // Same 0-based manifest index [i] the sender binds into the v2 AAD prefix.
+                            val aadPrefix = if (session.fileV2Negotiated) FileSeal.v2AadPrefix(session.sessionId, i.toLong()) else ByteArray(0)
                             while (remaining > 0) {
                                 if (session.isCancelled) throw Exception("Transfer cancelled")
-                                val pt = FileSeal.openChunk(aeadKeySpec, inputStream, chunkIndex, remaining)
+                                val pt = FileSeal.openChunk(aeadKeySpec, inputStream, chunkIndex, remaining, aadPrefix)
                                 out.write(pt)
                                 session.currentOffset += pt.size
                                 remaining -= pt.size
@@ -669,7 +758,13 @@ object TransferDaemon {
             var socket: Socket? = null
             try {
                 val fileKey = fileKeyIfAead(context, session.targetIp)
-                socket = Socket(session.targetIp, Ports.FILE_TRANSFER)
+                if (fileKey != null) session.fileGcmNegotiated = true
+                // v2 only when BOTH peers advertise FGCM2; else fall back to the v1 "fgcm" flag.
+                val useV2 = fileKey != null && discoveredNodes[session.targetIp]?.supportsAuthFileV2 == true
+                if (useV2) session.fileV2Negotiated = true
+                // Bounded connect so a peer that vanished mid-transfer can't hang the resume on the
+                // OS default SYN timeout (tens of seconds); mirrors Net.sendBytes.
+                socket = Socket().apply { connect(InetSocketAddress(session.targetIp, Ports.FILE_TRANSFER), 8000) }
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
                 var trueOffset = session.currentOffset
@@ -700,7 +795,7 @@ object TransferDaemon {
                 session.currentOffset = trueOffset
 
                 val resumeCmd = if (fileKey != null)
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|fgcm\n"
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}\n"
                 else
                     "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
@@ -754,12 +849,20 @@ object TransferDaemon {
             var socket: Socket? = null
             try {
                 val fileKey = fileKeyIfAead(context, session.targetIp)
-                socket = Socket(session.targetIp, Ports.FILE_TRANSFER)
+                if (fileKey != null) session.fileGcmNegotiated = true
+                // Choose the v2 FileSeal flag only when BOTH peers advertise FGCM2 (our own cap is
+                // implicit; the peer's is discovered). Otherwise fall back to the v1 "fgcm" flag.
+                val useV2 = fileKey != null && discoveredNodes[session.targetIp]?.supportsAuthFileV2 == true
+                if (useV2) session.fileV2Negotiated = true
+                // Bounded connect so an unreachable sender fails fast instead of hanging on the OS
+                // default SYN timeout; mirrors Net.sendBytes.
+                socket = Socket().apply { connect(InetSocketAddress(session.targetIp, Ports.FILE_TRANSFER), 8000) }
                 socket.soTimeout = 10000
                 val outStream = socket.getOutputStream()
-                // Request authenticated (FileSeal) file bytes when both peers support it; "fgcm" tells
-                // the sender to seal. Legacy senders ignore the extra field and stream plaintext.
-                val acceptCmd = if (fileKey != null) "ACCEPT_OFFER|${session.sessionId}|fgcm\n" else "ACCEPT_OFFER|${session.sessionId}\n"
+                // Request authenticated (FileSeal) file bytes when both peers support it; "fgcm"/"fgcm2"
+                // tells the sender to seal (v1/v2). Legacy senders ignore the extra field and stream plaintext.
+                val fgcmFlag = if (useV2) "fgcm2" else "fgcm"
+                val acceptCmd = if (fileKey != null) "ACCEPT_OFFER|${session.sessionId}|$fgcmFlag\n" else "ACCEPT_OFFER|${session.sessionId}\n"
                 outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
@@ -913,12 +1016,15 @@ object TransferDaemon {
                     // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
                     val flags = parts.drop(4)
                     val ackExpected = flags.contains("ack")
+                    // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
+                    // selects the v2 FileSeal (per-session key + session/file-bound AAD).
                     val resumeFileKey = try {
-                        senderFileKey(context, senderIp, flags.contains("fgcm"))
+                        senderFileKey(context, senderIp, flags.contains("fgcm") || flags.contains("fgcm2"))
                     } catch (e: DowngradeBlockedException) {
                         TransportDiag.log("TX: $e — refusing plaintext resume")
                         socket.close(); return
                     }
+                    val resumeUseV2 = flags.contains("fgcm2")
 
                     val session = activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
@@ -957,7 +1063,10 @@ object TransferDaemon {
                                     .build()
                                 notifMgr.notify(65435, senderNotif)
 
-                                streamSessionFiles(context, session, outStream, resumeFileKey)
+                                // Expose the live socket so a CANCEL_TRANSFER can close it and unblock
+                                // a write stuck on a dead link (rather than waiting out the TCP timeout).
+                                session.activeSendSocket = socket
+                                streamSessionFiles(context, session, outStream, resumeFileKey, myGen, resumeUseV2)
 
                                 if (ackExpected && !awaitCompletionAck(socket, sessionId)) {
                                     // Resent bytes never confirmed — pause and keep the session so
@@ -985,6 +1094,7 @@ object TransferDaemon {
                                     TransferHistoryManager.updateStatus(context, sessionId, "paused", session.currentFileIndex, session.currentOffset)
                                 }
                             } finally {
+                                if (session.activeSendSocket === socket) session.activeSendSocket = null
                                 try { socket.close() } catch(e:Exception){}
                             }
                         }
@@ -1003,19 +1113,26 @@ object TransferDaemon {
                         // Receiver appended "fgcm" ⇒ seal the bulk stream with FileSeal under the shared
                         // pairing key (the trust gate above guarantees we hold it). Absent ⇒ plaintext,
                         // unless we'd previously sealed for this peer (pin) → refuse the downgrade.
+                        // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
+                        // selects the v2 FileSeal (per-session key + session/file-bound AAD).
+                        val acceptFlags = parts.drop(2)
                         val fileKey = try {
-                            senderFileKey(context, senderIp, parts.drop(2).contains("fgcm"))
+                            senderFileKey(context, senderIp, acceptFlags.contains("fgcm") || acceptFlags.contains("fgcm2"))
                         } catch (e: DowngradeBlockedException) {
                             TransportDiag.log("TX: $e — refusing plaintext stream")
                             socket.close(); return
                         }
+                        val useV2 = acceptFlags.contains("fgcm2")
                         val myGen = session.sendGeneration.incrementAndGet()
                         TransferHistoryManager.updateStatus(context, sessionId, "transferring")
 
                         daemonScope.launch(Dispatchers.IO) {
                             try {
                                 val outStream = socket.getOutputStream()
-                                streamSessionFiles(context, session, outStream, fileKey)
+                                // Expose the live socket so a CANCEL_TRANSFER can close it and unblock a
+                                // write stuck on a dead link (rather than waiting out the TCP timeout).
+                                session.activeSendSocket = socket
+                                streamSessionFiles(context, session, outStream, fileKey, myGen, useV2)
                                 activeSessions.remove(sessionId)
                                 TransferHistoryManager.updateStatus(context, sessionId, "completed", session.fileUris.size)
                             } catch (e: Exception) {
@@ -1027,6 +1144,7 @@ object TransferDaemon {
                                     TransferHistoryManager.updateStatus(context, sessionId, "paused", session.currentFileIndex, session.currentOffset)
                                 }
                             } finally {
+                                if (session.activeSendSocket === socket) session.activeSendSocket = null
                                 try { socket.close() } catch(e:Exception){}
                             }
                         }
@@ -1042,6 +1160,10 @@ object TransferDaemon {
                     val session = activeSessions.remove(sessionId)
                     if (session != null && !session.isIncoming) {
                         session.isCancelled = true
+                        // A decline can also arrive mid-stream (older receivers send it for a live
+                        // cancel) — close the streaming socket like CANCEL_TRANSFER does, so a
+                        // blocked write aborts now instead of after the ~20 s TCP write timeout.
+                        session.activeSendSocket?.let { s -> runCatching { s.close() } }
                         TransferHistoryManager.updateStatus(context, sessionId, "declined")
                     }
                 }
@@ -1056,6 +1178,9 @@ object TransferDaemon {
                     val session = activeSessions.remove(sessionId)
                     if (session != null) {
                         session.isCancelled = true
+                        // Close the live streaming socket (if any) so a send blocked on a dead-link
+                        // write is interrupted now instead of hanging until the ~20 s TCP write timeout.
+                        session.activeSendSocket?.let { s -> runCatching { s.close() } }
                         TransferHistoryManager.updateStatus(context, sessionId, "cancelled")
                     }
                 }
@@ -1105,6 +1230,39 @@ object TransferDaemon {
 
             if (isOffer) {
                 val outStream = socket.getOutputStream()
+
+                // AUTH2 admission proof: the plain trust gate above only checks that senderIp has a
+                // stored pairing key, so a host spoofing a paired peer's IP (without the key) could still
+                // raise this popup. If the sender advertises AUTH2, require it to PROVE possession of the
+                // shared pairing key via an HMAC challenge-response BEFORE we ack the offer or show the
+                // popup. A sender that doesn't advertise AUTH2 (old build) skips this — byte-identical to
+                // before. senderIp is the same source address the trust gate validated above.
+                if (discoveredNodes[senderIp]?.supportsAuth2 == true) {
+                    val pairingKey = SecurityVault.getKeyForNode(context, senderIp)
+                    if (pairingKey == null) {
+                        // Trust gate said we hold a key for this IP; if it vanished, fail closed.
+                        activeSessions.remove(sessionId)
+                        socket.close()
+                        return
+                    }
+                    val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+                    outStream.write("OFFER_CHALLENGE|${android.util.Base64.encodeToString(nonce, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
+                    outStream.flush()
+                    val proofLine = readUntilNewline(inputStream)
+                    val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
+                        try { android.util.Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), android.util.Base64.NO_WRAP) } catch (_: Exception) { null }
+                    } else null
+                    val expected = hmacSha256(pairingKey, nonce)
+                    if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
+                        // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key. Drop
+                        // the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer lands here.)
+                        TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 proof failed")
+                        activeSessions.remove(sessionId)
+                        socket.close()
+                        return
+                    }
+                }
+
                 outStream.write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))
                 outStream.flush()
                 socket.close()
@@ -1170,7 +1328,8 @@ object TransferDaemon {
             executeDownloadStream(context, socket, newSession)
 
         } catch (e: Exception) {
-            socket.close()
+            // close() can itself throw (already-reset socket); swallow so the handler exits cleanly.
+            runCatching { socket.close() }
         }
     }
 
@@ -1360,7 +1519,7 @@ object TransferDaemon {
                 val myGen = session.sendGeneration.incrementAndGet()
 
                 try {
-                    streamSessionFiles(context, session, outStream)
+                    streamSessionFiles(context, session, outStream, sendGen = myGen)
                     if (ackExpected && !awaitCompletionAck(connection, sessionId)) {
                         // Bytes were written but the receiver never confirmed delivery (late drop).
                         // Keep the session paused so the receiver's resume can reconnect to it.
@@ -1408,19 +1567,30 @@ object TransferDaemon {
         return mac.doFinal(message)
     }
 
-    private fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null) {
+    private fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null, sendGen: Int? = null, useFileV2: Boolean = false) {
         // Non-null fileKey ⇒ seal the bulk stream per-chunk with FileSeal (negotiated via the FGCM1
         // capability + the "fgcm" ACCEPT/RESUME flag); otherwise bytes go in the clear (legacy peers
-        // and the off-grid ECDH path, which both pass null).
-        val aeadKeySpec = fileKey?.let { FileSeal.keySpec(FileSeal.deriveKey(it)) }
-        for (i in session.currentFileIndex until session.fileUris.size) {
+        // and the off-grid ECDH path, which both pass null). [useFileV2] (negotiated via FGCM2 + the
+        // "fgcm2" flag) selects the v2 per-session key and the session/file-bound v2 AAD prefix.
+        val aeadKeySpec = fileKey?.let {
+            FileSeal.keySpec(if (useFileV2) FileSeal.deriveKeyV2(it, session.sessionId) else FileSeal.deriveKey(it))
+        }
+        // Leg-local start position: capture the resume point once, so a concurrent resume (which bumps
+        // sendGeneration and rewrites session.currentOffset/Index) can't make THIS leg follow the new
+        // position mid-file. A superseded leg aborts via the generation check below instead.
+        val startIndex = session.currentFileIndex
+        var legOffset = session.currentOffset
+        // True while this is still the session's current send attempt; a newer resume flips it false.
+        fun isCurrent() = sendGen == null || session.sendGeneration.get() == sendGen
+        for (i in startIndex until session.fileUris.size) {
+            if (!isCurrent()) throw Exception("Send superseded by a newer resume")
             val uri = android.net.Uri.parse(session.fileUris[i])
             context.contentResolver.openInputStream(uri)?.use { fileIn ->
-                if (session.currentOffset > 0) {
+                if (legOffset > 0) {
                     // InputStream.skip may skip fewer bytes than requested; loop until the
                     // full offset is consumed (falling back to read-and-discard) so resume
                     // doesn't start mid-file and corrupt the stream.
-                    var remaining = session.currentOffset
+                    var remaining = legOffset
                     val skipBuffer = ByteArray(8192)
                     while (remaining > 0) {
                         val skipped = fileIn.skip(remaining)
@@ -1440,10 +1610,11 @@ object TransferDaemon {
                     // chunk index starts at 0 (kept general via currentOffset/CHUNK_SIZE).
                     val plainLen = session.manifest.getOrNull(i)?.second ?: 0L
                     val buffer = ByteArray(FileSeal.CHUNK_SIZE)
-                    var remaining = plainLen - session.currentOffset
-                    var chunkIndex = session.currentOffset / FileSeal.CHUNK_SIZE
+                    var remaining = plainLen - legOffset
+                    var chunkIndex = legOffset / FileSeal.CHUNK_SIZE
                     while (remaining > 0) {
                         if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
+                        if (!isCurrent()) throw Exception("Send superseded by a newer resume")
                         val want = if (remaining > FileSeal.CHUNK_SIZE) FileSeal.CHUNK_SIZE else remaining.toInt()
                         var filled = 0
                         while (filled < want) {
@@ -1451,25 +1622,32 @@ object TransferDaemon {
                             if (r == -1) throw java.io.IOException("File shorter than its manifest size")
                             filled += r
                         }
-                        outStream.write(FileSeal.sealChunk(aeadKeySpec, buffer, filled, chunkIndex))
-                        session.currentOffset += filled
+                        val aadPrefix = if (useFileV2) FileSeal.v2AadPrefix(session.sessionId, i.toLong()) else ByteArray(0)
+                        outStream.write(FileSeal.sealChunk(aeadKeySpec, buffer, filled, chunkIndex, aadPrefix = aadPrefix))
+                        legOffset += filled
                         remaining -= filled
                         chunkIndex++
+                        if (isCurrent()) session.currentOffset = legOffset
                     }
                 } else {
                     val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
                     while (true) {
                         if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
+                        if (!isCurrent()) throw Exception("Send superseded by a newer resume")
                         val read = fileIn.read(buffer)
                         if (read == -1) break
                         outStream.write(buffer, 0, read)
-                        session.currentOffset += read
+                        legOffset += read
+                        if (isCurrent()) session.currentOffset = legOffset
                     }
                 }
             }
             outStream.flush()
-            session.currentFileIndex = i + 1
-            session.currentOffset = 0
+            legOffset = 0
+            if (isCurrent()) {
+                session.currentFileIndex = i + 1
+                session.currentOffset = 0
+            }
         }
     }
 
@@ -1480,6 +1658,14 @@ object TransferDaemon {
      * pause-and-keep-the-session than block forever.
      */
     private const val COMPLETION_ACK_TIMEOUT_MS = 30000
+
+    /**
+     * Bounded acquire ceiling for the CPU wake lock. A missed release() (e.g. the process is killed
+     * before [stop] runs) would otherwise pin the CPU/radio awake for the whole process life; the
+     * timeout guarantees the lock auto-releases. Long enough to cover a large transfer; a normal
+     * shutdown still releases early via [releaseLocks].
+     */
+    private const val WAKELOCK_TIMEOUT_MS = 10 * 60 * 1000L
 
     /**
      * Auto-reconnect budget for a dropped incoming transfer. Each no-progress retry backs off
@@ -1515,8 +1701,28 @@ object TransferDaemon {
      */
     const val FILE_GCM_CAP = "FGCM1"
 
+    /**
+     * FileSeal v2 AEAD capability token, advertised comma-joined after [FILE_GCM_CAP]
+     * (`...|Android|GCM1,FGCM1,FGCM2`). Orthogonal to [FILE_GCM_CAP]: both are authenticated
+     * streams; v2 (per-session key + session/file-bound AAD) is chosen only when BOTH peers
+     * advertise FGCM2, otherwise the transfer falls back to the v1 FileSeal path. A peer that omits
+     * it stays on v1. Parsed into [DiscoveredDevice.supportsAuthFileV2].
+     */
+    const val FILE_GCM_CAP_V2 = "FGCM2"
+
+    /**
+     * OFFER admission-proof capability token, advertised comma-joined after [FILE_GCM_CAP_V2]
+     * (`...|Android|GCM1,FGCM1,FGCM2,AUTH2`). Presence means the peer will answer an OFFER_CHALLENGE
+     * with an HMAC proof of the shared pairing key before the receiver shows the incoming-file popup —
+     * closing the "spoof a paired peer's IP to raise a popup without holding the key" hole. A receiver
+     * only issues the challenge to a sender that advertises this; a sender always tolerates both the
+     * challenge and the direct OFFER_RECEIVED, so old↔new stays byte-identical. Parsed into
+     * [DiscoveredDevice.supportsAuth2].
+     */
+    const val OFFER_AUTH_CAP = "AUTH2"
+
     /** Capability list advertised in discovery — comma-joined, order-stable, parsed by `contains`. */
-    private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP"
+    private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP"
 
     private const val DISCOVERY_INTERVAL_MIN_MS = 3000L
     private const val DISCOVERY_INTERVAL_MAX_MS = 12000L

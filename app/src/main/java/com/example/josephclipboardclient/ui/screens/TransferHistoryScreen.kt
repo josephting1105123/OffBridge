@@ -257,7 +257,7 @@ private fun DetailView(
     reportBounds: (String) -> Modifier,
 ) {
     Row(modifier = Modifier.fillMaxWidth().padding(bottom = dimens.spaceLg), verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(dimens.radiusMd)).clickable { onBackToList() }, contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(dimens.touchTarget).clip(RoundedCornerShape(dimens.radiusMd)).clickable { onBackToList() }, contentAlignment = Alignment.Center) {
             Icon(painterResource(R.drawable.ic_back), contentDescription = stringResource(R.string.action_close), tint = colors.textPrimary, modifier = Modifier.size(dimens.iconMd))
         }
         Spacer(Modifier.width(dimens.spaceMd))

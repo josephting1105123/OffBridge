@@ -72,10 +72,21 @@ class BleControlServer(context: Context) : ControlChannel {
     @Volatile private var mtu = 23
     @Volatile private var closed = false
 
+    /**
+     * Consecutive congestion re-posts for the current chunk. Bounds the retry so a link that never
+     * drains does not spin the main thread forever; reset once a chunk is accepted. Touched only on
+     * the main thread.
+     */
+    private var notifyRetries = 0
+    private val NOTIFY_RETRY_TOKEN = Any()
+
     companion object {
         private const val TAG = "OffGridBle"
         /** Safety net: if onServiceAdded never fires (rare OEM), advertise anyway after this delay. */
         private const val SERVICE_ADD_FALLBACK_MS = 1_500L
+        /** Back-off between congestion re-posts, and the cap on how many times to retry one chunk. */
+        private const val NOTIFY_RETRY_DELAY_MS = 30L
+        private const val MAX_NOTIFY_RETRIES = 200
         /** Hardware peripheral-mode availability — checked BEFORE building the payload `cap` bit. */
         fun canAdvertise(context: Context): Boolean {
             val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -275,18 +286,36 @@ class BleControlServer(context: Context) : ControlChannel {
             // re-queue the unsent chunk at the front, and re-post pumpQueue ourselves
             // — otherwise the send queue stalls forever.
             val ok = gattServer?.notifyCharacteristicChanged(device, tx, false) == true
-            if (!ok) {
+            if (ok) {
+                notifyRetries = 0
+            } else {
                 notifyInFlight = false
                 synchronized(sendQueue) { sendQueue.addFirst(chunk) }
-                mainHandler.post { pumpQueue() }
+                scheduleCongestionRetry()
             }
         } catch (_: Exception) {
             notifyInFlight = false
             // The chunk was already polled off the queue; put it back so the
             // retry below does not silently drop it.
             synchronized(sendQueue) { sendQueue.addFirst(chunk) }
-            mainHandler.post { pumpQueue() }
+            scheduleCongestionRetry()
         }
+    }
+
+    /**
+     * Re-posts [pumpQueue] after a short back-off instead of immediately, so persistent GATT
+     * congestion can't busy-loop the main thread. Bounded by [MAX_NOTIFY_RETRIES]; once exhausted the
+     * link is treated as dead and the session is closed.
+     */
+    private fun scheduleCongestionRetry() {
+        if (closed) return
+        if (notifyRetries >= MAX_NOTIFY_RETRIES) {
+            Log.i(TAG, "notify congested past cap, closing")
+            closeOnce()
+            return
+        }
+        notifyRetries++
+        mainHandler.postDelayed({ pumpQueue() }, NOTIFY_RETRY_TOKEN, NOTIFY_RETRY_DELAY_MS)
     }
 
     private fun closeOnce() {
@@ -298,6 +327,7 @@ class BleControlServer(context: Context) : ControlChannel {
     override fun close() {
         closed = true
         mainHandler.removeCallbacksAndMessages(advFallbackToken)
+        mainHandler.removeCallbacksAndMessages(NOTIFY_RETRY_TOKEN)
         try { advertiser?.stopAdvertising(advertiseCallback) } catch (_: Exception) {}
         advertiser = null
         try { gattServer?.close() } catch (_: Exception) {}

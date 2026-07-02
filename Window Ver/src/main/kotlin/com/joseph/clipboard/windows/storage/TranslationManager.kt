@@ -37,9 +37,12 @@ object TranslationManager {
     private fun loadTranslations() {
         try {
             val stream = this::class.java.classLoader.getResourceAsStream("translation.json.txt")
-            if (stream == null) return
-            val content = InputStreamReader(stream, Charsets.UTF_8).readText()
-            
+            if (stream == null) {
+                System.err.println("TranslationManager: FATAL - translation.json.txt resource not found on classpath. Every getString() will return the raw key.")
+                return
+            }
+            val content = stream.use { InputStreamReader(it, Charsets.UTF_8).readText() }
+
             if (content.isBlank()) return
 
             for ((uiName, headerName) in languageMap) {
@@ -75,6 +78,12 @@ object TranslationManager {
             
             // Map System Default to English
             translations["System Default"] = translations["English"] ?: mutableMapOf()
+
+            // If nothing parsed, the resource was present but unreadable (e.g. packaging/encoding
+            // mistake). Fail loudly instead of silently returning raw keys from every getString().
+            if (translations["English"].isNullOrEmpty()) {
+                System.err.println("TranslationManager: FATAL - translation.json.txt parsed to an empty map (no 'English' keys). Check the resource is packaged intact; every getString() will return the raw key.")
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

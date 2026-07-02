@@ -19,6 +19,7 @@
             android:id="@+id/btn_push_text"
             android:layout_width="32dp"
             android:layout_height="32dp"
+            android:contentDescription="@string/a11y_push_clipboard"
             android:padding="4dp"
             android:src="@drawable/ic_clipboard_dark" />
 
@@ -27,6 +28,7 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginStart="12dp"
+            android:contentDescription="@string/a11y_transfer_file"
             android:padding="4dp"
             android:src="@android:drawable/ic_menu_gallery"
             app:tint="@color/white" />

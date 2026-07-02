@@ -97,7 +97,7 @@
     <string name="receiving_files_title">Menerima File</string>
     <string name="save_to_folder_downloads">Simpan ke folder: Downloads</string>
     <string name="action_cancel">Batal</string>
-    <string name="action_close_with_check">✓ Tutup</string>
+    <string name="action_close_with_check">Tutup</string>
     <string name="incoming_transfer_title">Transfer Masuk</string>
     <string name="default_device_name">Nama Perangkat</string>
     <string name="action_accept_files">Terima File</string>
@@ -109,13 +109,13 @@
     <string name="clipboard_share_windows_title">Clipboard Share untuk Windows</string>
     <string name="desktop_app_in_development_desc">Aplikasi desktop pendamping saat ini sedang dalam pengembangan dan akan segera tersedia.</string>
     <string name="menu_title">Menu</string>
-    <string name="menu_windows_version">💻 Versi Windows</string>
-    <string name="menu_restart_services">🔄 Mulai Ulang Layanan</string>
-    <string name="menu_power_off">🔌 Matikan Daya</string>
+    <string name="menu_windows_version">Versi Windows</string>
+    <string name="menu_restart_services">Mulai Ulang Layanan</string>
+    <string name="menu_power_off">Matikan Daya</string>
     <string name="action_pair">Sandingkan</string>
     <string name="action_unpair">Batal Sanding</string>
     <string name="send_files_title">Kirim File</string>
-    <string name="type_file">File</string>
+    <string name="type_file">Berkas</string>
     <string name="type_media">Media</string>
     <string name="type_folder">Folder</string>
     <string name="type_app">Aplikasi</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Perangkat Terhubung</string>
     <string name="action_send">Kirim</string>
     <string name="history_and_push_title">Papan Klip &amp; Kirim</string>
-    <string name="action_push_current_clipboard">📤 Dorong Papan Klip Saat Ini</string>
+    <string name="action_push_current_clipboard">Dorong Papan Klip Saat Ini</string>
     <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk menyalin)</string>
     <string name="required_permissions_title">Izin yang Diperlukan</string>
     <string name="battery_optimization_title">Pengoptimalan Baterai</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">LAINNYA</string>
     <string name="support_setting">Dukungan</string>
-    <string name="action_donate">☕ Donasi</string>
+    <string name="action_donate">Donasi</string>
     <string name="privacy_policy_setting">Kebijakan Privasi</string>
-    <string name="action_read_privacy_policy">📄 Baca</string>
+    <string name="action_read_privacy_policy">Baca</string>
     <string name="system_status_title">Status Sistem</string>
     <string name="status_checking">Status: Memeriksa...</string>
     <string name="accept_incoming_clipboard">Terima Papan Klip Masuk</string>
@@ -208,7 +208,7 @@
     <string name="toast_transfer_interrupted">Transfer terganggu. Penerima dapat melanjutkan saat tersambung kembali.</string>
     <string name="toast_batch_transfer_complete">Transfer Batch Selesai!</string>
     <string name="shortcut_send_to_device">Kirim ke %s</string>
-    <string name="shortcut_transfer_via_clipboard_share">Transfer via Clipboard Share</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transfer lewat Clipboard Share</string>
     <string name="toast_pushing_clipboard_to_mesh">Mendorong papan klip ke mesh...</string>
     <string name="no_clipboard_history_yet">Belum ada riwayat papan klip.</string>
     <string name="toast_copied_to_clipboard">Disalin ke papan klip</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Perangkat Terhubung</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Kirim Via</string>
+    <string name="send_via_size_selected">%1$s file dipilih</string>
     <string name="action_how_to_use">Cara pakai</string>
     <string name="discoverable_to_devices">Dapat ditemukan perangkat lain</string>
     <string name="transaction_details_title">Detail Transaksi</string>
@@ -416,7 +417,7 @@
     <string name="transfer_tut_history">Ketuk di sini untuk melihat riwayat transfer Anda dan melacak kemajuan.</string>
     <string name="transfer_tut_next">Berikutnya</string>
     <string name="transfer_shortcut_short_label">Kirim ke %1$s</string>
-    <string name="transfer_shortcut_long_label">Transfer via Clipboard Share</string>
+    <string name="transfer_shortcut_long_label">Transfer lewat Clipboard Share</string>
     <string name="transfer_unknown_file">File Tidak Diketahui</string>
     <string name="history_tutorial_push">Ketuk di sini untuk langsung mendorong teks papan klip Anda saat ini ke semua perangkat tersanding.</string>
     <string name="history_tutorial_accept_switch">Nonaktifkan ini jika Anda tidak ingin menerima konten papan klip dari perangkat lain.</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">Terima NFC</string>
     <string name="offgrid_send_title_qr">Kirim via QR</string>
     <string name="offgrid_send_title_nfc">Kirim via NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Lewati</string>
+    <string name="tutorial_done">Selesai</string>
+    <string name="scanner_tutorial_step">Arahkan kamera ke kode QR pengirim untuk menerima melalui jaringan lokal.</string>
+    <string name="tile_push_to_pc">Kirim ke PC</string>
+    <string name="a11y_menu">Menu</string>
+    <string name="a11y_push_clipboard">Kirim papan klip</string>
+    <string name="a11y_transfer_file">Transfer file</string>
+    <string name="action_remove_file">Hapus file</string>
 </resources>

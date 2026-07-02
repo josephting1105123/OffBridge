@@ -31,6 +31,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.EcdhSession
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.applyModalPolish
 import com.EntropicSoftwareLab.ClipboardShare.SkeletonHelper
 import com.EntropicSoftwareLab.ClipboardShare.Net
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
@@ -159,6 +160,8 @@ class QrScannerFragment : Fragment() {
     /** Stashed across the nearby-permission request round-trip. Null = the grant
      *  came from the up-front ask (no transfer in flight yet). */
     private var pendingFallbackPayload: OffGridPayload? = null
+    /** Payload awaiting the one-time Bluetooth-permission ask on the PC-QR (SoftAP) path. */
+    private var pendingBtControlPayload: OffGridPayload? = null
     private var activeSessionId: String? = null
     private var activeConnection: TransportConnection? = null
 
@@ -260,12 +263,45 @@ class QrScannerFragment : Fragment() {
             }
         }
 
+    /**
+     * One-time Bluetooth-permission ask for the PC-QR (SoftAP) path. A PC that advertises a BLE
+     * control channel lets the phone link the instant it scans — live PC status + coordinated retry
+     * instead of the PC waiting blind. That needs BLUETOOTH_SCAN/CONNECT (API 31+), which the SoftAP
+     * path never requested before (it only ever needed CHANGE_WIFI_STATE to join). Denial is fine:
+     * [connectToGroup] proceeds into the same direct SoftAP join regardless of the grant, so the
+     * transfer is never blocked on the answer.
+     */
+    private val requestBtControlPermission =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+            val payload = pendingBtControlPayload
+            pendingBtControlPayload = null
+            if (payload != null) startTransportLadder(payload, hasNearbyPermission = false)
+        }
+
     private fun nearbyPermission(): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.NEARBY_WIFI_DEVICES
         } else {
             Manifest.permission.ACCESS_FINE_LOCATION
         }
+
+    /** BLUETOOTH_SCAN/CONNECT still missing (API 31+ only); the runtime gate for BLE control. */
+    private fun missingBtControlPermissions(): List<String> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return emptyList()
+        return listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+            .filter {
+                ContextCompat.checkSelfPermission(requireContext(), it) != PackageManager.PERMISSION_GRANTED
+            }
+    }
+
+    private fun btControlPermRequested(): Boolean =
+        requireContext().getSharedPreferences(PERM_PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_BT_CONTROL_PERM_REQUESTED, false)
+
+    private fun markBtControlPermRequested() {
+        requireContext().getSharedPreferences(PERM_PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(KEY_BT_CONTROL_PERM_REQUESTED, true).apply()
+    }
 
     private fun ladderPermissions(): Array<String> {
         val perms = mutableListOf(nearbyPermission())
@@ -527,7 +563,7 @@ class QrScannerFragment : Fragment() {
             listOf(
                 TutorialStep(
                     requireView().findViewById(R.id.scanReticle),
-                    "Point the camera at the sender's code — or hold the phones back-to-back for NFC.",
+                    getString(R.string.scanner_tutorial_step),
                     hideSkipButton = forcedTour,
                     forceTooltipAbove = true,
                     tooltipAboveSpotlight = true
@@ -665,6 +701,8 @@ class QrScannerFragment : Fragment() {
             .setView(scroll)
             .setPositiveButton(android.R.string.ok, null)
             .setNeutralButton(R.string.offgrid_diag_copy) { _, _ -> copyDiag() }
+            .create()
+            .also { it.applyModalPolish() }
             .show()
     }
 
@@ -922,6 +960,21 @@ class QrScannerFragment : Fragment() {
         // denied NEARBY_WIFI_DEVICES can still join the hotspot. BLE control is still attempted
         // opportunistically inside the ladder (gated only on its own BLUETOOTH_SCAN permission).
         if (payload.softApBridge) {
+            // PC-QR case: when the sender (a PC) advertises a BLE control channel, asking for the
+            // Bluetooth runtime permission ONCE here lets the phone link over BLE — giving the PC live
+            // status and coordinated retry instead of waiting blind. PC-only users never granted it via
+            // the phone↔phone flow, so without this the rescue would silently never engage. Ask only if
+            // askable and not asked before; the transfer proceeds into the same direct join either way.
+            if ((payload.cap and TransportCaps.BLE_ADVERTISE) != 0 &&
+                !btControlPermRequested() &&
+                missingBtControlPermissions().isNotEmpty() &&
+                pendingBtControlPayload == null
+            ) {
+                pendingBtControlPayload = payload
+                markBtControlPermRequested()
+                requestBtControlPermission.launch(missingBtControlPermissions().toTypedArray())
+                return
+            }
             startTransportLadder(payload, hasNearbyPermission = false)
             return
         }
@@ -1167,6 +1220,11 @@ class QrScannerFragment : Fragment() {
         route: TransportRoute
     ): HandshakeOutcome {
         var connection: TransportConnection? = null
+        // Ownership of the connected socket transfers to TransferDaemon.executeDownloadStream only on
+        // the STARTED path. Every other return (and any thrown exception) must close it here, or the
+        // socket leaks. The finally is the single cleanup point — the catch no longer closes to avoid
+        // a double-close.
+        var handedOff = false
         try {
             val conn = connectToSender(route, payload)
             if (conn == null) {
@@ -1232,10 +1290,13 @@ class QrScannerFragment : Fragment() {
             if (!manifestLine.startsWith("MANIFEST|")) return HandshakeOutcome.FAILED
             val manifest = mutableListOf<Pair<String, Long>>()
             for (item in manifestLine.removePrefix("MANIFEST|").split('|')) {
-                if (item.contains(':')) {
-                    val lastColonIndex = item.lastIndexOf(':')
+                val lastColonIndex = item.lastIndexOf(':')
+                // Split on the LAST ':' so a filename containing ':' is preserved; require a
+                // non-empty name (index > 0) and a parseable size — skip malformed entries rather
+                // than admitting a phantom 0-byte file. Matches Windows ManifestCodec.parse.
+                if (lastColonIndex > 0) {
                     val fname = item.substring(0, lastColonIndex)
-                    val fsize = item.substring(lastColonIndex + 1).toLongOrNull() ?: 0L
+                    val fsize = item.substring(lastColonIndex + 1).toLongOrNull() ?: continue
                     manifest.add(Pair(fname, fsize))
                 }
             }
@@ -1282,11 +1343,15 @@ class QrScannerFragment : Fragment() {
             // Hand the stream to the proven engine — byte-for-byte the same
             // download path as LAN mode, regardless of carrier.
             TransferDaemon.executeDownloadStream(context, connection, session)
+            handedOff = true
             return HandshakeOutcome.STARTED
         } catch (e: Exception) {
             e.printStackTrace()
-            try { connection?.close() } catch (_: Exception) {}
             return HandshakeOutcome.FAILED
+        } finally {
+            if (!handedOff) {
+                try { connection?.close() } catch (_: Exception) {}
+            }
         }
     }
 
@@ -1561,5 +1626,7 @@ class QrScannerFragment : Fragment() {
          *  from "permanently denied" for [isPermanentlyDenied]. */
         private const val PERM_PREFS = "FileBridgePrefs"
         private const val KEY_LADDER_PERM_REQUESTED = "ladder_perm_requested_v1"
+        /** Tracks the one-time Bluetooth-permission ask on the PC-QR (SoftAP + BLE cap) path. */
+        private const val KEY_BT_CONTROL_PERM_REQUESTED = "bt_control_perm_requested_v1"
     }
 }

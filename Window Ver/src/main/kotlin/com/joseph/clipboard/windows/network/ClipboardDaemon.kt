@@ -11,7 +11,8 @@ import kotlin.concurrent.thread
 
 class ClipboardDaemon(
     private val acceptIncomingProvider: () -> Boolean,
-    private val onClipboardReceived: (String) -> Unit
+    private val onClipboardReceived: (String) -> Unit,
+    private val onClipboardDeleted: (String) -> Unit
 ) {
     val CLIPBOARD_PORT = Ports.CLIPBOARD
     private var isRunning = false
@@ -26,15 +27,19 @@ class ClipboardDaemon(
         isRunning = true
 
         thread(isDaemon = true, name = "Clipboard-Listener") {
+            // Capture the socket this run bound into a local. The finally must close only THIS
+            // socket — calling stop() would close whatever is in the serverSocket field, which a
+            // fast stop()/start() cycle may have already replaced with a freshly bound socket.
+            val socket = ServerSocket().apply {
+                reuseAddress = true
+                bind(InetSocketAddress(CLIPBOARD_PORT))
+            }
+            serverSocket = socket
             try {
-                serverSocket = ServerSocket().apply {
-                    reuseAddress = true
-                    bind(InetSocketAddress(CLIPBOARD_PORT))
-                }
                 println("ClipboardDaemon started on port $CLIPBOARD_PORT")
 
                 while (isRunning) {
-                    val clientSocket = serverSocket?.accept() ?: break
+                    val clientSocket = socket.accept()
                     handleIncomingClipboard(clientSocket)
                 }
             } catch (e: SocketException) {
@@ -42,7 +47,11 @@ class ClipboardDaemon(
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                stop()
+                try {
+                    socket.close()
+                } catch (e: Exception) {
+                    // Ignore
+                }
             }
         }
     }
@@ -83,17 +92,34 @@ class ClipboardDaemon(
                 val base64Payload = sb.toString().trim()
 
                 if (base64Payload.isNotEmpty()) {
-                    val aesKey = com.joseph.clipboard.windows.storage.SecurityVault.getAesKey(clientSocket.inetAddress.hostAddress)
+                    val senderIp = clientSocket.inetAddress.hostAddress
+                    val aesKey = com.joseph.clipboard.windows.storage.SecurityVault.getAesKey(senderIp)
                     if (aesKey != null) {
                         try {
-                            val decryptedText = com.joseph.clipboard.windows.storage.CryptoEngine.decryptString(base64Payload, aesKey)
-                            com.joseph.clipboard.windows.os.ClipboardManager.writeText(decryptedText)
-                            onClipboardReceived(decryptedText)
+                            // decryptString accepts only sealed (AES-GCM) payloads since the 3.5.0
+                            // CBC retirement; senderIp just names the peer in the rejection error.
+                            val decryptedText = com.joseph.clipboard.windows.storage.CryptoEngine.decryptString(base64Payload, aesKey, senderIp)
+                            if (decryptedText.startsWith("CMD_DELETE|")) {
+                                // Remote deleted a history entry. Android sends this as an encrypted
+                                // "CMD_DELETE|<text>" control frame; the suffix must NOT be pasted or
+                                // re-added to history. Remove any matching history row (parity with
+                                // Android's ClipboardHistoryManager.removeEntry) and wipe it from the
+                                // OS clipboard if it still matches.
+                                val toDelete = decryptedText.substring("CMD_DELETE|".length)
+                                onClipboardDeleted(toDelete)
+                                val current = com.joseph.clipboard.windows.os.ClipboardManager.readText()
+                                if (current == toDelete) {
+                                    com.joseph.clipboard.windows.os.ClipboardManager.writeText("")
+                                }
+                            } else {
+                                com.joseph.clipboard.windows.os.ClipboardManager.writeText(decryptedText)
+                                onClipboardReceived(decryptedText)
+                            }
                         } catch (e: Exception) {
                             System.err.println("Failed to decrypt clipboard payload: ${e.message}")
                         }
                     } else {
-                        System.err.println("No AES key found for ${clientSocket.inetAddress.hostAddress}, cannot decrypt clipboard.")
+                        System.err.println("No AES key found for $senderIp, cannot decrypt clipboard.")
                     }
                 }
             } catch (e: Exception) {

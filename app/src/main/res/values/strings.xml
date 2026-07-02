@@ -272,6 +272,7 @@
 
     <!-- V3.0: Send Via chooser -->
     <string name="send_via_title">Send Via</string>
+    <string name="send_via_size_selected">%1$s of files selected</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_connected_devices">Connected Devices</string>
     <string name="send_to_devices_title">Send to Devices</string>
@@ -585,4 +586,14 @@
     <string name="receive_nfc">NFC receive</string>
     <string name="offgrid_send_title_qr">Send via QR</string>
     <string name="offgrid_send_title_nfc">Send via NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Skip</string>
+    <string name="tutorial_done">Done</string>
+    <string name="scanner_tutorial_step">Point the camera at the sender\'s QR code to receive over the local network.</string>
+    <string name="tile_push_to_pc">Push to PC</string>
+    <string name="a11y_menu">Menu</string>
+    <string name="a11y_push_clipboard">Push clipboard</string>
+    <string name="a11y_transfer_file">Transfer file</string>
+    <string name="action_remove_file">Remove file</string>
 </resources>

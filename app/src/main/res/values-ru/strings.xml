@@ -97,7 +97,7 @@
     <string name="receiving_files_title">Получение файлов</string>
     <string name="save_to_folder_downloads">Сохранить в папку: Downloads</string>
     <string name="action_cancel">Отмена</string>
-    <string name="action_close_with_check">✓ Закрыть</string>
+    <string name="action_close_with_check">Закрыть</string>
     <string name="incoming_transfer_title">Входящая передача</string>
     <string name="default_device_name">Имя устройства</string>
     <string name="action_accept_files">Принять файлы</string>
@@ -109,9 +109,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share для Windows</string>
     <string name="desktop_app_in_development_desc">Настольное приложение в настоящее время находится в разработке и скоро будет доступно.</string>
     <string name="menu_title">Меню</string>
-    <string name="menu_windows_version">💻 Версия для Windows</string>
-    <string name="menu_restart_services">🔄 Перезапустить службы</string>
-    <string name="menu_power_off">🔌 Выключить</string>
+    <string name="menu_windows_version">Версия для Windows</string>
+    <string name="menu_restart_services">Перезапустить службы</string>
+    <string name="menu_power_off">Выключить</string>
     <string name="action_pair">Сопряжение</string>
     <string name="action_unpair">Отменить сопряжение</string>
     <string name="send_files_title">Отправить файлы</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Подключенные устройства</string>
     <string name="action_send">Отправить</string>
     <string name="history_and_push_title">Буфер обмена и Отправка</string>
-    <string name="action_push_current_clipboard">📤 Отправить текущий буфер обмена</string>
+    <string name="action_push_current_clipboard">Отправить текущий буфер обмена</string>
     <string name="recent_copies_hint">Недавние копии (нажмите, чтобы скопировать)</string>
     <string name="required_permissions_title">Необходимые разрешения</string>
     <string name="battery_optimization_title">Оптимизация батареи</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Загрузки (Downloads)</string>
     <string name="settings_section_others">ДРУГОЕ</string>
     <string name="support_setting">Поддержка</string>
-    <string name="action_donate">☕ Пожертвовать</string>
+    <string name="action_donate">Пожертвовать</string>
     <string name="privacy_policy_setting">Политика конфиденциальности</string>
-    <string name="action_read_privacy_policy">📄 Читать</string>
+    <string name="action_read_privacy_policy">Читать</string>
     <string name="system_status_title">Статус системы</string>
     <string name="status_checking">Статус: Проверка...</string>
     <string name="accept_incoming_clipboard">Принимать входящий буфер обмена</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Подключенные устройства</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Отправить через</string>
+    <string name="send_via_size_selected">Выбрано файлов: %1$s</string>
     <string name="action_how_to_use">Как использовать</string>
     <string name="discoverable_to_devices">Видимо для других устройств</string>
     <string name="transaction_details_title">Сведения о передаче</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">Получение по NFC</string>
     <string name="offgrid_send_title_qr">Отправить через QR</string>
     <string name="offgrid_send_title_nfc">Отправить через NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Пропустить</string>
+    <string name="tutorial_done">Готово</string>
+    <string name="scanner_tutorial_step">Наведите камеру на QR-код отправителя, чтобы получить файл по локальной сети.</string>
+    <string name="tile_push_to_pc">Отправить на ПК</string>
+    <string name="a11y_menu">Меню</string>
+    <string name="a11y_push_clipboard">Отправить буфер обмена</string>
+    <string name="a11y_transfer_file">Передать файл</string>
+    <string name="action_remove_file">Удалить файл</string>
 </resources>

@@ -34,8 +34,14 @@ import java.net.Socket
 
 class ClipboardService : Service() {
 
-    private val serviceJob = Job()
-    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
+    private val serviceJob = SupervisorJob()
+    // SupervisorJob keeps one child's failure from cancelling its siblings (receiver, notifier,
+    // senders); the handler catches anything that escapes a child so a stray throw can't crash the
+    // whole service via the default uncaught-exception path.
+    private val serviceExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        Log.w("ClipboardService", "Uncaught coroutine failure: ${throwable.message}")
+    }
+    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob + serviceExceptionHandler)
 
     private var serverSocket: ServerSocket? = null
     private lateinit var clipboardManager: ClipboardManager
@@ -172,7 +178,9 @@ class ClipboardService : Service() {
                 SecurityVault.pinClipboardGcm(applicationContext, ip)
                 CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             }
-            DowngradePolicy.Decision.PLAINTEXT -> CryptoEngine.encryptString(plain, aesKey)
+            // CBC retired in 3.5.0: a peer not (yet) advertising GCM1 still gets an authenticated GCM
+            // seal (it must update to open it) instead of the malleable unauthenticated CBC path.
+            DowngradePolicy.Decision.PLAINTEXT -> CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             DowngradePolicy.Decision.BLOCK -> {
                 Log.w("ClipboardService", "Clipboard GCM downgrade blocked for $ip — skipping peer")
                 null
@@ -275,19 +283,17 @@ class ClipboardService : Service() {
         notificationStartTime = System.currentTimeMillis()
         chronometerBase = SystemClock.elapsedRealtime()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val manager = getSystemService(NotificationManager::class.java)
-            val serviceChannel = NotificationChannel(CHANNEL_ID, applicationContext.getString(R.string.status_channel_service), NotificationManager.IMPORTANCE_LOW)
-            serviceChannel.setShowBadge(false)
-            manager.createNotificationChannel(serviceChannel)
-            manager.createNotificationChannel(NotificationChannel("CLIPBOARD_ALERT_CHANNEL_V2", applicationContext.getString(R.string.status_channel_alerts), NotificationManager.IMPORTANCE_HIGH))
-            val pairingChannel = NotificationChannel(PAIRING_CHANNEL_ID, applicationContext.getString(R.string.status_channel_pairing), NotificationManager.IMPORTANCE_HIGH)
-            manager.createNotificationChannel(pairingChannel)
-            val transferProgressChannel = NotificationChannel("FILE_TRANSFER_CHANNEL_V2", applicationContext.getString(R.string.status_channel_transfer_progress), NotificationManager.IMPORTANCE_LOW)
-            manager.createNotificationChannel(transferProgressChannel)
-            val transferRequestChannel = NotificationChannel("FILE_TRANSFER_REQUEST_CHANNEL_V2", applicationContext.getString(R.string.status_channel_incoming_transfers), NotificationManager.IMPORTANCE_HIGH)
-            manager.createNotificationChannel(transferRequestChannel)
-        }
+        val manager = getSystemService(NotificationManager::class.java)
+        val serviceChannel = NotificationChannel(CHANNEL_ID, applicationContext.getString(R.string.status_channel_service), NotificationManager.IMPORTANCE_LOW)
+        serviceChannel.setShowBadge(false)
+        manager.createNotificationChannel(serviceChannel)
+        manager.createNotificationChannel(NotificationChannel("CLIPBOARD_ALERT_CHANNEL_V2", applicationContext.getString(R.string.status_channel_alerts), NotificationManager.IMPORTANCE_HIGH))
+        val pairingChannel = NotificationChannel(PAIRING_CHANNEL_ID, applicationContext.getString(R.string.status_channel_pairing), NotificationManager.IMPORTANCE_HIGH)
+        manager.createNotificationChannel(pairingChannel)
+        val transferProgressChannel = NotificationChannel("FILE_TRANSFER_CHANNEL_V2", applicationContext.getString(R.string.status_channel_transfer_progress), NotificationManager.IMPORTANCE_LOW)
+        manager.createNotificationChannel(transferProgressChannel)
+        val transferRequestChannel = NotificationChannel("FILE_TRANSFER_REQUEST_CHANNEL_V2", applicationContext.getString(R.string.status_channel_incoming_transfers), NotificationManager.IMPORTANCE_HIGH)
+        manager.createNotificationChannel(transferRequestChannel)
 
         val remoteViews = getCustomRemoteViews(applicationContext.getString(R.string.status_mesh_active))
         val mainActivityIntent = Intent(this, MainActivity::class.java)
@@ -343,23 +349,29 @@ class ClipboardService : Service() {
     private fun startNotificationUpdater() {
         serviceScope.launch(Dispatchers.Main) {
             while (isActive) {
-                val pairedCount = TransferDaemon.discoveredNodes.values.count { SecurityVault.getKeyForNode(applicationContext, it.ip) != null }
-                val statusText = if (!hasValidNetwork()) applicationContext.getString(R.string.status_network_disconnected)
-                else if (!isSyncEnabled) applicationContext.getString(R.string.status_receiving_paused)
-                else if (TransferDaemon.discoveredNodes.isEmpty()) applicationContext.getString(R.string.status_scanning_devices)
-                else applicationContext.getString(R.string.status_connected_devices, pairedCount)
+                // Per-iteration guard: a notify() throw (e.g. TransactionTooLargeException) must not
+                // kill this loop, or the foreground notification would freeze on its last status.
+                try {
+                    val pairedCount = TransferDaemon.discoveredNodes.values.count { SecurityVault.getKeyForNode(applicationContext, it.ip) != null }
+                    val statusText = if (!hasValidNetwork()) applicationContext.getString(R.string.status_network_disconnected)
+                    else if (!isSyncEnabled) applicationContext.getString(R.string.status_receiving_paused)
+                    else if (TransferDaemon.discoveredNodes.isEmpty()) applicationContext.getString(R.string.status_scanning_devices)
+                    else applicationContext.getString(R.string.status_connected_devices, pairedCount)
 
-                val remoteViews = getCustomRemoteViews(statusText)
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val notification = NotificationCompat.Builder(this@ClipboardService, CHANNEL_ID)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                    .setCustomContentView(remoteViews)
-                    .setOngoing(true)
-                    .setSilent(true)
-                    .setPriority(NotificationCompat.PRIORITY_MAX)
-                    .build()
-                notificationManager.notify(1, notification)
+                    val remoteViews = getCustomRemoteViews(statusText)
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val notification = NotificationCompat.Builder(this@ClipboardService, CHANNEL_ID)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setStyle(NotificationCompat.DecoratedCustomViewStyle())
+                        .setCustomContentView(remoteViews)
+                        .setOngoing(true)
+                        .setSilent(true)
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .build()
+                    notificationManager.notify(1, notification)
+                } catch (e: Exception) {
+                    Log.w("ClipboardService", "Notification update failed, retrying: ${e.message}")
+                }
                 delay(2000)
             }
         }
@@ -368,16 +380,9 @@ class ClipboardService : Service() {
     private fun hasValidNetwork(): Boolean {
         try {
             val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val network = connectivityManager.activeNetwork ?: return false
-                val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-                return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            } else {
-                @Suppress("DEPRECATION")
-                val networkInfo = connectivityManager.activeNetworkInfo ?: return false
-                @Suppress("DEPRECATION")
-                return networkInfo.isConnected
-            }
+            val network = connectivityManager.activeNetwork ?: return false
+            val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
         } catch (e: Exception) { return false }
     }
 
@@ -459,11 +464,9 @@ class ClipboardService : Service() {
 
                             withContext(Dispatchers.Main) {
                                 val clipData = ClipData.newPlainText("Clipboard Share", text)
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    val extras = PersistableBundle()
-                                    extras.putBoolean(CLIPBOARD_SOURCE_TAG, true)
-                                    clipData.description.extras = extras
-                                }
+                                val extras = PersistableBundle()
+                                extras.putBoolean(CLIPBOARD_SOURCE_TAG, true)
+                                clipData.description.extras = extras
                                 clipboardManager.setPrimaryClip(clipData)
                             }
                         }

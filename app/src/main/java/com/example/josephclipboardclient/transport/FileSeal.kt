@@ -34,16 +34,32 @@ object FileSeal {
     private const val TAG_BYTES = TAG_BITS / 8
     private const val LEN_PREFIX = 4
     private val INFO = "file-aead-v1".toByteArray(Charsets.UTF_8)
+    private val INFO_V2 = "file-aead-v2".toByteArray(Charsets.UTF_8)
 
     /** Per-file/stream sub-key derived once from the shared pairing key. */
     fun deriveKey(pairKey: ByteArray): ByteArray = SessionCrypto.hkdfSha256(pairKey, INFO, 32)
+
+    /**
+     * v2 per-session sub-key: HKDF-SHA256(pairKey, "file-aead-v2" || sessionId, 32). Distinct per
+     * transfer session, so a record authentic under one session's key can't be replayed into another.
+     */
+    fun deriveKeyV2(pairKey: ByteArray, sessionId: String): ByteArray =
+        SessionCrypto.hkdfSha256(pairKey, INFO_V2 + sessionId.toByteArray(Charsets.UTF_8), 32)
+
+    /**
+     * v2 AAD prefix binding session + file identity: sessionIdBytes || u64be(fileIndex). Combined with
+     * the per-chunk suffix the full v2 AAD is sessionIdBytes || u64be(fileIndex) || u64be(chunkIndex),
+     * so a record can no longer be spliced across files or transfers.
+     */
+    fun v2AadPrefix(sessionId: String, fileIndex: Long): ByteArray =
+        sessionId.toByteArray(Charsets.UTF_8) + java.nio.ByteBuffer.allocate(8).putLong(fileIndex).array()
 
     /**
      * Seals exactly [plainLen] bytes pulled from [input] into [output] as GCM records. [subKey] is
      * the derived key from [deriveKey]; [startChunkIndex] is 0 for a fresh file (the only value the
      * current resume policy uses, since AEAD resume restarts the in-progress file).
      */
-    fun sealStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L) {
+    fun sealStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L, aadPrefix: ByteArray = ByteArray(0)) {
         val keySpec = SecretKeySpec(subKey, "AES")
         val buf = ByteArray(CHUNK_SIZE)
         var remaining = plainLen
@@ -56,7 +72,7 @@ object FileSeal {
                 if (r == -1) throw java.io.IOException("Source ended early: wanted $want at chunk $chunkIndex")
                 filled += r
             }
-            output.write(sealChunk(keySpec, buf, filled, chunkIndex))
+            output.write(sealChunk(keySpec, buf, filled, chunkIndex, aadPrefix = aadPrefix))
             remaining -= filled
             chunkIndex++
         }
@@ -67,12 +83,12 @@ object FileSeal {
      * Reads and decrypts [plainLen] bytes worth of GCM records from [input], writing the recovered
      * plaintext to [output]. Throws on authentication failure, truncation, or a malformed frame.
      */
-    fun openStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L) {
+    fun openStream(subKey: ByteArray, input: InputStream, plainLen: Long, output: OutputStream, startChunkIndex: Long = 0L, aadPrefix: ByteArray = ByteArray(0)) {
         val keySpec = SecretKeySpec(subKey, "AES")
         var remaining = plainLen
         var chunkIndex = startChunkIndex
         while (remaining > 0) {
-            val pt = openChunk(keySpec, input, chunkIndex, remaining)
+            val pt = openChunk(keySpec, input, chunkIndex, remaining, aadPrefix)
             output.write(pt)
             remaining -= pt.size
             chunkIndex++
@@ -86,7 +102,7 @@ object FileSeal {
      * chunks. [maxPlain] is the remaining expected plaintext (rejects an over-long chunk). Throws on
      * authentication failure / truncation / a malformed frame.
      */
-    internal fun openChunk(keySpec: SecretKeySpec, input: InputStream, chunkIndex: Long, maxPlain: Long): ByteArray {
+    internal fun openChunk(keySpec: SecretKeySpec, input: InputStream, chunkIndex: Long, maxPlain: Long, aadPrefix: ByteArray = ByteArray(0)): ByteArray {
         val ctLen = readU32(input)
         // A valid record is one tag plus 1..CHUNK_SIZE plaintext bytes; reject anything else before
         // allocating, so a hostile/garbled length can't drive a huge allocation.
@@ -95,7 +111,7 @@ object FileSeal {
         val ct = readFully(input, ctLen)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, keySpec, GCMParameterSpec(TAG_BITS, nonce))
-        cipher.updateAAD(aad(chunkIndex))
+        cipher.updateAAD(aad(chunkIndex, aadPrefix))
         val pt = cipher.doFinal(ct) // throws AEADBadTagException on tamper / wrong key / wrong index
         if (pt.isEmpty() || pt.size.toLong() > maxPlain) throw java.io.IOException("Chunk plaintext overflow at $chunkIndex")
         return pt
@@ -111,17 +127,21 @@ object FileSeal {
         len: Int,
         chunkIndex: Long,
         nonce: ByteArray = ByteArray(NONCE_LEN).also { SecureRandom().nextBytes(it) },
+        aadPrefix: ByteArray = ByteArray(0),
     ): ByteArray {
         require(nonce.size == NONCE_LEN) { "nonce must be $NONCE_LEN bytes" }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, keySpec, GCMParameterSpec(TAG_BITS, nonce))
-        cipher.updateAAD(aad(chunkIndex))
+        cipher.updateAAD(aad(chunkIndex, aadPrefix))
         val ct = cipher.doFinal(plain, 0, len)
         return ByteBuffer.allocate(LEN_PREFIX + NONCE_LEN + ct.size)
             .putInt(ct.size).put(nonce).put(ct).array()
     }
 
-    private fun aad(chunkIndex: Long): ByteArray = ByteBuffer.allocate(8).putLong(chunkIndex).array()
+    // aadPrefix defaults to empty ⇒ v1 AAD is exactly u64be(chunkIndex), byte-identical to the
+    // original scheme. v2 supplies a non-empty prefix (sessionId || u64be(fileIndex)) via v2AadPrefix.
+    private fun aad(chunkIndex: Long, aadPrefix: ByteArray): ByteArray =
+        aadPrefix + ByteBuffer.allocate(8).putLong(chunkIndex).array()
 
     private fun readU32(input: InputStream): Int {
         val b = readFully(input, LEN_PREFIX)

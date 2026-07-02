@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.EntropicSoftwareLab.ClipboardShare.PolishDialogWindow
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.BentoTile
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.EmptyState
@@ -59,6 +60,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialPlaceholderDevice
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialStep
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 
@@ -94,6 +97,7 @@ fun SystemStatusScreen(
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val anchors = rememberTutorialAnchors()
+    val backdrop = rememberBackdropState()
     val focusManager = LocalFocusManager.current
     var showPairedDialog by remember { mutableStateOf(false) }
 
@@ -103,7 +107,7 @@ fun SystemStatusScreen(
             .background(colors.background)
             .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(dimens.spaceXl)) {
+        Column(modifier = Modifier.fillMaxSize().backdropSource(backdrop).padding(dimens.spaceXl)) {
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 72.dp, bottom = dimens.spaceXl),
@@ -322,6 +326,7 @@ fun SystemStatusScreen(
                 boundsMap = anchors,
                 onDismiss = onTutorialDismiss,
                 onComplete = onTutorialDismiss,
+                backdrop = backdrop,
             )
         }
 
@@ -346,6 +351,8 @@ private fun PairedDevicesDialog(pairedDevices: List<PairedDeviceUi>, onDismiss: 
         },
         title = { Text(stringResource(R.string.paired_devices_title), color = colors.textPrimary) },
         text = {
+            // Inside a dialog slot so LocalView resolves to the dialog's own window.
+            PolishDialogWindow()
             if (rows.isEmpty()) {
                 Text(stringResource(R.string.paired_devices_empty), color = colors.textSecondary)
             } else {

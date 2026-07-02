@@ -97,7 +97,7 @@
     <string name="receiving_files_title">Dateien werden empfangen</string>
     <string name="save_to_folder_downloads">Speichern in Ordner: Downloads</string>
     <string name="action_cancel">Abbrechen</string>
-    <string name="action_close_with_check">✓ Schließen</string>
+    <string name="action_close_with_check">Schließen</string>
     <string name="incoming_transfer_title">Eingehende Übertragung</string>
     <string name="default_device_name">Gerätename</string>
     <string name="action_accept_files">Dateien annehmen</string>
@@ -109,9 +109,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share für Windows</string>
     <string name="desktop_app_in_development_desc">Die begleitende Desktop-App befindet sich derzeit in Entwicklung und wird bald verfügbar sein.</string>
     <string name="menu_title">Menü</string>
-    <string name="menu_windows_version">💻 Windows-Version</string>
-    <string name="menu_restart_services">🔄 Dienste neu starten</string>
-    <string name="menu_power_off">🔌 Ausschalten</string>
+    <string name="menu_windows_version">Windows-Version</string>
+    <string name="menu_restart_services">Dienste neu starten</string>
+    <string name="menu_power_off">Ausschalten</string>
     <string name="action_pair">Koppeln</string>
     <string name="action_unpair">Entkoppeln</string>
     <string name="send_files_title">Dateien senden</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Verbundene Geräte</string>
     <string name="action_send">Senden</string>
     <string name="history_and_push_title">Zwischenablage &amp; Senden</string>
-    <string name="action_push_current_clipboard">📤 Aktuelle Zwischenablage senden</string>
+    <string name="action_push_current_clipboard">Aktuelle Zwischenablage senden</string>
     <string name="recent_copies_hint">Kürzlich kopiert (Tippen zum Kopieren)</string>
     <string name="required_permissions_title">Erforderliche Berechtigungen</string>
     <string name="battery_optimization_title">Akku-Optimierung</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">SONSTIGES</string>
     <string name="support_setting">Unterstützung</string>
-    <string name="action_donate">☕ Spenden</string>
+    <string name="action_donate">Spenden</string>
     <string name="privacy_policy_setting">Datenschutzerklärung</string>
-    <string name="action_read_privacy_policy">📄 Lesen</string>
+    <string name="action_read_privacy_policy">Lesen</string>
     <string name="system_status_title">Systemstatus</string>
     <string name="status_checking">Status: Wird überprüft...</string>
     <string name="accept_incoming_clipboard">Eingehende Zwischenablage annehmen</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Verbundene Geräte</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Senden über</string>
+    <string name="send_via_size_selected">%1$s an Dateien ausgewählt</string>
     <string name="action_how_to_use">Anleitung</string>
     <string name="discoverable_to_devices">Für andere Geräte sichtbar</string>
     <string name="transaction_details_title">Transaktionsdetails</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">NFC-Empfang</string>
     <string name="offgrid_send_title_qr">Über QR senden</string>
     <string name="offgrid_send_title_nfc">Über NFC senden</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Überspringen</string>
+    <string name="tutorial_done">Fertig</string>
+    <string name="scanner_tutorial_step">Richten Sie die Kamera auf den QR-Code des Absenders, um über das lokale Netzwerk zu empfangen.</string>
+    <string name="tile_push_to_pc">An PC senden</string>
+    <string name="a11y_menu">Menü</string>
+    <string name="a11y_push_clipboard">Zwischenablage senden</string>
+    <string name="a11y_transfer_file">Datei übertragen</string>
+    <string name="action_remove_file">Datei entfernen</string>
 </resources>

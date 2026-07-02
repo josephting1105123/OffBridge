@@ -1,8 +1,6 @@
 package com.joseph.clipboard.windows
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,14 +43,23 @@ import com.joseph.clipboard.windows.theme.DarkSurface
 import com.joseph.clipboard.windows.theme.ErrorMuted
 import com.joseph.clipboard.windows.theme.ErrorText
 import com.joseph.clipboard.windows.theme.GreenPrimary
-import com.joseph.clipboard.windows.theme.ScrimColor
 import com.joseph.clipboard.windows.theme.ThemeMode
 import com.joseph.clipboard.windows.ui.AndroidVersionScreen
+import com.joseph.clipboard.windows.ui.BackdropController
+import com.joseph.clipboard.windows.ui.BackdropEffect
+import com.joseph.clipboard.windows.ui.BackdropScrim
 import com.joseph.clipboard.windows.ui.FileTransferScreen
 import com.joseph.clipboard.windows.ui.HistoryScreen
+import com.joseph.clipboard.windows.ui.LocalBackdrop
 import com.joseph.clipboard.windows.ui.SettingsScreen
 import com.joseph.clipboard.windows.ui.SystemStatusScreen
+import com.joseph.clipboard.windows.ui.backdropBlur
+import com.joseph.clipboard.windows.ui.modalPopIn
 import com.joseph.clipboard.windows.os.SystemTrayManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 enum class Screen {
@@ -61,19 +68,6 @@ enum class Screen {
 
 // Global Theme State
 val LocalThemeMode = compositionLocalOf<MutableState<ThemeMode>> { error("No ThemeMode provided") }
-
-/** A subtle scale-up + fade entrance for modal surfaces (smooth "pop", not sharp). */
-@Composable
-private fun Modifier.popIn(): Modifier {
-    val p = remember { Animatable(0f) }
-    LaunchedEffect(Unit) { p.animateTo(1f, animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)) }
-    return this.graphicsLayer {
-        val v = p.value
-        alpha = v
-        scaleX = 0.92f + 0.08f * v
-        scaleY = 0.92f + 0.08f * v
-    }
-}
 
 @Composable
 fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
@@ -99,6 +93,10 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
         }
     }
 
+    // While any modal (dialog / pairing / power menu) is up, the screen content blurs behind it.
+    val backdropController = remember { BackdropController() }
+
+    CompositionLocalProvider(LocalBackdrop provides backdropController) {
     Box(modifier = Modifier.fillMaxSize()) {
         Surface(modifier = Modifier.fillMaxSize()) {
             val transferText = com.joseph.clipboard.windows.storage.TranslationManager.getString("nav_send").takeIf { it != "nav_send" } ?: "Send"
@@ -156,7 +154,13 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
             }
 
             Box(modifier = Modifier.fillMaxSize().weight(1f)) {
-                Crossfade(targetState = currentScreen, animationSpec = tween(220), label = "screen") { screen ->
+                Crossfade(
+                    targetState = currentScreen,
+                    animationSpec = tween(220),
+                    label = "screen",
+                    // The page recedes (blurs) behind any modal; the rail stays sharp and usable.
+                    modifier = Modifier.backdropBlur(backdropController),
+                ) { screen ->
                     when (screen) {
                         Screen.SEND_FILES -> FileTransferScreen(
                             appController = appController,
@@ -173,10 +177,11 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                     }
                 }
                 if (showPowerMenu) {
+                    BackdropEffect()
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f))
+                            .background(BackdropScrim)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
@@ -188,7 +193,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colors.surface,
                             elevation = 8.dp,
-                            modifier = Modifier.popIn().clickable(
+                            modifier = Modifier.modalPopIn().clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = { /* Do nothing, consume click */ }
@@ -219,7 +224,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
 
                                 Button(
                                     onClick = {
-                                        // M-18: Restart the network daemons in-process instead of relaunching
+                                        // Restart the network daemons in-process instead of relaunching
                                         // the JVM. Relaunching via ProcessBuilder/exitProcess(0) failed in dev
                                         // and could spawn a second instance that cannot bind the daemon ports.
                                         appController.restartServices()
@@ -263,6 +268,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
         }
         } // Close Surface
     } // Close Box
+    } // Close CompositionLocalProvider
 } // Close AppContent
 
 /** Read-only segmented verification code (brand-bordered boxes, white digits) — mirrors the Android
@@ -301,10 +307,11 @@ private fun PairingVerifyLabel() {
 
 @Composable
 fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
+    BackdropEffect()
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScrimColor)
+            .background(BackdropScrim)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -316,7 +323,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
             color = DarkSurface,
             border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
             elevation = 24.dp,
-            modifier = Modifier.popIn()
+            modifier = Modifier.modalPopIn()
         ) {
             Column(
                 modifier = Modifier.padding(32.dp).width(300.dp),
@@ -372,10 +379,11 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
 
 @Composable
 fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCancel: () -> Unit) {
+    BackdropEffect()
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScrimColor)
+            .background(BackdropScrim)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -387,7 +395,7 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
             color = DarkSurface,
             border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
             elevation = 24.dp,
-            modifier = Modifier.popIn()
+            modifier = Modifier.modalPopIn()
         ) {
             Column(
                 modifier = Modifier.padding(32.dp).width(300.dp),
@@ -429,10 +437,11 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
 
 @Composable
 fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileSession, appController: ClipboardAppController) {
+    BackdropEffect()
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ScrimColor)
+            .background(BackdropScrim)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -444,7 +453,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
             color = DarkSurface,
             border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
             elevation = 24.dp,
-            modifier = Modifier.popIn()
+            modifier = Modifier.modalPopIn()
         ) {
             Column(
                 modifier = Modifier.padding(32.dp).width(300.dp),
@@ -502,13 +511,17 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
 fun main() = application {
     val windowState = rememberWindowState()
     val appController = remember { ClipboardAppController().apply { start() } }
+    // Tray menu callbacks fire on the AWT event thread; push the (potentially blocking) clipboard
+    // read + network send onto IO so the tray/UI never stalls.
+    val trayScope = remember { CoroutineScope(Dispatchers.IO) }
 
     DisposableEffect(Unit) {
         SystemTrayManager.initialize(
             onOpenApp = { windowState.isMinimized = false },
-            onPushClipboard = { /* Trigger push clipboard logic */ }
+            onPushClipboard = { trayScope.launch { appController.pushCurrentClipboard() } }
         )
         onDispose {
+            trayScope.cancel()
             appController.stop()
         }
     }
@@ -527,11 +540,16 @@ fun main() = application {
             window.graphicsConfiguration?.let { gc ->
                 val b = gc.bounds
                 val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
+                // The bundled JBR applies the HiDPI scale to maximizedBounds twice (measured on
+                // JBR 21.0.10: a user-space rect comes out scale× too large), so pre-divide by the
+                // monitor scale to land on the actual work area. Re-verify if the runtime changes.
+                val sx = gc.defaultTransform.scaleX
+                val sy = gc.defaultTransform.scaleY
                 window.maximizedBounds = java.awt.Rectangle(
-                    b.x + insets.left,
-                    b.y + insets.top,
-                    b.width - insets.left - insets.right,
-                    b.height - insets.top - insets.bottom,
+                    ((b.x + insets.left) / sx).toInt(),
+                    ((b.y + insets.top) / sy).toInt(),
+                    ((b.width - insets.left - insets.right) / sx).toInt(),
+                    ((b.height - insets.top - insets.bottom) / sy).toInt(),
                 )
             }
             Unit

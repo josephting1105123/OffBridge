@@ -396,6 +396,7 @@
   max-width: 28rem;
 }
 
+.footer__col h3,
 .footer__col h4 {
   font-size: var(--t-small);
   text-transform: uppercase;

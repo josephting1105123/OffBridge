@@ -11,14 +11,17 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Windows-side "send via QR" off-grid host (3.0).
+ * Windows-side "send via QR" off-grid host.
  *
  * Windows is always the SENDER: it shows a QR encoding an [com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridPayload]
  * (schema v1), then an Android phone scans it and dials back in to the file-transfer port. Two carriers:
  *  - **LAN** (shared network): the QR carries the PC's LAN IPv4 in `lan`; the phone connects directly.
  *  - **Off-grid hotspot** (no shared network): the PC stands up a Wi-Fi Direct GO (see [HotspotController]);
  *    the QR carries its real ssid/psk + `nk=1`, the phone JOINs it (`SOFTAP_JOIN`) and dials the GO IP.
- * NFC and the Bluetooth / Wi-Fi-Direct-credential transport tiers are Android-only and out of scope here.
+ * In hotspot mode the PC also advertises a BLE control channel (see
+ * [com.joseph.clipboard.windows.network.control.PcQrSenderController]) when the adapter supports the
+ * peripheral role — signalled via [CAP_BLE_ADVERTISE] in `cap`. NFC and the Wi-Fi-Direct-credential
+ * transport tiers remain Android-only and out of scope here.
  *
  * Wire protocol (one duplex socket, LF-terminated UTF-8 frames, `|`-separated):
  *   1. receiver → P2P_HELLO|tokenB64|receiverPubB64|name|HMAC(K,token)B64
@@ -51,6 +54,14 @@ object OffGridQrSender {
      */
     const val CAP_COMPLETION_ACK = 1 shl 5
 
+    /**
+     * `cap` bit advertising that we run a BLE control channel under the token-derived session
+     * UUID — identical to Android `TransportCaps.BLE_ADVERTISE`. Set ONLY after the GATT
+     * advertisement demonstrably started (fail-soft: without it the phone never scans and the
+     * flow is byte-identical to the pre-BLE QR).
+     */
+    const val CAP_BLE_ADVERTISE = 1 shl 0
+
     private val gson = GsonBuilder().disableHtmlEscaping().create()
 
     /** One active QR advertising window: ephemeral key + admission token + the files to serve. */
@@ -80,7 +91,8 @@ object OffGridQrSender {
     fun buildPayloadJson(
         session: HostSession,
         hotspot: HotspotController.HotspotInfo?,
-        lanIp: String?
+        lanIp: String?,
+        cap: Int = CAP_COMPLETION_ACK
     ): String {
         val b64 = Base64.getEncoder()
         val totalBytes = session.files.sumOf { it.length() }
@@ -99,8 +111,8 @@ object OffGridQrSender {
             "name" to session.deviceName.take(32),
             "n" to session.files.size,
             "b" to totalBytes,
-            // Tell the scanner we honour the delivery ack (old phones ignore unknown bits).
-            "cap" to CAP_COMPLETION_ACK
+            // Delivery-ack + (when advertising) BLE-control bits; old phones ignore unknown bits.
+            "cap" to cap
         )
         // Same-network shortcut: a phone already on this LAN connects directly (fast). Omitted off-grid
         // so the phone doesn't waste 2.5s probing an unreachable LAN IP before joining the hotspot.

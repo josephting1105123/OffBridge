@@ -97,7 +97,7 @@
     <string name="receiving_files_title">Réception de fichiers</string>
     <string name="save_to_folder_downloads">Enregistrer dans : Downloads</string>
     <string name="action_cancel">Annuler</string>
-    <string name="action_close_with_check">✓ Fermer</string>
+    <string name="action_close_with_check">Fermer</string>
     <string name="incoming_transfer_title">Transfert entrant</string>
     <string name="default_device_name">Nom de l\'appareil</string>
     <string name="action_accept_files">Accepter les fichiers</string>
@@ -109,9 +109,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share pour Windows</string>
     <string name="desktop_app_in_development_desc">L\'application de bureau complémentaire est en cours de développement et sera bientôt disponible.</string>
     <string name="menu_title">Menu</string>
-    <string name="menu_windows_version">💻 Version Windows</string>
-    <string name="menu_restart_services">🔄 Redémarrer les services</string>
-    <string name="menu_power_off">🔌 Éteindre</string>
+    <string name="menu_windows_version">Version Windows</string>
+    <string name="menu_restart_services">Redémarrer les services</string>
+    <string name="menu_power_off">Éteindre</string>
     <string name="action_pair">Coupler</string>
     <string name="action_unpair">Dissocier</string>
     <string name="send_files_title">Envoyer des fichiers</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Appareils connectés</string>
     <string name="action_send">Envoyer</string>
     <string name="history_and_push_title">Presse-papiers &amp; Envoi</string>
-    <string name="action_push_current_clipboard">📤 Envoyer le presse-papiers actuel</string>
+    <string name="action_push_current_clipboard">Envoyer le presse-papiers actuel</string>
     <string name="recent_copies_hint">Copies récentes (Appuyez pour copier)</string>
     <string name="required_permissions_title">Autorisations requises</string>
     <string name="battery_optimization_title">Optimisation de la batterie</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">AUTRES</string>
     <string name="support_setting">Assistance</string>
-    <string name="action_donate">☕ Faire un don</string>
+    <string name="action_donate">Faire un don</string>
     <string name="privacy_policy_setting">Politique de confidentialité</string>
-    <string name="action_read_privacy_policy">📄 Lire</string>
+    <string name="action_read_privacy_policy">Lire</string>
     <string name="system_status_title">État du système</string>
     <string name="status_checking">État : Vérification...</string>
     <string name="accept_incoming_clipboard">Accepter le presse-papiers entrant</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Appareils connectés</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Envoyer via</string>
+    <string name="send_via_size_selected">%1$s de fichiers sélectionnés</string>
     <string name="action_how_to_use">Comment utiliser</string>
     <string name="discoverable_to_devices">Visible par les autres appareils</string>
     <string name="transaction_details_title">Détails de la transaction</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">Réception NFC</string>
     <string name="offgrid_send_title_qr">Envoyer via QR</string>
     <string name="offgrid_send_title_nfc">Envoyer via NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Ignorer</string>
+    <string name="tutorial_done">Terminé</string>
+    <string name="scanner_tutorial_step">Pointez la caméra vers le code QR de l\'expéditeur pour recevoir via le réseau local.</string>
+    <string name="tile_push_to_pc">Envoyer au PC</string>
+    <string name="a11y_menu">Menu</string>
+    <string name="a11y_push_clipboard">Envoyer le presse-papiers</string>
+    <string name="a11y_transfer_file">Transférer un fichier</string>
+    <string name="action_remove_file">Retirer le fichier</string>
 </resources>

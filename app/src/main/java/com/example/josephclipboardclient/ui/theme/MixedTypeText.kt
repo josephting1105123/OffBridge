@@ -7,7 +7,7 @@ import androidx.compose.ui.text.withStyle
 
 /*
  * Renders digits with tabular figures so live numbers don't reflow; letters and digits both use the
- * surrounding TextStyle's font (Roboto). Call sites do:
+ * surrounding TextStyle's font (IBM Plex Sans for content styles). Call sites do:
  * Text(text.withInterNumerals(), style = MaterialTheme.typography.bodyLarge).
  */
 

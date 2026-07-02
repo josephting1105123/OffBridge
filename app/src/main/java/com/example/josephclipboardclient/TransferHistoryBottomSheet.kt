@@ -108,6 +108,8 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
+        // Backdrop only — sheets keep their native slide-up entrance.
+        dialog.window?.applyModalBackdrop()
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             if (bottomSheet != null) {
@@ -567,7 +569,11 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                 try {
                     val targetIp = session.targetIp.ifEmpty { TransferDaemon.discoveredNodes.entries.find { it.value.name == record.deviceName }?.key }
                     if (targetIp != null) {
-                        val cmd = if (session.isIncoming) "DECLINE_OFFER|${record.sessionId}\n" else "CANCEL_TRANSFER|${record.sessionId}\n"
+                        // This path only fires for a live ("transferring") session, so send
+                        // CANCEL_TRANSFER regardless of direction: it makes the sender abort the
+                        // stream and close its socket. DECLINE_OFFER is for refusing a
+                        // not-yet-accepted offer and doesn't force-close the sender's stream.
+                        val cmd = "CANCEL_TRANSFER|${record.sessionId}\n"
                         Net.sendBytes(targetIp, Ports.FILE_TRANSFER, cmd.toByteArray(Charsets.UTF_8), 5000)
                     }
                 } catch (e: Exception) {}

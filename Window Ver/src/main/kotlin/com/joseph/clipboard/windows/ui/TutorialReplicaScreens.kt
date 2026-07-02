@@ -66,6 +66,13 @@ internal fun TutorialReplicaSendVia(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.onBackground,
+                )
+                // Total-size line mirroring the real SendViaDialog (demo value in the tutorial).
+                Text(
+                    sendViaSizeLabel(TUTORIAL_DEMO_TOTAL_BYTES),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = Dimens.spaceMd),
                 )
                 Box(

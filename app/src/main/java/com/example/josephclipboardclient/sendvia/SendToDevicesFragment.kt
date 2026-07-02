@@ -150,6 +150,8 @@ class SendToDevicesFragment : Fragment() {
         const val TAG = "send_to_devices"
         const val RESULT_KEY = "send_to_devices_result"
         const val RESULT_SENT = "sent"
+        /** First outgoing sessionId of the batch — the listener opens its history detail. */
+        const val RESULT_SESSION_ID = "session_id"
 
         fun newInstance(items: List<TransferItem>): SendToDevicesFragment {
             return SendToDevicesFragment().apply {
@@ -157,6 +159,14 @@ class SendToDevicesFragment : Fragment() {
             }
         }
     }
+
+    /** One queued offer of [executeMultiDeviceTransfer]: its session plus the record identifiers. */
+    private data class PendingOffer(
+        val sessionId: String,
+        val targetIp: String,
+        val targetName: String,
+        val session: TransferSession,
+    )
 
     private var items: List<TransferItem> = emptyList()
     private val selectedTargetIps = mutableSetOf<String>()
@@ -329,11 +339,13 @@ class SendToDevicesFragment : Fragment() {
         CoroutineScope(Dispatchers.IO).launch {
             val expandedItems = TransferItemExpander.expand(appContext, sendItems)
             val manifestList = TransferItemExpander.buildManifest(appContext, expandedItems)
+            val fileUriStrings = expandedItems.map { it.uri.toString() }
 
-            var hasFailures = false
-            for (targetIp in ips) {
+            // Register every target's session + pending record BEFORE any handshake so the
+            // history detail we navigate to below exists immediately; the offers themselves
+            // keep running in this detached scope after the screen closes.
+            val offers = ips.map { targetIp ->
                 val sessionId = java.util.UUID.randomUUID().toString()
-                val fileUriStrings = expandedItems.map { it.uri.toString() }
                 val session = TransferSession(
                     sessionId = sessionId,
                     senderName = TransferDaemon.customDeviceName,
@@ -361,6 +373,23 @@ class SendToDevicesFragment : Fragment() {
                     currentFileOffset = 0L,
                     transport = "lan"
                 ))
+                PendingOffer(sessionId, targetIp, targetName, session)
+            }
+
+            // Close this screen and jump to the (first) outgoing record's history detail right
+            // away — the sender watches progress there while the offers continue below.
+            withContext(Dispatchers.Main) {
+                if (isAdded) {
+                    parentFragmentManager.setFragmentResult(
+                        RESULT_KEY,
+                        bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
+                    )
+                    parentFragmentManager.popBackStack()
+                }
+            }
+
+            var hasFailures = false
+            for ((sessionId, targetIp, targetName, session) in offers) {
 
                 try {
                     Socket(targetIp, Ports.FILE_TRANSFER).use { fileSocket ->
@@ -376,16 +405,37 @@ class SendToDevicesFragment : Fragment() {
                         outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
                         outStream.flush()
 
-                        // Wait for OFFER_RECEIVED from the receiver
+                        // Wait for the receiver's next line.
                         fileSocket.soTimeout = 10000
                         val inStream = fileSocket.getInputStream()
-                        val baos = java.io.ByteArrayOutputStream()
-                        var b = inStream.read()
-                        while (b != -1 && b != '\n'.code) {
-                            baos.write(b)
-                            b = inStream.read()
+                        fun readLine(): String {
+                            val baos = java.io.ByteArrayOutputStream()
+                            var c = inStream.read()
+                            while (c != -1 && c != '\n'.code) {
+                                baos.write(c)
+                                c = inStream.read()
+                            }
+                            return baos.toString("UTF-8")
                         }
-                        val response = baos.toString("UTF-8")
+                        var response = readLine()
+
+                        // AUTH2: a new receiver may challenge us to prove we hold the shared pairing key
+                        // before it shows its incoming-file popup. Answer with HMAC-SHA256(pairingKey,
+                        // nonce), then read the real OFFER_RECEIVED. An old receiver sends OFFER_RECEIVED
+                        // directly and we fall straight through — so we tolerate BOTH sequences without
+                        // depending on the peer's advertised caps.
+                        if (response.startsWith("OFFER_CHALLENGE|")) {
+                            val nonce = android.util.Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), android.util.Base64.NO_WRAP)
+                            val pairingKey = SecurityVault.getKeyForNode(appContext, targetIp)
+                                ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
+                            val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+                            mac.init(javax.crypto.spec.SecretKeySpec(pairingKey, "HmacSHA256"))
+                            val proof = mac.doFinal(nonce)
+                            outStream.write("OFFER_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
+                            outStream.flush()
+                            response = readLine()
+                        }
+
                         if (response != "OFFER_RECEIVED") {
                             throw Exception("Receiver did not acknowledge offer")
                         }
@@ -419,12 +469,10 @@ class SendToDevicesFragment : Fragment() {
                 }
             }
 
+            // The fragment already popped when the offers were queued; toast via app context.
             withContext(Dispatchers.Main) {
-                if (!isAdded) return@withContext
-                val message = if (hasFailures) getString(R.string.toast_transfer_interrupted) else getString(R.string.toast_batch_transfer_complete)
-                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-                parentFragmentManager.setFragmentResult(RESULT_KEY, bundleOf(RESULT_SENT to true))
-                parentFragmentManager.popBackStack()
+                val message = if (hasFailures) appContext.getString(R.string.toast_transfer_interrupted) else appContext.getString(R.string.toast_batch_transfer_complete)
+                Toast.makeText(appContext, message, Toast.LENGTH_LONG).show()
             }
         }
     }

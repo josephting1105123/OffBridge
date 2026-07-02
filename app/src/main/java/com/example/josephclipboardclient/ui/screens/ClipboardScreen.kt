@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -46,6 +47,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.withInterNumerals
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialStep
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
+import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 
@@ -68,10 +71,11 @@ fun ClipboardScreen(
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val anchors = rememberTutorialAnchors()
+    val backdrop = rememberBackdropState()
     var detailEntry by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.fillMaxSize().padding(dimens.spaceXl)) {
+        Column(modifier = Modifier.fillMaxSize().backdropSource(backdrop).padding(dimens.spaceXl)) {
             // Header: icon + title + How-to-use chip
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 72.dp, bottom = dimens.spaceXl),
@@ -195,6 +199,7 @@ fun ClipboardScreen(
                 boundsMap = anchors,
                 onDismiss = onTutorialDismiss,
                 onComplete = onTutorialDismiss,
+                backdrop = backdrop,
             )
         }
 
@@ -238,16 +243,20 @@ private fun ClipboardCard(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth().padding(end = 40.dp),
         )
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(32.dp)
-                .clip(RoundedCornerShape(dimens.radiusMd))
-                .background(Color(0x80000000))
-                .clickable { onDelete(entry) },
-            contentAlignment = Alignment.Center,
+        // Wrapped in an IconButton so the tap target is >=48dp while the visible badge stays 32dp.
+        IconButton(
+            onClick = { onDelete(entry) },
+            modifier = Modifier.align(Alignment.TopEnd),
         ) {
-            Icon(Icons.Filled.Close, contentDescription = "Delete", tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(dimens.radiusMd))
+                    .background(Color(0x80000000)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_delete), tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
+            }
         }
     }
 }

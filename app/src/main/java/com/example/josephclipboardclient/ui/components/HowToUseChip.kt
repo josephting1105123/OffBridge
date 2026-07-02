@@ -35,11 +35,12 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 fun HowToUseChip(
     onClick: () -> Unit,
     text: String = stringResource(R.string.action_how_to_use),
+    modifier: Modifier = Modifier,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(dimens.radiusSm))
             .background(colors.green.copy(alpha = 0.15f))
             .clickable(role = Role.Button) { onClick() }

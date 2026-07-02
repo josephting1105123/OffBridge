@@ -13,9 +13,15 @@
     var aReady = wireCard("android", cfg.android);
     var wReady = wireCard("windows", cfg.windows);
 
-    // Hide the "links not wired yet" setup banner once both are configured.
+    // Hide the "builds being published" banner once both downloads are wired.
     var todo = document.querySelector(".dl-todo");
     if (todo && aReady && wReady) todo.hidden = true;
+    // Developer reminder — console only, never shown to visitors.
+    if (!aReady || !wReady) {
+      console.info(
+        "[Clipboard Share] Download links not wired yet — set repo or url/size in js/config.js (see website/README.md)."
+      );
+    }
 
     detectOS().then(highlight);
   });

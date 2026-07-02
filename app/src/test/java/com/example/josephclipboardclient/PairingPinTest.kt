@@ -30,6 +30,28 @@ class PairingPinTest {
     }
 
     @Test
+    fun `honest v2 pairing derives identical key and v2 pin on both sides`() {
+        val alice = EcdhSession(); val bob = EcdhSession()
+        val (aKey, aPin) = alice.deriveSecrets(bob.getPublicKey(), useV2Pin = true)
+        val (bKey, bPin) = bob.deriveSecrets(alice.getPublicKey(), useV2Pin = true)
+        assertArrayEqualsMsg(aKey, bKey, "ECDH shared key must match (v2)")
+        assertEquals("v2 SAS must match for an honest pair", aPin, bPin)
+        assertEquals(6, aPin.length)
+        assertTrue(aPin.all { it.isDigit() })
+    }
+
+    /**
+     * Cross-platform pin: this exact expected value is hard-coded identically in the Windows test
+     * (CryptoEnginePinV2Test) so the two HKDF derivations can never silently drift. If this fails,
+     * the Android and Windows v2 PIN derivations no longer agree.
+     */
+    @Test
+    fun `v2 pin from fixed shared secret matches the pinned cross-platform vector`() {
+        val secret = ByteArray(32) { it.toByte() } // 0x00..0x1f
+        assertEquals("912594", EcdhSession.pinV2FromSecret(secret))
+    }
+
+    @Test
     fun `man-in-the-middle yields divergent keys (and codes) on each side`() {
         val alice = EcdhSession(); val bob = EcdhSession(); val mallory = EcdhSession()
         // Mallory terminates each side separately: alice<->mallory and mallory<->bob.

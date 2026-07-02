@@ -207,6 +207,8 @@ class SettingsFragment : Fragment() {
                 dialog.dismiss()
             }
             .setNegativeButton(getString(R.string.action_cancel), null)
+            .create()
+            .also { it.applyModalPolish() }
             .show()
     }
 
@@ -264,6 +266,8 @@ class SettingsFragment : Fragment() {
                 activity.overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
             }
             .setNegativeButton(getString(R.string.action_cancel), null)
+            .create()
+            .also { it.applyModalPolish() }
             .show()
     }
 
@@ -287,6 +291,8 @@ class SettingsFragment : Fragment() {
             .setTitle(getString(R.string.settings_dialog_privacy_policy))
             .setView(scrollView)
             .setPositiveButton(getString(R.string.settings_action_close), null)
+            .create()
+            .also { it.applyModalPolish() }
             .show()
     }
 

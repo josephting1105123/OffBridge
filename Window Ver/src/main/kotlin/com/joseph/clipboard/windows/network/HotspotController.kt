@@ -31,11 +31,17 @@ object HotspotController {
     data class HotspotInfo(val ssid: String, val passphrase: String, val gatewayIp: String)
 
     private val gson = Gson()
+    // Guards the start() critical section so two concurrent start() calls can't race. stop() deliberately
+    // does NOT take this lock — it must be able to kill the helper process while start() is still holding
+    // the lock and blocking on the ~9s PowerShell spin-up (otherwise the UI thread that triggers stop()
+    // would stall for the whole start window). stop() works off the @Volatile handles instead.
     private val lock = Any()
 
     @Volatile private var process: Process? = null
     @Volatile private var scriptFile: File? = null
     @Volatile private var current: HotspotInfo? = null
+    /** Set by stop() so an in-flight start() can bail out after its blocking wait instead of publishing a doomed AP. */
+    @Volatile private var cancelRequested = false
 
     /** Helper must report status within this window (Start + async status settle + IP probe). */
     private const val START_TIMEOUT_MS = 9000L
@@ -54,7 +60,8 @@ object HotspotController {
      */
     fun start(): HotspotInfo? = synchronized(lock) {
         current?.let { if (process?.isAlive == true) return it }
-        stopLocked() // clear any stale handle before a fresh attempt
+        killProcess() // clear any stale handle before a fresh attempt
+        cancelRequested = false // fresh attempt — arm cancellation for THIS start()
 
         val ssid = "ClipboardShare-" + (1000 + SecureRandom().nextInt(9000))
         val psk = randomPassphrase()
@@ -78,31 +85,52 @@ object HotspotController {
             }.start()
         } catch (e: Exception) {
             System.err.println("HotspotController: failed to launch PowerShell: ${e.message}")
-            stopLocked()
+            killProcess()
             return null
         }
         process = proc
 
         val line = readFirstLine(proc, START_TIMEOUT_MS)
-        if (line.isNullOrBlank()) {
-            System.err.println("HotspotController: no status from helper within ${START_TIMEOUT_MS}ms")
-            stopLocked()
+        // stop() may have fired on another thread during the blocking read above (it kills `proc` directly).
+        // If so, don't publish a doomed AP — clean up and bail.
+        if (cancelRequested || line.isNullOrBlank()) {
+            if (!cancelRequested) System.err.println("HotspotController: no status from helper within ${START_TIMEOUT_MS}ms")
+            killProcess()
             return null
         }
 
         val info = parseHelperResult(line, ssid, psk)
-        if (info == null) {
-            stopLocked()
+        if (cancelRequested || info == null) {
+            killProcess()
             return null
         }
         current = info
         return info
     }
 
-    /** Bring the AP down (kills the helper process → the WFD advertisement stops). Safe to call repeatedly. */
-    fun stop() = synchronized(lock) { stopLocked() }
+    /**
+     * Bring the AP down (kills the helper process → the WFD advertisement stops). Safe to call repeatedly and
+     * from any thread. Deliberately lock-free so it returns immediately even while start() holds `lock` during
+     * its ~9s spin-up — callers on the UI thread must not stall. It signals cancellation and kills the current
+     * process handle directly; an in-flight start() sees `cancelRequested` after its blocking read and bails.
+     */
+    fun stop() {
+        cancelRequested = true
+        killProcess()
+    }
 
-    private fun stopLocked() {
+    /**
+     * Fresh AP with fresh random credentials — the QR control plane's credential-regeneration
+     * rescue when a phone repeatedly fails to join the current one. Blocking (~9s worst case,
+     * like [start]); call off the UI thread. Returns null when the new AP couldn't be created.
+     */
+    fun restart(): HotspotInfo? {
+        stop()
+        return start() // start() re-arms cancelRequested for the fresh attempt
+    }
+
+    /** Kill the helper process and drop transient state. Safe to call from any thread (operates on @Volatile fields). */
+    private fun killProcess() {
         process?.let { try { it.destroyForcibly() } catch (_: Exception) {} }
         process = null
         current = null

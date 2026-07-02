@@ -3,15 +3,23 @@ package com.EntropicSoftwareLab.ClipboardShare
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.AttributeSet
+import android.view.PixelCopy
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
@@ -51,6 +59,12 @@ data class TutorialStep(
     val delayMs: Long = 0L,
     /** If set, called after delayMs to obtain the actual view to spotlight (overrides targetView). */
     val targetViewProvider: (() -> View)? = null,
+    /**
+     * If set (and non-null at resolve time), these WINDOW-space bounds are spotlighted instead of
+     * the target view's frame — for targets that have no View of their own (e.g. a Compose child
+     * inside a ComposeView). [targetView] is still required and acts as the fallback.
+     */
+    val targetBoundsProvider: (() -> android.graphics.Rect?)? = null,
     /** Hide the Skip button for this step. */
     val hideSkipButton: Boolean = false,
     /** Dp trimmed from each horizontal side of the spotlight (total width shrinks by 2x this). */
@@ -116,8 +130,17 @@ class TutorialOverlayView @JvmOverloads constructor(
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
     private val dimPaint = Paint().apply {
-        color = 0x99000000.toInt() // 60% black
+        color = DIM_FLAT
     }
+
+    // Frosted backdrop: a downscaled PixelCopy of the window drawn under the dim in the same
+    // hardware layer, so the CLEAR hole punches through frost + dim together and the spotlighted
+    // view stays sharp. Null (dim-only) when capture is unavailable or fails.
+    private var frostBitmap: Bitmap? = null
+    private val frostPaint = Paint(Paint.FILTER_BITMAP_FLAG)
+    private val frostSrc = Rect()
+    private val frostDst = RectF()
+    private val windowLoc = IntArray(2)
 
     private val clearPaint = Paint().apply {
         xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
@@ -230,11 +253,86 @@ class TutorialOverlayView @JvmOverloads constructor(
         this.stepIndexOffset = stepIndexOffset
         this.totalStepsOverride = totalStepsOverride
         currentIndex = 0
-        
+
+        // Entrance: fade the whole backdrop in (~180ms) so the dim/frost never pops on.
+        if (!reducedMotion()) {
+            alpha = 0f
+            animate().alpha(1f).setDuration(180).start()
+        }
+
         if (isLaidOut && width > 0 && height > 0) {
             showStep(currentIndex)
         } else {
             doOnLayout { showStep(currentIndex) }
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        beginFrostCapture()
+    }
+
+    /**
+     * Snapshot the window behind this overlay (before its first draw — the view stays INVISIBLE
+     * until the copy lands, with a time-boxed reveal so a lost callback can never hide the tour)
+     * and downscale-resample it into a soft frost. PixelCopy reads the composited frame, so
+     * SurfaceView content (the QR scanner's camera preview) frosts correctly too.
+     */
+    private fun beginFrostCapture() {
+        val root = rootView ?: return
+        if (root.width == 0 || root.height == 0) return
+        val dest = Bitmap.createBitmap(
+            (root.width / FROST_DOWNSCALE).coerceAtLeast(1),
+            (root.height / FROST_DOWNSCALE).coerceAtLeast(1),
+            Bitmap.Config.ARGB_8888
+        )
+        visibility = INVISIBLE
+        val reveal = Runnable { visibility = VISIBLE }
+        postDelayed(reveal, 120)
+        val onDone: (Boolean) -> Unit = { ok ->
+            removeCallbacks(reveal)
+            if (ok) {
+                // Two extra bilinear resamples smooth the single GPU downscale into a soft blur.
+                val half = Bitmap.createScaledBitmap(
+                    dest,
+                    (dest.width / 2).coerceAtLeast(1),
+                    (dest.height / 2).coerceAtLeast(1),
+                    true
+                )
+                frostBitmap = Bitmap.createScaledBitmap(half, dest.width, dest.height, true)
+            }
+            visibility = VISIBLE
+            invalidate()
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= 34) {
+                // Captures whatever window this view sits in — activity or dialog alike.
+                val request = PixelCopy.Request.Builder.ofWindow(this)
+                    .setDestinationBitmap(dest)
+                    .build()
+                PixelCopy.request(request, context.mainExecutor) { result ->
+                    onDone(result.status == PixelCopy.SUCCESS)
+                }
+            } else {
+                // Pre-34 PixelCopy needs the Window object; only the activity's is reachable, so
+                // skip the frost (dim-only) when hosted in another window (e.g. a bottom sheet).
+                val activity = generateSequence(context as Context?) { (it as? ContextWrapper)?.baseContext }
+                    .filterIsInstance<Activity>()
+                    .firstOrNull()
+                val window = activity?.window
+                if (window == null || window.decorView.rootView !== root) {
+                    onDone(false)
+                    return
+                }
+                PixelCopy.request(
+                    window,
+                    dest,
+                    { status -> onDone(status == PixelCopy.SUCCESS) },
+                    Handler(Looper.getMainLooper())
+                )
+            }
+        } catch (_: Throwable) {
+            onDone(false)
         }
     }
 
@@ -252,7 +350,10 @@ class TutorialOverlayView @JvmOverloads constructor(
             val total = totalStepsOverride ?: steps.size
             tvText.text      = step.text
             tvCounter.text   = "${index + 1 + stepIndexOffset} / $total"
-            tvNextLabel.text = step.buttonLabel ?: if (index == steps.size - 1) "Done" else "Next"
+            tvNextLabel.text = step.buttonLabel
+                ?: if (index == steps.size - 1) context.getString(R.string.tutorial_done)
+                   else context.getString(R.string.action_next)
+            btnSkip.text = context.getString(R.string.tutorial_skip)
             btnSkip.visibility = if (step.hideSkipButton) View.GONE else View.VISIBLE
             tooltipView.visibility = View.VISIBLE
 
@@ -285,10 +386,17 @@ class TutorialOverlayView @JvmOverloads constructor(
         val overlayLoc = IntArray(2)
         this.getLocationInWindow(overlayLoc)
 
-        var rawLeft   = (loc[0] - overlayLoc[0] - PADDING).toFloat()
-        var rawTop    = (loc[1] - overlayLoc[1] - PADDING).toFloat()
-        var rawRight  = (loc[0] - overlayLoc[0] + targetView.width  + PADDING).toFloat()
-        var rawBottom = (loc[1] - overlayLoc[1] + targetView.height + PADDING).toFloat()
+        // A step can supply window-space bounds directly (Compose targets have no View of their own).
+        val provided = step.targetBoundsProvider?.invoke()
+        val tLeft   = provided?.left   ?: loc[0]
+        val tTop    = provided?.top    ?: loc[1]
+        val tRight  = provided?.right  ?: (loc[0] + targetView.width)
+        val tBottom = provided?.bottom ?: (loc[1] + targetView.height)
+
+        var rawLeft   = (tLeft - overlayLoc[0] - PADDING).toFloat()
+        var rawTop    = (tTop - overlayLoc[1] - PADDING).toFloat()
+        var rawRight  = (tRight - overlayLoc[0] + PADDING).toFloat()
+        var rawBottom = (tBottom - overlayLoc[1] + PADDING).toFloat()
 
         val minHeightDp = minHeightOverrideDp ?: step.minSpotlightHeightDp
         if (minHeightDp != null) {
@@ -482,7 +590,23 @@ class TutorialOverlayView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        // 60% transparent black dim
+        // Frosted copy of the page (when captured), then the dim: 45% over frost, 60% flat.
+        val fb = frostBitmap
+        if (fb != null) {
+            val root = rootView
+            getLocationInWindow(windowLoc)
+            val sx = fb.width.toFloat() / root.width
+            val sy = fb.height.toFloat() / root.height
+            frostSrc.set(
+                (windowLoc[0] * sx).toInt(),
+                (windowLoc[1] * sy).toInt(),
+                ((windowLoc[0] + width) * sx).toInt().coerceAtMost(fb.width),
+                ((windowLoc[1] + height) * sy).toInt().coerceAtMost(fb.height)
+            )
+            frostDst.set(0f, 0f, width.toFloat(), height.toFloat())
+            canvas.drawBitmap(fb, frostSrc, frostDst, frostPaint)
+        }
+        dimPaint.color = if (fb != null) DIM_FROSTED else DIM_FLAT
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), dimPaint)
 
         // Punch rounded-rect spotlight hole (drawnRect glides toward spotlightRect)
@@ -524,6 +648,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         spotlightAnimator?.cancel()
         spotlightAnimator = null
         clearPointerAndSecondary()
+        frostBitmap = null
         super.onDetachedFromWindow()
     }
 
@@ -756,5 +881,12 @@ class TutorialOverlayView @JvmOverloads constructor(
         clearPointer()
         secondaryRunnable?.let { removeCallbacks(it) }
         secondaryRunnable = null
+    }
+
+    companion object {
+        /** Window snapshot downscale factor — the base of the frost blur. */
+        private const val FROST_DOWNSCALE = 6
+        private const val DIM_FLAT = 0x99000000.toInt()    // 60% black — dim must carry layering alone
+        private const val DIM_FROSTED = 0x73000000.toInt() // 45% black — blur adds the separation
     }
 }

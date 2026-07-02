@@ -179,6 +179,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         }
         
         if (showThemeDialog) {
+            BackdropEffect() // blur the main window's content while this OS dialog is up
             androidx.compose.ui.window.DialogWindow(
                 onCloseRequest = { showThemeDialog = false },
                 title = chooseThemeText,
@@ -227,6 +228,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         }
         
         if (showLanguageDialog) {
+            BackdropEffect()
             androidx.compose.ui.window.DialogWindow(
                 onCloseRequest = { showLanguageDialog = false },
                 title = chooseLanguageText,
@@ -270,6 +272,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         }
         
         if (showPrivacyDialog) {
+            BackdropEffect()
             androidx.compose.ui.window.DialogWindow(
                 onCloseRequest = { showPrivacyDialog = false },
                 title = privacyPolicyTitleText,

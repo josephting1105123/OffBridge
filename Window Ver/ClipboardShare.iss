@@ -1,5 +1,5 @@
 #define MyAppName "Clipboard Share"
-#define MyAppVersion "3.4.0"
+#define MyAppVersion "3.5.0"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "Clipboard Share.exe"
 
@@ -11,8 +11,8 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-; Remove previous versions of files silently before installing the new ones
-DirExistsWarning=no
+; Warn (Inno default) when the user browses to an existing non-empty folder, so an accidental
+; install target isn't wiped silently by the file overwrite below. Do NOT set DirExistsWarning=no.
 CloseApplications=yes
 RestartApplications=no
 OutputDir=build2\inno-setup
@@ -21,12 +21,31 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 
+; --- Code signing (Authenticode) ---------------------------------------------
+; The installer ships UNSIGNED today, so a brand-new publisher trips SmartScreen
+; ("Windows protected your PC / unknown publisher"). Until a cert is in hand, the
+; website download flow and the canned tester replies tell users to click
+; "More info -> Run anyway" and verify the installer's PUBLISHED SHA-256 out-of-band (publish the
+; hash on the GitHub Release / website; get it with `certutil -hashfile <exe> SHA256`) so an unsigned
+; download can still be integrity-checked. See release/RUNBOOK.md.
+;
+; Once you have an OV/EV Authenticode cert, uncomment the two lines below and define
+; the "signtool" helper on the ISCC command line so BOTH the installer and the
+; bundled uninstaller are signed:
+;   SignTool=signtool
+;   SignedUninstaller=yes
+; Define the helper when invoking the compiler (PowerShell, one line):
+;   & ISCC.exe /Ssigntool="signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f $qC:\path\to\cert.pfx$q /p $qPFX_PASSWORD$q $f" "ClipboardShare.iss"
+; -----------------------------------------------------------------------------
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
-[InstallDelete]
-; Delete all existing files in the app directory before installing the new version to ensure a clean slate
-Type: filesandordirs; Name: "{app}\*"
+; [InstallDelete] intentionally omitted: the [Files] entry below uses the `ignoreversion` flag, which
+; already overwrites every app file on upgrade. A blanket `Type: filesandordirs; Name: "{app}\*"` would
+; recursively wipe whatever lives under the chosen target dir before copying — dangerous if the user
+; browses to an existing non-empty folder. If a future version orphans files, add a targeted delete for
+; those specific paths rather than restoring the blanket wildcard.
 
 [Files]
 ; Copy everything from the AppImage directory to {app}
@@ -42,6 +61,11 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 ; Allow inbound off-grid file transfer (TCP 65433) through Windows Defender Firewall — the daemon
 ; listens on 0.0.0.0:65433 and inbound is blocked by default on every interface (LAN and the Wi-Fi
 ; Direct hotspot alike). Delete-then-add keeps exactly one rule across reinstalls. Runs elevated.
+; profile=any is REQUIRED (not a mistake): the primary off-grid path is the Wi-Fi Direct autonomous GO
+; (HotspotController serves 192.168.49.1:65433). Windows classifies that fresh/unidentified adapter as
+; a PUBLIC network by default, so narrowing this to profile=private would leave the off-grid hotspot
+; inbound blocked and break the core use case. Keep profile=any until the AP interface is provably
+; Private-classified.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (TCP 65433)"" dir=in action=allow protocol=TCP localport=65433 profile=any"; Flags: runhidden
 ; Auto-launch at the end

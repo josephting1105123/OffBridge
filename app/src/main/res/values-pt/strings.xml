@@ -97,7 +97,7 @@
     <string name="receiving_files_title">Recebendo Arquivos</string>
     <string name="save_to_folder_downloads">Salvar na pasta: Downloads</string>
     <string name="action_cancel">Cancelar</string>
-    <string name="action_close_with_check">✓ Fechar</string>
+    <string name="action_close_with_check">Fechar</string>
     <string name="incoming_transfer_title">Transferência Recebida</string>
     <string name="default_device_name">Nome do Dispositivo</string>
     <string name="action_accept_files">Aceitar Arquivos</string>
@@ -109,9 +109,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share para Windows</string>
     <string name="desktop_app_in_development_desc">O aplicativo de desktop complementar está atualmente em desenvolvimento e estará disponível em breve.</string>
     <string name="menu_title">Menu</string>
-    <string name="menu_windows_version">💻 Versão para Windows</string>
-    <string name="menu_restart_services">🔄 Reiniciar Serviços</string>
-    <string name="menu_power_off">🔌 Desligar</string>
+    <string name="menu_windows_version">Versão para Windows</string>
+    <string name="menu_restart_services">Reiniciar Serviços</string>
+    <string name="menu_power_off">Desligar</string>
     <string name="action_pair">Emparelhar</string>
     <string name="action_unpair">Desemparelhar</string>
     <string name="send_files_title">Enviar Arquivos</string>
@@ -124,7 +124,7 @@
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
     <string name="history_and_push_title">Área de Transferência e Envio</string>
-    <string name="action_push_current_clipboard">📤 Enviar Área de Transferência Atual</string>
+    <string name="action_push_current_clipboard">Enviar Área de Transferência Atual</string>
     <string name="recent_copies_hint">Cópias Recentes (Toque para copiar)</string>
     <string name="required_permissions_title">Permissões Necessárias</string>
     <string name="battery_optimization_title">Otimização de Bateria</string>
@@ -146,9 +146,9 @@
     <string name="save_location_downloads">Downloads</string>
     <string name="settings_section_others">OUTROS</string>
     <string name="support_setting">Suporte</string>
-    <string name="action_donate">☕ Doar</string>
+    <string name="action_donate">Doar</string>
     <string name="privacy_policy_setting">Política de Privacidade</string>
-    <string name="action_read_privacy_policy">📄 Ler</string>
+    <string name="action_read_privacy_policy">Ler</string>
     <string name="system_status_title">Status do Sistema</string>
     <string name="status_checking">Status: Verificando...</string>
     <string name="accept_incoming_clipboard">Aceitar Área de Transferência Recebida</string>
@@ -368,6 +368,7 @@
     <string name="send_via_connected_devices">Dispositivos Conectados</string>
     <string name="send_via_nfc_qr">NFC / QR</string>
     <string name="send_via_title">Enviar Via</string>
+    <string name="send_via_size_selected">%1$s de arquivos selecionados</string>
     <string name="action_how_to_use">Como usar</string>
     <string name="discoverable_to_devices">Visível para outros dispositivos</string>
     <string name="transaction_details_title">Detalhes da transação</string>
@@ -506,7 +507,7 @@
     <string name="settings_history_recovered">Recuperados %1$d itens da área de transferência e %2$d transferências</string>
     <string name="bento_nearby">Próximos</string>
     <string name="bento_paired">Emparelhados</string>
-    <string name="bento_status">Status</string>
+    <string name="bento_status">Estado</string>
     <string name="status_value_active">Ativo</string>
     <string name="status_value_offline">Offline</string>
     <string name="action_rescan">Procurar novamente</string>
@@ -590,4 +591,14 @@
     <string name="receive_nfc">Receber por NFC</string>
     <string name="offgrid_send_title_qr">Enviar via QR</string>
     <string name="offgrid_send_title_nfc">Enviar via NFC</string>
+
+    <!-- Tutorial / accessibility labels -->
+    <string name="tutorial_skip">Ignorar</string>
+    <string name="tutorial_done">Concluído</string>
+    <string name="scanner_tutorial_step">Aponte a câmera para o código QR do remetente para receber pela rede local.</string>
+    <string name="tile_push_to_pc">Enviar para o PC</string>
+    <string name="a11y_menu">Menu</string>
+    <string name="a11y_push_clipboard">Enviar área de transferência</string>
+    <string name="a11y_transfer_file">Transferir arquivo</string>
+    <string name="action_remove_file">Remover arquivo</string>
 </resources>

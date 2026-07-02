@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,35 +31,54 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.formatTotalSize
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+
+/** Transport choices delivered by [SendViaSheet]'s onChoose. */
+object SendViaChoice {
+    const val DEVICES = "devices"
+    const val QR = "qr"
+    const val NFC = "nfc"
+}
 
 /** Compose "Send Via" chooser: three options (Connected Devices / QR / NFC) as icon-above-label boxes. */
 @Composable
 fun SendViaSheet(
     nfcUnavailable: Boolean,
-    bottomInset: Dp = 0.dp,
+    totalSizeBytes: Long,
     onChoose: (String) -> Unit,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
+    val shape = RoundedCornerShape(dimens.radiusXl)
     Column(
         modifier = Modifier
+            // Floating island: side/bottom margins keep the frosted backdrop visible between the card
+            // and the nav bar, so the two surfaces never share an edge (the dark-mode seam fix).
+            // widthIn must precede fillMaxWidth or the tablet/landscape cap is ignored.
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            // Lift the card above the app's bottom navigation bar so the sheet doesn't cover it.
-            .padding(bottom = 16.dp + bottomInset)
-            .clip(RoundedCornerShape(dimens.radiusXl))
+            .padding(start = dimens.spaceMd, end = dimens.spaceMd, bottom = dimens.spaceMd)
+            .clip(shape)
             .background(colors.bottomSheet)
+            .border(dimens.hairlineWidth, colors.hairline, shape)
             .padding(dimens.spaceLg),
     ) {
         Text(
             stringResource(R.string.send_via_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.textPrimary,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = dimens.spaceLg),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
+        Text(
+            stringResource(R.string.send_via_size_selected, formatTotalSize(totalSizeBytes)),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.textSecondary,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = dimens.spaceXs, bottom = dimens.spaceLg),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -66,7 +86,7 @@ fun SendViaSheet(
         ) {
             SendViaOption(
                 label = stringResource(R.string.send_via_connected_devices),
-                onClick = { onChoose(SendViaBottomSheetFragment.CHOICE_DEVICES) },
+                onClick = { onChoose(SendViaChoice.DEVICES) },
             ) {
                 Icon(
                     painterResource(R.drawable.ic_device),
@@ -77,14 +97,14 @@ fun SendViaSheet(
             }
             SendViaOption(
                 label = stringResource(R.string.send_via_qr),
-                onClick = { onChoose(SendViaBottomSheetFragment.CHOICE_QR) },
+                onClick = { onChoose(SendViaChoice.QR) },
             ) {
                 QrIcon(modifier = Modifier.size(dimens.iconLg), tint = colors.green)
             }
             SendViaOption(
                 label = stringResource(R.string.send_via_nfc),
                 enabled = !nfcUnavailable,
-                onClick = { onChoose(SendViaBottomSheetFragment.CHOICE_NFC) },
+                onClick = { onChoose(SendViaChoice.NFC) },
             ) {
                 Icon(
                     painterResource(R.drawable.ic_nfc),
@@ -122,7 +142,7 @@ private fun RowScope.SendViaOption(
             .height(104.dp)
             .clip(shape)
             .alpha(if (enabled) 1f else 0.45f)
-            .background(colors.card)
+            .background(colors.surfaceElevated)
             .border(dimens.hairlineWidth, colors.divider, shape)
             .clickable(enabled = enabled) { onClick() }
             .padding(dimens.spaceMd),

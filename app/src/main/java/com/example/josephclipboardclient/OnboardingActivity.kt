@@ -3,6 +3,9 @@ package com.EntropicSoftwareLab.ClipboardShare
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -35,6 +38,14 @@ class OnboardingActivity : FragmentActivity(), UserAgreementFragment.OnAgreement
         }
 
         setContentView(R.layout.activity_onboarding)
+
+        // targetSdk 35+ forces edge-to-edge, so without this the page titles render under the
+        // status bar / display cutout and the bottom buttons under the gesture bar.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById<View>(R.id.onboarding_root)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         viewPager = findViewById(R.id.onboarding_view_pager)
         val pagerAdapter = OnboardingPagerAdapter(this)

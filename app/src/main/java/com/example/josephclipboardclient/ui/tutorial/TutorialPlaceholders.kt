@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -30,15 +31,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.QrIcon
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.DeviceCardRow
+import com.EntropicSoftwareLab.ClipboardShare.ui.formatTotalSize
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SELECTION_BADGE_SIZE
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SELECTION_CHECK_ICON
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+
+/** Demo total shown by the fake Send-Via sheet when no real files are queued (~1.2 GB). */
+internal const val TUTORIAL_DEMO_TOTAL_BYTES = 1_288_490_189L
 
 /*
  * Fake UI rendered inside tutorial spotlights. Themed via AppThemeTokens so every card matches the
@@ -65,40 +71,53 @@ fun TutorialPlaceholderDevice(showPairButton: Boolean = false) {
 
 /**
  * Fake three-tile "Send Via" sheet (Connected Devices / QR / NFC) mirroring the REAL
- * [com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaSheet]: a rounded bottom-sheet container with a
- * "Send Via" title above a Row of three equal-weight tiles (icon centred above its label), each a
- * card-coloured box with a hairline divider border and a green icon tint.
+ * [com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaSheet]: a floating island card (capped width,
+ * side/bottom margins, fully rounded, hairline border) with a "Send Via" title above a Row of three
+ * equal-weight tiles (icon centred above its label), each a raised surfaceElevated box with a divider
+ * border and a green icon tint.
  */
 @Composable
 fun TutorialPlaceholderSendVia(
     connectedButtonModifier: Modifier = Modifier,
     qrButtonModifier: Modifier = Modifier,
     nfcButtonModifier: Modifier = Modifier,
+    totalSizeBytes: Long = TUTORIAL_DEMO_TOTAL_BYTES,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
+    val shape = RoundedCornerShape(dimens.radiusXl)
     Column(
         modifier = Modifier
+            // Mirrors the real SendViaSheet's floating-island chain exactly (margins, cap, radius,
+            // hairline) so the tutorial replica and the live sheet stay pixel-identical.
+            .widthIn(max = 480.dp)
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = dimens.spaceLg)
-            .clip(RoundedCornerShape(dimens.radiusXl))
+            .padding(start = dimens.spaceMd, end = dimens.spaceMd, bottom = dimens.spaceMd)
+            .clip(shape)
             .background(colors.bottomSheet)
+            .border(dimens.hairlineWidth, colors.hairline, shape)
             .padding(dimens.spaceLg),
     ) {
         Text(
-            "Send Via",
+            stringResource(R.string.send_via_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.textPrimary,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
+        // Total-size line mirroring the real sheet; a demo value stands in when no files are queued.
+        Text(
+            stringResource(R.string.send_via_size_selected, formatTotalSize(totalSizeBytes)),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.textSecondary,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .padding(bottom = dimens.spaceLg),
+                .padding(top = dimens.spaceXs, bottom = dimens.spaceLg),
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(dimens.spaceMd),
         ) {
-            SendViaTile(label = "Connected Devices", tileModifier = connectedButtonModifier) {
+            SendViaTile(label = stringResource(R.string.send_via_connected_devices), tileModifier = connectedButtonModifier) {
                 Icon(
                     painterResource(R.drawable.ic_device),
                     contentDescription = null,
@@ -106,10 +125,10 @@ fun TutorialPlaceholderSendVia(
                     modifier = Modifier.size(dimens.iconLg),
                 )
             }
-            SendViaTile(label = "QR", tileModifier = qrButtonModifier) {
+            SendViaTile(label = stringResource(R.string.send_via_qr), tileModifier = qrButtonModifier) {
                 QrIcon(modifier = Modifier.size(dimens.iconLg), tint = colors.green)
             }
-            SendViaTile(label = "NFC", tileModifier = nfcButtonModifier) {
+            SendViaTile(label = stringResource(R.string.send_via_nfc), tileModifier = nfcButtonModifier) {
                 Icon(
                     painterResource(R.drawable.ic_nfc),
                     contentDescription = null,
@@ -122,9 +141,10 @@ fun TutorialPlaceholderSendVia(
 }
 
 /**
- * One "Send Via" tile: icon centred above its label inside a card-coloured box with a hairline divider
- * border. Mirrors the real SendViaSheet's SendViaOption (104.dp tall, weight(1f), radiusLg, card bg,
- * hairline border). [tileModifier] lets the cursor-reveal attach an onGloballyPositioned probe.
+ * One "Send Via" tile: icon centred above its label inside a raised surfaceElevated box with a divider
+ * border. Mirrors the real SendViaSheet's SendViaOption (104.dp tall, weight(1f), radiusLg,
+ * surfaceElevated bg, divider border). [tileModifier] lets the cursor-reveal attach an
+ * onGloballyPositioned probe.
  */
 @Composable
 private fun RowScope.SendViaTile(
@@ -140,7 +160,7 @@ private fun RowScope.SendViaTile(
             .weight(1f)
             .height(104.dp)
             .clip(shape)
-            .background(colors.card)
+            .background(colors.surfaceElevated)
             .border(dimens.hairlineWidth, colors.divider, shape)
             .padding(dimens.spaceMd),
         verticalArrangement = Arrangement.Center,

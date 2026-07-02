@@ -52,8 +52,9 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
     val trustedNodes by appController.trustedNodes.collectAsState()
     val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
     
-    // Simple local IP retrieval
-    val localIp = remember { 
+    // Display-only IP. getLocalHost() can return a loopback/virtual-adapter address on
+    // Windows; the network paths use Net.localLanIpv4() as the accurate resolver.
+    val localIp = remember {
         try {
             InetAddress.getLocalHost().hostAddress
         } catch (e: Exception) {
@@ -411,11 +412,12 @@ private fun PairedDevicesDialog(
         }
         .sortedByDescending { it.second }
 
+    BackdropEffect()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(Dimens.radiusLg),
             color = MaterialTheme.colors.background,
-            modifier = Modifier.width(380.dp)
+            modifier = Modifier.width(380.dp).modalPopIn()
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spaceXl)) {
                 Text(

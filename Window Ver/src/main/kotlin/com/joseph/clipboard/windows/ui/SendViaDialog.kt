@@ -29,15 +29,17 @@ import androidx.compose.ui.window.Dialog
  */
 @Composable
 fun SendViaDialog(
+    totalSizeBytes: Long,
     onConnectedDevices: () -> Unit,
     onQr: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    BackdropEffect()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colors.background,
-            modifier = Modifier.width(380.dp)
+            modifier = Modifier.width(380.dp).modalPopIn()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(24.dp),
@@ -49,6 +51,12 @@ fun SendViaDialog(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.onBackground,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    sendViaSizeLabel(totalSizeBytes),
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )

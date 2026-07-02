@@ -13,10 +13,12 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.StateFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +36,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.joseph.clipboard.windows.ClipboardAppController
+import com.joseph.clipboard.windows.network.control.QrControlState
 import com.joseph.clipboard.windows.theme.GreenPrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -47,7 +50,11 @@ private sealed interface QrUiState {
         val bitmap: ImageBitmap,
         val ssid: String?,
         val passphrase: String?,
-        val hotspotActive: Boolean
+        val hotspotActive: Boolean,
+        /** Live BLE control-plane state, or null when the PC isn't advertising a control channel. */
+        val controlState: StateFlow<QrControlState>?,
+        /** Live AP creds (republished after a credential regeneration), or null when no control channel. */
+        val creds: StateFlow<Pair<String, String>>?
     ) : QrUiState
     data class Error(val message: String) : QrUiState
 }
@@ -93,7 +100,9 @@ fun ShowQrDialog(
         } else {
             val bmp = try { encodeQr(info.qrJson, 660) } catch (e: Exception) { null }
             if (bmp == null) QrUiState.Error("Couldn't render the QR code.")
-            else QrUiState.Ready(bmp, info.ssid, info.passphrase, info.hotspotActive)
+            else QrUiState.Ready(
+                bmp, info.ssid, info.passphrase, info.hotspotActive, info.controlState, info.creds
+            )
         }
     }
 
@@ -109,11 +118,12 @@ fun ShowQrDialog(
     else
         String.format("%.1f KB", totalBytes / 1024f)
 
+    BackdropEffect()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colors.background,
-            modifier = Modifier.width(420.dp)
+            modifier = Modifier.width(420.dp).modalPopIn()
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(24.dp),
@@ -130,7 +140,7 @@ fun ShowQrDialog(
                 when (val s = uiState) {
                     is QrUiState.Loading -> LoadingBlock()
                     is QrUiState.Error -> ErrorBlock(s.message)
-                    is QrUiState.Ready -> ReadyBlock(s, realFiles.size, sizeStr)
+                    is QrUiState.Ready -> ReadyBlock(s, realFiles.size, sizeStr, appController)
                 }
 
                 Spacer(Modifier.height(20.dp))
@@ -182,7 +192,28 @@ private fun ErrorBlock(message: String) {
 }
 
 @Composable
-private fun ReadyBlock(state: QrUiState.Ready, fileCount: Int, sizeStr: String) {
+private fun ReadyBlock(
+    state: QrUiState.Ready,
+    fileCount: Int,
+    sizeStr: String,
+    appController: ClipboardAppController
+) {
+    // Live control-plane status (null flow → the PC isn't advertising BLE; behaves like before).
+    val control = state.controlState?.collectAsState()?.value
+    // Live AP creds — republished after a credential regeneration so the manual-join hint + QR refresh.
+    val liveCreds = state.creds?.collectAsState()?.value
+    val ssid = liveCreds?.first ?: state.ssid
+    val passphrase = liveCreds?.second ?: state.passphrase
+
+    // Regenerated creds (attempt 3 rescue): re-encode the QR so a not-yet-linked phone can rescan.
+    var bitmap by remember { mutableStateOf(state.bitmap) }
+    LaunchedEffect(liveCreds) {
+        val c = liveCreds ?: return@LaunchedEffect
+        if (c.first == state.ssid && c.second == state.passphrase) return@LaunchedEffect
+        val json = withContext(Dispatchers.IO) { appController.rebuildQrJson(c.first, c.second) } ?: return@LaunchedEffect
+        try { bitmap = encodeQr(json, 660) } catch (_: Exception) {}
+    }
+
     Box(
         modifier = Modifier
             .size(280.dp)
@@ -192,7 +223,7 @@ private fun ReadyBlock(state: QrUiState.Ready, fileCount: Int, sizeStr: String) 
         contentAlignment = Alignment.Center
     ) {
         Image(
-            bitmap = state.bitmap,
+            bitmap = bitmap,
             contentDescription = "Off-grid QR code",
             modifier = Modifier.fillMaxSize()
         )
@@ -212,7 +243,7 @@ private fun ReadyBlock(state: QrUiState.Ready, fileCount: Int, sizeStr: String) 
             color = MaterialTheme.colors.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
-        if (state.ssid != null && state.passphrase != null) {
+        if (ssid != null && passphrase != null) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "Can't scan? Join this Wi-Fi manually:",
@@ -222,7 +253,7 @@ private fun ReadyBlock(state: QrUiState.Ready, fileCount: Int, sizeStr: String) 
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "${state.ssid}  /  ${state.passphrase}",
+                "$ssid  /  $passphrase",
                 fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
@@ -238,6 +269,51 @@ private fun ReadyBlock(state: QrUiState.Ready, fileCount: Int, sizeStr: String) 
             textAlign = TextAlign.Center
         )
     }
+
+    // Live status from the BLE control channel — only rendered when the PC advertises one, so a PC
+    // without BLE looks exactly as before.
+    if (control != null) {
+        Spacer(Modifier.height(14.dp))
+        ControlStatusLine(control)
+    }
+}
+
+/** One-line, color-coded status driven by the BLE control channel (§ live PC status). */
+@Composable
+private fun ControlStatusLine(control: QrControlState) {
+    val (text, color) = when (control) {
+        is QrControlState.Advertising ->
+            "Waiting for a phone to connect over Bluetooth…" to MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
+        is QrControlState.CentralConnected ->
+            "Phone found — linking…" to MaterialTheme.colors.onBackground.copy(alpha = 0.8f)
+        is QrControlState.Linked ->
+            "Connected to ${control.phoneName} — starting Wi-Fi…" to GreenPrimary
+        is QrControlState.Joining ->
+            (if (control.attempt > 1) "Retrying with fresh Wi-Fi credentials — rescan the code…"
+            else "Phone connected — joining this PC's Wi-Fi…") to GreenPrimary
+        is QrControlState.AwaitingDial ->
+            "Phone joined the Wi-Fi — connecting…" to GreenPrimary
+        is QrControlState.Transferring ->
+            "Transferring ✓" to GreenPrimary
+        is QrControlState.ControlLost ->
+            "Bluetooth link dropped — the phone can still join the Wi-Fi to receive." to
+                MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
+        is QrControlState.Failed -> {
+            val msg = if (control.firewallSuspected)
+                "The phone joined the Wi-Fi but couldn't reach this PC. Allow Clipboard Share through Windows Defender Firewall, then try again."
+            else
+                "The phone couldn't join this PC's Wi-Fi. Keep the phone close with Wi-Fi on, then try again."
+            msg to MaterialTheme.colors.error
+        }
+    }
+    Text(
+        text,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        color = color,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(horizontal = 4.dp)
+    )
 }
 
 /** Renders [text] to a black-on-white QR [ImageBitmap] via ZXing. */
