@@ -290,6 +290,87 @@ object Net {
     }
 
     /** Fire-and-forget UDP datagram. Returns true on success. Never throws. */
+    /** First non-loopback IPv4 on any interface, or 127.0.0.1. (Moved from TransferDaemon.) */
+    fun getMyIpAddress(): String {
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            for (intf in java.util.Collections.list(interfaces)) {
+                val addrs = intf.inetAddresses
+                for (addr in java.util.Collections.list(addrs)) {
+                    if (!addr.isLoopbackAddress) {
+                        val sAddr = addr.hostAddress
+                        // Parenthesize: `?:` binds looser than `<`, so the elvis must be grouped
+                        // before the comparison or it parses as `sAddr ?: (-1 < 0)`.
+                        val isIPv4 = (sAddr?.indexOf(':') ?: -1) < 0
+                        if (isIPv4) return sAddr ?: "127.0.0.1"
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            // Ignore
+        }
+        return "127.0.0.1"
+    }
+
+    /** True if [ip] is loopback, unspecified, or bound to any local interface. (Moved from TransferDaemon.) */
+    fun isMyOwnIp(ip: String?): Boolean {
+        if (ip == null || ip == "127.0.0.1" || ip == "0.0.0.0") return true
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            for (intf in java.util.Collections.list(interfaces)) {
+                for (addr in java.util.Collections.list(intf.inetAddresses)) {
+                    if (addr.hostAddress == ip) return true
+                }
+            }
+        } catch (ex: Exception) {
+            // Ignore
+        }
+        return false
+    }
+
+    /** DHCP-derived + per-interface broadcast addresses, with 255.255.255.255 fallback. (Moved from TransferDaemon.) */
+    fun getAllBroadcastAddresses(context: Context): List<InetAddress> {
+        val addresses = mutableListOf<InetAddress>()
+
+        try {
+            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val dhcp = wifiManager.dhcpInfo
+            if (dhcp != null && dhcp.ipAddress != 0) {
+                val broadcast = (dhcp.ipAddress and dhcp.netmask) or dhcp.netmask.inv()
+                val quads = ByteArray(4)
+                for (k in 0..3) quads[k] = ((broadcast shr k * 8) and 0xFF).toByte()
+                addresses.add(InetAddress.getByAddress(quads))
+            }
+        } catch (e: Exception) {}
+
+        try {
+            val interfaces = NetworkInterface.getNetworkInterfaces()
+            for (intf in java.util.Collections.list(interfaces)) {
+                if (intf.isLoopback || !intf.isUp) continue
+                for (address in intf.interfaceAddresses) {
+                    val broadcast = address.broadcast
+                    if (broadcast != null && !addresses.contains(broadcast)) {
+                        addresses.add(broadcast)
+                    }
+                }
+            }
+        } catch (e: Exception) {}
+
+        // Add a global broadcast fallback just in case
+        try {
+            val globalBroadcast = InetAddress.getByName("255.255.255.255")
+            if (!addresses.contains(globalBroadcast)) {
+                addresses.add(globalBroadcast)
+            }
+        } catch (e: Exception) {}
+
+        if (addresses.isEmpty()) {
+            try { addresses.add(InetAddress.getByName("255.255.255.255")) } catch (e: Exception) {}
+        }
+
+        return addresses
+    }
+
     fun sendUdp(ip: String, port: Int, payload: ByteArray): Boolean {
         return try {
             DatagramSocket().use { socket ->

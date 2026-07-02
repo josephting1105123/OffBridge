@@ -44,6 +44,7 @@ import com.EntropicSoftwareLab.ClipboardShare.TutorialStep
 import com.EntropicSoftwareLab.ClipboardShare.tuneForBulkTransfer
 import com.EntropicSoftwareLab.ClipboardShare.transport.LanRoute
 import com.EntropicSoftwareLab.ClipboardShare.transport.ReceiverSessionController
+import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.control.BleControlClient
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportCaps
@@ -1243,7 +1244,7 @@ class QrScannerFragment : Fragment() {
             val tokenB64 = android.util.Base64.encodeToString(payload.token, android.util.Base64.NO_WRAP)
             val pubB64 = android.util.Base64.encodeToString(ecdh.getPublicKey(), android.util.Base64.NO_WRAP)
             val hmacB64 = android.util.Base64.encodeToString(
-                hmacSha256(sharedKey, payload.token), android.util.Base64.NO_WRAP
+                SessionCrypto.hmacSha256(sharedKey, payload.token), android.util.Base64.NO_WRAP
             )
             val hello = "P2P_HELLO|$tokenB64|$pubB64|${TransferDaemon.customDeviceName}|$hmacB64\n"
 
@@ -1271,7 +1272,7 @@ class QrScannerFragment : Fragment() {
             } catch (_: Exception) { TransportDiag.log("handshake: bad ack b64 → FAILED"); return HandshakeOutcome.FAILED }
 
             // Mutual authentication: key-confirmation HMAC over token || "ack".
-            val expectedAck = hmacSha256(sharedKey, payload.token + "ack".toByteArray(Charsets.UTF_8))
+            val expectedAck = SessionCrypto.hmacSha256(sharedKey, payload.token + "ack".toByteArray(Charsets.UTF_8))
             if (!MessageDigest.isEqual(ackBytes, expectedAck)) {
                 TransportDiag.log("handshake: ack HMAC mismatch (wrong key/token) → retry")
                 return HandshakeOutcome.EXPIRED
@@ -1411,12 +1412,6 @@ class QrScannerFragment : Fragment() {
         }
         if (b == -1 && baos.size() == 0) return null
         return baos.toString("UTF-8")
-    }
-
-    private fun hmacSha256(key: ByteArray, message: ByteArray): ByteArray {
-        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-        mac.init(javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"))
-        return mac.doFinal(message)
     }
 
     // ------------------------------------------------------------ receiving

@@ -11,6 +11,7 @@ import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
+import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
@@ -155,12 +156,6 @@ object TransferDaemon {
     val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
     
     val activeSessions = ConcurrentHashMap<String, TransferSession>()
-
-    var pendingSessionId: String = ""
-    var pendingSocket: Socket? = null
-    var pendingSenderName: String = ""
-    var pendingTotalFiles: Int = 0
-    var pendingManifest: List<Pair<String, Long>> = emptyList()
 
     /** Non-null only while an off-grid sender screen is advertising. */
     @Volatile
@@ -896,83 +891,11 @@ object TransferDaemon {
         }
     }
 
-    private fun getMyIpAddress(): String {
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
-            for (intf in Collections.list(interfaces)) {
-                val addrs = intf.inetAddresses
-                for (addr in Collections.list(addrs)) {
-                    if (!addr.isLoopbackAddress) {
-                        val sAddr = addr.hostAddress
-                        // Parenthesize: `?:` binds looser than `<`, so the elvis must be grouped
-                        // before the comparison or it parses as `sAddr ?: (-1 < 0)`.
-                        val isIPv4 = (sAddr?.indexOf(':') ?: -1) < 0
-                        if (isIPv4) return sAddr ?: "127.0.0.1"
-                    }
-                }
-            }
-        } catch (ex: Exception) {
-            // Ignore
-        }
-        return "127.0.0.1"
-    }
+    private fun getMyIpAddress(): String = Net.getMyIpAddress()
 
-    private fun isMyOwnIp(ip: String?): Boolean {
-        if (ip == null || ip == "127.0.0.1" || ip == "0.0.0.0") return true
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
-            for (intf in Collections.list(interfaces)) {
-                for (addr in Collections.list(intf.inetAddresses)) {
-                    if (addr.hostAddress == ip) return true
-                }
-            }
-        } catch (ex: Exception) {
-            // Ignore
-        }
-        return false
-    }
+    private fun isMyOwnIp(ip: String?): Boolean = Net.isMyOwnIp(ip)
 
-    private fun getAllBroadcastAddresses(context: Context): List<InetAddress> {
-        val addresses = mutableListOf<InetAddress>()
-        
-        try {
-            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            val dhcp = wifiManager.dhcpInfo
-            if (dhcp != null && dhcp.ipAddress != 0) {
-                val broadcast = (dhcp.ipAddress and dhcp.netmask) or dhcp.netmask.inv()
-                val quads = ByteArray(4)
-                for (k in 0..3) quads[k] = ((broadcast shr k * 8) and 0xFF).toByte()
-                addresses.add(InetAddress.getByAddress(quads))
-            }
-        } catch (e: Exception) {}
-
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
-            for (intf in Collections.list(interfaces)) {
-                if (intf.isLoopback || !intf.isUp) continue
-                for (address in intf.interfaceAddresses) {
-                    val broadcast = address.broadcast
-                    if (broadcast != null && !addresses.contains(broadcast)) {
-                        addresses.add(broadcast)
-                    }
-                }
-            }
-        } catch (e: Exception) {}
-        
-        // Add a global broadcast fallback just in case
-        try {
-            val globalBroadcast = InetAddress.getByName("255.255.255.255")
-            if (!addresses.contains(globalBroadcast)) {
-                addresses.add(globalBroadcast)
-            }
-        } catch (e: Exception) {}
-
-        if (addresses.isEmpty()) {
-            try { addresses.add(InetAddress.getByName("255.255.255.255")) } catch (e: Exception) {}
-        }
-        
-        return addresses
-    }
+    private fun getAllBroadcastAddresses(context: Context): List<InetAddress> = Net.getAllBroadcastAddresses(context)
 
     private fun handleIncomingConnection(context: Context, socket: Socket) {
         try {
@@ -1252,7 +1175,7 @@ object TransferDaemon {
                     val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
                         try { android.util.Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), android.util.Base64.NO_WRAP) } catch (_: Exception) { null }
                     } else null
-                    val expected = hmacSha256(pairingKey, nonce)
+                    val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
                     if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
                         // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key. Drop
                         // the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer lands here.)
@@ -1438,7 +1361,7 @@ object TransferDaemon {
             return
         }
 
-        val expectedHmac = hmacSha256(sharedKey, tokenBytes)
+        val expectedHmac = SessionCrypto.hmacSha256(sharedKey, tokenBytes)
         if (!java.security.MessageDigest.isEqual(helloHmac, expectedHmac)) {
             TransportDiag.log("TX: P2P_HELLO dropped — HMAC mismatch (key disagreement)")
             try { connection.close() } catch (_: Exception) {}
@@ -1454,7 +1377,7 @@ object TransferDaemon {
                 connection.setReadTimeout(30000)
                 val outStream = connection.output
 
-                val ack = hmacSha256(sharedKey, tokenBytes + "ack".toByteArray(Charsets.UTF_8))
+                val ack = SessionCrypto.hmacSha256(sharedKey, tokenBytes + "ack".toByteArray(Charsets.UTF_8))
                 val welcome = "P2P_WELCOME|$sessionId|${android.util.Base64.encodeToString(ack, android.util.Base64.NO_WRAP)}\n"
                 outStream.write(welcome.toByteArray(Charsets.UTF_8))
 
@@ -1559,12 +1482,6 @@ object TransferDaemon {
                 com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridLiveTransfer.finishIfArmed(sessionId)
             }
         }
-    }
-
-    private fun hmacSha256(key: ByteArray, message: ByteArray): ByteArray {
-        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-        mac.init(javax.crypto.spec.SecretKeySpec(key, "HmacSHA256"))
-        return mac.doFinal(message)
     }
 
     private fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null, sendGen: Int? = null, useFileV2: Boolean = false) {
