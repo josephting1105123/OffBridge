@@ -4,6 +4,66 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.5.1 — Android + Windows (cross-platform transfer fixes, audit pass)
+
+Both platforms now report **3.5.1** (Android versionCode 18). A read-only audit of the Android
+client, Windows client, and website found 44 bugs; the high-severity, cross-platform, and crash
+bugs were fixed and build-verified. Full findings and the deferred list: `release/AUDIT-3.5.1.md`.
+
+### Cross-platform transfer correctness
+- **Manifest-bounded upload (Android):** plaintext sends now stream exactly the manifest byte count
+  and abort on a null stream or short read, instead of streaming to EOF. A source file that changed
+  size mid-batch previously desynced the receiver's positional read and corrupted every later file
+  (off-grid sends included). Android now matches the Windows sender.
+- **Manifest parse parity:** one shared parser skips empty-name `:size` entries (`lastColonIndex > 0`)
+  so Android LAN, Android off-grid, and Windows agree on a degenerate/hostile manifest. Mirrored
+  golden tests on both platforms.
+- **AEAD resume guard:** both senders reject an `fgcm`/`fgcm2` RESUME_REQUEST that carries a non-zero
+  offset (AEAD restarts the file) instead of computing a wrong chunk index that only failed later at
+  the GCM tag.
+
+### Windows
+- Fixed a crash: the resume error path used `Dispatchers.Main`, which the desktop module has no
+  dispatcher for — the first failed resume threw an uncaught exception. The controller scope also
+  gained a `SupervisorJob` so one failure can't kill discovery and all networking until restart.
+- Escaped single quotes in the file-dialog PowerShell scripts (paths containing `'`); marked the
+  daemons' listening sockets `@Volatile` so `stop()` reliably closes them.
+
+### Android
+- History no longer wipes on a single malformed record (per-record parse); receiver aborts instead
+  of silently skipping a file whose output stream can't open; `TransferDaemon.start()` is synchronized
+  so concurrent callers can't leak the Wi-Fi/multicast locks; fixed a dead unpair-broadcast receiver,
+  a Settings-tab crash on a malformed saved folder URI, and a crash when dismissing the history sheet
+  mid-resume.
+
+### Website
+- Download-link `aria-label` matches its visible state (no "download" announced on a disabled card);
+  privacy page stamps the year dynamically. All on-page version strings updated to 3.5.1.
+
+---
+
+## 3.5.0 — Android + Windows (authenticated file stream v2, admission proof, stronger PIN)
+
+Both platforms report **3.5.0**. Security-focused release building on 3.4.0's anti-downgrade pins.
+
+### Crypto & protocol
+- **CBC clipboard retired** on both platforms: every clipboard send is now ClipboardSeal (AES-GCM);
+  the legacy CBC path is `@Deprecated(ERROR)` and non-sealed payloads are rejected.
+- **FileSeal v2 (FGCM2):** per-session key (`HKDF(pairKey, "file-aead-v2"||sessionId)`) with
+  session/file/chunk-bound AAD for splice/replay protection; negotiated via the `fgcm2` flag, falling
+  back to v1 when a peer doesn't advertise it.
+- **AUTH2 admission proof:** a receiver challenges an AUTH2-advertising sender
+  (`OFFER_CHALLENGE`/`OFFER_PROOF`, HMAC over a nonce) before showing the incoming-file popup, closing
+  an IP-spoof hole.
+- **pv2 pairing PIN:** the SAS is derived from `HKDF(sharedSecret, "clipshare-pair-pin-v2")` instead
+  of the AES key's first bytes.
+- Discovery capability string is now `GCM1,FGCM1,FGCM2,AUTH2` on both platforms.
+
+### Build & release
+- R8 + CI validation; release signing via `keystore.properties` (no debug-signing fallback).
+
+---
+
 ## 3.4.0 — Android + Windows (downgrade resistance, localization & release hardening)
 
 Both platforms now report **3.4.0**.

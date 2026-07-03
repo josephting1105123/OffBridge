@@ -1,8 +1,8 @@
 # Release runbook — the Claude-free operations manual
 
 This is the manual to run releases and a beta **without AI help**. Everything here is mechanical:
-follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.4.0,
-versionCode 15.
+follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.5.1,
+versionCode 18.
 
 ---
 

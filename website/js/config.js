@@ -29,7 +29,7 @@ window.CS_CONFIG = {
     label: "Download for Android",
     os: "Android",
     fileType: "APK",
-    version: "3.5.0",
+    version: "3.5.1",
     size: "TBD", // e.g. "42.7 MB"
     // Paste the real direct-download URL here. "#" = not wired yet.
     url: "#",
@@ -41,7 +41,7 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.5.0",
+    version: "3.5.1",
     size: "TBD", // e.g. "124 MB"
     url: "#",
     sha256: "",
