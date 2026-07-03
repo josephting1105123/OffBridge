@@ -413,7 +413,7 @@
     <string name="transfer_tut_send_button">Une fois les fichiers sélectionnés, appuyez sur Envoyer pour choisir comment les envoyer.</string>
     <string name="transfer_tut_send_via">Appareils connectés utilise votre réseau Wi-Fi. NFC / QR fonctionne partout — sans routeur.</string>
     <string name="transfer_tut_pick_devices">Choisissez un ou plusieurs appareils couplés, puis appuyez sur Envoyer.</string>
-    <string name="transfer_tut_offgrid_code">Montrez ce code QR au téléphone récepteur — il le scanne pour recevoir sur le réseau local, sans routeur nécessaire.</string>
+    <string name="transfer_tut_offgrid_code">Montrez ce code QR au téléphone qui reçoit — il le scanne pour recevoir sur le réseau local, sans routeur.</string>
     <string name="transfer_tut_history">Appuyez ici pour voir votre historique de transferts et suivre la progression.</string>
     <string name="transfer_tut_next">Suivant</string>
     <string name="transfer_shortcut_short_label">Envoyer à %1$s</string>

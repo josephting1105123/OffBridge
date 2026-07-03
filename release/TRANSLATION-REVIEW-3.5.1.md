@@ -1,5 +1,31 @@
 # Translation accuracy review — 3.5.1 (2026-07-03)
 
+## Independent cross-check (2026-07-03, after the apply pass)
+
+All 43 sentence-level changed strings were verified by two BLIND Opus agents (a different model
+from the Sonnet reviewers that proposed the wording; neither agent saw the English source or the
+key names):
+
+1. **Blind back-translation → English, compared to the real English source: 43/43 semantic match,
+   zero meaning drift.** Every "tap to view", "Clipboard", drag-to-reorder, and QR/local-network/
+   no-router string round-trips correctly.
+2. **Blind native-fluency judge: 4/43 flagged for naturalness (no meaning errors).** Applied 3:
+   de `transfer_tut_offgrid_code` (subject of "receive" was grammatically the QR code → now the
+   phone scans it), fr `transfer_tut_offgrid_code` ("sans routeur nécessaire" calque → "sans
+   routeur"; "téléphone récepteur" → "téléphone qui reçoit"), ru Android `copy_detail_title`
+   ("Детали копии" → "Сведения о копии", also unifies with the Windows value). Kept 1: zh-TW
+   `複製詳情` — the judge finds the verb-first parse ambiguous, but it matches Android zh-TW's
+   pre-existing value and Windows zh-CN's construction; changing one copy would reintroduce
+   cross-platform drift. If ever changed, change all three together (e.g. 複製內容詳情).
+
+The unit fixes (MB→Mo/МБ) and the P2P term swap (端到端/端對端 → 点对点/點對點) were verified by
+direct inspection — mechanical, well-attested term mappings.
+
+**Not done: Google/Gemini engine cross-check.** The attempt to query Google Translate was blocked
+by the permission sandbox (repo strings to an external endpoint). To run it: approve the network
+call outside auto mode, or provide a Gemini API key. Given the 43/43 blind round-trip pass, the
+marginal value is small.
+
 One Sonnet reviewer per language (de, es, fr, id, ja, pt, ru, zh-CN, zh-TW) compared each locale
 against the English source on both platforms, with web cross-check for disputed terminology. Read-only
 review; the orchestrator applied the clear fixes below via `scratchpad/apply-trans.js` and build-verified.

@@ -413,7 +413,7 @@
     <string name="transfer_tut_send_button">Wenn Dateien ausgewählt sind, tippen Sie auf Senden, um die Sendemethode zu wählen.</string>
     <string name="transfer_tut_send_via">Verbundene Geräte nutzen Ihr Wi-Fi-Netzwerk. NFC / QR funktioniert überall — kein Router nötig.</string>
     <string name="transfer_tut_pick_devices">Wählen Sie ein oder mehrere gekoppelte Geräte und tippen Sie dann auf Senden.</string>
-    <string name="transfer_tut_offgrid_code">Zeigen Sie diesen QR-Code dem empfangenden Telefon — er wird gescannt, um über das lokale Netzwerk zu empfangen, kein Router nötig.</string>
+    <string name="transfer_tut_offgrid_code">Zeigen Sie diesen QR-Code dem empfangenden Telefon — es scannt ihn, um über das lokale Netzwerk zu empfangen. Kein Router nötig.</string>
     <string name="transfer_tut_history">Tippen Sie hier, um Ihren Übertragungsverlauf anzuzeigen und den Fortschritt zu verfolgen.</string>
     <string name="transfer_tut_next">Weiter</string>
     <string name="transfer_shortcut_short_label">Senden an %1$s</string>

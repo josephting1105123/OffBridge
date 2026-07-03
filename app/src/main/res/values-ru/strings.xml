@@ -500,7 +500,7 @@
     <string name="share_text_sending">Отправка текста на ваши устройства…</string>
     <string name="history_share_sheet_hint">Совет: чтобы отправить текст из другого приложения, нажмите кнопку «Поделиться» и выберите Clipboard Share.</string>
     <string name="selected_files_empty_hint">Выбранные файлы будут показаны здесь</string>
-    <string name="copy_detail_title">Детали копии</string>
+    <string name="copy_detail_title">Сведения о копии</string>
     <string name="copy_detail_button">Копировать</string>
     <string name="action_open_wifi">Открыть Wi-Fi</string>
     <string name="settings_history_backup_note">История буфера обмена и передач сохраняется здесь в виде обычного файла и восстанавливается, когда вы снова выбираете эту папку — например, после переустановки. Выбирайте частную папку; избегайте общих или синхронизируемых с облаком, если в буфере обмена есть конфиденциальный текст.</string>
