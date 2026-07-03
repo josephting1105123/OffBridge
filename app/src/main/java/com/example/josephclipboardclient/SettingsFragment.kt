@@ -300,7 +300,14 @@ class SettingsFragment : Fragment() {
 
     private fun updateSaveLocationText(uri: Uri) {
         val selectedFolderLabel = getString(R.string.settings_save_location_selected_folder)
-        val docId = DocumentsContract.getTreeDocumentId(uri)
+        // getTreeDocumentId throws IllegalArgumentException on a non-tree/malformed persisted URI,
+        // which crashed the Settings tab every time it opened until prefs were cleared. Fall back to
+        // the generic label instead of propagating the crash.
+        val docId = try {
+            DocumentsContract.getTreeDocumentId(uri)
+        } catch (e: Exception) {
+            null
+        }
         val folderName = docId?.substringAfterLast(':', selectedFolderLabel)?.ifEmpty { selectedFolderLabel }
         saveLocationLabelState.value = folderName ?: selectedFolderLabel
     }

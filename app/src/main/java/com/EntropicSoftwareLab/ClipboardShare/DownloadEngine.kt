@@ -101,7 +101,12 @@ object DownloadEngine {
                         java.io.FileOutputStream(pf, append)
                     }
                     
-                    outputStream?.use { out ->
+                    // A null stream (SAF createFile failed, permission lost) must abort. The old
+                    // `outputStream?.use{}` silently skipped writing this file's bytes while still
+                    // advancing currentFileIndex/currentOffset, so the receiver kept reading this
+                    // file's promised bytes out of the NEXT file — corrupting the rest of the batch.
+                    if (outputStream == null) throw java.io.IOException("Cannot open output for $finalName")
+                    outputStream.use { out ->
                         if (aeadKeySpec != null) {
                             // AEAD: read GCM records, decrypt, and append plaintext until we have the
                             // file's plaintext bytes. AEAD resume restarts the file (currentOffset==0).

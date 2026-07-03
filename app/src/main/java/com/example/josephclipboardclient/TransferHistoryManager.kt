@@ -165,7 +165,13 @@ object TransferHistoryManager {
     fun getRecords(context: Context): List<TransferRecord> {
         return try {
             val array = PrefsJson.readArray(context, PREFS_NAME, KEY_HISTORY)
-            (0 until array.length()).map { TransferRecord.fromJson(array.getJSONObject(it)) }
+            // Parse each record independently: one malformed/legacy entry must not sink the whole
+            // history. The old single try/catch returned emptyList() on any bad record, and the next
+            // addRecord/updateStatus then saved only the new record — permanently wiping the rest
+            // (and the JSON backup). Mirrors HistoryBackupManager.readRecords' per-record isolation.
+            (0 until array.length()).mapNotNull { i ->
+                runCatching { TransferRecord.fromJson(array.getJSONObject(i)) }.getOrNull()
+            }
         } catch (e: Exception) {
             emptyList()
         }

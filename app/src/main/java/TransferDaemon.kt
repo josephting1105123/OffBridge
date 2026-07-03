@@ -97,8 +97,15 @@ object TransferDaemon {
 
 
     fun start(context: Context) {
-        if (isRunning) return
-        isRunning = true
+        // start() is called unconditionally from several sites, some off the main thread
+        // (SenderSessionController network callbacks, OffGridAdvertiser coroutines). An unsynchronized
+        // check-then-set let two callers both pass the guard and double-acquire the Wi-Fi/multicast
+        // locks — the second WifiLock/MulticastLock instance overwrote the field, leaking the first
+        // (no auto-timeout) and pinning the radio. Serialize the guard so only one caller initializes.
+        synchronized(this) {
+            if (isRunning) return
+            isRunning = true
+        }
         // A prior stop() cancelled daemonScope; a cancelled scope can't relaunch, so rebuild the
         // Job + scope before starting fresh after a shutdown.
         if (!daemonScope.isActive) {

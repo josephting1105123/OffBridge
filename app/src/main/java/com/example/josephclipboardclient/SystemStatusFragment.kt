@@ -54,7 +54,7 @@ class SystemStatusFragment : Fragment() {
 
     private val unpairReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == "com.example.josephclipboardclient.UNPAIRED_REMOTELY") refreshDeviceList()
+            if (intent?.action == "com.EntropicSoftwareLab.ClipboardShare.UNPAIRED_REMOTELY") refreshDeviceList()
         }
     }
 
@@ -134,7 +134,7 @@ class SystemStatusFragment : Fragment() {
 
         val ctx = context
         if (ctx != null && !receiversRegistered) {
-            val unpairFilter = IntentFilter("com.example.josephclipboardclient.UNPAIRED_REMOTELY")
+            val unpairFilter = IntentFilter("com.EntropicSoftwareLab.ClipboardShare.UNPAIRED_REMOTELY")
             val successFilter = IntentFilter(ACTION_PAIRING_SUCCESSFUL)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 ctx.registerReceiver(unpairReceiver, unpairFilter, Context.RECEIVER_NOT_EXPORTED)

@@ -598,14 +598,20 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             val targetIp = session?.targetIp ?: TransferDaemon.discoveredNodes.entries.find { it.value.name == record.deviceName }?.key
 
             if (targetIp != null) {
-                CoroutineScope(Dispatchers.IO).launch {
+                // Lifecycle-scoped so dismissing the sheet cancels the in-flight send, and the
+                // Main-thread block is isAdded-guarded: the old unscoped CoroutineScope(Dispatchers.IO)
+                // called requireContext() after the async send with no guard, throwing an uncaught
+                // IllegalStateException (fragment detached) if the sheet was dismissed mid-flight.
+                val appCtx = requireContext().applicationContext
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val msg = "FILEBRIDGE_RESUME_REQUEST|${record.sessionId}".toByteArray(Charsets.UTF_8)
                     val sent = Net.sendUdp(targetIp, Ports.DISCOVERY, msg)
                     withContext(Dispatchers.Main) {
+                        if (!isAdded) return@withContext
                         if (sent) {
-                            android.widget.Toast.makeText(requireContext(), getString(R.string.history_resume_request_sent, record.deviceName), android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(appCtx, getString(R.string.history_resume_request_sent, record.deviceName), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
-                            android.widget.Toast.makeText(requireContext(), getString(R.string.history_resume_request_failed), android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(appCtx, getString(R.string.history_resume_request_failed), android.widget.Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
