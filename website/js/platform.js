@@ -57,18 +57,22 @@
         link.classList.add("is-disabled");
         link.querySelector("[data-dl-label]").textContent = "Coming soon";
       }
-      // Descriptive accessible name.
+      // Descriptive accessible name. When the download isn't ready the visible label reads
+      // "Coming soon", so the accessible name must match that — announcing a live download for a
+      // disabled link fails WCAG label-in-name and misrepresents a dead link to screen readers.
       link.setAttribute(
         "aria-label",
-        "Download " +
-          window.CS_CONFIG.meta.appName +
-          " " +
-          data.version +
-          " for " +
-          data.os +
-          ", " +
-          data.fileType +
-          (data.size && data.size !== "TBD" ? ", " + data.size : "")
+        ready
+          ? "Download " +
+              window.CS_CONFIG.meta.appName +
+              " " +
+              data.version +
+              " for " +
+              data.os +
+              ", " +
+              data.fileType +
+              (data.size && data.size !== "TBD" ? ", " + data.size : "")
+          : window.CS_CONFIG.meta.appName + " for " + data.os + " — not available yet"
       );
     }
 
