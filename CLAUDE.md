@@ -8,11 +8,20 @@ Always run a full build after completing multi-file changes and report compile r
 - **Android:** `JAVA_HOME="C:/Program Files/Android/Android Studio/jbr" ./gradlew.bat :app:assembleDebug` (or `:app:compileDebugKotlin` for a faster compile-only check).
 - **Windows module:** build the Windows version module.
 
-Do not declare work finished on an assumption — the build is the proof.
+Do not declare work finished on an assumption — the build is the proof. The same gate applies to commits: only commit when the relevant platform builds are green.
 
 ## Cross-Platform
 
-When implementing a feature on Android, check whether it must also be ported to the Windows client, and keep the cross-platform protocol/interop in sync. Wire-level changes (transport framing, control frames, pairing/QR payloads) must stay compatible between the Android and Windows clients.
+When implementing a feature on Android, check whether it must also be ported to the Windows client, and keep the cross-platform protocol/interop in sync. Wire-level changes (transport framing, control frames, pairing/QR payloads) must stay compatible between the Android and Windows clients. Mirroring includes the surrounding assets, not just code: tutorials/onboarding text and translation files (Android per-locale `strings.xml`, Windows `translation.json.txt`) must be updated on both sides.
+
+## Git Workflow
+
+This repo has multiple worktrees (e.g. `JCC-android`, `JCC-risk`, `JCC-windows` alongside the primary checkout). Before the first edit of an implementation session, run `git worktree list` and `git branch --show-current`, state which worktree/branch the edits will land on, and verify it matches any target the user named — do not start editing on a mismatch. Respect any code regions the user has declared restricted/off-limits.
+
+## Quality Gates
+
+- **Self-review before commit.** For any non-trivial implementation, run the `code-review` skill on the pending diff before committing — low/medium effort for small UI or doc changes, high for concurrency, wire-framing, or security-touching changes. Fix high/medium findings, re-verify the builds, then commit.
+- **Pre-flight dependency check.** Before integrating any new library, skill, or tool, confirm it is free and compatible with the stack (Kotlin/Android + Compose Desktop + vanilla HTML/JS website; Node for scripting — no Python on this machine). Report blockers before starting the work, not after.
 
 ## Architecture & Planning
 

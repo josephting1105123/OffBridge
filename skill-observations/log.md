@@ -313,3 +313,18 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Add to audit-transport (or a new refactor-audit skill): "To prove a refactor kept wire bytes/timeouts identical, diff `grep -o '\"[^\"]*\"' | sort -u` and a timeout/constant regex between the pre-refactor git revision and the union of successor files; then read only the residue." Also: prefer git blobs over `*_temp.kt` scratch copies — the scratch copies here were mid-refactor snapshots, not true baselines.
 
 **Principle:** For behavior-preservation audits, diff extracted invariants (literals, constants) across revisions instead of prose-reading both versions; the residue is the complete work list.
+
+### Observation 22: Usage-report suggestions must be deduped against existing config before implementing
+
+**Status:** OPEN
+**Date:** 2026-07-03
+**Session context:** Implementing the /insights usage report's suggested improvements (CLAUDE.md rules, a /ship skill, build hooks) for this project.
+**Skill:** New skill created outside weekly review: ship (internal); also relevant to any future "apply tool-generated recommendations" task
+**Type:** internal
+**Phase/Area:** Triage before implementation
+
+**Issue:** The report's four suggestions were generated without knowledge of the project's current config. Two were already covered (a Stop hook already compiles Android Kotlin each turn; the `verify` skill already encodes both-platform builds), and one literal suggestion (PostToolUse gradle build after every Edit) would have been actively harmful — minutes of latency per edit. The genuinely new pieces were the Git Workflow rule (3 stale worktrees exist; wrong-worktree edits were real past friction), the Quality Gates rules, and a `ship` skill composing the existing `code-review` + `verify` skills rather than duplicating their commands. User confirmed both dedup decisions via explicit options.
+
+**Suggested improvement:** When implementing recommendations from a generated report (insights, audit tooling, linters), first inventory what the project already has (settings.json hooks, existing skills, CLAUDE.md sections), classify each suggestion as already-covered / new / harmful-as-stated, and compose new skills from existing ones by reference instead of duplicating their steps.
+
+**Principle:** Generated recommendations describe observed behavior, not current configuration — they lag whatever was recently fixed. Triage against the live config first; the deliverable is the delta, and new automation should reference existing automation, not restate it.
