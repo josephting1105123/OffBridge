@@ -298,3 +298,18 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** audit-transport's "Then" section (reuse-over-rebuild) should add: when the plan depends on a native/OS integration the codebase does NOT already exercise (here: WinRT GATT — the repo drove WinRT only for Wi-Fi Direct, never Bluetooth), gate the plan on a throwaway spike that proves the exact risky calls end-to-end before writing the production abstraction. The audit tells you what exists to reuse; it cannot tell you whether a *new* native path behaves as the docs claim.
 
 **Principle:** An audit de-risks reuse, not novelty. The most expensive defects hide in the one platform call your codebase has never made before, and no amount of reading existing code reveals them — only running the specific call does. Order the work so the riskiest unproven assumption is tested first and cheapest, before any abstraction hardens around it.
+
+### Observation 21: Literal-diff technique verifies refactors preserved wire bytes cheaply
+
+**Status:** OPEN
+**Date:** 2026-07-03
+**Session context:** Read-only cross-platform protocol/crypto audit after the TransferDaemon god-class split (commits d200032/b645508/50d141f)
+**Skill:** New skill candidate: refactor-wire-audit (or fold into audit-transport)
+**Type:** open-source
+**Phase/Area:** Verification methodology
+
+**Issue:** Verifying that a large refactor did not change wire behavior by reading old and new code side by side is slow and error-prone. What worked: diffing the *sorted sets of string literals* and *numeric constants* (timeouts, buffer sizes, ports) between the pre-refactor git blob (`git show <commit>:<path>`) and the union of the new split files. This caught that only intended tokens (fgcm2, OFFER_CHALLENGE) were added, surfaced an encoding regression (mojibake + a NUL byte making a crypto file "binary" to grep), and cleared everything else in minutes.
+
+**Suggested improvement:** Add to audit-transport (or a new refactor-audit skill): "To prove a refactor kept wire bytes/timeouts identical, diff `grep -o '\"[^\"]*\"' | sort -u` and a timeout/constant regex between the pre-refactor git revision and the union of successor files; then read only the residue." Also: prefer git blobs over `*_temp.kt` scratch copies — the scratch copies here were mid-refactor snapshots, not true baselines.
+
+**Principle:** For behavior-preservation audits, diff extracted invariants (literals, constants) across revisions instead of prose-reading both versions; the residue is the complete work list.
