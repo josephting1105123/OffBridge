@@ -356,7 +356,7 @@ class SendToDevicesFragment : Fragment() {
                     isIncoming = false,
                     isPaused = false
                 )
-                TransferDaemon.activeSessions[sessionId] = session
+                TransferDaemon.putActiveSession(sessionId, session)
 
                 val targetName = TransferDaemon.discoveredNodes[targetIp]?.name ?: targetIp
                 TransferHistoryManager.addRecord(appContext, TransferRecord(

@@ -1,4 +1,4 @@
-package com.EntropicSoftwareLab.ClipboardShare
+﻿package com.EntropicSoftwareLab.ClipboardShare
 
 import android.content.Intent
 import android.os.Bundle
@@ -46,7 +46,7 @@ class TransferRequestActivity : AppCompatActivity() {
         notificationManager.cancel(sessionId.hashCode())
 
         btnAccept.setOnClickListener {
-            TransferDaemon.acceptOffer(this, sessionId)
+            DownloadEngine.acceptOffer(this, sessionId)
             val uiIntent = Intent(this, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 putExtra("SHOW_HISTORY", true)
@@ -57,7 +57,7 @@ class TransferRequestActivity : AppCompatActivity() {
         }
 
         btnDecline.setOnClickListener {
-            TransferDaemon.declineOffer(this, sessionId)
+            DownloadEngine.declineOffer(this, sessionId)
             finish()
         }
     }

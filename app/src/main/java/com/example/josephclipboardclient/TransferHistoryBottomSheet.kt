@@ -1,4 +1,4 @@
-package com.EntropicSoftwareLab.ClipboardShare
+﻿package com.EntropicSoftwareLab.ClipboardShare
 
 import android.app.Dialog
 import android.graphics.Color
@@ -53,7 +53,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
 
     // When non-null, the screen renders THESE records instead of the live history (tutorial only).
     private val tutorialRecordsState = mutableStateOf<List<TransferRecord>?>(null)
-    // True only while the tutorial runs — gates the per-frame onGloballyPositioned anchor reporting
+    // True only while the tutorial runs â€” gates the per-frame onGloballyPositioned anchor reporting
     // (otherwise normal list scrolling / filter taps lag from the constant bounds callbacks).
     private val tutorialActiveState = mutableStateOf(false)
 
@@ -108,7 +108,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
-        // Backdrop only — sheets keep their native slide-up entrance.
+        // Backdrop only â€” sheets keep their native slide-up entrance.
         dialog.window?.applyModalBackdrop()
         dialog.setOnShowListener {
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
@@ -559,7 +559,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     // ---- Record actions (unchanged logic) ----
 
     private fun cancelTransfer(record: TransferRecord) {
-        val session = TransferDaemon.activeSessions.remove(record.sessionId)
+        val session = TransferDaemon.removeActiveSession(record.sessionId)
         if (session != null) {
             session.isCancelled = true
             TransferHistoryManager.updateStatus(requireContext(), record.sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
@@ -581,14 +581,14 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
         } else {
             TransferHistoryManager.updateStatus(requireContext(), record.sessionId, "cancelled")
         }
-        // updateStatus fires onHistoryChanged → refreshData → detail re-renders with "cancelled" status.
+        // updateStatus fires onHistoryChanged â†’ refreshData â†’ detail re-renders with "cancelled" status.
     }
 
     private fun resumeTransfer(record: TransferRecord) {
         if (record.direction == "incoming") {
             val session = TransferDaemon.activeSessions[record.sessionId]
             if (session != null && session.isPaused) {
-                TransferDaemon.resumeIncomingTransfer(requireContext(), record.sessionId)
+                com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.resumeIncomingTransfer(requireContext(), record.sessionId)
             } else {
                 android.widget.Toast.makeText(requireContext(), getString(R.string.history_session_unavailable), android.widget.Toast.LENGTH_SHORT).show()
             }

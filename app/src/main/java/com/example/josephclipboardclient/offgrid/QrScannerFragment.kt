@@ -1,4 +1,4 @@
-package com.EntropicSoftwareLab.ClipboardShare.offgrid
+﻿package com.EntropicSoftwareLab.ClipboardShare.offgrid
 
 import android.Manifest
 import android.content.Context
@@ -52,6 +52,7 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDescriptor
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportRoute
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -69,15 +70,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Receiver screen: CameraX + ML Kit QR scanning and NFC reader mode run
- * simultaneously — a tap works on the same screen as the scan, no mode
+ * simultaneously â€” a tap works on the same screen as the scan, no mode
  * switch. The first valid payload wins; both sources then disarm.
  *
- * V4 receiver state machine (§3):
- *   IDLE → SCANNING → PARSING → CONNECTING → HANDSHAKE → RECEIVING → TEARDOWN
+ * V4 receiver state machine (Â§3):
+ *   IDLE â†’ SCANNING â†’ PARSING â†’ CONNECTING â†’ HANDSHAKE â†’ RECEIVING â†’ TEARDOWN
  *
  * CONNECTING is the whole transport ladder: the [ReceiverSessionController]
  * either executes sender-coordinated TRY_TRANSPORT tiers (BLE control channel
- * up) or runs the local T1 → T0 → T2 ladder (degraded mode). The fragment is
+ * up) or runs the local T1 â†’ T0 â†’ T2 ladder (degraded mode). The fragment is
  * a thin UI over it; the handshake runs over whatever [TransportRoute] wins.
  */
 class QrScannerFragment : Fragment() {
@@ -92,7 +93,7 @@ class QrScannerFragment : Fragment() {
     // is hopped onto the UI scope before touching fragment state.
     private val nfcReader = NfcPayloadReader(
         onRawPayload = { raw -> uiScope.launch { onCandidatePayload(raw) } },
-        // Accumulate read breadcrumbs (binder thread → hop to main) into whichever diagnostic area
+        // Accumulate read breadcrumbs (binder thread â†’ hop to main) into whichever diagnostic area
         // is on screen, so a failed tap shows WHERE it stopped (e.g. "SELECT AID rejected").
         onEvent = { msg ->
             uiScope.launch {
@@ -129,7 +130,7 @@ class QrScannerFragment : Fragment() {
     /** Session-scoped: suppresses the hotspot banner until the user leaves and returns (reset in onResume). */
     private var hotspotWarningDismissed = false
     private lateinit var receiveBlockedOverlay: View
-    /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) — suppresses scanning. */
+    /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) â€” suppresses scanning. */
     @Volatile private var receiveBlocked = false
     private var tvDiag: TextView? = null
     private var diagScroll: android.widget.ScrollView? = null
@@ -155,7 +156,7 @@ class QrScannerFragment : Fragment() {
     private var sessionController: ReceiverSessionController? = null
     /** The live transport once a tier wins (specifier network, P2P join or BT link). */
     private var activeRoute: TransportRoute? = null
-    /** Exact sender endpoint from DATA_READY — overrides candidate guessing (§9 #8). */
+    /** Exact sender endpoint from DATA_READY â€” overrides candidate guessing (Â§9 #8). */
     private var exactSenderIp: String? = null
     private var exactSenderPort: Int? = null
     /** Stashed across the nearby-permission request round-trip. Null = the grant
@@ -166,7 +167,7 @@ class QrScannerFragment : Fragment() {
     private var activeSessionId: String? = null
     private var activeConnection: TransportConnection? = null
 
-    /** Set once the live joiner is handed to [OffGridLiveTransfer] and we leave for history —
+    /** Set once the live joiner is handed to [OffGridLiveTransfer] and we leave for history â€”
      *  tells onDestroyView NOT to tear the transport down (the holder owns it until the download ends). */
     private var handedOff = false
 
@@ -177,7 +178,7 @@ class QrScannerFragment : Fragment() {
     private var receiveNfcGuideView: NfcTapGuideView? = null
     private var receiveNfcGuideHint: TextView? = null
     private var receiveNfcDiag: TextView? = null
-    /** Last NFC read breadcrumbs for the on-screen diagnostic (newest last, capped) — so the real
+    /** Last NFC read breadcrumbs for the on-screen diagnostic (newest last, capped) â€” so the real
      *  failure step stays visible instead of being overwritten by the final generic line. */
     private val nfcDiagLines = ArrayDeque<String>(6)
 
@@ -208,10 +209,10 @@ class QrScannerFragment : Fragment() {
         }
 
     /**
-     * Transport-ladder permission bundle, asked ONCE up front (§3.1
+     * Transport-ladder permission bundle, asked ONCE up front (Â§3.1
      * permission-aware ordering): nearby/fine-location for the true-P2P tiers
      * (T1/T2) plus the runtime Bluetooth pair (API 31+) for the BLE control
-     * channel and the T4 data tier. Either way the ladder runs — denials just
+     * channel and the T4 data tier. Either way the ladder runs â€” denials just
      * reduce it to the permissionless tiers.
      */
     private val requestFallbackPermission =
@@ -223,7 +224,7 @@ class QrScannerFragment : Fragment() {
             pendingFallbackPayload = null
 
             // If the request couldn't show a dialog (nearby permanently denied / OEM-suppressed),
-            // launch() returns immediately still-denied — the "Grant" button then appears dead and the
+            // launch() returns immediately still-denied â€” the "Grant" button then appears dead and the
             // Nearby setting never changes (the reported bug). Escalate to the app's permission settings
             // (where the Nearby devices toggle lives) and DON'T start a doomed degraded ladder (which
             // would pop the flaky Wi-Fi picker over the settings screen); leave a retry for when they
@@ -266,7 +267,7 @@ class QrScannerFragment : Fragment() {
 
     /**
      * One-time Bluetooth-permission ask for the PC-QR (SoftAP) path. A PC that advertises a BLE
-     * control channel lets the phone link the instant it scans — live PC status + coordinated retry
+     * control channel lets the phone link the instant it scans â€” live PC status + coordinated retry
      * instead of the PC waiting blind. That needs BLUETOOTH_SCAN/CONNECT (API 31+), which the SoftAP
      * path never requested before (it only ever needed CHANGE_WIFI_STATE to join). Denial is fine:
      * [connectToGroup] proceeds into the same direct SoftAP join regardless of the grant, so the
@@ -469,7 +470,7 @@ class QrScannerFragment : Fragment() {
             ensureLadderPermissions()
         } else if (nfcMode) {
             // NFC receive: show the tap-position guide, never start the camera. The already-armed NFC
-            // reader (onResume) feeds onCandidatePayload exactly like a QR scan → same confirm/connect.
+            // reader (onResume) feeds onCandidatePayload exactly like a QR scan â†’ same confirm/connect.
             setupNfcReceivePresentation()
             ensureLadderPermissions()
         } else {
@@ -492,8 +493,8 @@ class QrScannerFragment : Fragment() {
 
     /**
      * NFC receive presentation: hide the camera surfaces and show the tap-position guide. The NFC
-     * reader is armed by onResume (state == SCANNING), so a tap runs the IDENTICAL onCandidatePayload →
-     * confirm → handshake → transfer path as a QR scan. Mirrors the send-side QrDisplayFragment.nfcMode.
+     * reader is armed by onResume (state == SCANNING), so a tap runs the IDENTICAL onCandidatePayload â†’
+     * confirm â†’ handshake â†’ transfer path as a QR scan. Mirrors the send-side QrDisplayFragment.nfcMode.
      */
     private fun setupNfcReceivePresentation() {
         // Make the onResume NFC-arm guard (state == SCANNING) pass without starting the camera.
@@ -509,7 +510,7 @@ class QrScannerFragment : Fragment() {
         refreshNfcReceiveHint()
     }
 
-    /** Keep the NFC guide hint honest about the adapter state: unavailable / off (→ settings) / ready. */
+    /** Keep the NFC guide hint honest about the adapter state: unavailable / off (â†’ settings) / ready. */
     private fun refreshNfcReceiveHint() {
         val hint = receiveNfcGuideHint ?: return
         val adapter = NfcAdapter.getDefaultAdapter(requireContext())
@@ -539,10 +540,10 @@ class QrScannerFragment : Fragment() {
     /**
      * Scanner tip. Standalone (no chain) it is a one-shot single step gated by
      * the SharedPreferences flag. When reached via the Receive-screen chain
-     * ([ARG_TUTORIAL]) it renders as "3 / 3 — Done" with the offset applied.
+     * ([ARG_TUTORIAL]) it renders as "3 / 3 â€” Done" with the offset applied.
      */
     private fun maybeShowFirstLaunchTip() {
-        // No camera scan-tip in NFC receive mode — the guide replaces the camera + reticle (which the
+        // No camera scan-tip in NFC receive mode â€” the guide replaces the camera + reticle (which the
         // tip would spotlight). The NFC path is never launched with the tutorial/forced-tour args.
         if (nfcMode) return
         val tutorialMode = arguments?.getBoolean(ARG_TUTORIAL) == true
@@ -550,7 +551,7 @@ class QrScannerFragment : Fragment() {
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
 
         if (!tutorialMode) {
-            // The confirm card is already up for a preset payload — no scan tip needed.
+            // The confirm card is already up for a preset payload â€” no scan tip needed.
             if (arguments?.getString(ARG_PRESET_PAYLOAD) != null) return
             if (prefs.getBoolean("scanner_tutorial_shown", false)) return
         }
@@ -593,7 +594,7 @@ class QrScannerFragment : Fragment() {
                         }
                     }
                 }
-                // Chained from the Receive screen (non-forced): step 3 is the last receive step —
+                // Chained from the Receive screen (non-forced): step 3 is the last receive step â€”
                 // return to the Receive interface instead of leaving the user on the camera.
                 tutorialMode -> {
                     { if (isAdded) requireActivity().finish() }
@@ -615,7 +616,7 @@ class QrScannerFragment : Fragment() {
             analysisExecutor = Executors.newSingleThreadExecutor()
             barcodeScanner = newBarcodeScanner()
         }
-        // Camera-bind is the worst perceived lag in the flow — mask it (~300–700 ms).
+        // Camera-bind is the worst perceived lag in the flow â€” mask it (~300â€“700 ms).
         SkeletonHelper.show(skeletonCameraContainer, R.layout.skeleton_device_card, 2, horizontal = false)
 
         val providerFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -710,7 +711,7 @@ class QrScannerFragment : Fragment() {
     /**
      * On a failed SoftAP-bridge join (the sender is on its hotspot) when THIS device is already
      * occupied by a different Wi-Fi: a single-radio device can't join the hotspot while on another
-     * Wi-Fi, and Android forbids a normal app from disconnecting/connecting Wi-Fi for the user — so
+     * Wi-Fi, and Android forbids a normal app from disconnecting/connecting Wi-Fi for the user â€” so
      * guide them to free it. Once they disconnect (or connect to the hotspot), SOFTAP_JOIN works and
      * the OS auto-restores their network when the transfer ends. Otherwise show the generic error.
      */
@@ -754,7 +755,7 @@ class QrScannerFragment : Fragment() {
             )
             return true
         }
-        // No hotspot/Wi-Fi-radio guidance applied — show the generic copy, or name the Bluetooth
+        // No hotspot/Wi-Fi-radio guidance applied â€” show the generic copy, or name the Bluetooth
         // coordination link when that's the likely cause (sender's CONTROL_FAILED / local degrade).
         tvStatus.text = getString(
             if (controlFailed) R.string.offgrid_error_control_failed else R.string.offgrid_error_all_methods
@@ -764,9 +765,9 @@ class QrScannerFragment : Fragment() {
 
     /**
      * Re-evaluate the radio conflicts that affect receiving, off the main thread:
-     *  - hotspot ON **and** this phone is on another Wi-Fi → receiving can't work at all → HARD BLOCK
+     *  - hotspot ON **and** this phone is on another Wi-Fi â†’ receiving can't work at all â†’ HARD BLOCK
      *    (full-screen modal + scanning suppressed).
-     *  - hotspot ON only → soft dismissible banner (Wi-Fi Direct may be impaired, but a transfer can
+     *  - hotspot ON only â†’ soft dismissible banner (Wi-Fi Direct may be impaired, but a transfer can
      *    still work, e.g. the sender joining this hotspot).
      * detectHotspotIp / isConnectedToOtherWifi iterate NetworkInterface, so they run on Dispatchers.IO.
      */
@@ -775,10 +776,10 @@ class QrScannerFragment : Fragment() {
         uiScope.launch {
             val hotspotOn = withContext(Dispatchers.IO) { Net.detectHotspotIp(appCtx) != null }
             val onOtherWifi = hotspotOn && withContext(Dispatchers.IO) { Net.isConnectedToOtherWifi(appCtx) }
-            // State may have advanced (a scan slipped in) during the IO — don't paint over a non-scan UI.
+            // State may have advanced (a scan slipped in) during the IO â€” don't paint over a non-scan UI.
             if (!isAdded || state != ReceiverState.SCANNING) return@launch
             val hardBlock = hotspotOn && onOtherWifi
-            TransportDiag.log("RX: pre-scan radio check — hotspot=$hotspotOn otherWifi=$onOtherWifi → ${if (hardBlock) "BLOCKED" else "ok"}")
+            TransportDiag.log("RX: pre-scan radio check â€” hotspot=$hotspotOn otherWifi=$onOtherWifi â†’ ${if (hardBlock) "BLOCKED" else "ok"}")
             receiveBlocked = hardBlock
             receiveBlockedOverlay.visibility = if (hardBlock) View.VISIBLE else View.GONE
             hotspotWarningBanner.visibility =
@@ -800,7 +801,7 @@ class QrScannerFragment : Fragment() {
         val adapter = NfcAdapter.getDefaultAdapter(requireContext())
         when {
             adapter == null -> {
-                // In nfcMode the header (and this chip) is hidden — the guide hint covers NFC state.
+                // In nfcMode the header (and this chip) is hidden â€” the guide hint covers NFC state.
                 if (!nfcMode) tvNfcChip.visibility = View.VISIBLE
                 tvNfcChip.text = getString(R.string.offgrid_nfc_unavailable)
                 tvNfcChip.setOnClickListener(null)
@@ -814,7 +815,7 @@ class QrScannerFragment : Fragment() {
             }
             else -> {
                 tvNfcChip.visibility = View.GONE
-                // NFC is armed by evaluateReceiveBlockers() in the onResume tail — only AFTER confirming
+                // NFC is armed by evaluateReceiveBlockers() in the onResume tail â€” only AFTER confirming
                 // receiving isn't hard-blocked (hotspot + other-Wi-Fi), so a tap can't slip through the
                 // async check window into a doomed transfer. The (!payloadConsumed && SCANNING) guard is
                 // applied there too. (NFC starts disarmed on resume: onPause disarms it.)
@@ -823,7 +824,7 @@ class QrScannerFragment : Fragment() {
         // Keep the NFC guide hint honest about the adapter state (e.g. user toggled NFC in settings).
         if (nfcMode) refreshNfcReceiveHint()
 
-        // Proactive "your hotspot is on" warning — re-evaluated on every return (e.g. from the
+        // Proactive "your hotspot is on" warning â€” re-evaluated on every return (e.g. from the
         // tethering screen), and only while actively scanning so it never coexists with the failure
         // card or runs during the ladder. Reset the dismiss first so a return always re-checks the
         // live hotspot state.
@@ -859,7 +860,7 @@ class QrScannerFragment : Fragment() {
                 }
             }
             OffGridPayload.ParseResult.Invalid -> {
-                // Wrong-app QR — ignore and keep scanning (edge case 10).
+                // Wrong-app QR â€” ignore and keep scanning (edge case 10).
             }
         }
     }
@@ -869,7 +870,7 @@ class QrScannerFragment : Fragment() {
         state = ReceiverState.PARSING
         acceptedPayload = payload
         disarmSources()
-        hotspotWarningBanner.visibility = View.GONE  // a payload arrived — drop the pre-scan warning
+        hotspotWarningBanner.visibility = View.GONE  // a payload arrived â€” drop the pre-scan warning
         receiveBlockedOverlay.visibility = View.GONE
 
         tvConfirmTitle.text = getString(R.string.offgrid_confirm_title, payload.senderName.ifEmpty { getString(R.string.unknown_device) })
@@ -887,7 +888,7 @@ class QrScannerFragment : Fragment() {
     private fun disarmSources() {
         try { cameraProvider?.unbindAll() } catch (_: Exception) {}
         // H-h1: this runs from onDestroyView too, where the fragment may already be
-        // detached — requireActivity() would throw IllegalStateException. Use the
+        // detached â€” requireActivity() would throw IllegalStateException. Use the
         // nullable activity so disarm is skipped instead of crashing teardown.
         activity?.let { NfcPayloadReader.disarm(it) }
     }
@@ -933,7 +934,7 @@ class QrScannerFragment : Fragment() {
     private fun connectToGroup(payload: OffGridPayload) {
         // Preflight: WifiNetworkSpecifier never resolves with Wi-Fi off (mobile-data
         // case), and the OS scan results feeding the picker are gated on Location on
-        // API 29–30. Re-run on every Retry.
+        // API 29â€“30. Re-run on every Retry.
         if (!receiverPreflight()) return
 
         messageCard.visibility = View.GONE
@@ -949,22 +950,22 @@ class QrScannerFragment : Fragment() {
         )
 
         // LAN-only (sender on an existing hotspot / shared network) needs no Wi-Fi Direct or
-        // Bluetooth — connect straight over LAN, skipping the ladder permission gate.
+        // Bluetooth â€” connect straight over LAN, skipping the ladder permission gate.
         if (payload.isLanOnly()) {
             startTransportLadder(payload, hasNearbyPermission = false)
             return
         }
 
         // SoftAP bridge: the sender's mobile hotspot is joined via WifiNetworkSpecifier, which needs
-        // only CHANGE_WIFI_STATE/CHANGE_NETWORK_STATE (normal, manifest-declared) — NOT
+        // only CHANGE_WIFI_STATE/CHANGE_NETWORK_STATE (normal, manifest-declared) â€” NOT
         // NEARBY_WIFI_DEVICES. Skip the nearby-permission gate (mirrors LAN-only) so a receiver that
         // denied NEARBY_WIFI_DEVICES can still join the hotspot. BLE control is still attempted
         // opportunistically inside the ladder (gated only on its own BLUETOOTH_SCAN permission).
         if (payload.softApBridge) {
             // PC-QR case: when the sender (a PC) advertises a BLE control channel, asking for the
-            // Bluetooth runtime permission ONCE here lets the phone link over BLE — giving the PC live
+            // Bluetooth runtime permission ONCE here lets the phone link over BLE â€” giving the PC live
             // status and coordinated retry instead of waiting blind. PC-only users never granted it via
-            // the phone↔phone flow, so without this the rescue would silently never engage. Ask only if
+            // the phoneâ†”phone flow, so without this the rescue would silently never engage. Ask only if
             // askable and not asked before; the transfer proceeds into the same direct join either way.
             if ((payload.cap and TransportCaps.BLE_ADVERTISE) != 0 &&
                 !btControlPermRequested() &&
@@ -980,7 +981,7 @@ class QrScannerFragment : Fragment() {
             return
         }
 
-        // §3.1 permission-aware ordering: without the nearby/Bluetooth grant the
+        // Â§3.1 permission-aware ordering: without the nearby/Bluetooth grant the
         // ladder collapses to the flaky SPECIFIER picker, so make the grant
         // reachable instead of silently degrading.
         val missing = missingLadderPermissions()
@@ -1018,8 +1019,8 @@ class QrScannerFragment : Fragment() {
 
     /**
      * Hands the connection problem to the [ReceiverSessionController]: control
-     * channel when the pair supports BLE, the local T1 → T0 → T2 ladder
-     * otherwise. The UI never dead-ends on a single tier any more — it shows
+     * channel when the pair supports BLE, the local T1 â†’ T0 â†’ T2 ladder
+     * otherwise. The UI never dead-ends on a single tier any more â€” it shows
      * "trying method k of n" until a route wins or the whole ladder fails.
      */
     private fun startTransportLadder(payload: OffGridPayload, hasNearbyPermission: Boolean) {
@@ -1037,18 +1038,18 @@ class QrScannerFragment : Fragment() {
         // a fast failure falls through to the Wi-Fi Direct ladder.
         val lanIp = payload.lanIp
         if (lanIp != null) {
-            TransportDiag.log("LAN: probing $lanIp:${payload.port} over current network…")
+            TransportDiag.log("LAN: probing $lanIp:${payload.port} over current networkâ€¦")
             uiScope.launch {
                 val conn = withContext(Dispatchers.IO) { probeLanConnect(lanIp, payload.port) }
                 if (!isAdded || state != ReceiverState.CONNECTING) {
                     conn?.let { try { it.close() } catch (_: Exception) {} }
                     return@launch
                 }
-                TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable ✓ (same network)" else "unreachable → ladder"}")
+                TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable âœ“ (same network)" else "unreachable â†’ ladder"}")
                 when {
                     conn != null -> startHandshake(payload, LanRoute(conn))
                     payload.isLanOnly() -> {
-                        // No AP credentials to join — the sender is on its own hotspot / a shared
+                        // No AP credentials to join â€” the sender is on its own hotspot / a shared
                         // network and expects this phone to already be on it. (Bluetooth is no longer
                         // a data fallback.)
                         state = ReceiverState.FAILED
@@ -1090,7 +1091,7 @@ class QrScannerFragment : Fragment() {
                     if (!isAdded) return
                     val status = when (tier) {
                         TransportDescriptor.SPECIFIER, TransportDescriptor.LOHS ->
-                            // The OS picker dialog is about to appear — tell the user why.
+                            // The OS picker dialog is about to appear â€” tell the user why.
                             getString(R.string.offgrid_status_connecting, payload.senderName)
                         TransportDescriptor.P2P_NEGOTIATED ->
                             getString(R.string.offgrid_status_trying_direct)
@@ -1121,7 +1122,7 @@ class QrScannerFragment : Fragment() {
                     btnReceive.isEnabled = true
                     btnReceive.text = getString(R.string.action_retry)
                     btnReceive.setOnClickListener { connectToGroup(payload) }
-                    // Skip the developer diag dialog when we showed the actionable Wi-Fi guidance card —
+                    // Skip the developer diag dialog when we showed the actionable Wi-Fi guidance card â€”
                     // it'd pop on top and block the "Go to Settings" button.
                     if (!showSoftApGuidanceOrGeneric(payload, controlFailed)) showDiagDialog()
                 }
@@ -1142,20 +1143,49 @@ class QrScannerFragment : Fragment() {
 
         uiScope.launch {
             val outcome = withContext(Dispatchers.IO) {
-                runHandshakeAndReceive(appContext, payload, route)
+                OffGridHandshake.connectAndReceive(
+                    payload = payload,
+                    route = route,
+                    ecdh = sessionController?.ecdh,
+                    isActive = { fragmentJob.isActive },
+                    exactSenderIp = exactSenderIp,
+                    exactSenderPort = exactSenderPort,
+                    listener = object : OffGridHandshake.Listener {
+                        override fun onTransferStarted(
+                            sessionId: String,
+                            connection: TransportConnection,
+                            session: TransferSession
+                        ) {
+                            TransferDaemon.putActiveSession(sessionId, session)
+                            activeSessionId = sessionId
+                            activeConnection = connection
+
+                            TransferHistoryManager.addRecord(appContext, TransferRecord(
+                                sessionId = sessionId,
+                                deviceName = session.senderName,
+                                direction = "incoming",
+                                fileNames = session.manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
+                                totalBytes = session.manifest.sumOf { it.second },
+                                timestamp = System.currentTimeMillis(),
+                                status = "transferring",
+                                filesCompleted = 0,
+                                totalFiles = session.totalFiles,
+                                fileSizes = session.manifest.map { it.second },
+                                currentFileOffset = 0L,
+                                transport = "p2p"
+                            ))
+
+                            com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session)
+                            handedOff = true
+                        }
+                    }
+                )
             }
             if (!isAdded) return@launch
             when (outcome) {
-                HandshakeOutcome.STARTED -> {
+                OffGridHandshake.HandshakeOutcome.STARTED -> {
                     state = ReceiverState.RECEIVING
-                    // Host tiers (RECEIVER_AS_GO/SENDER_JOINS_AP) defer their "CONNECTED ✓" report until
-                    // the TCP data path is actually live — report it now so the sender's ladder settles on
-                    // a real success rather than the premature ok it used to get on DATA_READY arrival.
                     sessionController?.reportHandshakeSucceeded()
-                    // Transfer started → leave the camera and go to the transfer-history details page;
-                    // the download keeps streaming in the background. The Wi-Fi joiner this download
-                    // rides on is handed to OffGridLiveTransfer so leaving doesn't tear it down. If we
-                    // somehow lack a session id, fall back to the old resident-overlay behavior.
                     val sid = activeSessionId
                     if (sid != null) {
                         handOffAndOpenHistory(sid)
@@ -1168,9 +1198,8 @@ class QrScannerFragment : Fragment() {
                         startReceiveProgressPolling()
                     }
                 }
-                HandshakeOutcome.BUSY -> {
-                    // Host tiers deferred their result to the handshake: a TCP-connected-but-rejected
-                    // outcome must free the sender's ladder (it's waiting for our TRANSPORT_RESULT).
+                OffGridHandshake.HandshakeOutcome.BUSY -> {
+                    TransportDiag.log("QR handshake: P2P_BUSY â†’ waiting and retrying")
                     sessionController?.reportHostHandshakeRejected()
                     connectingOverlay.visibility = View.GONE
                     tvStatus.text = getString(R.string.offgrid_error_sender_busy)
@@ -1178,7 +1207,8 @@ class QrScannerFragment : Fragment() {
                     btnReceive.text = getString(R.string.action_retry)
                     btnReceive.setOnClickListener { connectToGroup(payload) }
                 }
-                HandshakeOutcome.EXPIRED -> {
+                OffGridHandshake.HandshakeOutcome.EXPIRED -> {
+                    TransportDiag.log("QR handshake: EXPIRED â†’ waiting and retrying")
                     sessionController?.reportHostHandshakeRejected()
                     connectingOverlay.visibility = View.GONE
                     tvStatus.text = getString(R.string.offgrid_error_code_expired)
@@ -1186,17 +1216,15 @@ class QrScannerFragment : Fragment() {
                     btnReceive.text = getString(R.string.action_retry)
                     btnReceive.setOnClickListener { connectToGroup(payload) }
                 }
-                HandshakeOutcome.FAILED -> {
+                OffGridHandshake.HandshakeOutcome.FAILED -> {
                     state = ReceiverState.FAILED
                     connectingOverlay.visibility = View.GONE
                     tvStatus.text = getString(R.string.offgrid_error_connect_failed)
                     btnReceive.isEnabled = true
                     btnReceive.text = getString(R.string.action_retry)
-                    // Tell the coordinating sender so its ladder advances past a
-                    // route that joined but cannot reach the TCP server (§9 #10).
                     sessionController?.reportHandshakeFailed()
                     // The route may still be usable (specifier OK, socket failed):
-                    // retry the handshake on it — no second OS dialog.
+                    // retry the handshake on it â€” no second OS dialog.
                     btnReceive.setOnClickListener {
                         btnReceive.isEnabled = false
                         startHandshake(payload, route)
@@ -1206,11 +1234,9 @@ class QrScannerFragment : Fragment() {
         }
     }
 
-    private enum class HandshakeOutcome { STARTED, BUSY, EXPIRED, FAILED }
-
     /**
-     * §2.3, receiver side. The duplex stream is opened by the active
-     * [TransportRoute] — SpecifierRoute from the joined network's factory (the
+     * Â§2.3, receiver side. The duplex stream is opened by the active
+     * [TransportRoute] â€” SpecifierRoute from the joined network's factory (the
      * OS does not route to a specifier network by default, edge case 13);
      * P2pRoute binds the local p2p source address; LanRoute hands over the
      * already-connected same-LAN link. Protocol bytes are identical on all.
@@ -1219,199 +1245,46 @@ class QrScannerFragment : Fragment() {
         context: Context,
         payload: OffGridPayload,
         route: TransportRoute
-    ): HandshakeOutcome {
-        var connection: TransportConnection? = null
-        // Ownership of the connected socket transfers to TransferDaemon.executeDownloadStream only on
-        // the STARTED path. Every other return (and any thrown exception) must close it here, or the
-        // socket leaks. The finally is the single cleanup point — the catch no longer closes to avoid
-        // a double-close.
-        var handedOff = false
-        try {
-            val conn = connectToSender(route, payload)
-            if (conn == null) {
-                TransportDiag.log("handshake: couldn't open TCP to sender (route up but unreachable) → FAILED")
-                return HandshakeOutcome.FAILED
-            }
-            connection = conn
-            connection.setReadTimeout(10000)
-            TransportDiag.log("handshake: TCP connected ✓ to ${conn.remoteIdentifier} — sending P2P_HELLO")
+    ): OffGridHandshake.HandshakeOutcome {
+        return OffGridHandshake.connectAndReceive(
+            payload = payload,
+            route = route,
+            ecdh = sessionController?.ecdh,
+            isActive = { fragmentJob.isActive },
+            exactSenderIp = exactSenderIp,
+            exactSenderPort = exactSenderPort,
+            listener = object : OffGridHandshake.Listener {
+                override fun onTransferStarted(
+                    sessionId: String,
+                    connection: TransportConnection,
+                    session: TransferSession
+                ) {
+                    TransferDaemon.putActiveSession(sessionId, session)
+                    activeSessionId = sessionId
+                    activeConnection = connection
 
-            // One ephemeral key for both planes: the control HELLOs already used
-            // it, and the sender derives the same K from this pk either way.
-            val ecdh = sessionController?.ecdh ?: EcdhSession()
-            val sharedKey = ecdh.deriveSecrets(payload.senderPublicKey).first
+                    TransferHistoryManager.addRecord(context, TransferRecord(
+                        sessionId = sessionId,
+                        deviceName = session.senderName,
+                        direction = "incoming",
+                        fileNames = session.manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
+                        totalBytes = session.manifest.sumOf { it.second },
+                        timestamp = System.currentTimeMillis(),
+                        status = "transferring",
+                        filesCompleted = 0,
+                        totalFiles = session.totalFiles,
+                        fileSizes = session.manifest.map { it.second },
+                        currentFileOffset = 0L,
+                        transport = "p2p"
+                    ))
 
-            val tokenB64 = android.util.Base64.encodeToString(payload.token, android.util.Base64.NO_WRAP)
-            val pubB64 = android.util.Base64.encodeToString(ecdh.getPublicKey(), android.util.Base64.NO_WRAP)
-            val hmacB64 = android.util.Base64.encodeToString(
-                SessionCrypto.hmacSha256(sharedKey, payload.token), android.util.Base64.NO_WRAP
-            )
-            val hello = "P2P_HELLO|$tokenB64|$pubB64|${TransferDaemon.customDeviceName}|$hmacB64\n"
-
-            val outStream = connection.output
-            val inStream = connection.input
-            outStream.write(hello.toByteArray(Charsets.UTF_8))
-            outStream.flush()
-
-            val welcome = readLine(inStream)
-            if (welcome == null) {
-                TransportDiag.log("handshake: connected but no P2P_WELCOME (sender closed / token mismatch) → retry")
-                return HandshakeOutcome.EXPIRED
-            }
-            if (welcome == "P2P_BUSY") { TransportDiag.log("handshake: sender BUSY"); return HandshakeOutcome.BUSY }
-            if (!welcome.startsWith("P2P_WELCOME|")) {
-                TransportDiag.log("handshake: unexpected reply '${welcome.take(24)}' → retry")
-                return HandshakeOutcome.EXPIRED
-            }
-
-            val welcomeParts = welcome.split('|')
-            if (welcomeParts.size < 3) { TransportDiag.log("handshake: malformed WELCOME → FAILED"); return HandshakeOutcome.FAILED }
-            val sessionId = welcomeParts[1]
-            val ackBytes = try {
-                android.util.Base64.decode(welcomeParts[2], android.util.Base64.NO_WRAP)
-            } catch (_: Exception) { TransportDiag.log("handshake: bad ack b64 → FAILED"); return HandshakeOutcome.FAILED }
-
-            // Mutual authentication: key-confirmation HMAC over token || "ack".
-            val expectedAck = SessionCrypto.hmacSha256(sharedKey, payload.token + "ack".toByteArray(Charsets.UTF_8))
-            if (!MessageDigest.isEqual(ackBytes, expectedAck)) {
-                TransportDiag.log("handshake: ack HMAC mismatch (wrong key/token) → retry")
-                return HandshakeOutcome.EXPIRED
-            }
-            TransportDiag.log("handshake: WELCOME + ack OK — receiving OFFER/MANIFEST")
-
-            // Existing single-socket sequence: OFFER, MANIFEST.
-            val offerLine = readLine(inStream) ?: return HandshakeOutcome.FAILED
-            if (!offerLine.startsWith("OFFER|")) return HandshakeOutcome.FAILED
-            val offerParts = offerLine.split('|')
-            if (offerParts.size < 4) return HandshakeOutcome.FAILED
-            val senderName = offerParts[2]
-            val totalFiles = offerParts[3].toIntOrNull() ?: return HandshakeOutcome.FAILED
-
-            val manifestLine = readLine(inStream) ?: return HandshakeOutcome.FAILED
-            if (!manifestLine.startsWith("MANIFEST|")) return HandshakeOutcome.FAILED
-            val manifest = mutableListOf<Pair<String, Long>>()
-            for (item in manifestLine.removePrefix("MANIFEST|").split('|')) {
-                val lastColonIndex = item.lastIndexOf(':')
-                // Split on the LAST ':' so a filename containing ':' is preserved; require a
-                // non-empty name (index > 0) and a parseable size — skip malformed entries rather
-                // than admitting a phantom 0-byte file. Matches Windows ManifestCodec.parse.
-                if (lastColonIndex > 0) {
-                    val fname = item.substring(0, lastColonIndex)
-                    val fsize = item.substring(lastColonIndex + 1).toLongOrNull() ?: continue
-                    manifest.add(Pair(fname, fsize))
+                    // Hand the stream to the proven engine â€” byte-for-byte the same
+                    // download path as LAN mode, regardless of carrier.
+                    com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(context, connection, session)
+                    handedOff = true
                 }
             }
-            if (manifest.isEmpty()) return HandshakeOutcome.FAILED
-
-            // Same-socket accept — no reconnect, there is no discovery to
-            // re-resolve the peer. If the sender honours the delivery ack, signal that we'll
-            // send TRANSFER_COMPLETE so it waits for confirmation before finishing (this is the
-            // fix for the sender showing "done" while we're stuck mid-download with a dead resume).
-            val ackSupported = (payload.cap and TransportCaps.COMPLETION_ACK) != 0
-            val acceptCmd = if (ackSupported) "ACCEPT_OFFER|$sessionId|ack\n" else "ACCEPT_OFFER|$sessionId\n"
-            outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
-            outStream.flush()
-
-            val session = TransferSession(
-                sessionId = sessionId,
-                senderName = senderName,
-                totalFiles = totalFiles,
-                manifest = manifest,
-                targetIp = payload.ip,
-                isIncoming = true,
-                transport = "p2p",
-                completionAckRequired = ackSupported
-            )
-            TransferDaemon.activeSessions[sessionId] = session
-            activeSessionId = sessionId
-            activeConnection = connection
-
-            TransferHistoryManager.addRecord(context, TransferRecord(
-                sessionId = sessionId,
-                deviceName = senderName,
-                direction = "incoming",
-                fileNames = manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
-                totalBytes = manifest.sumOf { it.second },
-                timestamp = System.currentTimeMillis(),
-                status = "transferring",
-                filesCompleted = 0,
-                totalFiles = totalFiles,
-                fileSizes = manifest.map { it.second },
-                currentFileOffset = 0L,
-                transport = "p2p"
-            ))
-
-            // Hand the stream to the proven engine — byte-for-byte the same
-            // download path as LAN mode, regardless of carrier.
-            TransferDaemon.executeDownloadStream(context, connection, session)
-            handedOff = true
-            return HandshakeOutcome.STARTED
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return HandshakeOutcome.FAILED
-        } finally {
-            if (!handedOff) {
-                try { connection?.close() } catch (_: Exception) {}
-            }
-        }
-    }
-
-    /**
-     * The DATA_READY endpoint (exact, from the sender) leads; then two passes
-     * over the route's candidate addresses — DHCP / the p2p interface can
-     * still be settling right after the route resolves, so a clean miss on
-     * every address earns one short pause and a final retry before giving up.
-     */
-    private fun connectToSender(route: TransportRoute, payload: OffGridPayload): TransportConnection? {
-        val port = exactSenderPort ?: payload.port
-        val candidates = linkedSetOf<String>()
-        exactSenderIp?.let { candidates.add(it) }
-        candidates.addAll(route.senderCandidates(payload))
-        // Never dial our own addresses. When WE host as GO (RECEIVER_AS_GO), the route's candidate
-        // fallbacks (payload.ip, <p2p subnet>.1) resolve to our own GO IP (192.168.49.1) — dialing it
-        // connects to our own server and the sender side logs "no active send context". Drop self-IPs
-        // so a dead route fails cleanly and the ladder advances instead of looping back to itself.
-        val selfIps = Net.localIpv4Addresses()
-        val dialable = candidates.filterNot { it in selfIps }
-        if (dialable.isEmpty()) {
-            TransportDiag.log("handshake: no reachable sender address (all candidates were self) — route failed")
-            return null
-        }
-        TransportDiag.log("handshake: dialing sender at ${dialable.joinToString(",")}:$port")
-        repeat(5) { attempt ->
-            for (ip in dialable) {
-                try {
-                    return route.openConnection(ip, port)
-                } catch (_: Exception) {
-                }
-            }
-            if (attempt < 4) {
-                // Wi-Fi Direct DHCP can take several seconds after the group forms — back off
-                // progressively (≈1.0s,1.7s,2.4s,3.1s) so the p2p route comes up before we give up.
-                Thread.sleep(1000L + attempt * 700L)
-                // H-h3: Thread.sleep isn't cancellation-aware. This runs on the IO
-                // thread under fragmentJob; if the fragment was torn down during the
-                // pause, bail so we don't open a socket against a dead view.
-                if (!fragmentJob.isActive) return null
-            }
-        }
-        return null
-    }
-
-    private fun readLine(inputStream: java.io.InputStream): String? {
-        val baos = java.io.ByteArrayOutputStream()
-        var b = inputStream.read()
-        while (b != -1 && b != '\n'.code) {
-            baos.write(b)
-            // H-h4: any peer on the joined group could stream an endless line with no
-            // newline and OOM us. Control lines are tiny, so cap at 64 KiB and reject.
-            if (baos.size() > MAX_LINE_BYTES) {
-                throw java.io.IOException("control line exceeded $MAX_LINE_BYTES bytes")
-            }
-            b = inputStream.read()
-        }
-        if (b == -1 && baos.size() == 0) return null
-        return baos.toString("UTF-8")
+        )
     }
 
     // ------------------------------------------------------------ receiving
@@ -1423,7 +1296,7 @@ class QrScannerFragment : Fragment() {
             while (isActive) {
                 val session = TransferDaemon.activeSessions[sessionId]
                 if (session == null) {
-                    // Session gone: completed (or cancelled) — read the record.
+                    // Session gone: completed (or cancelled) â€” read the record.
                     val record = TransferHistoryManager.getRecords(requireContext())
                         .find { it.sessionId == sessionId }
                     if (record?.status == "completed") {
@@ -1460,11 +1333,11 @@ class QrScannerFragment : Fragment() {
     }
 
     /**
-     * Download started → hand the live Wi-Fi joiner/ladder to the process-lifetime [OffGridLiveTransfer]
+     * Download started â†’ hand the live Wi-Fi joiner/ladder to the process-lifetime [OffGridLiveTransfer]
      * holder (so leaving the camera doesn't tear the link down) and start the foreground session service
      * to keep the process alive while the download runs off-screen, then finish to the transfer-history
      * details page. The holder runs this teardown when the download reaches a terminal state (driven from
-     * TransferDaemon's finally → finishIfArmed). Captures only app context + the controller, never the
+     * TransferDaemon's finally â†’ finishIfArmed). Captures only app context + the controller, never the
      * fragment.
      */
     private fun handOffAndOpenHistory(sessionId: String) {
@@ -1508,7 +1381,7 @@ class QrScannerFragment : Fragment() {
     /**
      * Resume after a mid-transfer drop reuses RESUME_REQUEST verbatim, but
      * requires the group (and our specifier network) to still exist; if
-     * teardown already ran, the UX is "re-scan to resume" — the session
+     * teardown already ran, the UX is "re-scan to resume" â€” the session
      * record persists in history as paused (edge case 11).
      */
     private fun resumeReceive() {
@@ -1528,8 +1401,13 @@ class QrScannerFragment : Fragment() {
             val resumed = withContext(Dispatchers.IO) {
                 var connection: TransportConnection? = null
                 try {
-                    connection = connectToSender(route, payload)
-                        ?: throw java.io.IOException("sender unreachable")
+                    connection = OffGridHandshake.connectToSender(
+                        route = route,
+                        payload = payload,
+                        isActive = { fragmentJob.isActive },
+                        exactSenderIp = exactSenderIp,
+                        exactSenderPort = exactSenderPort
+                    ) ?: throw java.io.IOException("sender unreachable")
                     connection.setReadTimeout(10000)
                     session.isPaused = false
                     // Re-assert the delivery-ack contract on the resumed leg so the sender keeps
@@ -1542,7 +1420,7 @@ class QrScannerFragment : Fragment() {
                     }
                     TransferHistoryManager.updateStatus(appContext, sessionId, "transferring")
                     activeConnection = connection
-                    TransferDaemon.executeDownloadStream(appContext, connection, session)
+                    com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session)
                     true
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -1580,7 +1458,7 @@ class QrScannerFragment : Fragment() {
         fragmentJob.cancel()
         disarmSources()
         // When the download was handed off (we left the camera mid-transfer), OffGridLiveTransfer now
-        // owns the joiner and tears it down on completion — tearing it down here would kill the
+        // owns the joiner and tears it down on completion â€” tearing it down here would kill the
         // in-flight download. Otherwise release the control channel + every joiner the ladder drove
         // (the specifier request, P2P groups, BT links); the phone returns to its home Wi-Fi.
         if (!handedOff) sessionController?.teardown()
@@ -1602,7 +1480,7 @@ class QrScannerFragment : Fragment() {
         const val ARG_TUTORIAL = "ARG_TUTORIAL"
         /** Renders the scanner tip as the final step 22 / 22 of the forced first-launch tour. */
         const val ARG_FORCED_TOUR = "ARG_FORCED_TOUR"
-        /** Presentation forwarded from OffGridSendActivity; PRESENTATION_NFC → NFC tap-guide (no camera). */
+        /** Presentation forwarded from OffGridSendActivity; PRESENTATION_NFC â†’ NFC tap-guide (no camera). */
         const val ARG_PRESENTATION = "ARG_PRESENTATION"
 
         /** Brief dwell on the "complete" state before opening history details. */
@@ -1612,12 +1490,12 @@ class QrScannerFragment : Fragment() {
          *  to Wi-Fi Direct quickly. */
         private const val LAN_PROBE_TIMEOUT_MS = 2_500
 
-        /** H-h4: hard cap on a single control line — guards against a hostile peer on
+        /** H-h4: hard cap on a single control line â€” guards against a hostile peer on
          *  the joined group streaming an unbounded line to OOM the receiver. */
         private const val MAX_LINE_BYTES = 64 * 1024
 
         /** Shared prefs file (app-wide) + key tracking whether the ladder-permission
-         *  bundle has been requested at least once — disambiguates "never asked"
+         *  bundle has been requested at least once â€” disambiguates "never asked"
          *  from "permanently denied" for [isPermanentlyDenied]. */
         private const val PERM_PREFS = "FileBridgePrefs"
         private const val KEY_LADDER_PERM_REQUESTED = "ladder_perm_requested_v1"

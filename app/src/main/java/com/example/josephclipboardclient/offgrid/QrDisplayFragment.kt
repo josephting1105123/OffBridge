@@ -387,62 +387,32 @@ class QrDisplayFragment : Fragment() {
         state = SenderState.ADVERTISING
         TransportDiag.log("TX: advertising Wi-Fi Direct group '$ssid' (freq=$groupFreq)")
 
-        val ecdh = EcdhSession()
-        val token = OffGridPayload.newToken()
-
-        // V4 §3: one coordinator per advertising window. It pre-warms the BT
-        // listener and brings the BLE control endpoint up; on a non-BLE pair
-        // it stays dormant and this screen behaves exactly as before.
         senderController?.teardown()
-        val controller = SenderSessionController(
-            requireContext(), token, ecdh, ssid, psk, groupOwnerIp, groupGoMac,
-            newControllerListener { enterAdvertising() }
-        )
-        senderController = controller
-
-        val payload = OffGridPayload.build(
+        val pair = com.example.josephclipboardclient.transport.OffGridAdvertiser.startAdvertising(
+            context = requireContext(),
+            uiScope = uiScope,
             ssid = ssid,
             psk = psk,
-            senderPublicKey = ecdh.getPublicKey(),
-            token = token,
-            senderName = TransferDaemon.customDeviceName,
-            fileCount = manifest.size,
-            totalBytes = manifest.sumOf { it.second },
-            ip = groupOwnerIp ?: OffGridPayload.GROUP_OWNER_IP,
-            goDeviceAddress = groupGoMac,
-            frequencyMhz = groupFreq,
-            cap = controller.capabilityBits(),
-            senderIdentityKey = IdentityKeyStore.publicKeyDer(requireContext()),
-            // Same-network shortcut: if we're on a normal Wi-Fi LAN, advertise it so a
-            // receiver on the same network connects directly (no Wi-Fi Direct needed).
-            lanIp = com.EntropicSoftwareLab.ClipboardShare.Net.localLanIpv4()
-        )
-
-        TransferDaemon.p2pContext = P2pAdvertisingContext(
-            token = token,
-            ecdh = ecdh,
-            fileUris = fileUris,
+            hostIp = groupOwnerIp ?: OffGridPayload.GROUP_OWNER_IP,
+            goMac = groupGoMac,
+            freq = groupFreq,
             manifest = manifest,
-            totalFiles = manifest.size,
-            onPeerConnected = { deviceName ->
-                uiScope.launch { onPeerConnected(deviceName) }
-            },
-            onTransferComplete = { sid ->
-                uiScope.launch { onTransferComplete(sid) }
-            },
-            onTransferError = { paused ->
-                uiScope.launch { onTransferError(paused) }
-            }
+            fileUris = fileUris,
+            netKind = com.EntropicSoftwareLab.ClipboardShare.transport.NetKind.P2P_GROUP,
+            softApBridge = false,
+            isLanOnly = false,
+            onPeerConnected = { onPeerConnected(it) },
+            onTransferComplete = { onTransferComplete(it) },
+            onTransferError = { onTransferError(it) },
+            listener = newControllerListener { enterAdvertising() }
         )
+        senderController = pair.first
 
-        val payloadJson = payload.toJson()
+        val payloadJson = pair.second.toJson()
         stageSendPayload(payloadJson)
-        startControllerWithPermissions(controller)
-
-        // A P2P client join raises a system accept dialog on this (group-owner) device.
+        startControllerWithPermissions(pair.first)
         renderQr(payloadJson, R.string.offgrid_accept_hint)
 
-        // 120 s with no peer → regenerate token + QR.
         expiryJob?.cancel()
         expiryJob = uiScope.launch {
             delay(ADVERTISING_EXPIRY_MS)
@@ -502,55 +472,30 @@ class QrDisplayFragment : Fragment() {
         state = SenderState.ADVERTISING
         TransportDiag.log("TX: advertising over saved hotspot creds '$ssid' @ $hostIp")
 
-        // Ensure the file-transfer server is bound (idempotent) so the hotspot interface accepts.
-        TransferDaemon.start(requireContext().applicationContext)
-
-        val ecdh = EcdhSession()
-        val token = OffGridPayload.newToken()
-
-        // V4 §3: a controller so the BLE control channel coordinates the SoftAP join. If the receiver
-        // can't join the hotspot, the ladder reports exhaustion with actionable guidance (no BT data).
         senderController?.teardown()
-        val controller = SenderSessionController(
-            requireContext(), token, ecdh, ssid, psk, hostIp, null,
-            newControllerListener { enterAdvertisingHotspotCreds(ssid, psk, hostIp) },
-            netKind = com.EntropicSoftwareLab.ClipboardShare.transport.NetKind.SOFTAP
-        )
-        senderController = controller
-
-        val payload = OffGridPayload.build(
+        val pair = com.example.josephclipboardclient.transport.OffGridAdvertiser.startAdvertising(
+            context = requireContext(),
+            uiScope = uiScope,
             ssid = ssid,
             psk = psk,
-            senderPublicKey = ecdh.getPublicKey(),
-            token = token,
-            senderName = TransferDaemon.customDeviceName,
-            fileCount = manifest.size,
-            totalBytes = manifest.sumOf { it.second },
-            ip = hostIp,
-            cap = controller.capabilityBits(),
-            senderIdentityKey = IdentityKeyStore.publicKeyDer(requireContext()),
-            // Advertise our REAL router/STA IP (if we're also on a Wi-Fi LAN) so a receiver on the SAME
-            // network hits the LAN shortcut first; the hotspot gateway stays in `ip` for the SOFTAP_JOIN.
-            lanIp = com.EntropicSoftwareLab.ClipboardShare.Net.localLanIpv4() ?: hostIp,
-            // ssid/psk are our mobile HOTSPOT (SoftAP), not a Wi-Fi Direct group: tell the receiver to
-            // join via WifiNetworkSpecifier even if the BLE control channel never links.
-            softApBridge = true
-        )
-
-        TransferDaemon.p2pContext = P2pAdvertisingContext(
-            token = token,
-            ecdh = ecdh,
-            fileUris = fileUris,
+            hostIp = hostIp,
+            goMac = null,
+            freq = null,
             manifest = manifest,
-            totalFiles = manifest.size,
-            onPeerConnected = { deviceName -> uiScope.launch { onPeerConnected(deviceName) } },
-            onTransferComplete = { sid -> uiScope.launch { onTransferComplete(sid) } },
-            onTransferError = { paused -> uiScope.launch { onTransferError(paused) } }
+            fileUris = fileUris,
+            netKind = com.EntropicSoftwareLab.ClipboardShare.transport.NetKind.SOFTAP,
+            softApBridge = true,
+            isLanOnly = false,
+            onPeerConnected = { onPeerConnected(it) },
+            onTransferComplete = { onTransferComplete(it) },
+            onTransferError = { onTransferError(it) },
+            listener = newControllerListener { enterAdvertisingHotspotCreds(ssid, psk, hostIp) }
         )
+        senderController = pair.first
 
-        val payloadJson = payload.toJson()
+        val payloadJson = pair.second.toJson()
         stageSendPayload(payloadJson)
-        startControllerWithPermissions(controller)
+        startControllerWithPermissions(pair.first)
         renderQr(payloadJson, R.string.offgrid_status_hotspot_autojoin)
 
         // 120 s with no peer → fresh token + QR over the same hotspot.
@@ -592,53 +537,30 @@ class QrDisplayFragment : Fragment() {
         state = SenderState.ADVERTISING
         TransportDiag.log("TX: advertising LAN-only @ $hostIp (no Wi-Fi creds; receiver must already be on this network — save hotspot creds to enable auto-join)")
 
-        // Make sure the file-transfer server is bound (idempotent) so the hotspot interface accepts.
-        TransferDaemon.start(requireContext().applicationContext)
-
-        val ecdh = EcdhSession()
-        val token = OffGridPayload.newToken()
-
-        // V4 §3: a controller for the BLE control channel. LAN-only (no creds shared): the receiver
-        // must already be on this network, else the ladder reports exhaustion with guidance to save
-        // hotspot creds (no BT data fallback exists anymore).
         senderController?.teardown()
-        val controller = SenderSessionController(
-            requireContext(), token, ecdh, "", "", hostIp, null,
-            newControllerListener { enterAdvertisingLan(hostIp) }
-        )
-        senderController = controller
-
-        val payload = OffGridPayload.build(
+        val pair = com.example.josephclipboardclient.transport.OffGridAdvertiser.startAdvertising(
+            context = requireContext(),
+            uiScope = uiScope,
             ssid = "",
             psk = "",
-            senderPublicKey = ecdh.getPublicKey(),
-            token = token,
-            senderName = TransferDaemon.customDeviceName,
-            fileCount = manifest.size,
-            totalBytes = manifest.sumOf { it.second },
-            ip = hostIp,
-            cap = controller.capabilityBits(),
-            senderIdentityKey = IdentityKeyStore.publicKeyDer(requireContext()),
-            // LAN-only (no creds): the receiver MUST already be on THIS network, and the isLanOnly()
-            // path dead-ends on a probe miss (it never falls back to `ip`), so lanIp must point at the
-            // exact gateway the receiver is on — not a different (router) network.
-            lanIp = hostIp
-        )
-
-        TransferDaemon.p2pContext = P2pAdvertisingContext(
-            token = token,
-            ecdh = ecdh,
-            fileUris = fileUris,
+            hostIp = hostIp,
+            goMac = null,
+            freq = null,
             manifest = manifest,
-            totalFiles = manifest.size,
-            onPeerConnected = { deviceName -> uiScope.launch { onPeerConnected(deviceName) } },
-            onTransferComplete = { sid -> uiScope.launch { onTransferComplete(sid) } },
-            onTransferError = { paused -> uiScope.launch { onTransferError(paused) } }
+            fileUris = fileUris,
+            netKind = com.EntropicSoftwareLab.ClipboardShare.transport.NetKind.P2P_GROUP,
+            softApBridge = false,
+            isLanOnly = true,
+            onPeerConnected = { onPeerConnected(it) },
+            onTransferComplete = { onTransferComplete(it) },
+            onTransferError = { onTransferError(it) },
+            listener = newControllerListener { enterAdvertisingLan(hostIp) }
         )
+        senderController = pair.first
 
-        val payloadJson = payload.toJson()
+        val payloadJson = pair.second.toJson()
         stageSendPayload(payloadJson)
-        startControllerWithPermissions(controller)
+        startControllerWithPermissions(pair.first)
         renderQr(payloadJson, R.string.offgrid_status_hotspot_lan)
 
         // 120 s with no peer → fresh token + QR over the same hotspot.
@@ -728,7 +650,7 @@ class QrDisplayFragment : Fragment() {
         val controller = senderController
         val group = groupManager
         OffGridLiveTransfer.arm(sessionId) {
-            TransferDaemon.p2pContext = null
+            com.example.josephclipboardclient.transport.OffGridAdvertiser.stopAdvertising()
             NdefHceService.clearPayload()
             controller?.teardown()
             group?.teardown()
@@ -1028,7 +950,7 @@ class QrDisplayFragment : Fragment() {
 
     /** Deterministic teardown (edge case 16) — idempotent. */
     private fun teardownTransport() {
-        TransferDaemon.p2pContext = null
+        com.example.josephclipboardclient.transport.OffGridAdvertiser.stopAdvertising()
         NdefHceService.clearPayload()
         senderController?.teardown()
         senderController = null

@@ -248,7 +248,7 @@ class SystemStatusFragment : Fragment() {
     private fun onActionButton() {
         if (isConnectedState.value) {
             Toast.makeText(requireContext(), getString(R.string.status_flushing_cache), Toast.LENGTH_SHORT).show()
-            TransferDaemon.discoveredNodes.clear()
+            TransferDaemon.clearDiscoveredNodes()
             refreshDeviceList()
         } else {
             Toast.makeText(requireContext(), getString(R.string.status_rebooting_engines), Toast.LENGTH_SHORT).show()
