@@ -27,6 +27,12 @@ object FileDialogHelper {
 
     fun openMultipleFilesPicker(title: String = "Select Files", filterPattern: String? = null, defaultDirectory: String? = null): List<File> {
         return try {
+            // Escape single quotes ('' is the PowerShell literal-string escape) so a value containing
+            // ' (e.g. a path like D:\Users\O'Brien\Downloads) can't break out of the '...' string and
+            // corrupt or inject into the generated script.
+            val title = title.replace("'", "''")
+            val defaultDirectory = defaultDirectory?.replace("'", "''")
+            val filterPattern = filterPattern?.replace("'", "''")
             val scriptContent = """
                 Add-Type -AssemblyName System.Windows.Forms
                 ${'$'}dialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -61,6 +67,8 @@ object FileDialogHelper {
 
     fun openDirectoryPicker(title: String = "Select Directory"): File? {
         return try {
+            // Escape single quotes so a title containing ' can't break out of the '...' argument.
+            val title = title.replace("'", "''")
             val scriptContent = """
                 ${'$'}dllPath = "${'$'}env:TEMP\ComposeFolderPicker.dll"
                 if (-not (Test-Path ${'$'}dllPath)) {

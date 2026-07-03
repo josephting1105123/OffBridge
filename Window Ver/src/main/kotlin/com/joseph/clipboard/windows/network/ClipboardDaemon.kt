@@ -16,7 +16,9 @@ class ClipboardDaemon(
 ) {
     val CLIPBOARD_PORT = Ports.CLIPBOARD
     private var isRunning = false
-    private var serverSocket: ServerSocket? = null
+    // Written by the accept loop, read/closed by stop() from another thread — @Volatile so stop()
+    // observes the bound socket and can actually close it (else the listener can stay bound).
+    @Volatile private var serverSocket: ServerSocket? = null
 
     // Upper bound on a single clipboard payload (base64 chars) — generous for real text
     // copies while preventing an unbounded read from exhausting the heap.

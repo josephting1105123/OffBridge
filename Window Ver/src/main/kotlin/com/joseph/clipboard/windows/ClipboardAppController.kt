@@ -21,8 +21,10 @@ import com.joseph.clipboard.windows.network.control.PcQrSenderController
 import com.joseph.clipboard.windows.network.control.QrControlState
 import com.joseph.clipboard.windows.network.TransferDaemon
 import com.joseph.clipboard.windows.os.ClipboardManager
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -105,7 +107,13 @@ class ClipboardAppController {
         val visualPin: String? = null
     )
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    // SupervisorJob so one child coroutine's uncaught exception can't cancel the whole scope's Job
+    // and permanently kill discovery + every future send/pair/accept until app restart; the handler
+    // logs strays instead of relying solely on each call site's try/catch.
+    private val scope = CoroutineScope(
+        Dispatchers.IO + SupervisorJob() +
+            CoroutineExceptionHandler { _, e -> System.err.println("ClipboardAppController scope: uncaught $e") }
+    )
 
     // Daemons
     private val transferDaemon = TransferDaemon(
@@ -924,10 +932,11 @@ class ClipboardAppController {
             } catch (e: Exception) {
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
-                withContext(Dispatchers.Main) {
-                    // Update status back to failed if connection fails
-                    updateRecord(sessionId) { it.copy(status = "failed") }
-                }
+                // updateRecord just does StateFlow.update{}, which is dispatcher-agnostic. The old
+                // withContext(Dispatchers.Main) threw IllegalStateException here — :window-ver has no
+                // Main dispatcher on its classpath (no coroutines-swing/javafx) — so the first failed
+                // resume attempt crashed this coroutine instead of marking the record failed.
+                updateRecord(sessionId) { it.copy(status = "failed") }
             }
         }
     }

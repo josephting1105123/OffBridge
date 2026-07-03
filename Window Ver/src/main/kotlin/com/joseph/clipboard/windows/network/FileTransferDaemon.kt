@@ -25,7 +25,9 @@ class FileTransferDaemon(
 ) {
     private val FILE_TRANSFER_PORT = Ports.FILE_TRANSFER
     @Volatile private var isRunning = false
-    private var serverSocket: ServerSocket? = null
+    // Written by the accept loop, read/closed by stop() from another thread — @Volatile so stop()
+    // observes the bound socket and can actually close it (else the listener can stay bound).
+    @Volatile private var serverSocket: ServerSocket? = null
 
     // Surface the bind result so the controller/UI can tell a live listener from a silently dead one.
     // null = not started / stopped; true = bound & accepting; false = last start() failed to bind.
