@@ -120,9 +120,9 @@
     <string name="action_select_all">すべて選択</string>
     <string name="select_trusted_recipients_title">接続されているデバイス</string>
     <string name="action_send">送信</string>
-    <string name="history_and_push_title">クリップボードとプッシュ</string>
+    <string name="history_and_push_title">クリップボード</string>
     <string name="action_push_current_clipboard">現在のクリップボードをプッシュ</string>
-    <string name="recent_copies_hint">最近のコピー（タップしてコピー）</string>
+    <string name="recent_copies_hint">最近のコピー（タップして表示）</string>
     <string name="required_permissions_title">必要な権限</string>
     <string name="battery_optimization_title">バッテリー最適化</string>
     <string name="battery_optimization_desc">Clipboard Shareはバックグラウンドで実行されます。転送と同期が中断されないように、バッテリー最適化を無効にしてください。</string>
@@ -406,11 +406,11 @@
     <string name="transfer_text_item_name">テキスト %1$d</string>
     <string name="transfer_tut_file_type">送信するファイルの種類を選択してください：ファイル、メディア、フォルダ、テキスト、またはアプリ。</string>
     <string name="transfer_tut_files_appear">選択したファイルがここに表示されます。ファイルをタップするとプレビューできます。</string>
-    <string name="transfer_tut_long_press">任意のファイルを長押しすると選択モードに入り、選択した項目を削除できます。</string>
+    <string name="transfer_tut_long_press">ファイルを長押しするとドラッグして並べ替えられます。「選択」をタップすると複数を一度に削除できます。</string>
     <string name="transfer_tut_send_button">ファイルを選択した状態で「送信」をタップし、送信方法を選びます。</string>
     <string name="transfer_tut_send_via">接続されているデバイスはWi-Fiネットワークを使用します。NFC / QR はどこでも使え、ルーターは不要です。</string>
     <string name="transfer_tut_pick_devices">1台以上のペアリング済みデバイスを選び、「送信」を押してください。</string>
-    <string name="transfer_tut_offgrid_code">このコードを受信側のスマホに見せるか、スマホどうしをタップしてください。</string>
+    <string name="transfer_tut_offgrid_code">このQRコードを受信側のスマホに見せてください。スキャンするとローカルネットワーク経由で受信でき、ルーターは不要です。</string>
     <string name="transfer_tut_history">ここをタップすると転送履歴を表示し、進捗を確認できます。</string>
     <string name="transfer_tut_next">次へ</string>
     <string name="transfer_shortcut_short_label">%1$sに送信</string>

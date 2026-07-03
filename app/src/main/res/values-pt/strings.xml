@@ -123,9 +123,9 @@
     <string name="action_select_all">Selecionar Tudo</string>
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
-    <string name="history_and_push_title">Área de Transferência e Envio</string>
+    <string name="history_and_push_title">Área de Transferência</string>
     <string name="action_push_current_clipboard">Enviar Área de Transferência Atual</string>
-    <string name="recent_copies_hint">Cópias Recentes (Toque para copiar)</string>
+    <string name="recent_copies_hint">Cópias Recentes (Toque para ver)</string>
     <string name="required_permissions_title">Permissões Necessárias</string>
     <string name="battery_optimization_title">Otimização de Bateria</string>
     <string name="battery_optimization_desc">O Clipboard Share é executado em segundo plano. Desative a otimização da bateria para garantir que as transferências e a sincronização não sejam interrompidas.</string>
@@ -409,11 +409,11 @@
     <string name="transfer_text_item_name">Texto %1$d</string>
     <string name="transfer_tut_file_type">Selecione o tipo de arquivo a enviar: Arquivo, Mídia, Pasta, Texto ou App.</string>
     <string name="transfer_tut_files_appear">Os arquivos selecionados aparecerão aqui. Toque em um arquivo para visualizá-lo.</string>
-    <string name="transfer_tut_long_press">Mantenha pressionado qualquer arquivo para entrar no modo de seleção e excluir os itens selecionados.</string>
+    <string name="transfer_tut_long_press">Mantenha pressionado um arquivo para arrastar e reordenar, ou toque em Selecionar para remover vários de uma vez.</string>
     <string name="transfer_tut_send_button">Com os arquivos selecionados, toque em Enviar para escolher como enviar.</string>
     <string name="transfer_tut_send_via">Dispositivos Conectados usa sua rede Wi-Fi. NFC / QR funciona em qualquer lugar — sem precisar de roteador.</string>
     <string name="transfer_tut_pick_devices">Escolha um ou mais dispositivos emparelhados e toque em Enviar.</string>
-    <string name="transfer_tut_offgrid_code">Mostre este código ao telefone que vai receber ou apenas encoste os telefones.</string>
+    <string name="transfer_tut_offgrid_code">Mostre este código QR ao telefone que vai receber — ele o lê para receber pela rede local, sem precisar de roteador.</string>
     <string name="transfer_tut_history">Toque aqui para ver seu histórico de transferências e acompanhar o progresso.</string>
     <string name="transfer_tut_next">Próximo</string>
     <string name="transfer_shortcut_short_label">Enviar para %1$s</string>

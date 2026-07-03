@@ -123,9 +123,9 @@
     <string name="action_select_all">Alles auswählen</string>
     <string name="select_trusted_recipients_title">Verbundene Geräte</string>
     <string name="action_send">Senden</string>
-    <string name="history_and_push_title">Zwischenablage &amp; Senden</string>
+    <string name="history_and_push_title">Zwischenablage</string>
     <string name="action_push_current_clipboard">Aktuelle Zwischenablage senden</string>
-    <string name="recent_copies_hint">Kürzlich kopiert (Tippen zum Kopieren)</string>
+    <string name="recent_copies_hint">Kürzlich kopiert (Tippen zum Anzeigen)</string>
     <string name="required_permissions_title">Erforderliche Berechtigungen</string>
     <string name="battery_optimization_title">Akku-Optimierung</string>
     <string name="battery_optimization_desc">Clipboard Share läuft im Hintergrund. Bitte deaktivieren Sie die Akku-Optimierung, damit Übertragungen nicht unterbrochen werden.</string>
@@ -297,7 +297,7 @@
     <string name="nfc_a11y_selected">Ausgewählt</string>
     <string name="nfc_a11y_vertical">Halten Sie die Telefone aufrecht</string>
     <string name="nfc_guide_continue">Verstanden</string>
-    <string name="nfc_guide_label_their">Ihr Telefon (anderes)</string>
+    <string name="nfc_guide_label_their">Das andere Telefon</string>
     <string name="nfc_guide_label_your">Ihr Telefon</string>
     <string name="nfc_guide_subtitle_receive">Berühren Sie die Rückseiten der Telefone, sodass sich die leuchtenden Punkte treffen.</string>
     <string name="nfc_guide_subtitle_send">Halten Sie Ihr Telefon Rücken an Rücken mit dem anderen Gerät, sodass sich die leuchtenden Punkte treffen.</string>
@@ -409,11 +409,11 @@
     <string name="transfer_text_item_name">Text %1$d</string>
     <string name="transfer_tut_file_type">Wählen Sie den zu sendenden Dateityp: Datei, Medien, Ordner, Text oder App.</string>
     <string name="transfer_tut_files_appear">Ihre ausgewählten Dateien erscheinen hier. Tippen Sie auf eine Datei, um sie in der Vorschau anzuzeigen.</string>
-    <string name="transfer_tut_long_press">Halten Sie eine beliebige Datei gedrückt, um in den Auswahlmodus zu wechseln, und löschen Sie dann die ausgewählten Elemente.</string>
+    <string name="transfer_tut_long_press">Halten Sie eine beliebige Datei gedrückt, um sie zu ziehen und neu anzuordnen, oder tippen Sie auf Auswählen, um mehrere auf einmal zu entfernen.</string>
     <string name="transfer_tut_send_button">Wenn Dateien ausgewählt sind, tippen Sie auf Senden, um die Sendemethode zu wählen.</string>
     <string name="transfer_tut_send_via">Verbundene Geräte nutzen Ihr Wi-Fi-Netzwerk. NFC / QR funktioniert überall — kein Router nötig.</string>
     <string name="transfer_tut_pick_devices">Wählen Sie ein oder mehrere gekoppelte Geräte und tippen Sie dann auf Senden.</string>
-    <string name="transfer_tut_offgrid_code">Zeigen Sie diesen Code dem empfangenden Telefon oder tippen Sie die Telefone einfach zusammen.</string>
+    <string name="transfer_tut_offgrid_code">Zeigen Sie diesen QR-Code dem empfangenden Telefon — er wird gescannt, um über das lokale Netzwerk zu empfangen, kein Router nötig.</string>
     <string name="transfer_tut_history">Tippen Sie hier, um Ihren Übertragungsverlauf anzuzeigen und den Fortschritt zu verfolgen.</string>
     <string name="transfer_tut_next">Weiter</string>
     <string name="transfer_shortcut_short_label">Senden an %1$s</string>

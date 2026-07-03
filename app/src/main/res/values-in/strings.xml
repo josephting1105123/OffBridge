@@ -123,9 +123,9 @@
     <string name="action_select_all">Pilih Semua</string>
     <string name="select_trusted_recipients_title">Perangkat Terhubung</string>
     <string name="action_send">Kirim</string>
-    <string name="history_and_push_title">Papan Klip &amp; Kirim</string>
+    <string name="history_and_push_title">Papan Klip</string>
     <string name="action_push_current_clipboard">Dorong Papan Klip Saat Ini</string>
-    <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk menyalin)</string>
+    <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk melihat)</string>
     <string name="required_permissions_title">Izin yang Diperlukan</string>
     <string name="battery_optimization_title">Pengoptimalan Baterai</string>
     <string name="battery_optimization_desc">Clipboard Share berjalan di latar belakang. Harap nonaktifkan pengoptimalan baterai untuk memastikan transfer dan sinkronisasi papan klip tidak terganggu.</string>
@@ -409,11 +409,11 @@
     <string name="transfer_text_item_name">Teks %1$d</string>
     <string name="transfer_tut_file_type">Pilih jenis file yang akan dikirim: File, Media, Folder, Teks, atau Aplikasi.</string>
     <string name="transfer_tut_files_appear">File yang Anda pilih akan muncul di sini. Ketuk file untuk melihat pratinjaunya.</string>
-    <string name="transfer_tut_long_press">Tekan lama file mana pun untuk masuk ke mode pilih, lalu hapus item yang dipilih.</string>
+    <string name="transfer_tut_long_press">Tekan lama file untuk menyeret dan mengubah urutan, atau ketuk Pilih untuk menghapus beberapa sekaligus.</string>
     <string name="transfer_tut_send_button">Setelah file dipilih, ketuk Kirim untuk memilih cara pengiriman.</string>
     <string name="transfer_tut_send_via">Perangkat Terhubung menggunakan jaringan Wi-Fi Anda. NFC / QR berfungsi di mana saja — tanpa perlu router.</string>
     <string name="transfer_tut_pick_devices">Pilih satu atau beberapa perangkat tersanding, lalu tekan Kirim.</string>
-    <string name="transfer_tut_offgrid_code">Tunjukkan kode ini ke ponsel penerima, atau cukup sentuhkan kedua ponsel.</string>
+    <string name="transfer_tut_offgrid_code">Tunjukkan kode QR ini ke ponsel penerima — dipindai untuk menerima melalui jaringan lokal, tanpa perlu router.</string>
     <string name="transfer_tut_history">Ketuk di sini untuk melihat riwayat transfer Anda dan melacak kemajuan.</string>
     <string name="transfer_tut_next">Berikutnya</string>
     <string name="transfer_shortcut_short_label">Kirim ke %1$s</string>

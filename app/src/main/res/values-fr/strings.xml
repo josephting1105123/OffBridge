@@ -123,9 +123,9 @@
     <string name="action_select_all">Tout sélectionner</string>
     <string name="select_trusted_recipients_title">Appareils connectés</string>
     <string name="action_send">Envoyer</string>
-    <string name="history_and_push_title">Presse-papiers &amp; Envoi</string>
+    <string name="history_and_push_title">Presse-papiers</string>
     <string name="action_push_current_clipboard">Envoyer le presse-papiers actuel</string>
-    <string name="recent_copies_hint">Copies récentes (Appuyez pour copier)</string>
+    <string name="recent_copies_hint">Copies récentes (Appuyez pour voir)</string>
     <string name="required_permissions_title">Autorisations requises</string>
     <string name="battery_optimization_title">Optimisation de la batterie</string>
     <string name="battery_optimization_desc">Clipboard Share s\'exécute en arrière-plan. Veuillez désactiver l\'optimisation de la batterie pour ne pas interrompre les transferts.</string>
@@ -244,7 +244,7 @@
     <string name="toast_successfully_paired_with">Couplé avec succès avec %s !</string>
     <string name="toast_pairing_declined_by">Le couplage a été refusé par %s.</string>
     <string name="toast_pairing_timed_out">Délai d\'attente du couplage dépassé. L\'autre utilisateur n\'a pas répondu.</string>
-    <string name="toast_pairing_failed">Échec du couplage. Assurez-vous que l\'appareil est sur le même réseau.</string>
+    <string name="toast_pairing_failed">Échec du couplage. Assurez-vous que l\'autre appareil est sur le même réseau.</string>
     <string name="toast_paired_with_device">Couplé avec %s</string>
     <string name="toast_pairing_declined">Couplage refusé</string>
     <string name="notification_transfers_can_be_resumed">%d transfert(s) peu(ven)t être repris</string>
@@ -312,7 +312,7 @@
     <string name="offgrid_band_warning">Le groupe est sur %1$d MHz — certains appareils risquent de ne pas le trouver.</string>
     <string name="offgrid_bt_available">Le Wi-Fi prend trop de temps ? Bluetooth est prêt — plus lent, mais il se connecte toujours.</string>
     <string name="offgrid_camera_denied">L\'autorisation d\'accès à la caméra est nécessaire pour scanner le code. Vous pouvez aussi rapprocher les téléphones pour utiliser le NFC.</string>
-    <string name="offgrid_confirm_subtitle">%1$d fichier(s) • %2$.1f MB</string>
+    <string name="offgrid_confirm_subtitle">%1$d fichier(s) • %2$.1f Mo</string>
     <string name="offgrid_confirm_title">%s souhaite vous envoyer des fichiers</string>
     <string name="offgrid_connecting_title">Connexion en cours…</string>
     <string name="offgrid_degraded_bt_off">\nLe canal de contrôle Bluetooth est désactivé — les méthodes de secours sont réduites.</string>
@@ -339,7 +339,7 @@
     <string name="offgrid_permission_miui_hint">\nSur Xiaomi/MIUI, activez « Appareils à proximité » dans Infos sur l\'appli → Autorisations.</string>
     <string name="offgrid_permission_permanently_denied">L\'autorisation d\'accès aux appareils à proximité est bloquée, donc seule la connexion Wi-Fi de base est disponible. Ouvrez les paramètres de l\'application pour l\'activer et obtenir une connexion directe plus rapide et plus fiable.</string>
     <string name="offgrid_permission_required">L\'autorisation d\'accès aux appareils à proximité est requise pour l\'envoi hors ligne.</string>
-    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f Mo / %3$.1f Mo)</string>
     <string name="offgrid_receive_title">Recevoir via QR / NFC</string>
     <string name="offgrid_send_title">Envoyer via NFC / QR</string>
     <string name="offgrid_session_notification_text">Maintien de la connexion directe.</string>
@@ -409,11 +409,11 @@
     <string name="transfer_text_item_name">Texte %1$d</string>
     <string name="transfer_tut_file_type">Sélectionnez le type de fichier à envoyer : Fichier, Média, Dossier, Texte ou Application.</string>
     <string name="transfer_tut_files_appear">Vos fichiers sélectionnés apparaîtront ici. Appuyez sur un fichier pour le prévisualiser.</string>
-    <string name="transfer_tut_long_press">Appuyez longuement sur un fichier pour activer le mode sélection, puis supprimez les éléments sélectionnés.</string>
+    <string name="transfer_tut_long_press">Appuyez longuement sur un fichier pour le faire glisser et le réorganiser, ou appuyez sur Sélectionner pour en supprimer plusieurs à la fois.</string>
     <string name="transfer_tut_send_button">Une fois les fichiers sélectionnés, appuyez sur Envoyer pour choisir comment les envoyer.</string>
     <string name="transfer_tut_send_via">Appareils connectés utilise votre réseau Wi-Fi. NFC / QR fonctionne partout — sans routeur.</string>
     <string name="transfer_tut_pick_devices">Choisissez un ou plusieurs appareils couplés, puis appuyez sur Envoyer.</string>
-    <string name="transfer_tut_offgrid_code">Montrez ce code au téléphone récepteur, ou rapprochez simplement les téléphones.</string>
+    <string name="transfer_tut_offgrid_code">Montrez ce code QR au téléphone récepteur — il le scanne pour recevoir sur le réseau local, sans routeur nécessaire.</string>
     <string name="transfer_tut_history">Appuyez ici pour voir votre historique de transferts et suivre la progression.</string>
     <string name="transfer_tut_next">Suivant</string>
     <string name="transfer_shortcut_short_label">Envoyer à %1$s</string>
@@ -479,10 +479,10 @@
     <string name="history_file_not_found">Fichier introuvable</string>
     <string name="history_cannot_open_file">Impossible d\'ouvrir le fichier</string>
     <string name="history_waiting_zero">En attente (0%)</string>
-    <string name="history_detail_subtitle">%1$s • %2$d fichiers (%3$s MB)</string>
-    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d fichiers (%3$s Mo)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s Mo)</string>
     <string name="history_more_files_suffix"> +%1$d de plus</string>
-    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress">%1$d%% (%2$sMo / %3$sMo)</string>
     <string name="history_file_progress_prefixed">%1$s : %2$s</string>
     <string name="history_filter_all">Tous</string>
     <string name="history_filter_sent">Envoyés</string>

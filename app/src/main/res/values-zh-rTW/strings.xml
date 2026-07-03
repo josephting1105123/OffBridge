@@ -27,7 +27,7 @@
         生效日期：22/6/2026&lt;br&gt;&lt;br&gt;
         感謝您使用 Clipboard Share（以下簡稱「本應用程式」）。本隱私權政策闡明了我們在收集、使用和披露資訊方面的原則。我們的核心理念很簡單：您的資料屬於您，我們不需要它。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;核心原則：我們不收集您的資料&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share 從設計之初就將您的隱私放在首位。本應用程式可促進您的裝置在區域 Wi-Fi 網路上進行直接的端對端 (P2P) 通訊。&lt;br&gt;&lt;br&gt;
+        Clipboard Share 從設計之初就將您的隱私放在首位。本應用程式可促進您的裝置在區域 Wi-Fi 網路上進行直接的點對點 (P2P) 通訊。&lt;br&gt;&lt;br&gt;
         我們沒有收集、儲存或處理您個人資料的伺服器。您的所有資料都保留在您的裝置和區域網路上。&lt;br&gt;&lt;br&gt;
         具體而言，我們不會收集、接收或共享：&lt;br&gt;
         • 您的剪貼簿內容。&lt;br&gt;
@@ -110,9 +110,9 @@
     <string name="action_select_all">全選</string>
     <string name="select_trusted_recipients_title">已連接裝置</string>
     <string name="action_send">傳送</string>
-    <string name="history_and_push_title">剪貼簿與推送</string>
+    <string name="history_and_push_title">剪貼簿</string>
     <string name="action_push_current_clipboard">推送當前剪貼簿</string>
-    <string name="recent_copies_hint">最近複製內容（點擊以複製）</string>
+    <string name="recent_copies_hint">最近複製內容（點擊以查看）</string>
     <string name="required_permissions_title">所需權限</string>
     <string name="battery_optimization_title">電池最佳化</string>
     <string name="battery_optimization_desc">Clipboard Share 在背景執行。請停用電池最佳化以確保傳輸和剪貼簿同步不被中斷。</string>
@@ -396,11 +396,11 @@
     <string name="transfer_text_item_name">文字 %1$d</string>
     <string name="transfer_tut_file_type">選擇要傳送的檔案類型：檔案、媒體、資料夾、文字或應用程式。</string>
     <string name="transfer_tut_files_appear">您選取的檔案會顯示在這裡。點擊檔案即可預覽。</string>
-    <string name="transfer_tut_long_press">長按任一檔案以進入選取模式，然後刪除選取的項目。</string>
+    <string name="transfer_tut_long_press">長按檔案可拖曳排序，或點擊「選擇」一次移除多個項目。</string>
     <string name="transfer_tut_send_button">選取檔案後，點擊「傳送」以選擇傳送方式。</string>
     <string name="transfer_tut_send_via">「已連接裝置」會使用您的 Wi-Fi 網路。NFC / QR 隨處可用——無需路由器。</string>
     <string name="transfer_tut_pick_devices">選擇一個或多個配對裝置，然後點擊「傳送」。</string>
-    <string name="transfer_tut_offgrid_code">向接收手機出示此代碼，或直接將兩支手機相互貼合。</string>
+    <string name="transfer_tut_offgrid_code">向接收手機出示此 QR code，掃描後即可透過區域網路接收，無需路由器。</string>
     <string name="transfer_tut_history">點擊這裡以查看您的傳輸歷史記錄並追蹤進度。</string>
     <string name="transfer_tut_next">下一步</string>
     <string name="transfer_shortcut_short_label">傳送到 %1$s</string>

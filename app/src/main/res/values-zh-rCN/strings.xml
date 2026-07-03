@@ -27,7 +27,7 @@
         生效日期：22/6/2026&lt;br&gt;&lt;br&gt;
         感谢您使用 Clipboard Share（以下简称“本应用”）。本隐私政策阐明了我们在收集、使用和披露信息方面的原则。我们的核心理念很简单：您的数据属于您，我们不需要它。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;核心原则：我们不收集您的数据&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share 从设计之初就将您的隐私放在首位。本应用可促进您的设备在本地 Wi-Fi 网络上进行直接的端到端 (P2P) 通信。&lt;br&gt;&lt;br&gt;
+        Clipboard Share 从设计之初就将您的隐私放在首位。本应用可促进您的设备在本地 Wi-Fi 网络上进行直接的点对点 (P2P) 通信。&lt;br&gt;&lt;br&gt;
         我们没有收集、存储或处理您个人数据的服务器。您的所有数据都保留在您的设备和本地网络上。&lt;br&gt;&lt;br&gt;
         具体而言，我们不会收集、接收或共享：&lt;br&gt;
         • 您的剪贴板内容。&lt;br&gt;
@@ -110,9 +110,9 @@
     <string name="action_select_all">全选</string>
     <string name="select_trusted_recipients_title">已连接设备</string>
     <string name="action_send">发送</string>
-    <string name="history_and_push_title">剪贴板与推送</string>
+    <string name="history_and_push_title">剪贴板</string>
     <string name="action_push_current_clipboard">推送当前剪贴板</string>
-    <string name="recent_copies_hint">最近复制内容（点击以复制）</string>
+    <string name="recent_copies_hint">最近复制内容（点击查看）</string>
     <string name="required_permissions_title">所需权限</string>
     <string name="battery_optimization_title">电池优化</string>
     <string name="battery_optimization_desc">Clipboard Share 在后台运行。请禁用电池优化以确保传输和剪贴板同步不被中断。</string>
@@ -396,11 +396,11 @@
     <string name="transfer_text_item_name">文本 %1$d</string>
     <string name="transfer_tut_file_type">选择要发送的文件类型：文件、媒体、文件夹、文本或应用。</string>
     <string name="transfer_tut_files_appear">您选择的文件将显示在这里。点击文件即可预览。</string>
-    <string name="transfer_tut_long_press">长按任意文件进入选择模式，然后删除选中的项目。</string>
+    <string name="transfer_tut_long_press">长按文件可拖动排序，或点击“选择”一次移除多个文件。</string>
     <string name="transfer_tut_send_button">选好文件后，点击“发送”选择发送方式。</string>
     <string name="transfer_tut_send_via">“已连接设备”使用您的 Wi-Fi 网络。NFC / QR 随处可用——无需路由器。</string>
     <string name="transfer_tut_pick_devices">选择一个或多个已配对设备，然后点击“发送”。</string>
-    <string name="transfer_tut_offgrid_code">向接收方手机出示此代码，或直接将两部手机贴合在一起。</string>
+    <string name="transfer_tut_offgrid_code">向接收方手机出示此二维码——扫描即可通过本地网络接收，无需路由器。</string>
     <string name="transfer_tut_history">点击此处查看传输历史记录并跟踪进度。</string>
     <string name="transfer_tut_next">下一步</string>
     <string name="transfer_shortcut_short_label">发送到 %1$s</string>

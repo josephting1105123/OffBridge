@@ -123,9 +123,9 @@
     <string name="action_select_all">Выбрать все</string>
     <string name="select_trusted_recipients_title">Подключенные устройства</string>
     <string name="action_send">Отправить</string>
-    <string name="history_and_push_title">Буфер обмена и Отправка</string>
+    <string name="history_and_push_title">Буфер обмена</string>
     <string name="action_push_current_clipboard">Отправить текущий буфер обмена</string>
-    <string name="recent_copies_hint">Недавние копии (нажмите, чтобы скопировать)</string>
+    <string name="recent_copies_hint">Недавние копии (нажмите, чтобы просмотреть)</string>
     <string name="required_permissions_title">Необходимые разрешения</string>
     <string name="battery_optimization_title">Оптимизация батареи</string>
     <string name="battery_optimization_desc">Clipboard Share работает в фоновом режиме. Пожалуйста, отключите оптимизацию батареи, чтобы передача и синхронизация буфера обмена не прерывались.</string>
@@ -312,7 +312,7 @@
     <string name="offgrid_band_warning">Группа работает на частоте %1$d MHz — некоторые устройства могут её не найти.</string>
     <string name="offgrid_bt_available">Wi-Fi слишком долго подключается? Bluetooth готов — медленнее, но подключается всегда.</string>
     <string name="offgrid_camera_denied">Для сканирования кода нужно разрешение на доступ к камере. Вы также можете приложить телефоны друг к другу для использования NFC.</string>
-    <string name="offgrid_confirm_subtitle">%1$d файл(ов) • %2$.1f MB</string>
+    <string name="offgrid_confirm_subtitle">%1$d файл(ов) • %2$.1f МБ</string>
     <string name="offgrid_confirm_title">%s хочет отправить вам файлы</string>
     <string name="offgrid_connecting_title">Подключение…</string>
     <string name="offgrid_degraded_bt_off">\nКанал управления Bluetooth отключён — резервных методов меньше.</string>
@@ -339,7 +339,7 @@
     <string name="offgrid_permission_miui_hint">\nНа Xiaomi/MIUI включите «Устройства поблизости» в разделе «О приложении» → «Разрешения».</string>
     <string name="offgrid_permission_permanently_denied">Разрешение на доступ к устройствам поблизости заблокировано, поэтому доступно только базовое подключение по Wi-Fi. Откройте настройки приложения, чтобы включить его для более быстрого и надёжного прямого соединения.</string>
     <string name="offgrid_permission_required">Для автономной отправки требуется разрешение на доступ к устройствам поблизости.</string>
-    <string name="offgrid_progress_format">%1$d%% (%2$.1f MB / %3$.1f MB)</string>
+    <string name="offgrid_progress_format">%1$d%% (%2$.1f МБ / %3$.1f МБ)</string>
     <string name="offgrid_receive_title">Получить через QR / NFC</string>
     <string name="offgrid_send_title">Отправить через NFC / QR</string>
     <string name="offgrid_session_notification_text">Поддержание прямого соединения.</string>
@@ -370,7 +370,7 @@
     <string name="send_via_title">Отправить через</string>
     <string name="send_via_size_selected">Выбрано файлов: %1$s</string>
     <string name="action_how_to_use">Как использовать</string>
-    <string name="discoverable_to_devices">Видимо для других устройств</string>
+    <string name="discoverable_to_devices">Видимость для других устройств</string>
     <string name="transaction_details_title">Сведения о передаче</string>
     <string name="type_text">Текст</string>
     <string name="transfer_resume_request_title">Запрос на возобновление</string>
@@ -479,10 +479,10 @@
     <string name="history_file_not_found">Файл не найден</string>
     <string name="history_cannot_open_file">Не удалось открыть файл</string>
     <string name="history_waiting_zero">Ожидание (0%)</string>
-    <string name="history_detail_subtitle">%1$s • %2$d файлов (%3$s MB)</string>
-    <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>
+    <string name="history_detail_subtitle">%1$s • %2$d файлов (%3$s МБ)</string>
+    <string name="history_file_summary">%1$s%2$s (%3$s МБ)</string>
     <string name="history_more_files_suffix"> +ещё %1$d</string>
-    <string name="history_file_progress">%1$d%% (%2$sMB / %3$sMB)</string>
+    <string name="history_file_progress">%1$d%% (%2$sМБ / %3$sМБ)</string>
     <string name="history_file_progress_prefixed">%1$s: %2$s</string>
     <string name="history_filter_all">Все</string>
     <string name="history_filter_sent">Отправленные</string>
@@ -500,7 +500,7 @@
     <string name="share_text_sending">Отправка текста на ваши устройства…</string>
     <string name="history_share_sheet_hint">Совет: чтобы отправить текст из другого приложения, нажмите кнопку «Поделиться» и выберите Clipboard Share.</string>
     <string name="selected_files_empty_hint">Выбранные файлы будут показаны здесь</string>
-    <string name="copy_detail_title">Копировать детали</string>
+    <string name="copy_detail_title">Детали копии</string>
     <string name="copy_detail_button">Копировать</string>
     <string name="action_open_wifi">Открыть Wi-Fi</string>
     <string name="settings_history_backup_note">История буфера обмена и передач сохраняется здесь в виде обычного файла и восстанавливается, когда вы снова выбираете эту папку — например, после переустановки. Выбирайте частную папку; избегайте общих или синхронизируемых с облаком, если в буфере обмена есть конфиденциальный текст.</string>
