@@ -35,6 +35,16 @@ class ManifestCodecTest {
     }
 
     @Test
+    fun skipsEmptyNameEntry_crossPlatformParity() {
+        // ":512" has lastColonIndex == 0 (empty name) → skipped. Mirror of the Android 3.5.1 parity
+        // fix (ManifestParseTest): Android's old LAN parser accepted this as ("", 512); now both skip it.
+        assertEquals(
+            listOf("real.txt" to 1L),
+            ManifestCodec.parse("MANIFEST|:512|real.txt:1|")
+        )
+    }
+
+    @Test
     fun emptyForNonManifestLine() {
         assertEquals(emptyList<Pair<String, Long>>(), ManifestCodec.parse("OFFER|sid|name|1"))
     }

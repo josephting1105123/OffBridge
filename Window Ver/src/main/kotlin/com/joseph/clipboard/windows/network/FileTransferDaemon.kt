@@ -189,6 +189,11 @@ class FileTransferDaemon(
                         val ackExpected = flags.contains("ack")
                         val fgcm2 = flags.contains("fgcm2")
                         val fgcm = flags.contains("fgcm") || fgcm2
+                        // AEAD resume restarts the file (GCM records aren't byte-seekable), so the
+                        // receiver always sends offset 0 with fgcm/fgcm2. A non-zero offset under AEAD
+                        // is malformed — reject it here rather than seal from a wrong chunk index that
+                        // only fails later at the receiver's tag check. Mirrors the Android guard.
+                        if (fgcm && offset != 0L) { clientSocket.close(); return@thread }
                         onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, fgcm2, clientSocket)
                     } else {
                         clientSocket.close()

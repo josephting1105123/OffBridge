@@ -8,7 +8,7 @@ import java.net.Socket
 
 object UploadEngine {
     internal fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null, sendGen: Int? = null, useFileV2: Boolean = false) {
-        // Non-null fileKey Ã¢â€¡â€™ seal the bulk stream per-chunk with FileSeal (negotiated via the FGCM1
+        // Non-null fileKey ⇒ seal the bulk stream per-chunk with FileSeal (negotiated via the FGCM1
         // capability + the "fgcm" ACCEPT/RESUME flag); otherwise bytes go in the clear (legacy peers
         // and the off-grid ECDH path, which both pass null). [useFileV2] (negotiated via FGCM2 + the
         // "fgcm2" flag) selects the v2 per-session key and the session/file-bound v2 AAD prefix.
@@ -25,7 +25,12 @@ object UploadEngine {
         for (i in startIndex until session.fileUris.size) {
             if (!isCurrent()) throw Exception("Send superseded by a newer resume")
             val uri = android.net.Uri.parse(session.fileUris[i])
-            context.contentResolver.openInputStream(uri)?.use { fileIn ->
+            // A null stream (revoked SAF grant, deleted file) must abort — the old `?.use{}` sent
+            // zero bytes but still advanced currentFileIndex/currentOffset, so the receiver kept
+            // reading this file's promised bytes out of the NEXT file, corrupting the whole batch.
+            val fileIn = context.contentResolver.openInputStream(uri)
+                ?: throw java.io.IOException("Cannot open $uri for reading")
+            fileIn.use { fileIn ->
                 if (legOffset > 0) {
                     // InputStream.skip may skip fewer bytes than requested; loop until the
                     // full offset is consumed (falling back to read-and-discard) so resume
@@ -70,14 +75,22 @@ object UploadEngine {
                         if (isCurrent()) session.currentOffset = legOffset
                     }
                 } else {
+                    // Stream exactly the OFFER-time manifest byte count for this file. Bounding by
+                    // the manifest size (not EOF) caps a file that grew since OFFER and aborts one
+                    // that shrank — streaming to EOF instead would desync the receiver's positional
+                    // read of every later file in the batch. Mirrors Windows FileStreamer.sendFromFiles.
+                    val plainLen = session.manifest.getOrNull(i)?.second ?: 0L
+                    var remaining = plainLen - legOffset
                     val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
-                    while (true) {
+                    while (remaining > 0) {
                         if (session.isCancelled || session.isPaused) throw Exception("Transfer cancelled")
                         if (!isCurrent()) throw Exception("Send superseded by a newer resume")
-                        val read = fileIn.read(buffer)
-                        if (read == -1) break
+                        val want = if (remaining > buffer.size) buffer.size else remaining.toInt()
+                        val read = fileIn.read(buffer, 0, want)
+                        if (read == -1) throw java.io.IOException("Source file shorter than its manifest size ($uri)")
                         outStream.write(buffer, 0, read)
                         legOffset += read
+                        remaining -= read
                         if (isCurrent()) session.currentOffset = legOffset
                     }
                 }

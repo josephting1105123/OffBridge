@@ -324,12 +324,18 @@ object TransferDaemon {
                         socket.close(); return
                     }
                     val resumeUseV2 = flags.contains("fgcm2")
+                    val resumeAead = flags.contains("fgcm") || flags.contains("fgcm2")
 
                     val session = _activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
                         // Bounds-check the network-supplied resume position before trusting it, so a
                         // bad (fileIndex, offset) can't make the sender skip past or re-send file data.
-                        if (fileIndex < 0 || fileIndex >= session.fileUris.size || offset < 0L) {
+                        // AEAD resume restarts the file (records aren't byte-seekable): the receiver
+                        // always requests offset 0 with fgcm/fgcm2, so a non-zero offset under AEAD is
+                        // malformed — reject it up front instead of computing a wrong chunk index that
+                        // only fails later at the GCM tag.
+                        if (fileIndex < 0 || fileIndex >= session.fileUris.size || offset < 0L ||
+                            (resumeAead && offset != 0L)) {
                             socket.close(); return
                         }
                         session.isPaused = false
@@ -504,18 +510,11 @@ object TransferDaemon {
             val totalFiles = parts[totalFilesIdx].toIntOrNull() ?: run { socket.close(); return }
 
             val manifestHeader = TransferUtils.readUntilNewline(inputStream)
-            val manifestParts = manifestHeader.replace("MANIFEST|", "").split('|')
-            val fileList = mutableListOf<Pair<String, Long>>()
-
-            for (item in manifestParts) {
-                if (item.contains(':')) {
-                    val lastColonIndex = item.lastIndexOf(':')
-                    val fname = item.substring(0, lastColonIndex)
-                    // Skip malformed manifest entries instead of throwing NumberFormatException.
-                    val fsize = item.substring(lastColonIndex + 1).toLongOrNull() ?: continue
-                    fileList.add(Pair(fname, fsize))
-                }
-            }
+            // Shared parser (skips empty-name ":size" entries via lastColonIndex > 0) so a
+            // degenerate/hostile manifest yields the SAME file list here, on the off-grid path,
+            // and on Windows. An earlier local copy accepted ":size" that Windows dropped, which
+            // desynced the positional byte stream across platforms.
+            val fileList = TransferUtils.parseManifestEntries(manifestHeader).toMutableList()
 
             val newSession = TransferSession(
                 sessionId = sessionId,
