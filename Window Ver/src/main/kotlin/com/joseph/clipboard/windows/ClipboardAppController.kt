@@ -6,19 +6,15 @@ import com.joseph.clipboard.windows.network.ClipboardDaemon
 import com.joseph.clipboard.windows.network.DiscoveredDevice
 import com.joseph.clipboard.windows.network.DowngradePolicy
 import com.joseph.clipboard.windows.network.FileTransferDaemon
-import com.joseph.clipboard.windows.network.HotspotController
 import com.joseph.clipboard.windows.network.ManifestCodec
 import com.joseph.clipboard.windows.network.Net
 import com.joseph.clipboard.windows.network.OffGridQrSender
+import com.joseph.clipboard.windows.network.QrHostCoordinator
 import com.joseph.clipboard.windows.network.WireFrames
 import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.network.PairingClient
 import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
-import com.joseph.clipboard.windows.network.control.BleControlPeripheral
-import com.joseph.clipboard.windows.network.control.ControlProtocol
-import com.joseph.clipboard.windows.network.control.PcQrSenderController
-import com.joseph.clipboard.windows.network.control.QrControlState
 import com.joseph.clipboard.windows.network.TransferDaemon
 import com.joseph.clipboard.windows.os.ClipboardManager
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -126,24 +122,9 @@ class ClipboardAppController {
     // Concurrent: written from FileTransferDaemon's per-connection handler (onOfferReceived) and
     // read/removed from receive coroutines — must not be an unsynchronized plain map.
     private val activeIncomingFileSessions = java.util.concurrent.ConcurrentHashMap<String, IncomingFileSession>()
-    // Single in-flight off-grid "send via QR" advertising window (Windows = sender).
-    // Atomically CLAIMED (getAndSet) by the first scanner that dials in, so two concurrent
-    // dial-ins can't both win the same one-shot session. null means "no QR being shown".
-    private val pendingQrSession = java.util.concurrent.atomic.AtomicReference<OffGridQrSender.HostSession?>(null)
-    // Monotonic "QR intent" counter. Bumped by start AND cancel so an in-flight startQrHostSession
-    // (the hotspot spin-up can take seconds) can detect it was superseded and tear its own AP down,
-    // closing the dispose-during-startup race that would otherwise leak the hotspot.
-    private val qrEpoch = java.util.concurrent.atomic.AtomicLong(0)
-    // BLE control channel for the current QR window (null when no phone-side BLE rescue is up).
-    // Advertises the token-derived session UUID so the phone links over BLE the instant it scans,
-    // giving the PC live status + a coordinated retry instead of waiting blind for a Wi-Fi join.
-    @Volatile private var qrControl: PcQrSenderController? = null
-    @Volatile private var qrPeripheral: BleControlPeripheral? = null
-    // Build context captured for the current QR window so the dialog can re-render the QR after a
-    // credential regeneration (new ssid/psk, same token/pk/UUID) without re-running the whole session.
-    @Volatile private var qrLanIp: String? = null
-    @Volatile private var qrCap: Int = OffGridQrSender.CAP_COMPLETION_ACK
-    @Volatile private var qrGatewayIp: String = "192.168.49.1"
+    // Off-grid "send via QR" advertising window (Windows = sender). All QR/hotspot/BLE-control state
+    // lives in the coordinator; it asks isTransferActive() so it never drops the AP mid-stream.
+    private val qrHost = QrHostCoordinator(isTransferActive = { activeOutgoingFileSessions.isNotEmpty() })
     private val activeFileTransferSockets = java.util.concurrent.ConcurrentHashMap<String, java.net.Socket>()
     
     private val _transferHistory = MutableStateFlow<List<TransferRecord>>(emptyList())
@@ -588,150 +569,14 @@ class ClipboardAppController {
 
     // --- Off-grid "send via QR" (Windows = sender) ---
 
-    /** Result of opening a QR host session: the QR payload plus the AP creds to display (null when LAN-only). */
-    data class QrHostInfo(
-        val qrJson: String,
-        val ssid: String?,
-        val passphrase: String?,
-        val hotspotActive: Boolean,
-        /**
-         * Live control-plane state when the PC advertises a BLE control channel, else null. Non-null
-         * lets the QR dialog show "phone connected — joining Wi-Fi…", regeneration prompts, and an
-         * actionable failure instead of waiting silently forever.
-         */
-        val controlState: StateFlow<QrControlState>? = null,
-        /**
-         * Live AP creds — republished after a credential regeneration so the dialog can re-render the
-         * QR and the manual-join hint. Null when there's no BLE control channel to trigger a regen.
-         */
-        val creds: StateFlow<Pair<String, String>>? = null
-    )
+    /** Opens an off-grid QR advertising window; see [QrHostCoordinator.startQrHostSession]. */
+    fun startQrHostSession(files: List<File>): QrHostCoordinator.QrHostInfo? = qrHost.startQrHostSession(files)
 
-    /**
-     * Opens an off-grid advertising window and returns the QR payload to render. Stands up a Wi-Fi
-     * Direct hotspot (for the true off-grid case) and/or advertises the LAN IP (for the same-network
-     * case). Returns null when there are no real files, or when this machine can offer NEITHER a
-     * hotspot NOR a shared LAN (nothing the phone could connect to).
-     *
-     * This blocks for ~1–4s while the hotspot spins up, so call it off the UI thread.
-     */
-    fun startQrHostSession(files: List<File>): QrHostInfo? {
-        val realFiles = files.filter { it.exists() && it.isFile }
-        if (realFiles.isEmpty()) return null
+    /** Re-render the QR after a hotspot credential regeneration; see [QrHostCoordinator.rebuildQrJson]. */
+    fun rebuildQrJson(ssid: String, psk: String): String? = qrHost.rebuildQrJson(ssid, psk)
 
-        val myEpoch = qrEpoch.incrementAndGet()
-        // Retire any control channel from a prior QR window before opening a new one.
-        qrControl?.closeWithAbort()
-        qrControl = null
-        qrPeripheral = null
-        // Off-grid AP (null if the adapter lacks Wi-Fi Direct / Wi-Fi is off) + same-network LAN IP
-        // (null off-grid). At least one is required to host.
-        val hotspot = HotspotController.start()
-        val lanIp = Net.localLanIpv4()
-        if (hotspot == null && lanIp == null) {
-            if (qrEpoch.get() == myEpoch) stopHotspotIfIdle()
-            return null
-        }
-        // Superseded while we were starting (dialog dismissed or a newer QR opened) — don't register a
-        // stale session; drop the AP we just started if nothing else needs it.
-        if (qrEpoch.get() != myEpoch) {
-            stopHotspotIfIdle()
-            return null
-        }
-
-        val session = OffGridQrSender.HostSession(
-            sessionId = UUID.randomUUID().toString(),
-            ecdh = EcdhSession(),
-            token = OffGridQrSender.newToken(),
-            files = realFiles,
-            // The name rides '|'-separated, LF-terminated OFFER/QR frames — strip delimiters
-            // so a user-chosen name like "Joe|Work" can't desync the receiver's positional parse.
-            deviceName = SecurityVault.getDeviceName()
-                .replace('|', ' ').replace('\n', ' ').replace('\r', ' ').trim().take(32)
-        )
-        pendingQrSession.set(session)
-
-        // Off-grid hotspot mode only: stand up a BLE control channel so the phone can link the
-        // instant it scans (parallel with its Wi-Fi join) and the PC gets live status + coordinated
-        // retry. LAN-only sessions don't need it (the phone dials the LAN IP directly). Fail-soft:
-        // if the adapter can't advertise, cap stays COMPLETION_ACK and the QR is unchanged from before.
-        var cap = OffGridQrSender.CAP_COMPLETION_ACK
-        if (hotspot != null) {
-            val peripheral = BleControlPeripheral()
-            val advertising = try {
-                peripheral.start(ControlProtocol.sessionServiceUuid(session.token))
-            } catch (e: Exception) {
-                System.err.println("QR: BLE control unavailable (${e.message}) — QR-only fallback")
-                false
-            }
-            if (advertising && qrEpoch.get() == myEpoch) {
-                cap = cap or OffGridQrSender.CAP_BLE_ADVERTISE
-                val controller = PcQrSenderController(
-                    channel = peripheral,
-                    token = session.token,
-                    ecdh = session.ecdh,
-                    gatewayIp = hotspot.gatewayIp,
-                    initialSsid = hotspot.ssid,
-                    initialPsk = hotspot.passphrase,
-                    regenerateCreds = {
-                        HotspotController.restart()?.let { it.ssid to it.passphrase }
-                    }
-                )
-                peripheral.onSubscribed = { controller.onCentralSubscribed() }
-                controller.begin()
-                qrPeripheral = peripheral
-                qrControl = controller
-            } else {
-                peripheral.close() // superseded, or advertising never started
-            }
-        }
-
-        qrLanIp = lanIp
-        qrCap = cap
-        qrGatewayIp = hotspot?.gatewayIp ?: qrGatewayIp
-        return QrHostInfo(
-            qrJson = OffGridQrSender.buildPayloadJson(session, hotspot, lanIp, cap),
-            ssid = hotspot?.ssid,
-            passphrase = hotspot?.passphrase,
-            hotspotActive = hotspot != null,
-            controlState = qrControl?.state,
-            creds = qrControl?.creds
-        )
-    }
-
-    /**
-     * Rebuild the QR JSON for the still-open QR window with regenerated hotspot creds ([ssid]/[psk]).
-     * The token, ECDH key and BLE service UUID are unchanged, so only the printed QR (and the manual-
-     * join hint) need refreshing — a not-yet-linked phone rescans the fresh code. Null if the window
-     * was already claimed or dismissed.
-     */
-    fun rebuildQrJson(ssid: String, psk: String): String? {
-        val session = pendingQrSession.get() ?: return null
-        val hotspot = HotspotController.HotspotInfo(ssid, psk, qrGatewayIp)
-        return OffGridQrSender.buildPayloadJson(session, hotspot, qrLanIp, qrCap)
-    }
-
-    /** Tear down an unscanned QR window (dialog dismissed) so a stray dial-in is rejected. */
-    fun cancelQrHostSession() {
-        qrEpoch.incrementAndGet() // supersede any in-flight startQrHostSession
-        pendingQrSession.set(null)
-        // Sealed ABORT + kill the BLE helper BEFORE dropping the AP, so a linked phone fails fast
-        // instead of joining a hotspot that's about to vanish.
-        qrControl?.closeWithAbort()
-        qrControl = null
-        qrPeripheral = null
-        stopHotspotIfIdle()
-    }
-
-    /**
-     * Drop the Wi-Fi Direct AP once nothing needs it: no QR is being shown AND no outgoing transfer is
-     * streaming. (The phone must stay joined for the whole transfer, so we never stop it mid-stream.)
-     */
-    private fun stopHotspotIfIdle() {
-        if (pendingQrSession.get() == null && activeOutgoingFileSessions.isEmpty()) {
-            HotspotController.stop()
-        }
-    }
+    /** Tear down an unscanned QR window (dialog dismissed); see [QrHostCoordinator.cancelQrHostSession]. */
+    fun cancelQrHostSession() = qrHost.cancelQrHostSession()
 
     /**
      * Inbound off-grid dial from an Android scanner (handed over by the file
@@ -741,7 +586,7 @@ class ClipboardAppController {
     private fun handleP2pHello(socket: Socket, header: String) {
         scope.launch(Dispatchers.IO) {
             // Atomically claim the one-shot window: a second concurrent dial-in gets null → busy.
-            val session = pendingQrSession.getAndSet(null)
+            val session = qrHost.claimPendingSession()
             if (session == null) {
                 OffGridQrSender.writeBusy(socket)
                 try { socket.close() } catch (e: Exception) {}
@@ -752,14 +597,14 @@ class ClipboardAppController {
                 val handshake = OffGridQrSender.runHandshake(socket, header, session)
                 if (!handshake.accepted) {
                     // Restore the window (only if no newer QR replaced it) so a genuine retry works.
-                    pendingQrSession.compareAndSet(null, session)
+                    qrHost.restorePendingSession(session)
                     try { socket.close() } catch (e: Exception) {}
                     return@launch
                 }
                 // Data plane is live — tell the control channel to stop coordinating and show
                 // "Transferring". This fires whether the phone reached us via the BLE-driven
                 // SOFTAP_JOIN or its own direct join, since the TCP dial is the ground truth.
-                qrControl?.notifyTransferStarted()
+                qrHost.notifyTransferStarted()
 
                 val outSession = OutgoingFileSession(
                     session.sessionId,
@@ -792,10 +637,10 @@ class ClipboardAppController {
             } catch (e: Exception) {
                 e.printStackTrace()
                 activeOutgoingFileSessions.remove(session.sessionId)
-                // We claimed the one-shot QR window via getAndSet(null) above; on any
+                // We claimed the one-shot QR window via claimPendingSession() above; on any
                 // failure here restore it (only if no newer QR replaced it) so the phone's
                 // retry can dial back in instead of getting P2P_BUSY until the QR is reopened.
-                pendingQrSession.compareAndSet(null, session)
+                qrHost.restorePendingSession(session)
                 try { socket.close() } catch (e2: Exception) {}
             }
         }
@@ -1062,7 +907,7 @@ class ClipboardAppController {
                 if (!keepSession) activeOutgoingFileSessions.remove(session.sessionId)
                 // Transfer finished — drop the off-grid AP unless a QR is still being shown or the
                 // session was kept for a resumable retry (keepSession leaves it in activeOutgoing).
-                stopHotspotIfIdle()
+                qrHost.stopHotspotIfIdle()
             }
         }
     }
