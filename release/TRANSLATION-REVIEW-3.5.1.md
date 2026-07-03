@@ -21,10 +21,12 @@ key names):
 The unit fixes (MB→Mo/МБ) and the P2P term swap (端到端/端對端 → 点对点/點對點) were verified by
 direct inspection — mechanical, well-attested term mappings.
 
-**Not done: Google/Gemini engine cross-check.** The attempt to query Google Translate was blocked
-by the permission sandbox (repo strings to an external endpoint). To run it: approve the network
-call outside auto mode, or provide a Gemini API key. Given the 43/43 blind round-trip pass, the
-marginal value is small.
+3. **Google Translate engine cross-check (user-approved network call): 43/43 agreement.** Every
+   changed string was back-translated to English by Google Translate and diffed against the source.
+   No meaning drift found — full three-way agreement (English source ↔ blind Opus ↔ Google). One
+   explainable artifact: zh-TW `剪貼簿` renders as "scrapbook" without context; it is the official
+   Taiwan software term for Clipboard (Microsoft/Apple zh-TW UIs), correctly rendered "Clipboard"
+   by the context-aware agent. Raw results: session scratchpad `backtrans-results.json`.
 
 One Sonnet reviewer per language (de, es, fr, id, ja, pt, ru, zh-CN, zh-TW) compared each locale
 against the English source on both platforms, with web cross-check for disputed terminology. Read-only
