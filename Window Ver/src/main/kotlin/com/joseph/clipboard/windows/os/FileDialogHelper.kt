@@ -49,7 +49,8 @@ object FileDialogHelper {
             val tempScript = File.createTempFile("compose_file_picker", ".ps1")
             tempScript.writeText(scriptContent)
             
-            val process = ProcessBuilder("powershell", "-Sta", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", tempScript.absolutePath).start()
+            val process = ProcessBuilder("powershell", "-Sta", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", tempScript.absolutePath)
+                .startDrained("FileDialogHelper file picker")
             val output = process.inputStream.bufferedReader().readText().trim()
             
             tempScript.delete()
@@ -119,7 +120,8 @@ public class FolderPicker {
             val tempScript = File.createTempFile("compose_folder_picker", ".ps1")
             tempScript.writeText(scriptContent)
             
-            val process = ProcessBuilder("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", tempScript.absolutePath).start()
+            val process = ProcessBuilder("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", tempScript.absolutePath)
+                .startDrained("FileDialogHelper folder picker")
             val output = process.inputStream.bufferedReader().readText().trim()
             
             tempScript.delete()

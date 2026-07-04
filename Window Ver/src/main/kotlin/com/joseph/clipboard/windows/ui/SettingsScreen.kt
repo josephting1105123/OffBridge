@@ -38,7 +38,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(appController: ClipboardAppController) {
@@ -49,6 +51,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
     var showPrivacyDialog by remember { mutableStateOf(false) }
     val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
     val extra = com.joseph.clipboard.windows.theme.LocalExtraColors.current
+    val scope = rememberCoroutineScope()
 
     // Uniform width for every settings value button: the "System Default" value text + ~2 chars of
     // breathing room + the button's horizontal padding, so all rows line up at one length.
@@ -130,10 +133,14 @@ fun SettingsScreen(appController: ClipboardAppController) {
                     value = saveLocation.substringAfterLast("\\").ifEmpty { saveLocation },
                     width = uniformButtonWidth,
                     onClick = {
-                        val dir = FileDialogHelper.openDirectoryPicker()
-                        if (dir != null) {
-                            saveLocation = dir.absolutePath
-                            com.joseph.clipboard.windows.storage.SecurityVault.setSaveLocation(dir.absolutePath)
+                        // Blocking PowerShell picker — keep it off the Compose UI thread
+                        // (mirrors the FileTransferScreen call sites).
+                        scope.launch(Dispatchers.IO) {
+                            val dir = FileDialogHelper.openDirectoryPicker()
+                            if (dir != null) {
+                                saveLocation = dir.absolutePath
+                                com.joseph.clipboard.windows.storage.SecurityVault.setSaveLocation(dir.absolutePath)
+                            }
                         }
                     }
                 )

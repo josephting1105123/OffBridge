@@ -6,13 +6,12 @@ import java.awt.PopupMenu
 import java.awt.SystemTray
 import java.awt.TrayIcon
 import java.awt.image.BufferedImage
-import kotlin.system.exitProcess
 
 object SystemTrayManager {
 
     private var trayIcon: TrayIcon? = null
 
-    fun initialize(onOpenApp: () -> Unit, onPushClipboard: () -> Unit) {
+    fun initialize(onOpenApp: () -> Unit, onPushClipboard: () -> Unit, onQuit: () -> Unit) {
         if (!SystemTray.isSupported()) {
             System.err.println("SystemTray is not supported on this platform.")
             return
@@ -36,9 +35,11 @@ object SystemTrayManager {
             addActionListener { onPushClipboard() }
         }
         val quitItem = MenuItem("Quit").apply {
-            addActionListener { 
+            addActionListener {
                 trayIcon?.let { tray.remove(it) }
-                exitProcess(0) 
+                // Exit is the caller's job: quitting via exitProcess here would skip the
+                // app-level daemon/socket teardown (DisposableEffect.onDispose never runs).
+                onQuit()
             }
         }
 

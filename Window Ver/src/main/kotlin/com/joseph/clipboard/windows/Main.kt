@@ -241,6 +241,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                 }
 
                                 Button(
+                                    // Daemon teardown happens in the JVM shutdown hook (see main()).
                                     onClick = { exitProcess(0) },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
@@ -513,7 +514,16 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
 
 fun main() = application {
     val windowState = rememberWindowState()
-    val appController = remember { ClipboardAppController().apply { start() } }
+    val appController = remember {
+        ClipboardAppController().apply {
+            start()
+            // Every exit path (window close, tray Quit, Power Off, future ones) must release
+            // the daemon ports and clipboard polling, but exitProcess(0) never reaches
+            // DisposableEffect.onDispose. A JVM shutdown hook covers them all; stop() is
+            // idempotent, so the onDispose call below double-firing it is harmless.
+            Runtime.getRuntime().addShutdownHook(Thread { runCatching { stop() } })
+        }
+    }
     // Tray menu callbacks fire on the AWT event thread; push the (potentially blocking) clipboard
     // read + network send onto IO so the tray/UI never stalls.
     val trayScope = remember { CoroutineScope(Dispatchers.IO) }
@@ -521,7 +531,9 @@ fun main() = application {
     DisposableEffect(Unit) {
         SystemTrayManager.initialize(
             onOpenApp = { windowState.isMinimized = false },
-            onPushClipboard = { trayScope.launch { appController.pushCurrentClipboard() } }
+            onPushClipboard = { trayScope.launch { appController.pushCurrentClipboard() } },
+            // Daemon teardown happens in the JVM shutdown hook (see appController above).
+            onQuit = { exitProcess(0) }
         )
         onDispose {
             trayScope.cancel()

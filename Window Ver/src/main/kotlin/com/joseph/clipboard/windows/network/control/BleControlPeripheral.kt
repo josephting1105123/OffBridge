@@ -3,6 +3,7 @@ package com.joseph.clipboard.windows.network.control
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.joseph.clipboard.windows.os.startDrained
 import java.io.BufferedWriter
 import java.io.File
 import java.io.OutputStreamWriter
@@ -87,7 +88,7 @@ class BleControlPeripheral : ControlChannel {
                 environment()["CS_BLE_HELPER_CS"] = cs.absolutePath
                 environment()["CS_BLE_HELPER_EXE"] = exe.absolutePath
                 redirectErrorStream(false)
-            }.start()
+            }.startDrained("BleControlPeripheral helper")
         } catch (e: Exception) {
             System.err.println("BleControlPeripheral: failed to launch PowerShell: ${e.message}")
             cleanup()
@@ -158,6 +159,10 @@ class BleControlPeripheral : ControlChannel {
         if (closed || closedFired) return
         closedFired = true
         onClosed?.invoke()
+        // Helper gone (stdout EOF) or the linked phone unsubscribed: nothing above us is
+        // obliged to call close(), so tear down here too — otherwise the compiled exe and
+        // its .cs/.ps1 sources outlive the session on every post-start helper death.
+        close()
     }
 
     override fun send(frame: ByteArray) {
@@ -182,15 +187,31 @@ class BleControlPeripheral : ControlChannel {
     /** Kills the helper (the advertisement dies with it). Safe to call repeatedly, any thread. */
     override fun close() {
         closed = true
-        process?.let { try { it.destroyForcibly() } catch (_: Exception) {} }
+        val proc = process
         process = null
         writer = null
-        cleanup()
+        if (proc == null) {
+            cleanup()
+            return
+        }
+        // Windows won't delete a still-running exe, so deletion must wait for the kill to
+        // land — but close() runs on the reader thread and session-teardown paths, so do
+        // the wait + delete on a detached thread and never block the caller.
+        Thread {
+            try {
+                proc.destroyForcibly()
+                proc.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)
+            } catch (_: Exception) {
+            }
+            cleanup()
+        }.apply { isDaemon = true; name = "ble-helper-cleanup"; start() }
     }
 
     private fun cleanup() {
-        tempFiles.forEach { f -> try { f.delete() } catch (_: Exception) {} }
-        tempFiles.clear()
+        synchronized(writeLock) {
+            tempFiles.forEach { f -> try { if (!f.delete()) f.deleteOnExit() } catch (_: Exception) {} }
+            tempFiles.clear()
+        }
     }
 
     companion object {

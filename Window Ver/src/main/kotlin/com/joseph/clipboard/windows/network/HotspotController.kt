@@ -1,6 +1,7 @@
 package com.joseph.clipboard.windows.network
 
 import com.google.gson.Gson
+import com.joseph.clipboard.windows.os.startDrained
 import java.io.File
 import java.security.SecureRandom
 
@@ -82,7 +83,7 @@ object HotspotController {
                 environment()["CS_SSID"] = ssid
                 environment()["CS_PSK"] = psk
                 redirectErrorStream(false)
-            }.start()
+            }.startDrained("HotspotController helper")
         } catch (e: Exception) {
             System.err.println("HotspotController: failed to launch PowerShell: ${e.message}")
             killProcess()
@@ -134,7 +135,9 @@ object HotspotController {
         process?.let { try { it.destroyForcibly() } catch (_: Exception) {} }
         process = null
         current = null
-        scriptFile?.let { try { it.delete() } catch (_: Exception) {} }
+        // PowerShell can still hold the script open while the kill lands — fall back to
+        // a JVM-exit delete rather than silently leaking the temp file.
+        scriptFile?.let { try { if (!it.delete()) it.deleteOnExit() } catch (_: Exception) {} }
         scriptFile = null
     }
 
