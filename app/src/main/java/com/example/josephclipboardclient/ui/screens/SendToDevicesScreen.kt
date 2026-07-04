@@ -34,14 +34,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.EmptyState
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.SkeletonBox
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
@@ -84,6 +87,7 @@ fun SendToDevicesScreen(
     onToggleDevice: (String) -> Unit,
     onToggleSelectAll: (Boolean) -> Unit,
     onSend: () -> Unit,
+    onGoToPairing: () -> Unit,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -196,6 +200,8 @@ fun SendToDevicesScreen(
                         color = colors.green,
                     )
                 }
+                // Discovery keeps polling while the list is empty — the spinner says "still
+                // looking" next to the empty state below (System Status shows the same pair).
                 if (!loading && devices.isEmpty()) {
                     CircularProgressIndicator(
                         color = colors.green,
@@ -216,6 +222,18 @@ fun SendToDevicesScreen(
                         cornerRadius = dimens.radiusLg,
                     )
                 }
+            } else if (devices.isEmpty() && !sending) {
+                // System-Status-style empty state: no paired device is online, so offer the
+                // direct fix — jump to the Pairing tab. Suppressed mid-send so a transient
+                // device dropout can't dangle a tab-switch button under an in-flight batch.
+                EmptyState(
+                    icon = ImageVector.vectorResource(R.drawable.ic_device),
+                    title = stringResource(R.string.send_no_devices_title),
+                    subtitle = stringResource(R.string.send_no_devices_hint),
+                    actionLabel = stringResource(R.string.action_go_to_pairing),
+                    onAction = onGoToPairing,
+                    modifier = Modifier.padding(top = dimens.spaceXl),
+                )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(dimens.spaceMd)) {
                     devices.forEach { device ->

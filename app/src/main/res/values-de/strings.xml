@@ -412,7 +412,10 @@
     <string name="transfer_tut_long_press">Halten Sie eine beliebige Datei gedrückt, um sie zu ziehen und neu anzuordnen, oder tippen Sie auf Auswählen, um mehrere auf einmal zu entfernen.</string>
     <string name="transfer_tut_send_button">Wenn Dateien ausgewählt sind, tippen Sie auf Senden, um die Sendemethode zu wählen.</string>
     <string name="transfer_tut_send_via">Verbundene Geräte nutzen Ihr Wi-Fi-Netzwerk. NFC / QR funktioniert überall — kein Router nötig.</string>
-    <string name="transfer_tut_pick_devices">Wählen Sie ein oder mehrere gekoppelte Geräte und tippen Sie dann auf Senden.</string>
+    <string name="transfer_tut_pick_devices">Wählen Sie ein oder mehrere gekoppelte Geräte und tippen Sie dann auf Senden. Wenn keine Geräte verbunden sind, tippen Sie auf Zur Kopplung, um zuerst ein Gerät zu koppeln.</string>
+    <string name="send_no_devices_title">Keine verbundenen Geräte</string>
+    <string name="send_no_devices_hint">Koppeln Sie zuerst ein Gerät in der Nähe, um ihm Dateien zu senden.</string>
+    <string name="action_go_to_pairing">Zur Kopplung</string>
     <string name="transfer_tut_offgrid_code">Zeigen Sie diesen QR-Code dem empfangenden Telefon — es scannt ihn, um über das lokale Netzwerk zu empfangen. Kein Router nötig.</string>
     <string name="transfer_tut_history">Tippen Sie hier, um Ihren Übertragungsverlauf anzuzeigen und den Fortschritt zu verfolgen.</string>
     <string name="transfer_tut_next">Weiter</string>

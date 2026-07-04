@@ -167,7 +167,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                         Screen.SEND_FILES -> FileTransferScreen(
                             appController = appController,
                             onTutorialChainNext = onTutorialChainNext,
-                            tutorialTrigger = if (tutorialChainTarget == Screen.SEND_FILES) tutorialChainCounter else 0
+                            tutorialTrigger = if (tutorialChainTarget == Screen.SEND_FILES) tutorialChainCounter else 0,
+                            onNavigateToPairing = { currentScreen = Screen.SYSTEM_STATUS }
                         )
                         Screen.SYSTEM_STATUS -> SystemStatusScreen(
                             appController = appController,

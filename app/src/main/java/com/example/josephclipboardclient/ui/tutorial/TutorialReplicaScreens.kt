@@ -64,6 +64,7 @@ internal fun TutorialReplicaConnectedDevices() {
         onToggleDevice = {},
         onToggleSelectAll = {},
         onSend = {},
+        onGoToPairing = {},
     )
 }
 

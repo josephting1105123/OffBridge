@@ -399,7 +399,10 @@
     <string name="transfer_tut_long_press">长按文件可拖动排序，或点击“选择”一次移除多个文件。</string>
     <string name="transfer_tut_send_button">选好文件后，点击“发送”选择发送方式。</string>
     <string name="transfer_tut_send_via">“已连接设备”使用您的 Wi-Fi 网络。NFC / QR 随处可用——无需路由器。</string>
-    <string name="transfer_tut_pick_devices">选择一个或多个已配对设备，然后点击“发送”。</string>
+    <string name="transfer_tut_pick_devices">选择一个或多个已配对设备，然后点击“发送”。如果没有已连接的设备，请点击“前往配对”先配对一台设备。</string>
+    <string name="send_no_devices_title">没有已连接的设备</string>
+    <string name="send_no_devices_hint">请先与附近的设备配对，然后即可向其发送文件。</string>
+    <string name="action_go_to_pairing">前往配对</string>
     <string name="transfer_tut_offgrid_code">向接收方手机出示此二维码——扫描即可通过本地网络接收，无需路由器。</string>
     <string name="transfer_tut_history">点击此处查看传输历史记录并跟踪进度。</string>
     <string name="transfer_tut_next">下一步</string>

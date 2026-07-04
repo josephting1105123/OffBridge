@@ -244,6 +244,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    /**
+     * Jumps to the Pairing (System Status) tab — used by the Send-to-Devices empty state.
+     * Goes through the bottom nav so the selection listener runs the normal switch path
+     * (which also hides the Send-to-Devices overlay until the user returns to the Send tab).
+     */
+    fun openPairingTab() {
+        bottomNavView.selectedItemId = R.id.nav_system_status
+    }
+
     private fun switchFragment(itemId: Int) {
         val targetFragment = fragmentMap[itemId] ?: return
         val transaction = supportFragmentManager.beginTransaction()

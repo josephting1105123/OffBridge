@@ -412,7 +412,10 @@
     <string name="transfer_tut_long_press">Удерживайте любой файл, чтобы войти в режим выбора, затем удалите выбранные элементы.</string>
     <string name="transfer_tut_send_button">Выбрав файлы, нажмите «Отправить», чтобы выбрать способ отправки.</string>
     <string name="transfer_tut_send_via">Подключённые устройства используют вашу сеть Wi-Fi. NFC / QR работает где угодно — роутер не нужен.</string>
-    <string name="transfer_tut_pick_devices">Выберите одно или несколько сопряжённых устройств, затем нажмите «Отправить».</string>
+    <string name="transfer_tut_pick_devices">Выберите одно или несколько сопряжённых устройств, затем нажмите «Отправить». Если подключённых устройств нет, нажмите «Перейти к сопряжению», чтобы сначала выполнить сопряжение.</string>
+    <string name="send_no_devices_title">Нет подключённых устройств</string>
+    <string name="send_no_devices_hint">Сначала выполните сопряжение с устройством поблизости, чтобы отправлять ему файлы.</string>
+    <string name="action_go_to_pairing">Перейти к сопряжению</string>
     <string name="transfer_tut_offgrid_code">Покажите этот код принимающему телефону или просто приложите телефоны друг к другу.</string>
     <string name="transfer_tut_history">Нажмите здесь, чтобы просмотреть историю передач и отслеживать прогресс.</string>
     <string name="transfer_tut_next">Далее</string>

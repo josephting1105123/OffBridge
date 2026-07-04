@@ -343,3 +343,34 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Create a small `session-recovery` skill: (1) locate candidate transcripts by mtime, (2) canned JSONL extraction snippets for prompts/todos/tool-calls, (3) check the dead session's scratchpad dir for reusable artifacts, (4) report finished vs unfinished, then resume. Timezone note: transcript timestamps are UTC while file mtimes are local — compare accordingly.
 
 **Principle:** Transcript JSONL files plus the per-session scratchpad are a complete crash log; a killed session's progress can be reconstructed mechanically instead of re-doing the task from scratch.
+
+### Observation 24: Review findings should be classified introduced-by-diff vs pre-existing to drive commit scope
+
+**Status:** OPEN
+**Date:** 2026-07-04
+**Session context:** "commit changes" on a large uncommitted diff. The ship skill's code-review pass (8 finders + 6 verifiers) surfaced ~10 confirmed findings across both platforms — several were missing Windows mirrors of Android changes, one was a regression the diff introduced, several were pre-existing bugs the diff merely widened.
+
+**Skill:** ship (and code-review)
+**Type:** open-source
+**Phase/Area:** Verify phase / post-review triage
+
+**Issue:** The literal request was "commit changes," but the review ballooned it into a security-fix project. The decisive signal for scoping was whether each finding was NEW (introduced by this diff), a HALF-DONE cross-platform mirror, or PRE-EXISTING. The verifier agents that explicitly reported "preexisting: yes/widened + why (git show HEAD)" made the fix/defer/commit-as-is call obvious; the ones that didn't left it ambiguous. I asked verifiers to compare against the shipped baseline, then used AskUserQuestion to let the user pick scope (fix diff-tied issues / fix everything / commit as-is) rather than silently expanding scope.
+
+**Suggested improvement:** In the code-review skill's verify phase, require each verdict to carry an origin tag — `introduced` | `preexisting` | `widened` — established by diffing against the merge-base/HEAD, not just CONFIRMED/PLAUSIBLE/REFUTED. In the ship skill, when confirmed findings exceed the literal request, surface a scope decision (fix diff-tied only / fix all / commit as-is) with that origin classification, instead of auto-fixing everything or committing blind.
+
+**Principle:** A finding's severity doesn't determine whether it belongs in the current commit — its origin does. Separating "this diff broke it" from "this was already broken" is what lets a review stay scoped to the change under review instead of turning every commit into an open-ended cleanup.
+
+### Observation 25: Recurring 10-language string-addition ritual could be a project skill
+
+**Date:** 2026-07-04
+**Session context:** Adding a System-Status-style empty state (+ Go to Pairing button) to the Send-to-Connected-Devices flow on Android and Windows, including 3 new string keys and a tutorial-text change in 10 languages on both platforms.
+**Skill:** New skill candidate: add-i18n-strings (project-internal)
+**Type:** internal
+**Phase/Area:** Cross-platform i18n string additions
+
+**Issue:** Any user-visible string change in this repo fans out to 10 Android per-locale strings.xml files plus 10 language blocks in the Windows translation.json.txt. The mechanical part is error-prone in known ways: batch Edits need per-locale unique anchor lines (the translated neighbour string works well), Android XML needs \' apostrophe escaping (French), the Windows file's gson-per-block parser needs comma discipline, and completeness is only provable with a count grep (keys x languages). This session also confirmed Windows tutorial step text is hardcoded English (not in translation.json.txt), while Android tutorial text is fully localized — an asymmetry easy to forget.
+
+**Suggested improvement:** Create a small internal skill (or CLAUDE.md section) codifying the ritual: (1) anchor batch edits on per-locale unique neighbour lines; (2) escape apostrophes in Android XML; (3) insert into every language block of translation.json.txt and verify with `grep -c` = keys x 10; (4) remember the repo-root translation.json.txt is a stale copy (classpath loads Window Ver/src/main/resources); (5) Windows tutorials are English-only — do not add tutorial keys there.
+
+**Principle:** When a codebase has a fan-out invariant (one logical change = N mechanical copies), capture the copy discipline and its verification command as a checklist; correctness by grep-count beats correctness by memory.
+**Status:** OPEN

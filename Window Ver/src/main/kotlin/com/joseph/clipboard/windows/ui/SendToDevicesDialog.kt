@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,8 @@ fun SendToDevicesDialog(
     files: List<File>,
     devices: List<DiscoveredDevice>,
     onSend: (recipients: List<DiscoveredDevice>) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onGoToPairing: () -> Unit
 ) {
     val selectedRecipients = remember { mutableStateListOf<DiscoveredDevice>() }
     var showSkeleton by remember { mutableStateOf(true) }
@@ -58,6 +60,12 @@ fun SendToDevicesDialog(
             delay(250)
             showSkeleton = false
         }
+    }
+
+    // Prune vanished devices from the selection so Send can't target an offline node
+    // while the empty state says nothing is connected (Android prunes the same way).
+    LaunchedEffect(devices) {
+        selectedRecipients.retainAll(devices.toSet())
     }
 
     BackdropEffect()
@@ -101,19 +109,33 @@ fun SendToDevicesDialog(
                     }
                 }
 
-                // Device list
-                Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("select_trusted_recipients_title").takeIf { it != "select_trusted_recipients_title" } ?: "Connected Devices",
-                    style = MaterialTheme.typography.subtitle1,
-                    color = MaterialTheme.colors.onBackground,
+                // Device list header — discovery keeps polling while the list is empty, so the
+                // spinner says "still looking" next to the empty state (System Status pairing).
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(bottom = Dimens.spaceSm)
-                )
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
                 ) {
-                    if (showSkeleton && devices.isEmpty()) {
-                        items(2) {
+                    Text(
+                        com.joseph.clipboard.windows.storage.TranslationManager.getString("select_trusted_recipients_title").takeIf { it != "select_trusted_recipients_title" } ?: "Connected Devices",
+                        style = MaterialTheme.typography.subtitle1,
+                        color = MaterialTheme.colors.onBackground
+                    )
+                    if (devices.isEmpty() && !showSkeleton) {
+                        Spacer(modifier = Modifier.width(Dimens.spaceLg))
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colors.primary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+                // Three exclusive states: first-poll skeletons, empty state, device list.
+                when {
+                    showSkeleton && devices.isEmpty() -> Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
+                    ) {
+                        repeat(2) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -122,16 +144,25 @@ fun SendToDevicesDialog(
                                     .shimmer()
                             )
                         }
-                    } else if (devices.isEmpty()) {
-                        item {
-                            Text(
-                                "Scanning for devices…",
-                                style = MaterialTheme.typography.body1,
-                                color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f),
-                                modifier = Modifier.padding(Dimens.spaceSm)
-                            )
-                        }
-                    } else {
+                    }
+                    devices.isEmpty() -> Box(
+                        // System-Status-style empty state: no paired device is online, so instead
+                        // of a "scanning" line that never resolves, offer the direct fix — go pair.
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        EmptyState(
+                            icon = Icons.Filled.Smartphone,
+                            title = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_title").takeIf { it != "send_no_devices_title" } ?: "No connected devices",
+                            subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_hint").takeIf { it != "send_no_devices_hint" } ?: "Pair with a nearby device to send files to it.",
+                            actionLabel = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_go_to_pairing").takeIf { it != "action_go_to_pairing" } ?: "Go to Pairing",
+                            onAction = onGoToPairing
+                        )
+                    }
+                    else -> LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
+                    ) {
                         items(devices.size) { index ->
                             val device = devices[index]
                             val isSelected = selectedRecipients.contains(device)

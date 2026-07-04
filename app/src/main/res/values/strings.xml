@@ -474,7 +474,10 @@
     <string name="transfer_tut_long_press">Long press a file to drag and reorder, or tap Select to remove several at once.</string>
     <string name="transfer_tut_send_button">With files selected, tap Send to choose how to send.</string>
     <string name="transfer_tut_send_via">Connected Devices uses your Wi-Fi network. NFC / QR works anywhere — no router needed.</string>
-    <string name="transfer_tut_pick_devices">Pick one or more paired devices, then hit Send.</string>
+    <string name="transfer_tut_pick_devices">Pick one or more paired devices, then hit Send. If no devices are connected, tap Go to Pairing to pair one first.</string>
+    <string name="send_no_devices_title">No connected devices</string>
+    <string name="send_no_devices_hint">Pair with a nearby device to send files to it.</string>
+    <string name="action_go_to_pairing">Go to Pairing</string>
     <string name="transfer_tut_offgrid_code">Show this QR code to the receiving phone — it scans to receive over the local network, no router needed.</string>
     <string name="transfer_tut_nfc">Or just tap the phones back-to-back — hold them together until the transfer starts.</string>
     <string name="transfer_tut_history">Tap here to view your transfer history and track progress.</string>

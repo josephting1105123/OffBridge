@@ -18,6 +18,7 @@ import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.DiscoveredDevice
+import com.EntropicSoftwareLab.ClipboardShare.MainActivity
 import com.EntropicSoftwareLab.ClipboardShare.Ports
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
@@ -200,6 +201,9 @@ class SendToDevicesFragment : Fragment() {
                         onToggleDevice = ::onToggleDevice,
                         onToggleSelectAll = ::onToggleSelectAll,
                         onSend = ::executeMultiDeviceTransfer,
+                        // Tab switch only: this screen stays (hidden) on the back stack with the
+                        // selection intact, so the user pairs a device and returns to send.
+                        onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
                     )
                 }
             }

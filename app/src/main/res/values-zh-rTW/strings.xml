@@ -399,7 +399,10 @@
     <string name="transfer_tut_long_press">長按檔案可拖曳排序，或點擊「選擇」一次移除多個項目。</string>
     <string name="transfer_tut_send_button">選取檔案後，點擊「傳送」以選擇傳送方式。</string>
     <string name="transfer_tut_send_via">「已連接裝置」會使用您的 Wi-Fi 網路。NFC / QR 隨處可用——無需路由器。</string>
-    <string name="transfer_tut_pick_devices">選擇一個或多個配對裝置，然後點擊「傳送」。</string>
+    <string name="transfer_tut_pick_devices">選擇一個或多個配對裝置，然後點擊「傳送」。如果沒有已連線的裝置，請點擊「前往配對」先配對一台裝置。</string>
+    <string name="send_no_devices_title">沒有已連線的裝置</string>
+    <string name="send_no_devices_hint">請先與附近的裝置配對，即可向其傳送檔案。</string>
+    <string name="action_go_to_pairing">前往配對</string>
     <string name="transfer_tut_offgrid_code">向接收手機出示此 QR code，掃描後即可透過區域網路接收，無需路由器。</string>
     <string name="transfer_tut_history">點擊這裡以查看您的傳輸歷史記錄並追蹤進度。</string>
     <string name="transfer_tut_next">下一步</string>

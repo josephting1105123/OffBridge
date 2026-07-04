@@ -55,7 +55,8 @@ import java.io.File
 fun FileTransferScreen(
     appController: ClipboardAppController,
     onTutorialChainNext: (Screen) -> Unit = {},
-    tutorialTrigger: Int = 0
+    tutorialTrigger: Int = 0,
+    onNavigateToPairing: () -> Unit = {}
 ) {
     var selectAllFiles by remember { mutableStateOf(false) }
     var showSendVia by remember { mutableStateOf(false) }
@@ -399,7 +400,7 @@ fun FileTransferScreen(
                     // Step 6: replay the Send-Via sheet, tap "Connected Devices", reveal the dialog replica.
                     TutorialStep(
                         "deviceList",
-                        "Pick one or more paired devices, then hit Send.",
+                        "Pick one or more paired devices, then hit Send. If no devices are connected, tap Go to Pairing to pair one first.",
                         fullScreenContent = { TutorialRevealConnectedDevices() }
                     ),
                     // Step 7: replay the Send-Via sheet, tap "QR", reveal the QR dialog replica (a nearby
@@ -468,7 +469,14 @@ fun FileTransferScreen(
                     showTransferHistory = true
                 }
             },
-            onDismiss = { showSendToDevices = false }
+            onDismiss = { showSendToDevices = false },
+            // Close the dialog and jump to the Pairing screen. Leaving this screen disposes
+            // its remember state (Main.kt renders screens in a Crossfade), so the file queue
+            // does not survive the trip — the same cost as any nav-rail switch today.
+            onGoToPairing = {
+                showSendToDevices = false
+                onNavigateToPairing()
+            }
         )
     }
 

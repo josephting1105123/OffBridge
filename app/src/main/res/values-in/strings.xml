@@ -412,7 +412,10 @@
     <string name="transfer_tut_long_press">Tekan lama file untuk menyeret dan mengubah urutan, atau ketuk Pilih untuk menghapus beberapa sekaligus.</string>
     <string name="transfer_tut_send_button">Setelah file dipilih, ketuk Kirim untuk memilih cara pengiriman.</string>
     <string name="transfer_tut_send_via">Perangkat Terhubung menggunakan jaringan Wi-Fi Anda. NFC / QR berfungsi di mana saja — tanpa perlu router.</string>
-    <string name="transfer_tut_pick_devices">Pilih satu atau beberapa perangkat tersanding, lalu tekan Kirim.</string>
+    <string name="transfer_tut_pick_devices">Pilih satu atau beberapa perangkat tersanding, lalu tekan Kirim. Jika tidak ada perangkat tersambung, ketuk Buka Pemasangan untuk menyandingkan perangkat terlebih dahulu.</string>
+    <string name="send_no_devices_title">Tidak ada perangkat tersambung</string>
+    <string name="send_no_devices_hint">Sandingkan dengan perangkat di dekat Anda terlebih dahulu untuk mengirim file.</string>
+    <string name="action_go_to_pairing">Buka Pemasangan</string>
     <string name="transfer_tut_offgrid_code">Tunjukkan kode QR ini ke ponsel penerima — dipindai untuk menerima melalui jaringan lokal, tanpa perlu router.</string>
     <string name="transfer_tut_history">Ketuk di sini untuk melihat riwayat transfer Anda dan melacak kemajuan.</string>
     <string name="transfer_tut_next">Berikutnya</string>

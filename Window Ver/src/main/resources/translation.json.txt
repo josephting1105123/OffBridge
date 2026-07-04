@@ -205,6 +205,9 @@ English (en)
   "action_rescan": "Rescan",
   "no_devices_found": "No devices found",
   "no_devices_found_hint": "Make sure both devices are on the same Wi-Fi network, then rescan.",
+  "send_no_devices_title": "No connected devices",
+  "send_no_devices_hint": "Pair with a nearby device to send files to it.",
+  "action_go_to_pairing": "Go to Pairing",
   "pairing_verify_label": "Make sure this code matches on both devices",
   "settings_history_backup_note": "Your clipboard and transfer history is saved here as a plain file and restored when you pick this folder again — for example after reinstalling. Choose a private folder; avoid shared or cloud-synced ones if your clipboard holds sensitive text."
 }
@@ -416,6 +419,9 @@ Simplified Chinese (zh-CN)
   "action_rescan": "重新扫描",
   "no_devices_found": "未找到设备",
   "no_devices_found_hint": "请确保两台设备连接到同一 Wi-Fi 网络，然后重新扫描。",
+  "send_no_devices_title": "没有已连接的设备",
+  "send_no_devices_hint": "请先与附近的设备配对，然后即可向其发送文件。",
+  "action_go_to_pairing": "前往配对",
   "pairing_verify_label": "请确认此代码在两台设备上一致",
   "settings_history_backup_note": "您的剪贴板和传输历史记录会以普通文件的形式保存在这里，并在您再次选择此文件夹时恢复——例如重新安装之后。请选择一个私密文件夹；如果您的剪贴板包含敏感文本，请避免使用共享或云同步的文件夹。"
 }
@@ -627,6 +633,9 @@ Traditional Chinese (zh-TW)
   "action_rescan": "重新掃描",
   "no_devices_found": "未找到裝置",
   "no_devices_found_hint": "請確認兩台裝置連接到同一 Wi-Fi 網路，然後重新掃描。",
+  "send_no_devices_title": "沒有已連線的裝置",
+  "send_no_devices_hint": "請先與附近的裝置配對，即可向其傳送檔案。",
+  "action_go_to_pairing": "前往配對",
   "pairing_verify_label": "請確認此代碼在兩台裝置上相符",
   "settings_history_backup_note": "您的剪貼簿和傳輸歷史記錄會以純檔案形式儲存在此處，當您再次選擇此資料夾時即可還原——例如重新安裝後。請選擇私人資料夾；如果您的剪貼簿存有敏感文字，請避免使用共享或雲端同步的資料夾。"
 }
@@ -838,6 +847,9 @@ Spanish (es)
   "action_rescan": "Volver a buscar",
   "no_devices_found": "No se encontraron dispositivos",
   "no_devices_found_hint": "Asegúrate de que ambos dispositivos estén en la misma red Wi-Fi y vuelve a buscar.",
+  "send_no_devices_title": "No hay dispositivos conectados",
+  "send_no_devices_hint": "Empareja primero con un dispositivo cercano para enviarle archivos.",
+  "action_go_to_pairing": "Ir a Emparejamiento",
   "pairing_verify_label": "Asegúrate de que este código coincida en ambos dispositivos",
   "settings_history_backup_note": "Tu historial de portapapeles y transferencias se guarda aquí como un archivo simple y se restaura cuando vuelves a elegir esta carpeta, por ejemplo después de reinstalar. Elige una carpeta privada; evita las compartidas o sincronizadas con la nube si tu portapapeles contiene texto sensible."
 }
@@ -1049,6 +1061,9 @@ French (fr)
   "action_rescan": "Rescanner",
   "no_devices_found": "Aucun appareil trouvé",
   "no_devices_found_hint": "Assurez-vous que les deux appareils sont sur le même réseau Wi-Fi, puis relancez la recherche.",
+  "send_no_devices_title": "Aucun appareil connecté",
+  "send_no_devices_hint": "Couplez d'abord un appareil à proximité pour lui envoyer des fichiers.",
+  "action_go_to_pairing": "Aller au couplage",
   "pairing_verify_label": "Assurez-vous que ce code correspond sur les deux appareils",
   "settings_history_backup_note": "Votre historique du presse-papiers et des transferts est enregistré ici sous forme de fichier brut et restauré lorsque vous sélectionnez à nouveau ce dossier — par exemple après une réinstallation. Choisissez un dossier privé ; évitez les dossiers partagés ou synchronisés sur le cloud si votre presse-papiers contient du texte sensible."
 }
@@ -1260,6 +1275,9 @@ Japanese (ja)
   "action_rescan": "再スキャン",
   "no_devices_found": "デバイスが見つかりません",
   "no_devices_found_hint": "両方のデバイスが同じ Wi-Fi ネットワークに接続されていることを確認してから、再スキャンしてください。",
+  "send_no_devices_title": "接続中のデバイスがありません",
+  "send_no_devices_hint": "近くのデバイスとペアリングすると、ファイルを送信できます。",
+  "action_go_to_pairing": "ペアリングへ移動",
   "pairing_verify_label": "このコードが両方のデバイスで一致していることを確認してください",
   "settings_history_backup_note": "クリップボードと転送の履歴は、ここにプレーンファイルとして保存され、このフォルダを再び選ぶと復元されます（例：再インストール後）。プライベートなフォルダを選んでください。クリップボードに機密性の高いテキストが含まれる場合は、共有フォルダやクラウド同期フォルダは避けてください。"
 }
@@ -1471,6 +1489,9 @@ German (de)
   "action_rescan": "Erneut suchen",
   "no_devices_found": "Keine Geräte gefunden",
   "no_devices_found_hint": "Stellen Sie sicher, dass beide Geräte im selben Wi-Fi-Netzwerk sind, und suchen Sie erneut.",
+  "send_no_devices_title": "Keine verbundenen Geräte",
+  "send_no_devices_hint": "Koppeln Sie zuerst ein Gerät in der Nähe, um ihm Dateien zu senden.",
+  "action_go_to_pairing": "Zur Kopplung",
   "pairing_verify_label": "Stellen Sie sicher, dass dieser Code auf beiden Geräten übereinstimmt",
   "settings_history_backup_note": "Ihr Zwischenablage- und Übertragungsverlauf wird hier als einfache Datei gespeichert und wiederhergestellt, wenn Sie diesen Ordner erneut auswählen — zum Beispiel nach einer Neuinstallation. Wählen Sie einen privaten Ordner; vermeiden Sie freigegebene oder cloud-synchronisierte Ordner, wenn Ihre Zwischenablage vertraulichen Text enthält."
 }
@@ -1682,6 +1703,9 @@ Portuguese (pt)
   "action_rescan": "Procurar novamente",
   "no_devices_found": "Nenhum dispositivo encontrado",
   "no_devices_found_hint": "Verifique se os dois dispositivos estão na mesma rede Wi-Fi e procure novamente.",
+  "send_no_devices_title": "Nenhum dispositivo conectado",
+  "send_no_devices_hint": "Emparelhe primeiro com um dispositivo próximo para enviar arquivos a ele.",
+  "action_go_to_pairing": "Ir para Emparelhamento",
   "pairing_verify_label": "Verifique se este código coincide nos dois dispositivos",
   "settings_history_backup_note": "Seu histórico de área de transferência e de transferências é salvo aqui como um arquivo simples e restaurado quando você escolhe esta pasta novamente — por exemplo, após reinstalar. Escolha uma pasta privada; evite pastas compartilhadas ou sincronizadas na nuvem se sua área de transferência contiver texto sensível."
 }
@@ -1893,6 +1917,9 @@ Indonesian (id)
   "action_rescan": "Pindai Ulang",
   "no_devices_found": "Tidak ada perangkat ditemukan",
   "no_devices_found_hint": "Pastikan kedua perangkat berada di jaringan Wi-Fi yang sama, lalu pindai ulang.",
+  "send_no_devices_title": "Tidak ada perangkat tersambung",
+  "send_no_devices_hint": "Sandingkan dengan perangkat di dekat Anda terlebih dahulu untuk mengirim file.",
+  "action_go_to_pairing": "Buka Pemasangan",
   "pairing_verify_label": "Pastikan kode ini cocok di kedua perangkat",
   "settings_history_backup_note": "Riwayat papan klip dan transfer Anda disimpan di sini sebagai file biasa dan dipulihkan saat Anda memilih folder ini lagi — misalnya setelah memasang ulang. Pilih folder pribadi; hindari folder bersama atau yang tersinkron cloud jika papan klip Anda berisi teks sensitif."
 }
@@ -2104,6 +2131,9 @@ Russian (ru)
   "action_rescan": "Сканировать снова",
   "no_devices_found": "Устройства не найдены",
   "no_devices_found_hint": "Убедитесь, что оба устройства подключены к одной сети Wi-Fi, затем выполните сканирование снова.",
+  "send_no_devices_title": "Нет подключённых устройств",
+  "send_no_devices_hint": "Сначала выполните сопряжение с устройством поблизости, чтобы отправлять ему файлы.",
+  "action_go_to_pairing": "Перейти к сопряжению",
   "pairing_verify_label": "Убедитесь, что этот код совпадает на обоих устройствах",
   "settings_history_backup_note": "История буфера обмена и передач сохраняется здесь в виде обычного файла и восстанавливается, когда вы снова выбираете эту папку — например, после переустановки. Выбирайте частную папку; избегайте общих или синхронизируемых с облаком, если в буфере обмена есть конфиденциальный текст."
 }

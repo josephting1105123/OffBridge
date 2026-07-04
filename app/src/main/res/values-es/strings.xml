@@ -412,7 +412,10 @@
     <string name="transfer_tut_long_press">Mantén pulsado un archivo para arrastrarlo y reordenarlo, o toca Seleccionar para quitar varios a la vez.</string>
     <string name="transfer_tut_send_button">Con los archivos seleccionados, toca Enviar para elegir cómo enviarlos.</string>
     <string name="transfer_tut_send_via">Dispositivos Conectados usa tu red Wi-Fi. NFC / QR funciona en cualquier lugar, sin necesidad de router.</string>
-    <string name="transfer_tut_pick_devices">Elige uno o más dispositivos emparejados y luego toca Enviar.</string>
+    <string name="transfer_tut_pick_devices">Elige uno o más dispositivos emparejados y luego toca Enviar. Si no hay dispositivos conectados, toca Ir a Emparejamiento para emparejar uno primero.</string>
+    <string name="send_no_devices_title">No hay dispositivos conectados</string>
+    <string name="send_no_devices_hint">Empareja primero con un dispositivo cercano para enviarle archivos.</string>
+    <string name="action_go_to_pairing">Ir a Emparejamiento</string>
     <string name="transfer_tut_offgrid_code">Muestra este código QR al teléfono receptor: lo escanea para recibir por la red local, sin necesidad de router.</string>
     <string name="transfer_tut_history">Toca aquí para ver tu historial de transferencias y seguir el progreso.</string>
     <string name="transfer_tut_next">Siguiente</string>

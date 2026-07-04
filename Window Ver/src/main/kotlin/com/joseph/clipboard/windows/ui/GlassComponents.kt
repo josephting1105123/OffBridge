@@ -226,13 +226,15 @@ fun GlassToggleRow(
     }
 }
 
-/** Centered empty-state: icon, title, optional subtitle. */
+/** Centered empty-state: icon, title, optional subtitle (+ optional primary action) — Android parity. */
 @Composable
 fun EmptyState(
     icon: ImageVector,
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth().padding(Dimens.spaceXl),
@@ -244,6 +246,10 @@ fun EmptyState(
         if (subtitle != null) {
             Spacer(Modifier.height(Dimens.spaceXs))
             Text(subtitle, style = MaterialTheme.typography.body2, color = LocalExtraColors.current.textSecondary, textAlign = TextAlign.Center)
+        }
+        if (actionLabel != null && onAction != null) {
+            Spacer(Modifier.height(Dimens.spaceLg))
+            AppButton(text = actionLabel, onClick = onAction)
         }
     }
 }
