@@ -32,3 +32,9 @@ build_info.log
 keystore.properties
 *.jks
 *.keystore
+
+# Personal interview prep — never publish (see PORTFOLIO.md header)
+PORTFOLIO.md
+
+# Claude Code runtime lock
+.claude/scheduled_tasks.lock

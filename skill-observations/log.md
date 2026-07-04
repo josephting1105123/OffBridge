@@ -328,3 +328,18 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** When implementing recommendations from a generated report (insights, audit tooling, linters), first inventory what the project already has (settings.json hooks, existing skills, CLAUDE.md sections), classify each suggestion as already-covered / new / harmful-as-stated, and compose new skills from existing ones by reference instead of duplicating their steps.
 
 **Principle:** Generated recommendations describe observed behavior, not current configuration — they lag whatever was recently fixed. Triage against the live config first; the deliverable is the delta, and new automation should reference existing automation, not restate it.
+
+### Observation 23: Session-recovery from transcript JSONL is a repeatable workflow
+
+**Status:** OPEN
+**Date:** 2026-07-03
+**Session context:** A chat window was force-killed (claude-mem issue) mid-task; user asked a new window to check whether the tasks finished.
+**Skill:** New skill candidate: session-recovery
+**Type:** open-source
+**Phase/Area:** Whole workflow
+
+**Issue:** Recovering a killed session's state required a specific sequence with no skill coverage: list `~/.claude/projects/<project>/*.jsonl` by mtime, identify the dead session (ends with "Request interrupted by user" seconds before the new window opened), extract its user prompts / TodoWrite state / tool activity with a small Node script over the JSONL, then resume the unfinished work — reusing the dead session's scratchpad artifacts (its check script was still on disk and reusable).
+
+**Suggested improvement:** Create a small `session-recovery` skill: (1) locate candidate transcripts by mtime, (2) canned JSONL extraction snippets for prompts/todos/tool-calls, (3) check the dead session's scratchpad dir for reusable artifacts, (4) report finished vs unfinished, then resume. Timezone note: transcript timestamps are UTC while file mtimes are local — compare accordingly.
+
+**Principle:** Transcript JSONL files plus the per-session scratchpad are a complete crash log; a killed session's progress can be reconstructed mechanically instead of re-doing the task from scratch.
