@@ -95,6 +95,8 @@ object SecurityVault {
             .remove("paired_device_name_$ipAddress")
             .remove(PIN_FILE_GCM_PREFIX + ipAddress)
             .remove(PIN_CLIP_GCM_PREFIX + ipAddress)
+            .remove(PIN_AUTH2_PREFIX + ipAddress)
+            .remove(PIN_FILE_GCM_V2_PREFIX + ipAddress)
             .apply()
     }
 
@@ -108,6 +110,12 @@ object SecurityVault {
     // side. Pins are cleared on unpair (removeTrustedNode), so a deliberate re-pair resets TOFU.
     private const val PIN_FILE_GCM_PREFIX = "file_gcm_pinned_"
     private const val PIN_CLIP_GCM_PREFIX = "clipboard_gcm_pinned_"
+    // XP-DEF-01: the FGCM1/GCM1 pins above didn't cover two stronger capabilities that also ride the
+    // unauthenticated discovery — the AUTH2 admission challenge and the v2 FileSeal (per-session key).
+    // A spoofed advert could strip AUTH2 (re-opening the IP-spoof offer hole) or force a v2→v1 file-key
+    // downgrade. Pin both once genuinely used and fail closed on a later strip, same TOFU rule.
+    private const val PIN_AUTH2_PREFIX = "auth2_pinned_"
+    private const val PIN_FILE_GCM_V2_PREFIX = "file_gcm_v2_pinned_"
 
     /** Remember that [ip] negotiated an authenticated (FileSeal/FGCM1) bulk-file stream. */
     fun pinFileGcm(context: Context, ip: String) {
@@ -117,6 +125,24 @@ object SecurityVault {
     /** True once [ip] has been seen to support FileSeal — a later loss of FGCM1 is a downgrade attempt. */
     fun isFileGcmPinned(context: Context, ip: String): Boolean =
         getPlainPrefs(context).getBoolean(PIN_FILE_GCM_PREFIX + ip, false)
+
+    /** Remember that [ip] proved possession of the pairing key via the AUTH2 OFFER challenge. */
+    fun pinAuth2(context: Context, ip: String) {
+        getPlainPrefs(context).edit().putBoolean(PIN_AUTH2_PREFIX + ip, true).apply()
+    }
+
+    /** True once [ip] has completed an AUTH2 proof — a later loss of AUTH2 is a downgrade attempt. */
+    fun isAuth2Pinned(context: Context, ip: String): Boolean =
+        getPlainPrefs(context).getBoolean(PIN_AUTH2_PREFIX + ip, false)
+
+    /** Remember that [ip] negotiated a v2 (per-session key) FileSeal stream. */
+    fun pinFileGcmV2(context: Context, ip: String) {
+        getPlainPrefs(context).edit().putBoolean(PIN_FILE_GCM_V2_PREFIX + ip, true).apply()
+    }
+
+    /** True once [ip] has been seen to support FGCM2 — a later loss (forcing v1) is a downgrade attempt. */
+    fun isFileGcmV2Pinned(context: Context, ip: String): Boolean =
+        getPlainPrefs(context).getBoolean(PIN_FILE_GCM_V2_PREFIX + ip, false)
 
     /** Remember that [ip] negotiated an authenticated (AES-GCM / GCM1) clipboard payload. */
     fun pinClipboardGcm(context: Context, ip: String) {

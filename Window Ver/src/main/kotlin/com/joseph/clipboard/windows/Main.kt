@@ -147,6 +147,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                 ) {
                     Icon(
                         Icons.Filled.Build, // Placeholder for Power icon
+                        // No "power" key exists in translation.json.txt; "menu_title" ("Menu") would
+                        // mislabel this control for screen readers, so keep the accurate literal.
                         contentDescription = "Power",
                         tint = MaterialTheme.colors.onSurface
                     )
@@ -359,7 +361,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Accept", color = Color.Black)
+                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -370,7 +372,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Decline", color = ErrorText)
+                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
                 }
             }
         }
@@ -490,7 +492,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Accept", color = Color.Black)
+                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -501,7 +503,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Decline", color = ErrorText)
+                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
                 }
             }
         }

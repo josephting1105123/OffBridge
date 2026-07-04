@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
@@ -83,11 +84,26 @@ object FileTransferServer {
                 return
             }
 
+            // Off-grid resume exemption (XP-05): an off-grid (Wi-Fi Direct) transfer is admitted by the
+            // ECDH + QR-token P2P_HELLO handshake, not by IP pairing, and on a mid-transfer drop its
+            // receiver reconnects to resume from an ephemeral, never-paired IP — the same reason
+            // P2P_HELLO above bypasses this gate. A RESUME_REQUEST whose sessionId matches a live
+            // *outgoing off-grid* session is that already-authenticated peer resuming, so admit it. The
+            // sessionId was issued over the ECDH-authenticated channel (P2P_WELCOME), making it an
+            // unguessable per-session token; and off-grid streams plaintext by construction, so no
+            // pairing key is needed here. Scoped to transport=="p2p": LAN resumes are unaffected — their
+            // peer IP is paired and still runs the full gate. Without this, off-grid resume always failed.
+            val isOffGridResume = batchHeader.startsWith("RESUME_REQUEST|") && run {
+                val sid = batchHeader.split('|').getOrNull(1)
+                val s = sid?.let { TransferDaemon.activeSessions[it] }
+                s != null && !s.isIncoming && s.transport == "p2p"
+            }
+
             // Trust gate: only paired devices may push files / drive session control over the LAN
             // — same check ClipboardService uses for clipboard pushes. Closes the "any host on the
-            // network can push files" hole. (Off-grid P2P_HELLO is handled above, so it is exempt.)
-            val senderIp = (socket.remoteSocketAddress as? java.net.InetSocketAddress)?.address?.hostAddress
-            if (senderIp == null || SecurityVault.getKeyForNode(context, senderIp) == null) {
+            // network can push files" hole. (Off-grid P2P_HELLO and off-grid resume are exempt above.)
+            val senderIp = (socket.remoteSocketAddress as? java.net.InetSocketAddress)?.address?.hostAddress ?: ""
+            if (!isOffGridResume && (senderIp.isEmpty() || SecurityVault.getKeyForNode(context, senderIp) == null)) {
                 // If the trace shows this during an off-grid send, the receiver's HELLO arrived
                 // garbled/partial (didn't match "P2P_HELLO|") and got caught by the LAN trust gate.
                 TransportDiag.log("TX: incoming '${batchHeader.take(16)}' from $senderIp blocked — not a paired LAN node")
@@ -110,13 +126,17 @@ object FileTransferServer {
                     val ackExpected = flags.contains("ack")
                     // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
                     // selects the v2 FileSeal (per-session key + session/file-bound AAD).
+                    val resumeUseV2: Boolean
                     val resumeFileKey = try {
-                        TransferKeys.senderFileKey(context, senderIp, flags.contains("fgcm") || flags.contains("fgcm2"))
+                        val key = TransferKeys.senderFileKey(context, senderIp, flags.contains("fgcm") || flags.contains("fgcm2"))
+                        // Gate v2 by the same TOFU pin the receiver enforces: a v2-pinned peer whose
+                        // RESUME stripped "fgcm2"→"fgcm" is a downgrade → throw, not seal v1 silently.
+                        resumeUseV2 = TransferKeys.senderUseFileV2(context, senderIp, flags.contains("fgcm2"))
+                        key
                     } catch (e: DowngradeBlockedException) {
                         TransportDiag.log("TX: $e — refusing plaintext resume")
                         socket.close(); return
                     }
-                    val resumeUseV2 = flags.contains("fgcm2")
                     val resumeAead = flags.contains("fgcm") || flags.contains("fgcm2")
 
                     val session = TransferDaemon.activeSessions[sessionId]
@@ -214,13 +234,17 @@ object FileTransferServer {
                         // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
                         // selects the v2 FileSeal (per-session key + session/file-bound AAD).
                         val acceptFlags = parts.drop(2)
+                        val useV2: Boolean
                         val fileKey = try {
-                            TransferKeys.senderFileKey(context, senderIp, acceptFlags.contains("fgcm") || acceptFlags.contains("fgcm2"))
+                            val key = TransferKeys.senderFileKey(context, senderIp, acceptFlags.contains("fgcm") || acceptFlags.contains("fgcm2"))
+                            // Gate v2 by the same TOFU pin the receiver enforces: a v2-pinned peer whose
+                            // ACCEPT stripped "fgcm2"→"fgcm" is a downgrade → throw, not seal v1 silently.
+                            useV2 = TransferKeys.senderUseFileV2(context, senderIp, acceptFlags.contains("fgcm2"))
+                            key
                         } catch (e: DowngradeBlockedException) {
                             TransportDiag.log("TX: $e — refusing plaintext stream")
                             socket.close(); return
                         }
-                        val useV2 = acceptFlags.contains("fgcm2")
                         val myGen = session.sendGeneration.incrementAndGet()
                         TransferHistoryManager.updateStatus(context, sessionId, "transferring")
 
@@ -328,7 +352,21 @@ object FileTransferServer {
                 // shared pairing key via an HMAC challenge-response BEFORE we ack the offer or show the
                 // popup. A sender that doesn't advertise AUTH2 (old build) skips this — byte-identical to
                 // before. senderIp is the same source address the trust gate validated above.
-                if (TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2 == true) {
+                //
+                // Anti-downgrade (XP-DEF-01): supportsAuth2 rides the unauthenticated discovery, so a
+                // spoofed advert could strip it and re-open the IP-spoof hole. TOFU: once a peer has
+                // proven AUTH2 we pin it (below), and a later strip is a downgrade — fail closed here.
+                val auth2Decision = DowngradePolicy.decide(
+                    peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2 == true,
+                    pinned = SecurityVault.isAuth2Pinned(context, senderIp)
+                )
+                if (auth2Decision == DowngradePolicy.Decision.BLOCK) {
+                    TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 downgrade blocked")
+                    TransferDaemon.removeActiveSession(sessionId)
+                    socket.close()
+                    return
+                }
+                if (auth2Decision == DowngradePolicy.Decision.SEAL) {
                     val pairingKey = SecurityVault.getKeyForNode(context, senderIp)
                     if (pairingKey == null) {
                         // Trust gate said we hold a key for this IP; if it vanished, fail closed.
@@ -352,7 +390,11 @@ object FileTransferServer {
                         socket.close()
                         return
                     }
+                    // Proof valid → pin AUTH2 so a later strip on the unauthenticated discovery is caught.
+                    SecurityVault.pinAuth2(context, senderIp)
                 }
+                // DowngradePolicy.Decision.PLAINTEXT → legacy peer that never advertised AUTH2: skip the
+                // challenge, exactly as before.
 
                 outStream.write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))
                 outStream.flush()

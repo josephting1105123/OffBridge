@@ -21,7 +21,13 @@ class FileTransferDaemon(
      * lives in the separate [TransferDaemon]; the controller wires this to its discovered-node set so
      * the OFFER branch can decide whether to issue the AUTH2 admission challenge. Defaults to "no
      * AUTH2" so a caller that doesn't wire it keeps today's behavior. */
-    private val supportsAuth2Provider: (ip: String) -> Boolean = { false }
+    private val supportsAuth2Provider: (ip: String) -> Boolean = { false },
+    /** True iff [sessionId] names a live OUTGOING off-grid (p2p) session. An off-grid receiver resumes
+     * from an ephemeral, never-paired IP, so a matching RESUME_REQUEST is exempt from the LAN trust
+     * gate below (XP-05) — the sessionId was issued over the ECDH-authenticated P2P_WELCOME, so it is
+     * an unguessable per-session token. Mirrors the Android FileTransferServer exemption. Defaults to
+     * "no p2p session" so a caller that doesn't wire it keeps LAN-only behavior. */
+    private val isOffGridResumeSession: (sessionId: String) -> Boolean = { false }
 ) {
     private val FILE_TRANSFER_PORT = Ports.FILE_TRANSFER
     @Volatile private var isRunning = false
@@ -110,7 +116,16 @@ class FileTransferDaemon(
                 // authenticates itself with the QR token + ECDH HMAC (stronger than IP pairing) and
                 // arrives from an ephemeral IP that is never a paired node, so it is exempt. P2P_BUSY
                 // is a receiver-side reply Windows already ignores, so it is exempt too.
-                if (!header.startsWith("P2P_HELLO|") && !header.startsWith("P2P_BUSY")) {
+                //
+                // Off-grid resume exemption (XP-05, mirrors Android FileTransferServer): an off-grid
+                // receiver whose Wi-Fi dropped mid-transfer reconnects from its ephemeral hotspot IP
+                // (never paired) and sends RESUME_REQUEST. If the sessionId names a live outgoing p2p
+                // session — a token issued over the ECDH-authenticated P2P_WELCOME — admit it; the
+                // stream is plaintext by construction, so no pairing key is needed. LAN resumes are
+                // unaffected (their session is transport="lan", so the provider returns false).
+                val isOffGridResume = header.startsWith("RESUME_REQUEST|") &&
+                    header.split("|").getOrNull(1)?.let(isOffGridResumeSession) == true
+                if (!isOffGridResume && !header.startsWith("P2P_HELLO|") && !header.startsWith("P2P_BUSY")) {
                     val senderIp = clientSocket.inetAddress?.hostAddress
                     if (senderIp == null || SecurityVault.getAesKey(senderIp) == null) {
                         System.err.println("Blocked transfer header '${header.take(16)}' from $senderIp — not a paired LAN node")
@@ -138,7 +153,20 @@ class FileTransferDaemon(
                         // response BEFORE we ack the offer or show the popup. A sender that doesn't
                         // advertise AUTH2 (old build) skips this — byte-identical to before. Mirrors
                         // Android TransferDaemon's OFFER branch exactly (same nonce size, Base64, HMAC).
-                        if (senderIp != null && supportsAuth2Provider(senderIp)) {
+                        // Anti-downgrade (XP-DEF-01): supportsAuth2 rides the unauthenticated discovery,
+                        // so a spoofed advert could strip it and re-open the IP-spoof hole. TOFU: once a
+                        // peer proves AUTH2 we pin it, and a later strip is a downgrade — fail closed.
+                        // Mirrors Android FileTransferServer (same DowngradePolicy decision + pin).
+                        val auth2Decision = if (senderIp != null) DowngradePolicy.decide(
+                            peerOffersAead = supportsAuth2Provider(senderIp),
+                            pinned = SecurityVault.isAuth2Pinned(senderIp)
+                        ) else DowngradePolicy.Decision.PLAINTEXT
+                        if (auth2Decision == DowngradePolicy.Decision.BLOCK) {
+                            System.err.println("Blocked OFFER from $senderIp — AUTH2 downgrade blocked")
+                            clientSocket.close()
+                            return@thread
+                        }
+                        if (auth2Decision == DowngradePolicy.Decision.SEAL && senderIp != null) {
                             val pairingKey = SecurityVault.getAesKey(senderIp)
                             if (pairingKey == null) {
                                 // Trust gate said we hold a key for this IP; if it vanished, fail closed.
@@ -161,6 +189,8 @@ class FileTransferDaemon(
                                 clientSocket.close()
                                 return@thread
                             }
+                            // Proof valid → pin AUTH2 so a later strip on the discovery is caught above.
+                            SecurityVault.pinAuth2(senderIp)
                         }
 
                         clientSocket.getOutputStream().write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))

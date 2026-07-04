@@ -215,11 +215,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (uris.isNotEmpty()) {
-            val bundle = Bundle().apply {
-                putParcelableArrayList("uris", uris)
-            }
             val fileTransferFragment = fragmentMap[R.id.nav_send_files] as FileTransferFragment
-            fileTransferFragment.arguments = bundle
+            // Ingest directly instead of via setArguments: the fragment's view is already created
+            // (added with commitNow in onCreate), so a post-hoc setArguments is never re-read and the
+            // share silently vanished (AND-28). ingestSharedUris works whenever it's called.
+            fileTransferFragment.ingestSharedUris(uris)
             switchFragment(R.id.nav_send_files)
             // Ensure the UI reflects that we are on the "Send Files" screen
             bottomNavView.selectedItemId = R.id.nav_send_files

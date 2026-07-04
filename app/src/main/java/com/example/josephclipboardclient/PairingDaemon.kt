@@ -1,12 +1,11 @@
 package com.EntropicSoftwareLab.ClipboardShare
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.util.Base64
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -51,7 +50,6 @@ object PairingDaemon {
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     fun start(context: Context) {
         if (isRunning) return
         isRunning = true
@@ -69,11 +67,12 @@ object PairingDaemon {
         // without holding an Activity/Service reference.
         val appCtx = context.applicationContext
         registeredContext = appCtx
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            appCtx.registerReceiver(confirmationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            appCtx.registerReceiver(confirmationReceiver, filter)
-        }
+        // Register NOT_EXPORTED on every API level (AND-01/02). On API 29-32 a bare registerReceiver
+        // exports the receiver, letting a co-installed app forge ACTION_PAIRING_ACCEPTED and bypass the
+        // PIN-consent gate. ContextCompat guards it with a synthetic signature permission on those
+        // levels, so only same-signature senders (PairingConfirmationActivity, which setPackage's the
+        // broadcast) can reach it; API 33+ passes the real flag through.
+        ContextCompat.registerReceiver(appCtx, confirmationReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         daemonScope.launch {
             var serverSocket: ServerSocket? = null

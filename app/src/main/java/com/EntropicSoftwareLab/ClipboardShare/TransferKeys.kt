@@ -49,4 +49,44 @@ object TransferKeys {
                 throw DowngradeBlockedException("FileSeal downgrade blocked (sender) for $ip (receiver dropped fgcm)")
         }
     }
+
+    /**
+     * Receiver-side FGCM2 (v2 FileSeal) TOFU gate (XP-DEF-01). v2 layers on v1: it applies only when the
+     * v1 key is available ([fgcm1Available]) AND the peer advertises FGCM2. Once a v2 stream has run with
+     * a peer it is pinned; a later loss of FGCM2 that would silently force us back to v1 is treated as a
+     * downgrade and blocked (fail closed), reusing [DowngradePolicy.decide] exactly like the FGCM1/GCM1
+     * gates. Returns whether to negotiate v2. Off-grid (fgcm1Available=false) never reaches v2.
+     */
+    fun useFileV2(context: Context, ip: String, fgcm1Available: Boolean): Boolean {
+        val peerOffersV2 = fgcm1Available && TransferDaemon.discoveredNodes[ip]?.supportsAuthFileV2 == true
+        return when (DowngradePolicy.decide(
+            peerOffersAead = peerOffersV2,
+            pinned = SecurityVault.isFileGcmV2Pinned(context, ip)
+        )) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcmV2(context, ip); true }
+            DowngradePolicy.Decision.PLAINTEXT -> false
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal v2 downgrade blocked for $ip (peer no longer advertises FGCM2)")
+        }
+    }
+
+    /**
+     * Sender-side counterpart to [useFileV2] (XP-DEF-01). v1 was enforced in both directions
+     * ([senderFileKey]); v2 was only enforced receiver-side, so a stripped "fgcm2"→"fgcm" ACCEPT /
+     * RESUME line silently sealed v1 instead of failing closed. [fgcm2Requested] is the receiver's
+     * on-the-wire flag; a v2-pinned peer that dropped it is a downgrade → throw. Legacy/v1 peers never
+     * sent "fgcm2" and were never v2-pinned → PLAINTEXT (v1), unchanged. Driven by the ACCEPT flag,
+     * not discovery, so it carries no empty-cache false-positive.
+     */
+    fun senderUseFileV2(context: Context, ip: String, fgcm2Requested: Boolean): Boolean {
+        return when (DowngradePolicy.decide(
+            peerOffersAead = fgcm2Requested,
+            pinned = SecurityVault.isFileGcmV2Pinned(context, ip)
+        )) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcmV2(context, ip); true }
+            DowngradePolicy.Decision.PLAINTEXT -> false
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal v2 downgrade blocked (sender) for $ip (receiver dropped fgcm2)")
+        }
+    }
 }

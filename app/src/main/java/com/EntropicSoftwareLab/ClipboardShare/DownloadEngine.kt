@@ -53,7 +53,9 @@ object DownloadEngine {
 
                 if (session.localFileNames.isEmpty()) {
                     for (m in manifest) {
-                        var finalName = m.first.replace('\\', '/').substringAfterLast('/')
+                        // Sanitize the manifest-supplied name before it ever hits the filesystem
+                        // (path-traversal / reserved chars), matching the Windows receiver (XP-DEF-03).
+                        var finalName = TransferUtils.sanitizeIncomingFileName(m.first)
                         if (session.currentOffset == 0L) {
                             val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                             var targetFile = java.io.File(downloadDir, finalName)
@@ -237,8 +239,10 @@ object DownloadEngine {
             try {
                 val fileKey = TransferKeys.fileKeyIfAead(context, session.targetIp)
                 if (fileKey != null) session.fileGcmNegotiated = true
-                // v2 only when BOTH peers advertise FGCM2; else fall back to the v1 "fgcm" flag.
-                val useV2 = fileKey != null && TransferDaemon.discoveredNodes[session.targetIp]?.supportsAuthFileV2 == true
+                // v2 only when BOTH peers advertise FGCM2; else fall back to the v1 "fgcm" flag. Pinned
+                // via TOFU so a later FGCM2-strip forcing v1 is blocked (XP-DEF-01) — throws
+                // DowngradeBlockedException, caught below like the FGCM1 gate.
+                val useV2 = TransferKeys.useFileV2(context, session.targetIp, fileKey != null)
                 if (useV2) session.fileV2Negotiated = true
                 // Bounded connect so a peer that vanished mid-transfer can't hang the resume on the
                 // OS default SYN timeout (tens of seconds); mirrors Net.sendBytes.
@@ -283,9 +287,12 @@ object DownloadEngine {
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer â€” refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
+                // Mark cancelled and drop the session from the active map (as every other terminal path
+                // does) so it can't linger as a zombie or be re-driven by a later frame.
                 TransportDiag.log("RX: $e")
                 try { socket?.close() } catch (_: Exception) {}
-                session.isPaused = false
+                session.isCancelled = true
+                TransferDaemon.removeActiveSession(sessionId)
                 TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -329,8 +336,9 @@ object DownloadEngine {
                 val fileKey = TransferKeys.fileKeyIfAead(context, session.targetIp)
                 if (fileKey != null) session.fileGcmNegotiated = true
                 // Choose the v2 FileSeal flag only when BOTH peers advertise FGCM2 (our own cap is
-                // implicit; the peer's is discovered). Otherwise fall back to the v1 "fgcm" flag.
-                val useV2 = fileKey != null && TransferDaemon.discoveredNodes[session.targetIp]?.supportsAuthFileV2 == true
+                // implicit; the peer's is discovered). Otherwise fall back to the v1 "fgcm" flag. TOFU-
+                // pinned so a later FGCM2-strip forcing v1 is blocked (XP-DEF-01); throws on downgrade.
+                val useV2 = TransferKeys.useFileV2(context, session.targetIp, fileKey != null)
                 if (useV2) session.fileV2Negotiated = true
                 // Bounded connect so an unreachable sender fails fast instead of hanging on the OS
                 // default SYN timeout; mirrors Net.sendBytes.
@@ -348,9 +356,12 @@ object DownloadEngine {
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer â€” refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
+                // Mark cancelled and drop the session from the active map (as every other terminal path
+                // does) so it can't linger as a zombie or be re-driven by a later frame.
                 TransportDiag.log("RX: $e")
                 try { socket?.close() } catch (_: Exception) {}
-                session.isPaused = false
+                session.isCancelled = true
+                TransferDaemon.removeActiveSession(sessionId)
                 TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e

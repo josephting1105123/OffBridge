@@ -30,6 +30,11 @@ object SecurityVault {
     // pins; cleared on unpair.
     private val fileGcmPinned = ConcurrentHashMap.newKeySet<String>()
     private val clipboardGcmPinned = ConcurrentHashMap.newKeySet<String>()
+    // XP-DEF-01: the FGCM1/GCM1 pins above didn't cover the AUTH2 admission challenge or the v2 FileSeal
+    // (per-session key), which also ride the unauthenticated discovery. Pin both once genuinely used and
+    // fail closed on a later strip. Mirrors the Android SecurityVault pins; cleared on unpair.
+    private val auth2Pinned = ConcurrentHashMap.newKeySet<String>()
+    private val fileGcmV2Pinned = ConcurrentHashMap.newKeySet<String>()
 
     // DPAPI (Windows Data Protection API) wraps each pairing key at rest so config.json no longer holds
     // recoverable key material (Android keeps the equivalents in the Keystore). Windows-only; on any
@@ -74,7 +79,9 @@ object SecurityVault {
         val nodes: String? = null,
         val pairedNames: Map<String, String>? = null,
         val fileGcmPinned: List<String>? = null,
-        val clipboardGcmPinned: List<String>? = null
+        val clipboardGcmPinned: List<String>? = null,
+        val auth2Pinned: List<String>? = null,
+        val fileGcmV2Pinned: List<String>? = null
     )
 
     init {
@@ -120,6 +127,8 @@ object SecurityVault {
             dto.pairedNames?.let { pairedDeviceNames.putAll(it) }
             dto.fileGcmPinned?.let { fileGcmPinned.addAll(it) }
             dto.clipboardGcmPinned?.let { clipboardGcmPinned.addAll(it) }
+            dto.auth2Pinned?.let { auth2Pinned.addAll(it) }
+            dto.fileGcmV2Pinned?.let { fileGcmV2Pinned.addAll(it) }
             // One-time migration: rewrite config.json so legacy plaintext keys become DPAPI-wrapped.
             if (legacyKeysPresent) save()
         } catch (e: Exception) {
@@ -132,7 +141,7 @@ object SecurityVault {
     private fun save() {
         try {
             val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
-            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList())
+            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList())
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
@@ -217,6 +226,8 @@ object SecurityVault {
         // Drop the anti-downgrade pins too, so a deliberate re-pair starts from a clean TOFU state.
         fileGcmPinned.remove(ipAddress)
         clipboardGcmPinned.remove(ipAddress)
+        auth2Pinned.remove(ipAddress)
+        fileGcmV2Pinned.remove(ipAddress)
         save()
     }
 
@@ -232,6 +243,18 @@ object SecurityVault {
 
     /** True once [ipAddress] supported authenticated clipboard — a later loss of GCM1 is a downgrade. */
     fun isClipboardGcmPinned(ipAddress: String): Boolean = clipboardGcmPinned.contains(ipAddress)
+
+    /** Remember that [ipAddress] proved possession of the pairing key via the AUTH2 OFFER challenge. */
+    fun pinAuth2(ipAddress: String) { if (auth2Pinned.add(ipAddress)) save() }
+
+    /** True once [ipAddress] completed an AUTH2 proof — a later loss of AUTH2 is a downgrade attempt. */
+    fun isAuth2Pinned(ipAddress: String): Boolean = auth2Pinned.contains(ipAddress)
+
+    /** Remember that [ipAddress] negotiated a v2 (per-session key) FileSeal stream. */
+    fun pinFileGcmV2(ipAddress: String) { if (fileGcmV2Pinned.add(ipAddress)) save() }
+
+    /** True once [ipAddress] supported FGCM2 — a later loss (forcing v1) is a downgrade attempt. */
+    fun isFileGcmV2Pinned(ipAddress: String): Boolean = fileGcmV2Pinned.contains(ipAddress)
 
     fun isTrusted(ipAddress: String): Boolean {
         return trustedNodes.containsKey(ipAddress)

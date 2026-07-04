@@ -54,7 +54,11 @@ data class OutgoingFileSession(
     // Per-file lengths snapshotted at OFFER time. The MANIFEST we send commits the receiver to read
     // exactly this many bytes per file; if a file's on-disk length later changes we must still stream
     // exactly this count (or abort) so a mid-transfer size change can't desync the receiver.
-    val fileSizes: List<Long> = files.map { it.length() }
+    val fileSizes: List<Long> = files.map { it.length() },
+    // "lan" (IP-paired) or "p2p" (off-grid QR/hotspot). An off-grid receiver resumes from an
+    // ephemeral, never-paired IP, so the trust gate exempts a RESUME_REQUEST that names a live p2p
+    // outgoing session (XP-05) — mirrors the Android FileTransferServer exemption.
+    val transport: String = "lan"
 )
 
 data class IncomingFileSession(
@@ -197,7 +201,10 @@ class ClipboardAppController {
                 // A pinned peer that dropped fgcm is a downgrade attempt → refuse the plaintext stream.
                 try {
                     val fileKey = senderFileKey(session.targetIp, fgcm)
-                    streamFilesToSocket(session, socket, 0, 0L, ackExpected = false, fileKey = fileKey, useV2 = useV2)
+                    // Gate v2 by the same TOFU pin the receiver enforces (XP-DEF-01): a v2-pinned peer
+                    // whose ACCEPT stripped "fgcm2"→"fgcm" is a downgrade → throw, not seal v1 silently.
+                    val gatedV2 = senderUseFileV2(session.targetIp, useV2)
+                    streamFilesToSocket(session, socket, 0, 0L, ackExpected = false, fileKey = fileKey, useV2 = gatedV2)
                 } catch (e: DowngradeBlockedException) {
                     System.err.println("TX: ${e.message} — refusing plaintext stream")
                     updateRecord(sessionId) { it.copy(status = "failed") }
@@ -215,7 +222,8 @@ class ClipboardAppController {
             if (session != null && fileIndex >= 0 && fileIndex < session.files.size && offset >= 0L) {
                 try {
                     val fileKey = senderFileKey(session.targetIp, fgcm)
-                    streamFilesToSocket(session, socket, fileIndex, offset, ackExpected, fileKey = fileKey, useV2 = useV2)
+                    val gatedV2 = senderUseFileV2(session.targetIp, useV2)
+                    streamFilesToSocket(session, socket, fileIndex, offset, ackExpected, fileKey = fileKey, useV2 = gatedV2)
                 } catch (e: DowngradeBlockedException) {
                     System.err.println("TX: ${e.message} — refusing plaintext resume")
                     updateRecord(sessionId) { it.copy(status = "failed") }
@@ -241,7 +249,10 @@ class ClipboardAppController {
         // Discovery (and the AUTH2 capability flag) lives in the separate transferDaemon; surface it so
         // the OFFER branch can decide whether to issue the AUTH2 admission challenge. Mirrors how the
         // FileSeal-v2 send path reads supportsAuthFileV2 off the same discovered-node set.
-        supportsAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2 } }
+        supportsAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2 } },
+        // XP-05: admit an off-grid receiver's RESUME_REQUEST past the LAN trust gate when its sessionId
+        // names a live outgoing p2p session (registered in handleP2pHello with transport="p2p").
+        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" }
     )
 
     // UI State
@@ -609,7 +620,8 @@ class ClipboardAppController {
                 val outSession = OutgoingFileSession(
                     session.sessionId,
                     socket.inetAddress.hostAddress ?: "",
-                    session.files
+                    session.files,
+                    transport = "p2p"
                 )
                 activeOutgoingFileSessions[session.sessionId] = outSession
 
@@ -646,6 +658,23 @@ class ClipboardAppController {
         }
     }
 
+    /** A terminal "cancelled" history row for an incoming offer that was refused before any bytes
+     *  streamed (e.g. a blocked downgrade throws before the "transferring" record is created), so the
+     *  user sees why the offer vanished instead of it disappearing silently. */
+    private fun incomingCancelledRecord(session: IncomingFileSession, sessionId: String) = TransferRecord(
+        sessionId = sessionId,
+        deviceName = session.senderName,
+        direction = "incoming",
+        fileNames = session.manifest.map { it.first },
+        totalBytes = session.manifest.sumOf { it.second },
+        timestamp = System.currentTimeMillis(),
+        status = "cancelled",
+        filesCompleted = 0,
+        totalFiles = session.manifest.size,
+        fileSizes = session.manifest.map { it.second },
+        currentFileOffset = 0L
+    )
+
     fun acceptIncomingFileTransfer(sessionId: String) {
         val session = activeIncomingFileSessions[sessionId] ?: return
         _incomingFileOffer.value = null
@@ -660,7 +689,8 @@ class ClipboardAppController {
                 // advertised FGCM1 and we hold its pairing key; legacy senders ignore it and stream
                 // plaintext. "fgcm2" is sent only when the sender ALSO advertises FGCM2 → v2 AEAD.
                 val fileKey = fileKeyIfAead(session.senderIp)
-                val useV2 = fileKey != null && transferDaemon.getDiscoveredNodes().any { it.ip == session.senderIp && it.supportsAuthFileV2 }
+                // TOFU-pinned so a later FGCM2-strip forcing v1 is blocked (XP-DEF-01); throws on downgrade.
+                val useV2 = useFileV2(session.senderIp, fileKey != null)
                 // Explicit connect timeout: the Socket(host, port) constructor blocks for the full OS
                 // timeout (~minutes) when the sender is unreachable (mirrors sendFiles).
                 socket = Socket().also { it.connect(InetSocketAddress(session.senderIp, Ports.FILE_TRANSFER), 3000) }
@@ -690,6 +720,19 @@ class ClipboardAppController {
                 saveHistory()
 
                 receiveFilesFromSocket(session, socket, sessionId, 0, 0L, fileKey, useV2)
+            } catch (e: DowngradeBlockedException) {
+                // A pinned sender dropped FGCM1/FGCM2 ⇒ downgrade attempt. Terminal (cancelled), and do
+                // NOT restore the offer dialog — else Accept loops straight back into the same block.
+                // Mirrors the Android DownloadEngine acceptOffer handler (terminal, not retryable).
+                System.err.println("RX: ${e.message} — refusing plaintext stream")
+                try { socket?.close() } catch (_: Exception) {}
+                activeIncomingFileSessions.remove(sessionId)
+                if (_transferHistory.value.none { it.sessionId == sessionId }) {
+                    _transferHistory.update { listOf(incomingCancelledRecord(session, sessionId)) + it }
+                    saveHistory()
+                } else {
+                    updateRecord(sessionId) { it.copy(status = "cancelled") }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
@@ -722,6 +765,22 @@ class ClipboardAppController {
     }
 
     /**
+     * Receiver-side FGCM2 (v2 FileSeal) TOFU gate (XP-DEF-01). v2 applies only when the v1 key is
+     * available ([fgcm1Available]) AND the peer advertises FGCM2. Once used it is pinned; a later
+     * FGCM2-strip that would silently force us back to v1 is a downgrade — throw. Mirrors Android
+     * TransferKeys.useFileV2 exactly (same DowngradePolicy decision + pin).
+     */
+    private fun useFileV2(ip: String, fgcm1Available: Boolean): Boolean {
+        val peerOffersV2 = fgcm1Available && transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthFileV2 }
+        return when (DowngradePolicy.decide(peerOffersAead = peerOffersV2, pinned = SecurityVault.isFileGcmV2Pinned(ip))) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcmV2(ip); true }
+            DowngradePolicy.Decision.PLAINTEXT -> false
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal v2 downgrade blocked for $ip (peer no longer advertises FGCM2)")
+        }
+    }
+
+    /**
      * Sender-side AEAD decision with anti-downgrade enforcement (mirrors Android senderFileKey).
      * [fgcm] is true iff the receiver requested a sealed stream. Returns the key to seal with, or null
      * for legitimate plaintext. Throws [DowngradeBlockedException] if the receiver dropped fgcm after a
@@ -736,6 +795,23 @@ class ClipboardAppController {
         }
     }
 
+    /**
+     * Sender-side FGCM2 (v2 FileSeal) anti-downgrade gate — the send-path mirror of the receiver's
+     * [useFileV2] (XP-DEF-01). v1 was already enforced in both directions ([senderFileKey]); v2 was
+     * only enforced receiver-side, so a stripped "fgcm2"→"fgcm" ACCEPT/RESUME line silently sealed v1.
+     * [fgcm2Requested] is the receiver's on-the-wire flag; a v2-pinned peer that dropped it is a
+     * downgrade → throw. Legacy/v1 peers never sent fgcm2 and were never pinned → PLAINTEXT (v1),
+     * unchanged. Driven by the ACCEPT flag, not discovery, so it has no empty-cache false-positive.
+     */
+    private fun senderUseFileV2(ip: String, fgcm2Requested: Boolean): Boolean {
+        return when (DowngradePolicy.decide(peerOffersAead = fgcm2Requested, pinned = SecurityVault.isFileGcmV2Pinned(ip))) {
+            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcmV2(ip); true }
+            DowngradePolicy.Decision.PLAINTEXT -> false
+            DowngradePolicy.Decision.BLOCK ->
+                throw DowngradeBlockedException("FileSeal v2 downgrade blocked (sender) for $ip (receiver dropped fgcm2)")
+        }
+    }
+
     fun resumeIncomingFileTransfer(sessionId: String) {
         val session = activeIncomingFileSessions[sessionId] ?: return
         val records = _transferHistory.value
@@ -746,8 +822,9 @@ class ClipboardAppController {
             var socket: Socket? = null
             try {
                 val fileKey = fileKeyIfAead(session.senderIp)
-                // v2 only when BOTH peers advertise FGCM2; else fall back to the v1 "fgcm" flag.
-                val useV2 = fileKey != null && transferDaemon.getDiscoveredNodes().any { it.ip == session.senderIp && it.supportsAuthFileV2 }
+                // v2 only when BOTH peers advertise FGCM2; TOFU-pinned so a later FGCM2-strip forcing
+                // v1 is blocked (XP-DEF-01); throws on downgrade, caught below.
+                val useV2 = useFileV2(session.senderIp, fileKey != null)
                 // Explicit connect timeout so an unreachable sender fails fast instead of blocking
                 // for the full OS timeout (mirrors sendFiles / acceptIncomingFileTransfer).
                 socket = Socket().also { it.connect(InetSocketAddress(session.senderIp, Ports.FILE_TRANSFER), 3000) }
@@ -774,6 +851,15 @@ class ClipboardAppController {
                 outStream.flush()
 
                 receiveFilesFromSocket(session, socket, sessionId, startFileIndex, trueOffset, fileKey, useV2)
+            } catch (e: DowngradeBlockedException) {
+                // A pinned sender dropped FGCM1/FGCM2 ⇒ downgrade attempt. Mark "cancelled" (terminal),
+                // NOT "failed" — the resume gate above only re-runs on status=="failed", so "failed"
+                // would let the user retry straight back into the same block. Remove the session so no
+                // frame can re-drive it. Mirrors the Android DownloadEngine resume handler.
+                System.err.println("RX: ${e.message} — refusing plaintext resume")
+                try { socket?.close() } catch (_: Exception) {}
+                activeIncomingFileSessions.remove(sessionId)
+                updateRecord(sessionId) { it.copy(status = "cancelled") }
             } catch (e: Exception) {
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}

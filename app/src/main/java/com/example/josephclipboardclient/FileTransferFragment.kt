@@ -203,21 +203,6 @@ class FileTransferFragment : Fragment() {
             }
         }
 
-        arguments?.let {
-            val uris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                it.getParcelableArrayList("uris", Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                it.getParcelableArrayList("uris")
-            }
-            if (uris != null) {
-                val newItems = uris.map { uri -> TransferItem(uri, null) }
-                val combined = selectedFiles.toMutableList()
-                combined.addAll(newItems)
-                handleMultipleFilesSelection(combined)
-            }
-        }
-
         syncSelectionState()
     }
 
@@ -475,6 +460,20 @@ class FileTransferFragment : Fragment() {
         if (selectedFiles.isEmpty()) return
         selectedFiles.clear()
         syncSelectionState()
+    }
+
+    /**
+     * Ingests files shared into the app via the system share-sheet (ACTION_SEND[_MULTIPLE]).
+     * Appends [uris] to the current selection and refreshes the UI. Called by MainActivity from
+     * onCreate/onNewIntent. Reliable regardless of whether the view already exists — unlike the
+     * old `setArguments`-after-commitNow path, which ran too late (the view was already created)
+     * so shared files silently vanished (AND-28). Safe to call before the view exists: the data
+     * lives in [selectedFiles] and onViewCreated re-syncs it into the Compose state. */
+    fun ingestSharedUris(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+        val combined = selectedFiles.toMutableList()
+        combined.addAll(uris.map { TransferItem(it, null) })
+        handleMultipleFilesSelection(combined)
     }
 
     private fun handleMultipleFilesSelection(items: MutableList<TransferItem>) {
