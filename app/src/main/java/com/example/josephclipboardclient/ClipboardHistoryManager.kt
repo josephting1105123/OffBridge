@@ -26,6 +26,9 @@ object ClipboardHistoryManager {
         HistoryBackupManager.requestBackup(context)
     }
 
+    // @Synchronized on the mutators: each is a read-modify-write over the same prefs key, and
+    // concurrent writers (receive loop vs UI delete) lost whichever update saved first (AND-05).
+    @Synchronized
     fun addEntry(context: Context, text: String) {
         if (text.isBlank()) return
         val list = getHistory(context).toMutableList()
@@ -39,6 +42,7 @@ object ClipboardHistoryManager {
         saveList(context, list)
     }
 
+    @Synchronized
     fun removeEntry(context: Context, text: String) {
         val list = getHistory(context).toMutableList()
         if (list.remove(text)) {
@@ -51,6 +55,7 @@ object ClipboardHistoryManager {
      * by exact text and capping at [MAX_ENTRIES]. Returns how many new entries were added. Used by
      * [HistoryBackupManager] to recover history without clobbering anything already present.
      */
+    @Synchronized
     fun mergeEntries(context: Context, entries: List<String>): Int {
         if (entries.isEmpty()) return 0
         val current = getHistory(context)

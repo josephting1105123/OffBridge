@@ -75,6 +75,11 @@ class BleControlClient(context: Context) : ControlChannel {
         private const val MAX_GATT_ATTEMPTS = 2
         private const val GATT_RETRY_DELAY_MS = 350L
 
+        /** Whole connect→MTU→discover→CCCD setup, per attempt. Some stacks connect and then
+         *  go silent mid-chain (MTU quirk) — no callback ever fires, so without a deadline
+         *  onReady never resolves and the ladder hangs on "connecting" (AND-10). */
+        private const val SETUP_BUDGET_MS = 10_000L
+
         /** Central-mode availability — gates the whole control-channel attempt. */
         fun canScan(context: Context): Boolean {
             val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -123,7 +128,9 @@ class BleControlClient(context: Context) : ControlChannel {
                         val dev = device
                         if (dev != null && gattAttempts < MAX_GATT_ATTEMPTS) {
                             mainHandler.postDelayed({
-                                if (closed || ready) return@postDelayed
+                                // onReady == null means the setup watchdog (or another failure
+                                // path) already reported — a late retry would leak its GATT.
+                                if (closed || ready || onReady == null) return@postDelayed
                                 try { gatt?.close() } catch (_: Exception) {}
                                 gatt = null
                                 attemptConnect(dev)
@@ -227,9 +234,20 @@ class BleControlClient(context: Context) : ControlChannel {
         }
     }
 
+    private val SETUP_TIMEOUT_TOKEN = Any()
+
     /** Opens (or re-opens) the GATT client to [dev]; counts the attempt so the retry stays bounded. */
     private fun attemptConnect(dev: BluetoothDevice) {
         gattAttempts++
+        // Setup watchdog (same pattern as the scan budget): if the chain goes silent between
+        // CONNECTED and the CCCD write, report failure so the ladder degrades instead of hanging.
+        mainHandler.removeCallbacksAndMessages(SETUP_TIMEOUT_TOKEN)
+        mainHandler.postDelayed({
+            if (!closed && !ready) {
+                Log.i(TAG, "GATT setup timed out after ${SETUP_BUDGET_MS}ms (attempt $gattAttempts)")
+                finishReady(null)
+            }
+        }, SETUP_TIMEOUT_TOKEN, SETUP_BUDGET_MS)
         try {
             gatt = dev.connectGatt(appContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
         } catch (e: Exception) {
@@ -239,6 +257,7 @@ class BleControlClient(context: Context) : ControlChannel {
     }
 
     private fun finishReady(d: BluetoothDevice?) {
+        mainHandler.removeCallbacksAndMessages(SETUP_TIMEOUT_TOKEN)
         val cb = onReady ?: return
         onReady = null
         if (d == null && !ready) {
@@ -300,6 +319,7 @@ class BleControlClient(context: Context) : ControlChannel {
         closed = true
         mainHandler.removeCallbacksAndMessages(SCAN_TIMEOUT_TOKEN)
         mainHandler.removeCallbacksAndMessages(GATT_RETRY_TOKEN)
+        mainHandler.removeCallbacksAndMessages(SETUP_TIMEOUT_TOKEN)
         stopScan()
         try { gatt?.disconnect() } catch (_: Exception) {}
         try { gatt?.close() } catch (_: Exception) {}

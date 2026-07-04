@@ -119,6 +119,10 @@ object TransferHistoryManager {
     private const val KEY_HISTORY = "transfer_history"
     private const val MAX_RECORDS = 100
 
+    // Mutators are @Synchronized (one monitor for the singleton): each is a read-modify-write
+    // over the same prefs key, and concurrent sessions (e.g. two transfers finishing together)
+    // lost whichever update saved first (AND-05).
+    @Synchronized
     fun addRecord(context: Context, record: TransferRecord) {
         val records = getRecords(context).toMutableList()
         // Update existing record if same sessionId
@@ -136,6 +140,7 @@ object TransferHistoryManager {
         com.EntropicSoftwareLab.ClipboardShare.data.db.OffGridRepository.mirrorRecord(context, record)
     }
 
+    @Synchronized
     fun updateStatus(context: Context, sessionId: String, status: String, filesCompleted: Int? = null, currentFileOffset: Long? = null) {
         val records = getRecords(context).toMutableList()
         val index = records.indexOfFirst { it.sessionId == sessionId }
@@ -152,6 +157,7 @@ object TransferHistoryManager {
             .mirrorStatus(context, sessionId, status, filesCompleted, currentFileOffset)
     }
 
+    @Synchronized
     fun updateFileNames(context: Context, sessionId: String, fileNames: List<String>) {
         val records = getRecords(context).toMutableList()
         val index = records.indexOfFirst { it.sessionId == sessionId }
@@ -184,6 +190,7 @@ object TransferHistoryManager {
         return getRecords(context).sortedByDescending { it.timestamp }
     }
 
+    @Synchronized
     fun deleteRecords(context: Context, sessionIds: Set<String>) {
         val records = getRecords(context).toMutableList()
         records.removeAll { it.sessionId in sessionIds }
@@ -196,6 +203,7 @@ object TransferHistoryManager {
      * sorts newest-first and caps at [MAX_RECORDS]. Returns how many new records were added.
      * Used by [HistoryBackupManager] to recover history without clobbering newer local data.
      */
+    @Synchronized
     fun mergeRecords(context: Context, incoming: List<TransferRecord>): Int {
         if (incoming.isEmpty()) return 0
         val bySession = LinkedHashMap<String, TransferRecord>()

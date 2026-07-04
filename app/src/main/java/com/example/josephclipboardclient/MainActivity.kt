@@ -107,11 +107,30 @@ class MainActivity : AppCompatActivity() {
         fragmentMap[R.id.nav_history] = HistoryFragment()
         fragmentMap[R.id.nav_receive] = ReceiveFragment()
 
+        // The FragmentManager restores these fragments across recreation; adding a fresh
+        // set on every onCreate stacked hidden duplicates on top of the restored ones and
+        // leaked their views on each rotation (AND-27). Reuse a restored instance when one
+        // exists — it keeps its saved shown/hidden state — and only add+hide fresh ones.
         val transaction = supportFragmentManager.beginTransaction()
-        for ((_, fragment) in fragmentMap) {
-            transaction.add(R.id.nav_host_fragment, fragment).hide(fragment)
+        for (id in fragmentMap.keys.toList()) {
+            // Tag by resource NAME, not the R.id integer — aapt renumbers ids across builds,
+            // and a task restored after an app upgrade would miss the old int-keyed tags and
+            // stack fresh duplicates on top of the restored fragments.
+            val tag = "main_tab_${resources.getResourceEntryName(id)}"
+            val restored = supportFragmentManager.findFragmentByTag(tag)
+            if (restored != null) {
+                fragmentMap[id] = restored
+            } else {
+                val fragment = fragmentMap.getValue(id)
+                transaction.add(R.id.nav_host_fragment, fragment, tag).hide(fragment)
+            }
         }
         transaction.commitNowAllowingStateLoss()
+        if (savedInstanceState != null) {
+            // Rebind the active-tab pointer so the next tab switch hides the right fragment
+            // (the restored visible one), not a null.
+            activeFragment = fragmentMap.values.firstOrNull { !it.isHidden }
+        }
 
         if (savedInstanceState == null) {
             // THE FIX: Check the initial intent. If it's a share, handle it. Otherwise, load the default fragment.

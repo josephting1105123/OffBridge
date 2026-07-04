@@ -59,9 +59,10 @@ class ClipboardService : Service() {
                 val senderIp = intent.getStringExtra("SENDER_IP")
                 val aesKey = intent.getByteArrayExtra("AES_KEY")
                 val visualPin = intent.getStringExtra("VISUAL_PIN")
+                val expiresAt = intent.getLongExtra(PairingDaemon.EXTRA_EXPIRES_AT, 0L)
 
                 if (senderIp != null && aesKey != null) {
-                    showPairingNotification(senderName, senderIp, aesKey, visualPin)
+                    showPairingNotification(senderName, senderIp, aesKey, visualPin, expiresAt)
                 }
             }
         }
@@ -323,12 +324,13 @@ class ClipboardService : Service() {
         }
     }
 
-    private fun showPairingNotification(senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String?) {
+    private fun showPairingNotification(senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String?, expiresAt: Long) {
         val fullScreenIntent = Intent(this, PairingConfirmationActivity::class.java).apply {
             putExtra("SENDER_NAME", senderName)
             putExtra("SENDER_IP", senderIp)
             putExtra("AES_KEY", aesKey)
             putExtra("VISUAL_PIN", visualPin)
+            putExtra(PairingDaemon.EXTRA_EXPIRES_AT, expiresAt)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(this, 3, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
@@ -347,7 +349,9 @@ class ClipboardService : Service() {
     }
 
     private fun startNotificationUpdater() {
-        serviceScope.launch(Dispatchers.Main) {
+        // Off Main (AND-06): each tick reads per-peer keys from EncryptedSharedPreferences and
+        // builds RemoteViews — none of it needs the UI thread, and notify() is thread-safe.
+        serviceScope.launch(Dispatchers.IO) {
             while (isActive) {
                 // Per-iteration guard: a notify() throw (e.g. TransactionTooLargeException) must not
                 // kill this loop, or the foreground notification would freeze on its last status.

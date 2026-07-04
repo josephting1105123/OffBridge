@@ -272,6 +272,8 @@
     <string name="status_declined_with_icon">Abgelehnt</string>
     <string name="status_transferring">Wird übertragen</string>
     <string name="status_paused">Pausiert</string>
+    <string name="status_failed">Fehlgeschlagen</string>
+    <string name="status_pending">Ausstehend</string>
     <string name="action_continue">Fortfahren</string>
     <string name="action_grant">Erteilen</string>
     <string name="action_receive">Empfangen</string>
@@ -500,6 +502,7 @@
     <string name="history_tutorial_open">Drücken Sie die Schaltfläche Öffnen, um die empfangene Datei zu öffnen.</string>
     <string name="transfer_incoming_from">Von: %1$s (%2$d Dateien)</string>
     <string name="pairing_declined_simple">Kopplung abgelehnt</string>
+    <string name="pairing_request_expired">Diese Kopplungsanfrage ist abgelaufen – starten Sie eine neue Kopplung vom anderen Gerät.</string>
     <string name="share_text_sending">Text wird an Ihre Geräte gesendet…</string>
     <string name="history_share_sheet_hint">Tipp: Um Text aus einer anderen App zu senden, tippen Sie auf deren Teilen-Schaltfläche und wählen Sie Clipboard Share.</string>
     <string name="selected_files_empty_hint">Ausgewählte Dateien werden hier angezeigt</string>
@@ -587,6 +590,7 @@
     <string name="perm_nearby_desc">Ermöglicht der App, andere Telefone über Wi-Fi Direct für Off-Grid-Übertragungen zu finden und sich mit ihnen zu verbinden. Ohne sie funktionieren Übertragungen nur, wenn sich beide Geräte im selben Wi-Fi-Netzwerk befinden.</string>
     <string name="perm_nearby_granted_toast">Berechtigung für Geräte in der Nähe erteilt.</string>
     <string name="perm_nearby_settings_toast">Erlauben Sie \"Geräte in der Nähe\" für diese App unter Berechtigungen und kehren Sie dann zurück.</string>
+    <string name="perm_notification_settings_toast">Erlauben Sie \"Benachrichtigungen\" für diese App unter Berechtigungen und kehren Sie dann zurück.</string>
     <string name="offgrid_nearby_grant_in_settings">Erlauben Sie \"Geräte in der Nähe\" für diese App unter Einstellungen → Berechtigungen und versuchen Sie es dann erneut.</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

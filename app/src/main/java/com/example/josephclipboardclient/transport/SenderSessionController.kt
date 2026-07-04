@@ -757,11 +757,34 @@ class SenderSessionController(
      * Tear down our autonomous Wi-Fi Direct GO, once. [onDone] fires (on the main thread) when the
      * teardown has settled — used by RECEIVER_AS_GO so the join doesn't start while the chip is still
      * a GO. Tiers that don't need to wait (P2P_NEGOTIATED/LOHS) call it with the default no-op.
+     *
+     * Callers arriving while the first teardown is still in flight are QUEUED until it settles —
+     * firing them immediately (the old behavior) reopened the dual-GO window this function exists
+     * to close: a RECEIVER_AS_GO join could start while the chip was still Group Owner (AND-14).
      */
+    private val groupTeardownLock = Any()
+    private var groupTeardownSettled = false
+    private val groupTeardownWaiters = mutableListOf<() -> Unit>()
+
     private fun teardownGroupOnce(onDone: () -> Unit = {}) {
-        if (groupTornDown) { mainHandler.post(onDone); return }
-        groupTornDown = true
-        listener.onRequireGroupTeardown(onDone)
+        synchronized(groupTeardownLock) {
+            if (groupTeardownSettled) {
+                mainHandler.post(onDone)
+                return
+            }
+            groupTeardownWaiters.add(onDone)
+            if (groupTornDown) return // teardown in flight — onDone fires when it settles
+            groupTornDown = true
+        }
+        listener.onRequireGroupTeardown {
+            val waiters: List<() -> Unit>
+            synchronized(groupTeardownLock) {
+                groupTeardownSettled = true
+                waiters = groupTeardownWaiters.toList()
+                groupTeardownWaiters.clear()
+            }
+            waiters.forEach { mainHandler.post(it) }
+        }
     }
 
     fun teardown() {

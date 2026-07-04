@@ -272,6 +272,10 @@
     <string name="status_declined_with_icon">Rechazado</string>
     <string name="status_transferring">Transfiriendo</string>
     <string name="status_paused">Pausado</string>
+
+    <string name="status_failed">Fallido</string>
+
+    <string name="status_pending">Pendiente</string>
     <string name="action_continue">Continuar</string>
     <string name="action_grant">Conceder</string>
     <string name="action_receive">Recibir</string>
@@ -500,6 +504,8 @@
     <string name="history_tutorial_open">Pulsa el botón abrir para abrir el archivo recibido.</string>
     <string name="transfer_incoming_from">De: %1$s (%2$d archivos)</string>
     <string name="pairing_declined_simple">Emparejamiento rechazado</string>
+
+    <string name="pairing_request_expired">Esta solicitud de emparejamiento ha caducado: inicia un nuevo emparejamiento desde el otro dispositivo.</string>
     <string name="share_text_sending">Enviando texto a tus dispositivos…</string>
     <string name="history_share_sheet_hint">Consejo: para enviar texto desde otra app, toca su botón Compartir y elige Clipboard Share.</string>
     <string name="selected_files_empty_hint">Los archivos seleccionados se mostrarán aquí</string>
@@ -587,6 +593,8 @@
     <string name="perm_nearby_desc">Permite que la app encuentre y se conecte a otros teléfonos por Wi-Fi Direct para transferencias sin conexión. Sin esto, las transferencias solo funcionan cuando ambos dispositivos están en la misma red Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Permiso de dispositivos cercanos concedido.</string>
     <string name="perm_nearby_settings_toast">Permite \"Dispositivos cercanos\" para esta app en Permisos y luego vuelve.</string>
+
+    <string name="perm_notification_settings_toast">Permite \"Notificaciones\" para esta app en Permisos y luego vuelve.</string>
     <string name="offgrid_nearby_grant_in_settings">Permite \"Dispositivos cercanos\" para esta app en Ajustes → Permisos y luego reinténtalo.</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

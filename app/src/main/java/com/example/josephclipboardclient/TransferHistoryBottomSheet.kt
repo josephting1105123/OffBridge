@@ -65,9 +65,17 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     private val anchorViews = mutableMapOf<String, View>()
     private val lastAnchorBounds = mutableMapOf<String, IntArray>()
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_FILTER, currentFilterState.value)
+        if (showDetailState.value) outState.putString(STATE_DETAIL_ID, currentDetailRecordId)
+    }
+
     companion object {
         /** Single canonical tag so only one detail sheet is ever shown (prevents stacking). */
         const val TAG = "transfer_history_detail"
+        private const val STATE_FILTER = "state_filter"
+        private const val STATE_DETAIL_ID = "state_detail_id"
 
         fun newInstance(
             targetSessionId: String? = null,
@@ -124,7 +132,9 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        currentFilterState.value = "All"
+        // Restore the filter across recreation — the unconditional "All" reset dropped the
+        // user's selection on every rotation (AND-41).
+        currentFilterState.value = savedInstanceState?.getString(STATE_FILTER) ?: "All"
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -167,19 +177,31 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
 
         refreshData()
 
-        val targetSessionId = arguments?.getString("TARGET_SESSION_ID")
-        if (targetSessionId != null) {
-            val targetRecord = recordsState.value.find { it.sessionId == targetSessionId }
-            if (targetRecord != null) openDetail(targetRecord)
+        if (savedInstanceState != null) {
+            // Recreation: reopen the detail page the user was on (or stay on the list if they
+            // had navigated back — the arguments-driven jump below must not re-fire, AND-41).
+            savedInstanceState.getString(STATE_DETAIL_ID)?.let { id ->
+                recordsState.value.find { it.sessionId == id }?.let(::openDetail)
+            }
+        } else {
+            val targetSessionId = arguments?.getString("TARGET_SESSION_ID")
+            if (targetSessionId != null) {
+                val targetRecord = recordsState.value.find { it.sessionId == targetSessionId }
+                if (targetRecord != null) openDetail(targetRecord)
+            }
         }
 
-        lifecycleScope.launch {
+        // View-scoped so it dies with the view (the old fragment-scoped loop could
+        // requireContext() after detach). Liveness comes from the in-RAM session map — an
+        // O(1) read — instead of re-parsing the full JSON history every tick (AND-43): a
+        // present, non-paused, non-cancelled session IS the "transferring" state.
+        viewLifecycleOwner.lifecycleScope.launch {
             while (isActive) {
                 delay(500)
-                if (showDetailState.value && currentDetailRecordId != null) {
-                    val record = TransferHistoryManager.getSortedRecords(requireContext())
-                        .find { it.sessionId == currentDetailRecordId }
-                    if (record?.status == "transferring") {
+                if (showDetailState.value) {
+                    val sid = currentDetailRecordId ?: continue
+                    val live = TransferDaemon.activeSessions[sid]
+                    if (live != null && !live.isPaused && !live.isCancelled) {
                         // Bump the tick so the detail file rows recompute live progress from RAM.
                         progressTickState.value++
                     }
@@ -493,15 +515,26 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                 completedBytes = sizeBytes
             }
 
+            // Zero-byte fallback mirrors the isDone rule below, off the LIVE filesCompleted —
+            // the record's persisted count lags the in-RAM session while transferring (AND-45).
             val pct = if (sizeBytes > 0) ((completedBytes.toDouble() / sizeBytes) * 100).toInt()
-            else if (position <= record.filesCompleted) 100 else 0
+            else if (position < filesCompleted || (position == filesCompleted && record.status == "completed")) 100 else 0
             val completedMb = completedBytes / 1048576.0
 
             val isDone = (pct == 100 && position < filesCompleted) ||
                 (position == filesCompleted && record.status == "completed")
             val isActive = position == filesCompleted && record.status != "completed"
             val activePrefix = if (isActive) {
-                if (record.status == "transferring") getString(R.string.status_transferring) else getString(R.string.status_paused)
+                // Label the row by its real status — the old transferring-else-Paused binary
+                // stamped failed/cancelled/pending rows all as "Paused" (AND-42).
+                when (record.status) {
+                    "transferring" -> getString(R.string.status_transferring)
+                    "failed" -> getString(R.string.status_failed)
+                    "cancelled" -> getString(R.string.status_cancelled)
+                    "declined" -> getString(R.string.status_declined)
+                    "pending" -> getString(R.string.status_pending)
+                    else -> getString(R.string.status_paused)
+                }
             } else ""
 
             val progressText: String
@@ -564,7 +597,9 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             session.isCancelled = true
             TransferHistoryManager.updateStatus(requireContext(), record.sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
 
-            // Notify the remote peer
+            // Notify the remote peer. Deliberately NOT lifecycle-scoped (unlike resumeTransfer):
+            // the cancel notice must reach the peer even if the sheet is dismissed mid-send, and
+            // the block captures no fragment state — only the session and the record's ids.
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val targetIp = session.targetIp.ifEmpty { TransferDaemon.discoveredNodes.entries.find { it.value.name == record.deviceName }?.key }
@@ -576,7 +611,9 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                         val cmd = "CANCEL_TRANSFER|${record.sessionId}\n"
                         Net.sendBytes(targetIp, Ports.FILE_TRANSFER, cmd.toByteArray(Charsets.UTF_8), 5000)
                     }
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    android.util.Log.w("TransferHistory", "cancel notify to peer failed: ${e.message}")
+                }
             }
         } else {
             TransferHistoryManager.updateStatus(requireContext(), record.sessionId, "cancelled")

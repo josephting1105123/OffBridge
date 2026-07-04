@@ -55,14 +55,32 @@ object Net {
         return second in 64..127
     }
 
+    /** Closes sockets whose write outlived its deadline — java.net has no write timeout. */
+    private val sendWatchdog = java.util.concurrent.Executors.newSingleThreadScheduledExecutor { r ->
+        Thread(r, "net-send-watchdog").apply { isDaemon = true }
+    }
+
     /** Connect, write payload, flush, close. Returns true on success. Never throws. */
-    fun sendBytes(ip: String, port: Int, payload: ByteArray, connectTimeoutMs: Int = 2000): Boolean {
+    fun sendBytes(ip: String, port: Int, payload: ByteArray, connectTimeoutMs: Int = 2000, writeTimeoutMs: Long = 8000): Boolean {
         return try {
             Socket().use { socket ->
                 socket.connect(InetSocketAddress(ip, port), connectTimeoutMs)
-                socket.getOutputStream().run {
-                    write(payload)
-                    flush()
+                // A peer that ACKs the connect but dies with a full TCP window parks write()
+                // forever, and callers loop over peers sequentially — one dead peer used to
+                // stall the whole clipboard broadcast (AND-07). The watchdog closes the
+                // socket at the deadline so the parked write throws instead.
+                val closer = sendWatchdog.schedule(
+                    { runCatching { socket.close() } },
+                    writeTimeoutMs,
+                    java.util.concurrent.TimeUnit.MILLISECONDS
+                )
+                try {
+                    socket.getOutputStream().run {
+                        write(payload)
+                        flush()
+                    }
+                } finally {
+                    closer.cancel(false)
                 }
             }
             true

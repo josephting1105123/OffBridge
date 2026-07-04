@@ -396,7 +396,12 @@ class SendToDevicesFragment : Fragment() {
             for ((sessionId, targetIp, targetName, session) in offers) {
 
                 try {
-                    Socket(targetIp, Ports.FILE_TRANSFER).use { fileSocket ->
+                    // Bounded connect (mirrors DownloadEngine's resume path): the 2-arg Socket
+                    // ctor blocks on the OS default SYN timeout — a vanished peer stalled the
+                    // whole multi-device offer loop for tens of seconds (AND-24). connect runs
+                    // INSIDE use so a timeout still closes the socket instead of leaking the fd.
+                    Socket().use { fileSocket ->
+                        fileSocket.connect(java.net.InetSocketAddress(targetIp, Ports.FILE_TRANSFER), 8000)
                         val outStream = fileSocket.getOutputStream()
                         val offerHeader = "OFFER|$sessionId|${TransferDaemon.customDeviceName}|${expandedItems.size}\n"
                         var manifestStr = "MANIFEST|"
@@ -409,19 +414,11 @@ class SendToDevicesFragment : Fragment() {
                         outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
                         outStream.flush()
 
-                        // Wait for the receiver's next line.
+                        // Wait for the receiver's next line (shared size-capped reader — the old
+                        // hand-rolled loop had no byte cap, AND-24).
                         fileSocket.soTimeout = 10000
                         val inStream = fileSocket.getInputStream()
-                        fun readLine(): String {
-                            val baos = java.io.ByteArrayOutputStream()
-                            var c = inStream.read()
-                            while (c != -1 && c != '\n'.code) {
-                                baos.write(c)
-                                c = inStream.read()
-                            }
-                            return baos.toString("UTF-8")
-                        }
-                        var response = readLine()
+                        var response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
 
                         // AUTH2: a new receiver may challenge us to prove we hold the shared pairing key
                         // before it shows its incoming-file popup. Answer with HMAC-SHA256(pairingKey,
@@ -432,12 +429,10 @@ class SendToDevicesFragment : Fragment() {
                             val nonce = android.util.Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), android.util.Base64.NO_WRAP)
                             val pairingKey = SecurityVault.getKeyForNode(appContext, targetIp)
                                 ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
-                            val mac = javax.crypto.Mac.getInstance("HmacSHA256")
-                            mac.init(javax.crypto.spec.SecretKeySpec(pairingKey, "HmacSHA256"))
-                            val proof = mac.doFinal(nonce)
+                            val proof = com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto.hmacSha256(pairingKey, nonce)
                             outStream.write("OFFER_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
                             outStream.flush()
-                            response = readLine()
+                            response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
                         }
 
                         if (response != "OFFER_RECEIVED") {

@@ -30,6 +30,11 @@ class PermissionsFragment : Fragment() {
     private val requestNotificationLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
             Toast.makeText(requireContext(), getString(R.string.perm_notification_granted_toast), Toast.LENGTH_SHORT).show()
+        } else if (isNotificationPermanentlyDenied()) {
+            // The system dialog can no longer appear — same dead-end the Nearby flow already
+            // handles (AND-37): without a Settings route the Finish button stays disabled forever.
+            Toast.makeText(requireContext(), getString(R.string.perm_notification_settings_toast), Toast.LENGTH_LONG).show()
+            openAppSettings()
         } else {
             Toast.makeText(requireContext(), getString(R.string.perm_notification_recommended_toast), Toast.LENGTH_LONG).show()
         }
@@ -82,10 +87,18 @@ class PermissionsFragment : Fragment() {
         }
 
         notificationButton.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requestNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                Toast.makeText(requireContext(), getString(R.string.perm_notification_already_granted_toast), Toast.LENGTH_SHORT).show()
+            when {
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ->
+                    Toast.makeText(requireContext(), getString(R.string.perm_notification_already_granted_toast), Toast.LENGTH_SHORT).show()
+                hasNotificationPermission() -> { /* already granted */ }
+                isNotificationPermanentlyDenied() -> {
+                    Toast.makeText(requireContext(), getString(R.string.perm_notification_settings_toast), Toast.LENGTH_LONG).show()
+                    openAppSettings()
+                }
+                else -> {
+                    markNotificationRequested()
+                    requestNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
 
@@ -179,21 +192,31 @@ class PermissionsFragment : Fragment() {
     private fun hasNearbyPermission(): Boolean =
         ContextCompat.checkSelfPermission(requireContext(), nearbyPermission()) == PackageManager.PERMISSION_GRANTED
 
-    private fun nearbyRequested(): Boolean =
-        requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-            .getBoolean("nearby_perm_requested", false)
+    // ---- Shared permanently-denied machinery (one copy for every gated permission) ----
 
-    private fun markNearbyRequested() {
+    private fun permRequested(flagKey: String): Boolean =
         requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-            .edit().putBoolean("nearby_perm_requested", true).apply()
+            .getBoolean(flagKey, false)
+
+    private fun markPermRequested(flagKey: String) {
+        requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            .edit().putBoolean(flagKey, true).apply()
     }
 
     /** True only once we've actually asked AND the system won't show the dialog again — i.e. the user
      *  must toggle it in Settings. (Before the first ask, rationale is also false, hence the flag.) */
-    private fun isNearbyPermanentlyDenied(): Boolean {
-        if (hasNearbyPermission() || !nearbyRequested()) return false
-        return !shouldShowRequestPermissionRationale(nearbyPermission())
+    private fun isPermanentlyDenied(permission: String, flagKey: String): Boolean {
+        val granted = ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED
+        if (granted || !permRequested(flagKey)) return false
+        return !shouldShowRequestPermissionRationale(permission)
     }
+
+    private fun nearbyRequested(): Boolean = permRequested("nearby_perm_requested")
+
+    private fun markNearbyRequested() = markPermRequested("nearby_perm_requested")
+
+    private fun isNearbyPermanentlyDenied(): Boolean =
+        isPermanentlyDenied(nearbyPermission(), "nearby_perm_requested")
 
     private fun updateNearbyButtonState() {
         val btn = view?.findViewById<Button>(R.id.btn_request_nearby_permission) ?: return
@@ -234,6 +257,13 @@ class PermissionsFragment : Fragment() {
         }
     }
 
+    private fun markNotificationRequested() = markPermRequested("notification_perm_requested")
+
+    private fun isNotificationPermanentlyDenied(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        return isPermanentlyDenied(Manifest.permission.POST_NOTIFICATIONS, "notification_perm_requested")
+    }
+
     private fun updateBatteryButtonState() {
         val batteryButton = view?.findViewById<Button>(R.id.btn_go_to_battery_settings) ?: return
         if (isBatteryOptimizationDisabled()) {
@@ -251,6 +281,9 @@ class PermissionsFragment : Fragment() {
             if (hasNotificationPermission()) {
                 notificationButton.text = getString(R.string.perm_permission_granted_label)
                 notificationButton.isEnabled = false
+            } else if (isNotificationPermanentlyDenied()) {
+                notificationButton.text = getString(R.string.perm_go_to_settings_label)
+                notificationButton.isEnabled = true
             } else {
                 notificationButton.text = getString(R.string.perm_request_permission_label)
                 notificationButton.isEnabled = true

@@ -69,7 +69,14 @@ data class TransferSession(
      * derive the v2 per-session key and bind the v2 AAD prefix; false keeps the v1 FileSeal path.
      * Orthogonal to [fileGcmNegotiated] (which stays true for both v1 and v2 authenticated streams).
      */
-    @Volatile var fileV2Negotiated: Boolean = false
+    @Volatile var fileV2Negotiated: Boolean = false,
+    /**
+     * One-shot accept latch (incoming sessions): flipped by [DownloadEngine.acceptOffer] under a
+     * lock on the session so a double-tap on the offer UI can't spawn two download coroutines
+     * writing the same .part (AND-19). Lives on the session — not a global registry — so a
+     * sender re-offering the same sessionId (fresh session object) can be accepted again.
+     */
+    @Volatile var acceptStarted: Boolean = false
 ) {
     /**
      * Bumped when a new outgoing send attempt starts. A stale send coroutine — still blocked on a dead

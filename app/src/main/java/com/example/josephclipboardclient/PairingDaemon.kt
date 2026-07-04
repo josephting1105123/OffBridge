@@ -22,10 +22,24 @@ object PairingDaemon {
     private var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob)
     @Volatile var isRunning = false
     @Volatile private var registeredContext: Context? = null
+    // Field (not a launch-local) so stop() can close it: cancelling the scope never interrupts
+    // the blocking accept(), which kept the port bound and made every restart BindException
+    // until the process died (AND-03).
+    @Volatile private var serverSocket: ServerSocket? = null
 
     const val ACTION_PAIRING_ACCEPTED = "com.EntropicSoftwareLab.ClipboardShare.PAIRING_ACCEPTED"
     const val ACTION_PAIRING_DECLINED = "com.EntropicSoftwareLab.ClipboardShare.PAIRING_DECLINED"
     const val ACTION_TRIGGER_PAIRING_NOTIFICATION = "com.EntropicSoftwareLab.ClipboardShare.TRIGGER_PAIRING_NOTIFICATION"
+
+    /** Human-accept window: the initiator's final read, the parked-socket expiry, and the
+     *  confirmation screen's Accept deadline must all agree, or a late Accept records trust
+     *  the initiator never learns about (one-sided pairing, AND-36). */
+    const val PAIR_CONFIRM_WINDOW_MS = 120_000L
+
+    /** Intent-extra key for the accept deadline, shared by the daemon broadcast, the service's
+     *  notification intent, and the confirmation screen — a typo in any hop would silently fall
+     *  back to 0L and disable the expiry check. */
+    const val EXTRA_EXPIRES_AT = "EXPIRES_AT"
 
     private val pendingConfirmations = ConcurrentHashMap<String, PrintWriter>()
 
@@ -75,27 +89,28 @@ object PairingDaemon {
         ContextCompat.registerReceiver(appCtx, confirmationReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         daemonScope.launch {
-            var serverSocket: ServerSocket? = null
+            var socket: ServerSocket? = null
             try {
-                serverSocket = ServerSocket()
-                serverSocket.reuseAddress = true
-                serverSocket.bind(InetSocketAddress("0.0.0.0", Ports.PAIRING))
+                socket = ServerSocket()
+                serverSocket = socket
+                socket.reuseAddress = true
+                socket.bind(InetSocketAddress("0.0.0.0", Ports.PAIRING))
 
                 while (isActive) {
                     try {
-                        val clientSocket = serverSocket.accept()
+                        val clientSocket = socket.accept()
                         handleIncomingPairing(context, clientSocket)
                     } catch (e: Exception) {
                         // A transient accept() error must not permanently kill pairing;
                         // only stop when the socket itself is closed.
-                        if (!isActive || serverSocket.isClosed) break
+                        if (!isActive || socket.isClosed) break
                         e.printStackTrace()
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                serverSocket?.close()
+                socket?.close()
             }
         }
     }
@@ -109,6 +124,10 @@ object PairingDaemon {
         if (!isRunning) return
         isRunning = false
         try { daemonScope.cancel() } catch (_: Exception) {}
+        // Cancelling the scope does NOT unblock accept() — close the socket so the accept
+        // loop exits and the port is actually released for the next start().
+        try { serverSocket?.close() } catch (_: Exception) {}
+        serverSocket = null
         try { registeredContext?.unregisterReceiver(confirmationReceiver) } catch (_: Exception) {}
         registeredContext = null
     }
@@ -177,7 +196,7 @@ object PairingDaemon {
                     // fires when THIS writer is still parked (accept/decline or a newer PAIR_REQ
                     // will have replaced it), avoiding a race with the confirmation broadcast.
                     daemonScope.launch {
-                        delay(120000)
+                        delay(PAIR_CONFIRM_WINDOW_MS)
                         if (pendingConfirmations.remove(senderIp, writer)) {
                             runCatching { socket.close() }
                         }
@@ -203,6 +222,7 @@ object PairingDaemon {
             putExtra("SENDER_IP", senderIp)
             putExtra("AES_KEY", aesKey)
             putExtra("VISUAL_PIN", visualPin)
+            putExtra(EXTRA_EXPIRES_AT, System.currentTimeMillis() + PAIR_CONFIRM_WINDOW_MS)
         }
         context.sendBroadcast(broadcastIntent)
     }

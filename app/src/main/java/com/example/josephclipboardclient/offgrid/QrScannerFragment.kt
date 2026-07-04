@@ -164,12 +164,14 @@ class QrScannerFragment : Fragment() {
     private var pendingFallbackPayload: OffGridPayload? = null
     /** Payload awaiting the one-time Bluetooth-permission ask on the PC-QR (SoftAP) path. */
     private var pendingBtControlPayload: OffGridPayload? = null
-    private var activeSessionId: String? = null
-    private var activeConnection: TransportConnection? = null
+    // @Volatile: written by the IO handshake thread (onTransferStarted), read on Main
+    // (STARTED continuation, teardown, polling) — plain vars had no visibility guarantee (AND-21).
+    @Volatile private var activeSessionId: String? = null
+    @Volatile private var activeConnection: TransportConnection? = null
 
     /** Set once the live joiner is handed to [OffGridLiveTransfer] and we leave for history â€”
      *  tells onDestroyView NOT to tear the transport down (the holder owns it until the download ends). */
-    private var handedOff = false
+    @Volatile private var handedOff = false
 
     /** NFC receive mode (PRESENTATION_NFC): swaps the camera for the tap-position guide while the SAME
      *  NFC reader stays armed and feeds onCandidatePayload exactly like a QR scan. Mirrors the send side. */
@@ -1157,6 +1159,9 @@ class QrScannerFragment : Fragment() {
                             session: TransferSession
                         ) {
                             TransferDaemon.putActiveSession(sessionId, session)
+                            // IO handshake thread; the fields are @Volatile so Main readers
+                            // (STARTED continuation, teardown, polling) see these writes, and
+                            // the withContext join orders them before the continuation (AND-21).
                             activeSessionId = sessionId
                             activeConnection = connection
 
@@ -1232,59 +1237,6 @@ class QrScannerFragment : Fragment() {
                 }
             }
         }
-    }
-
-    /**
-     * Â§2.3, receiver side. The duplex stream is opened by the active
-     * [TransportRoute] â€” SpecifierRoute from the joined network's factory (the
-     * OS does not route to a specifier network by default, edge case 13);
-     * P2pRoute binds the local p2p source address; LanRoute hands over the
-     * already-connected same-LAN link. Protocol bytes are identical on all.
-     */
-    private fun runHandshakeAndReceive(
-        context: Context,
-        payload: OffGridPayload,
-        route: TransportRoute
-    ): OffGridHandshake.HandshakeOutcome {
-        return OffGridHandshake.connectAndReceive(
-            payload = payload,
-            route = route,
-            ecdh = sessionController?.ecdh,
-            isActive = { fragmentJob.isActive },
-            exactSenderIp = exactSenderIp,
-            exactSenderPort = exactSenderPort,
-            listener = object : OffGridHandshake.Listener {
-                override fun onTransferStarted(
-                    sessionId: String,
-                    connection: TransportConnection,
-                    session: TransferSession
-                ) {
-                    TransferDaemon.putActiveSession(sessionId, session)
-                    activeSessionId = sessionId
-                    activeConnection = connection
-
-                    TransferHistoryManager.addRecord(context, TransferRecord(
-                        sessionId = sessionId,
-                        deviceName = session.senderName,
-                        direction = "incoming",
-                        fileNames = session.manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
-                        totalBytes = session.manifest.sumOf { it.second },
-                        timestamp = System.currentTimeMillis(),
-                        status = "transferring",
-                        filesCompleted = 0,
-                        totalFiles = session.totalFiles,
-                        fileSizes = session.manifest.map { it.second },
-                        currentFileOffset = 0L,
-                        transport = "p2p"
-                    ))
-
-                    // Hand the stream to the proven engine â€” byte-for-byte the same
-                    // download path as LAN mode, regardless of carrier.
-                    com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(context, connection, session)
-                    handedOff = true
-                }
-            }
-        )
     }
 
     // ------------------------------------------------------------ receiving

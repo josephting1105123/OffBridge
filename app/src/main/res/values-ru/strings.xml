@@ -272,6 +272,8 @@
     <string name="status_declined_with_icon">Отклонено</string>
     <string name="status_transferring">Передача</string>
     <string name="status_paused">Приостановлено</string>
+    <string name="status_failed">Не удалось</string>
+    <string name="status_pending">Ожидание</string>
     <string name="action_continue">Продолжить</string>
     <string name="action_grant">Предоставить</string>
     <string name="action_receive">Получить</string>
@@ -500,6 +502,7 @@
     <string name="history_tutorial_open">Нажмите кнопку «Открыть», чтобы открыть полученный файл.</string>
     <string name="transfer_incoming_from">От: %1$s (файлов: %2$d)</string>
     <string name="pairing_declined_simple">Сопряжение отклонено</string>
+    <string name="pairing_request_expired">Срок действия этого запроса на сопряжение истёк — начните новое сопряжение с другого устройства.</string>
     <string name="share_text_sending">Отправка текста на ваши устройства…</string>
     <string name="history_share_sheet_hint">Совет: чтобы отправить текст из другого приложения, нажмите кнопку «Поделиться» и выберите Clipboard Share.</string>
     <string name="selected_files_empty_hint">Выбранные файлы будут показаны здесь</string>
@@ -587,6 +590,7 @@
     <string name="perm_nearby_desc">Позволяет приложению находить другие телефоны и подключаться к ним через Wi-Fi Direct для автономных передач. Без этого передачи работают только когда оба устройства находятся в одной сети Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Разрешение на доступ к устройствам поблизости предоставлено.</string>
     <string name="perm_nearby_settings_toast">Разрешите «Устройства поблизости» для этого приложения в разделе «Разрешения», затем вернитесь.</string>
+    <string name="perm_notification_settings_toast">Разрешите «Уведомления» для этого приложения в разделе «Разрешения», затем вернитесь.</string>
     <string name="offgrid_nearby_grant_in_settings">Разрешите «Устройства поблизости» для этого приложения в «Настройки» → «Разрешения», затем повторите.</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

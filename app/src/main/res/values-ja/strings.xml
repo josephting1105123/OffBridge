@@ -269,6 +269,8 @@
     <string name="status_declined_with_icon">拒否</string>
     <string name="status_transferring">転送中</string>
     <string name="status_paused">一時停止</string>
+    <string name="status_failed">失敗</string>
+    <string name="status_pending">保留中</string>
     <string name="action_continue">続行</string>
     <string name="action_grant">許可</string>
     <string name="action_receive">受信</string>
@@ -497,6 +499,7 @@
     <string name="history_tutorial_open">「開く」ボタンを押すと受信したファイルを開けます。</string>
     <string name="transfer_incoming_from">送信元: %1$s (%2$d個のファイル)</string>
     <string name="pairing_declined_simple">ペアリングが拒否されました</string>
+    <string name="pairing_request_expired">このペアリング リクエストは期限切れです。相手のデバイスから新しいペアリングを開始してください。</string>
     <string name="share_text_sending">デバイスにテキストを送信中…</string>
     <string name="history_share_sheet_hint">ヒント：他のアプリからテキストを送るには、そのアプリの共有ボタンをタップして Clipboard Share を選んでください。</string>
     <string name="selected_files_empty_hint">選択したファイルがここに表示されます</string>
@@ -584,6 +587,7 @@
     <string name="perm_nearby_desc">アプリが Wi-Fi Direct 経由で他のスマホを検出して接続し、オフグリッド転送できるようにします。これがないと、両方のデバイスが同じ Wi-Fi ネットワークにあるときのみ転送できます。</string>
     <string name="perm_nearby_granted_toast">近くのデバイスの権限が許可されました。</string>
     <string name="perm_nearby_settings_toast">権限から、このアプリの「近くのデバイス」を許可してから、戻ってください。</string>
+    <string name="perm_notification_settings_toast">権限から、このアプリの「通知」を許可してから、戻ってください。</string>
     <string name="offgrid_nearby_grant_in_settings">設定 → 権限から、このアプリの「近くのデバイス」を許可してから、再試行してください。</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

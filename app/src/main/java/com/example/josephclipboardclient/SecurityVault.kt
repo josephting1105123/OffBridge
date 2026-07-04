@@ -14,15 +14,27 @@ object SecurityVault {
     private const val PLAIN_PREFS_NAME = "ClipboardShare_Prefs"
     private const val MIGRATED_FLAG = "__migrated_from_vault"
 
+    // Built once per process: MasterKey + EncryptedSharedPreferences.create is full Keystore
+    // work, and hot paths (the 2s notification loop, per-peer key lookups during broadcast)
+    // used to redo it on every call — on the Main thread (AND-06).
+    @Volatile private var cachedEncryptedPrefs: android.content.SharedPreferences? = null
+
     private fun getEncryptedPrefs(context: Context): android.content.SharedPreferences {
-        return try {
-            buildEncryptedPrefs(context)
-        } catch (e: Exception) {
-            // Keyset corrupted (restore-to-new-device, Keystore reset, biometric/lock change,
-            // or a legacy plaintext write into this file). Drop it and recreate so the app
-            // stays usable — the only cost is that trusted nodes must be re-paired.
-            try { context.deleteSharedPreferences(PREFS_NAME) } catch (_: Exception) {}
-            buildEncryptedPrefs(context)
+        cachedEncryptedPrefs?.let { return it }
+        synchronized(this) {
+            cachedEncryptedPrefs?.let { return it }
+            val appCtx = context.applicationContext
+            val prefs = try {
+                buildEncryptedPrefs(appCtx)
+            } catch (e: Exception) {
+                // Keyset corrupted (restore-to-new-device, Keystore reset, biometric/lock change,
+                // or a legacy plaintext write into this file). Drop it and recreate so the app
+                // stays usable — the only cost is that trusted nodes must be re-paired.
+                try { appCtx.deleteSharedPreferences(PREFS_NAME) } catch (_: Exception) {}
+                buildEncryptedPrefs(appCtx)
+            }
+            cachedEncryptedPrefs = prefs
+            return prefs
         }
     }
 

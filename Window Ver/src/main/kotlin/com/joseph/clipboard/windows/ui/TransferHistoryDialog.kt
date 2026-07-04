@@ -254,13 +254,18 @@ fun TransferHistoryDialog(
                                 "cancelled", "failed", "declined" -> ErrorColor
                                 else -> MaterialTheme.colors.onBackground.copy(alpha = 0.7f)
                             }
+                            // Icon glyph stays in code; the word comes from the translation file
+                            // (mirrors the Android per-locale status_* strings).
+                            fun tr(key: String, fallback: String): String =
+                                com.joseph.clipboard.windows.storage.TranslationManager.getString(key)
+                                    .takeIf { it != key } ?: fallback
                             val statusLabel = when (record.status) {
-                                "completed" -> "✓ Done"
-                                "transferring" -> "↕ Transferring"
-                                "cancelled" -> "✗ Cancelled"
-                                "failed" -> "✗ Failed"
-                                "declined" -> "✗ Declined"
-                                "pending" -> "⏳ Pending"
+                                "completed" -> "✓ " + tr("status_done_with_icon", "Done")
+                                "transferring" -> "↕ " + tr("status_transferring", "Transferring")
+                                "cancelled" -> "✗ " + tr("status_cancelled", "Cancelled")
+                                "failed" -> "✗ " + tr("status_failed", "Failed")
+                                "declined" -> "✗ " + tr("status_declined", "Declined")
+                                "pending" -> "⏳ " + tr("status_pending", "Pending")
                                 else -> record.status.replaceFirstChar { it.uppercase() }
                             }
 

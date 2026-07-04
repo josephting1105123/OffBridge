@@ -31,6 +31,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
         val senderIp = intent.getStringExtra("SENDER_IP")
         val aesKey = intent.getByteArrayExtra("AES_KEY")
         val visualPin = intent.getStringExtra("VISUAL_PIN")
+        val expiresAt = intent.getLongExtra(PairingDaemon.EXTRA_EXPIRES_AT, 0L)
 
         val deviceNameTextView = findViewById<TextView>(R.id.tv_pairing_device_name)
         val acceptButton = findViewById<Button>(R.id.btn_accept_pairing)
@@ -53,7 +54,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
 
         acceptButton.setOnClickListener {
             if (senderIp != null && aesKey != null) {
-                completePairing(senderIp, aesKey, senderName)
+                completePairing(senderIp, aesKey, senderName, expiresAt)
             } else {
                 clearNotification()
                 finish()
@@ -63,7 +64,19 @@ class PairingConfirmationActivity : AppCompatActivity() {
         declineButton.setOnClickListener { declinePairing(senderIp, senderName) }
     }
 
-    private fun completePairing(senderIp: String, aesKey: ByteArray, senderName: String) {
+    private fun completePairing(senderIp: String, aesKey: ByteArray, senderName: String, expiresAt: Long) {
+        // finish() flips isFinishing synchronously, so this also blocks an Accept double-tap
+        // from re-saving trust and re-broadcasting.
+        if (isFinishing) return
+        // The daemon's parked socket and the initiator's final read both give up after
+        // PAIR_CONFIRM_WINDOW_MS. An Accept on a notification older than that would record
+        // trust only on this side (AND-36) — tell the user to redo the pairing instead.
+        if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
+            Toast.makeText(applicationContext, getString(R.string.pairing_request_expired), Toast.LENGTH_LONG).show()
+            clearNotification()
+            finish()
+            return
+        }
         SecurityVault.saveTrustedNode(applicationContext, senderIp, aesKey)
         SecurityVault.savePairedDeviceName(applicationContext, senderIp, senderName)
         sendBroadcast(Intent(PairingDaemon.ACTION_PAIRING_ACCEPTED).apply {

@@ -272,6 +272,8 @@
     <string name="status_declined_with_icon">Refusé</string>
     <string name="status_transferring">Transfert en cours</string>
     <string name="status_paused">En pause</string>
+    <string name="status_failed">Échec</string>
+    <string name="status_pending">En attente</string>
     <string name="action_continue">Continuer</string>
     <string name="action_grant">Autoriser</string>
     <string name="action_receive">Recevoir</string>
@@ -500,6 +502,7 @@
     <string name="history_tutorial_open">Appuyez sur le bouton Ouvrir pour ouvrir le fichier reçu.</string>
     <string name="transfer_incoming_from">De : %1$s (%2$d fichiers)</string>
     <string name="pairing_declined_simple">Couplage refusé</string>
+    <string name="pairing_request_expired">Cette demande de couplage a expiré : lancez un nouveau couplage depuis l’autre appareil.</string>
     <string name="share_text_sending">Envoi du texte à vos appareils…</string>
     <string name="history_share_sheet_hint">Astuce : pour envoyer du texte depuis une autre application, appuyez sur son bouton Partager et choisissez Clipboard Share.</string>
     <string name="selected_files_empty_hint">Les fichiers sélectionnés s\'afficheront ici</string>
@@ -587,6 +590,7 @@
     <string name="perm_nearby_desc">Permet à l\'application de trouver et de se connecter à d\'autres téléphones via Wi-Fi Direct pour les transferts hors ligne. Sans cela, les transferts ne fonctionnent que lorsque les deux appareils sont sur le même réseau Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Autorisation d\'accès aux appareils à proximité accordée.</string>
     <string name="perm_nearby_settings_toast">Autorisez « Appareils à proximité » pour cette application dans Autorisations, puis revenez.</string>
+    <string name="perm_notification_settings_toast">Autorisez « Notifications » pour cette application dans Autorisations, puis revenez.</string>
     <string name="offgrid_nearby_grant_in_settings">Autorisez « Appareils à proximité » pour cette application dans Paramètres → Autorisations, puis réessayez.</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

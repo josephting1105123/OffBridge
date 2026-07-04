@@ -270,6 +270,10 @@
     <string name="status_transferring">Transferring</string>
     <string name="status_paused">Paused</string>
 
+    <string name="status_failed">Failed</string>
+
+    <string name="status_pending">Pending</string>
+
     <!-- V3.0: Send Via chooser -->
     <string name="send_via_title">Send Via</string>
     <string name="send_via_size_selected">%1$s of files selected</string>
@@ -530,6 +534,8 @@
     <string name="perm_nearby_desc">Lets the app find and connect to other phones over Wi-Fi Direct for off-grid transfers. Without it, transfers only work when both devices are on the same Wi-Fi network.</string>
     <string name="perm_nearby_granted_toast">Nearby devices permission allowed.</string>
     <string name="perm_nearby_settings_toast">Allow \"Nearby devices\" for this app under Permissions, then return.</string>
+
+    <string name="perm_notification_settings_toast">Allow \"Notifications\" for this app under Permissions, then return.</string>
     <string name="offgrid_nearby_grant_in_settings">Allow \"Nearby devices\" for this app in Settings → Permissions, then retry.</string>
     <string name="perm_granted_by_default_label">Granted by Default</string>
     <string name="perm_battery_settings_error_toast">Could not open battery settings automatically.</string>
@@ -581,6 +587,8 @@
     <string name="history_tutorial_open">Press open button to open received file.</string>
     <string name="transfer_incoming_from">From: %1$s (%2$d files)</string>
     <string name="pairing_declined_simple">Pairing declined</string>
+
+    <string name="pairing_request_expired">This pairing request has expired — start a new pairing from the other device.</string>
 
     <!-- Separated QR / NFC send + NFC receive -->
     <string name="send_via_qr">QR</string>

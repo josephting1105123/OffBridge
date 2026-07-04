@@ -314,7 +314,13 @@ object DownloadEngine {
     fun acceptOffer(context: Context, sessionId: String) {
         val session = TransferDaemon.activeSessions[sessionId] ?: return
         if (!session.isIncoming) return
-        
+        // One-shot per session object: a double-tap on the offer dialog/notification must not
+        // spawn a second download coroutine writing the same .part (AND-19).
+        synchronized(session) {
+            if (session.acceptStarted) return
+            session.acceptStarted = true
+        }
+
         session.isPaused = false
         TransferHistoryManager.addRecord(context, TransferRecord(
             sessionId = sessionId,

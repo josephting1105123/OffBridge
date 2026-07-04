@@ -259,6 +259,8 @@
     <string name="status_declined_with_icon">已拒絕</string>
     <string name="status_transferring">傳輸中</string>
     <string name="status_paused">已暫停</string>
+    <string name="status_failed">失敗</string>
+    <string name="status_pending">待處理</string>
     <string name="action_continue">繼續</string>
     <string name="action_grant">授予</string>
     <string name="action_receive">接收</string>
@@ -487,6 +489,7 @@
     <string name="history_tutorial_open">按下開啟按鈕以開啟接收到的檔案。</string>
     <string name="transfer_incoming_from">來自：%1$s（%2$d 個檔案）</string>
     <string name="pairing_declined_simple">配對被拒絕</string>
+    <string name="pairing_request_expired">此配對請求已過期——請從另一台裝置重新發起配對。</string>
     <string name="share_text_sending">正在將文字傳送到您的裝置…</string>
     <string name="history_share_sheet_hint">提示：若要從其他應用程式傳送文字，請點擊其分享按鈕並選擇 Clipboard Share。</string>
     <string name="selected_files_empty_hint">所選的檔案會顯示在這裡</string>
@@ -574,6 +577,7 @@
     <string name="perm_nearby_desc">讓應用程式可透過 Wi-Fi Direct 尋找並連接其他手機以進行離網傳輸。若沒有它，只有在兩台裝置位於同一 Wi-Fi 網路時才能傳輸。</string>
     <string name="perm_nearby_granted_toast">已允許附近裝置權限。</string>
     <string name="perm_nearby_settings_toast">請在「權限」中為此應用程式允許「附近裝置」，然後返回。</string>
+    <string name="perm_notification_settings_toast">請在「權限」中為此應用程式允許「通知」，然後返回。</string>
     <string name="offgrid_nearby_grant_in_settings">請在「設定 → 權限」中為此應用程式允許「附近裝置」，然後重試。</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>

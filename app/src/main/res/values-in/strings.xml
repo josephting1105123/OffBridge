@@ -272,6 +272,10 @@
     <string name="status_declined_with_icon">Ditolak</string>
     <string name="status_transferring">Mentransfer</string>
     <string name="status_paused">Dijeda</string>
+
+    <string name="status_failed">Gagal</string>
+
+    <string name="status_pending">Tertunda</string>
     <string name="action_continue">Lanjutkan</string>
     <string name="action_grant">Berikan</string>
     <string name="action_receive">Terima</string>
@@ -500,6 +504,8 @@
     <string name="history_tutorial_open">Tekan tombol buka untuk membuka file yang diterima.</string>
     <string name="transfer_incoming_from">Dari: %1$s (%2$d file)</string>
     <string name="pairing_declined_simple">Penyandingan ditolak</string>
+
+    <string name="pairing_request_expired">Permintaan penyandingan ini telah kedaluwarsa — mulai penyandingan baru dari perangkat lain.</string>
     <string name="share_text_sending">Mengirim teks ke perangkat Anda…</string>
     <string name="history_share_sheet_hint">Tips: untuk mengirim teks dari aplikasi lain, ketuk tombol Bagikan-nya dan pilih Clipboard Share.</string>
     <string name="selected_files_empty_hint">File yang dipilih akan ditampilkan di sini</string>
@@ -587,6 +593,8 @@
     <string name="perm_nearby_desc">Memungkinkan aplikasi menemukan dan terhubung ke ponsel lain melalui Wi-Fi Direct untuk transfer luar jaringan. Tanpa itu, transfer hanya berfungsi saat kedua perangkat berada di jaringan Wi-Fi yang sama.</string>
     <string name="perm_nearby_granted_toast">Izin perangkat di sekitar diizinkan.</string>
     <string name="perm_nearby_settings_toast">Izinkan \"Perangkat di sekitar\" untuk aplikasi ini di bawah Izin, lalu kembali.</string>
+
+    <string name="perm_notification_settings_toast">Izinkan \"Notifikasi\" untuk aplikasi ini di bawah Izin, lalu kembali.</string>
     <string name="offgrid_nearby_grant_in_settings">Izinkan \"Perangkat di sekitar\" untuk aplikasi ini di Pengaturan → Izin, lalu coba lagi.</string>
     <string name="send_via_qr">QR</string>
     <string name="send_via_nfc">NFC</string>
