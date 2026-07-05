@@ -136,8 +136,14 @@ object OffGridQrSender {
      * and the receiver's ACCEPT_OFFER has been read — the caller then streams
      * the file bytes on the same socket. Returns [HandshakeResult.REJECTED]
      * (and leaves the socket for the caller to close) on any validation failure.
+     *
+     * [manifestEntries] is the caller's name→size snapshot (from its OutgoingFileSession): the
+     * MANIFEST must commit the receiver to exactly the byte counts the streamer will send.
+     * Re-reading file.length() here (the old behavior) let a file change size between this frame
+     * and the stream, silently desyncing the positional read on the receiver (XP-DEF-04). The
+     * pairs travel together so a name can't be zipped against the wrong size.
      */
-    fun runHandshake(socket: Socket, header: String, session: HostSession): HandshakeResult {
+    fun runHandshake(socket: Socket, header: String, session: HostSession, manifestEntries: List<Pair<String, Long>>): HandshakeResult {
         // parts[3] (the receiver name) is untrusted and may contain '|', so index positionally.
         val parts = header.split("|")
         if (parts.size < 5) return HandshakeResult.REJECTED
@@ -173,8 +179,8 @@ object OffGridQrSender {
         out.write("P2P_WELCOME|${session.sessionId}|${Base64.getEncoder().encodeToString(ack)}\n".toByteArray(Charsets.UTF_8))
 
         // Existing single-socket sequence: OFFER then MANIFEST (basenames; trailing '|').
-        val offer = WireFrames.offerLine(session.sessionId, session.deviceName, session.files.size)
-        val manifest = ManifestCodec.encode(session.files.map { it.name to it.length() })
+        val offer = WireFrames.offerLine(session.sessionId, session.deviceName, manifestEntries.size)
+        val manifest = ManifestCodec.encode(manifestEntries)
         out.write(offer.toByteArray(Charsets.UTF_8))
         out.write(manifest.toByteArray(Charsets.UTF_8))
         out.flush()

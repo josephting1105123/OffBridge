@@ -35,6 +35,18 @@ class ClipboardSealVectorTest {
         assertNull(ClipboardSeal.open(key, b, ts))
     }
 
+    @Test
+    fun `replayed blob is rejected even when first accepted at the early clock edge`() {
+        // Mirrors the Android ClipboardSealTest regression: the nonce cache must age by the blob's
+        // embedded timestamp, not the receiver acceptance clock, or a replay accepted at the early
+        // edge of the window slips back in later (XP-DEF-06 clock-model fix).
+        val window = ClipboardSeal.FRESHNESS_WINDOW_MS
+        val replayKey = ByteArray(32) { (0x40 + it).toByte() } // distinct key → isolated nonce cache
+        val blob = ClipboardSeal.seal(replayKey, "cmd: wipe".toByteArray(), ts)
+        assertArrayEquals("cmd: wipe".toByteArray(), ClipboardSeal.open(replayKey, blob, ts - window))
+        assertNull(ClipboardSeal.open(replayKey, blob, ts + window - 1))
+    }
+
     private fun ByteArray.toHex() = joinToString("") { "%02x".format(it) }
     private fun String.hexToBytes() = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 

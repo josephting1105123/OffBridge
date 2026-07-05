@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,7 +51,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens
 
-/** Kind of file-preview tile to render (mirrors FilePreviewAdapter's branches, Coil-free). */
+/** Kind of file-preview tile to render (extension-based branches, Coil-free). */
 enum class FilePreviewKind { IMAGE, FOLDER, TEXT, OTHER }
 
 /**
@@ -73,7 +74,8 @@ data class SendDeviceUi(
 /**
  * Compose rewrite of SendToDevicesFragment's screen: a back-arrow header, a read-only horizontal
  * strip of the chosen files, the paired-device list as selectable cards (System Status DeviceCard
- * look + selected outline/fill), a select-all control and the bottom Send button. Pure presentation:
+ * look + selected outline/fill) on a Send-Files-style tray surface, a select-all control and the
+ * bottom Send button. Pure presentation:
  * all polling / networking / SAF logic stays in the Fragment, which feeds state + callbacks.
  */
 @Composable
@@ -211,39 +213,50 @@ fun SendToDevicesScreen(
                 }
             }
 
-            // Device list — skeletons while the first poll is in flight.
-            if (loading) {
-                repeat(2) {
-                    SkeletonBox(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(DEVICE_CARD_HEIGHT)
-                            .padding(bottom = dimens.spaceMd),
-                        cornerRadius = dimens.radiusLg,
+            // Device list on the Send-Files tray surface (same rounded bottomSheet box as the
+            // "Selected files" grid) — skeletons while the first poll is in flight. The min
+            // height keeps the tray from collapsing to a sliver mid-send if every device drops.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = DEVICE_CARD_HEIGHT)
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(colors.bottomSheet)
+                    .padding(dimens.spaceSm),
+            ) {
+                if (loading) {
+                    Column(verticalArrangement = Arrangement.spacedBy(dimens.spaceMd)) {
+                        repeat(2) {
+                            SkeletonBox(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(DEVICE_CARD_HEIGHT),
+                                cornerRadius = dimens.radiusLg,
+                            )
+                        }
+                    }
+                } else if (devices.isEmpty() && !sending) {
+                    // System-Status-style empty state: no paired device is online, so offer the
+                    // direct fix — jump to the Pairing tab. Suppressed mid-send so a transient
+                    // device dropout can't dangle a tab-switch button under an in-flight batch.
+                    EmptyState(
+                        icon = ImageVector.vectorResource(R.drawable.ic_device),
+                        title = stringResource(R.string.send_no_devices_title),
+                        subtitle = stringResource(R.string.send_no_devices_hint),
+                        actionLabel = stringResource(R.string.action_go_to_pairing),
+                        onAction = onGoToPairing,
                     )
-                }
-            } else if (devices.isEmpty() && !sending) {
-                // System-Status-style empty state: no paired device is online, so offer the
-                // direct fix — jump to the Pairing tab. Suppressed mid-send so a transient
-                // device dropout can't dangle a tab-switch button under an in-flight batch.
-                EmptyState(
-                    icon = ImageVector.vectorResource(R.drawable.ic_device),
-                    title = stringResource(R.string.send_no_devices_title),
-                    subtitle = stringResource(R.string.send_no_devices_hint),
-                    actionLabel = stringResource(R.string.action_go_to_pairing),
-                    onAction = onGoToPairing,
-                    modifier = Modifier.padding(top = dimens.spaceXl),
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(dimens.spaceMd)) {
-                    devices.forEach { device ->
-                        SelectableDeviceCard(
-                            device = device,
-                            selected = selectedIps.contains(device.ip),
-                            colors = colors,
-                            dimens = dimens,
-                            onClick = { onToggleDevice(device.ip) },
-                        )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(dimens.spaceMd)) {
+                        devices.forEach { device ->
+                            SelectableDeviceCard(
+                                device = device,
+                                selected = selectedIps.contains(device.ip),
+                                colors = colors,
+                                dimens = dimens,
+                                onClick = { onToggleDevice(device.ip) },
+                            )
+                        }
                     }
                 }
             }

@@ -511,7 +511,7 @@ private fun FilePreviewCard(
         }
     }
 
-    // Resolve mime type the same way FilePreviewAdapter does (folders can't be resolved).
+    // Resolve mime type from the content resolver (folders can't be resolved).
     val mimeType = remember(item.uri, item.isFolder) {
         if (item.isFolder) "inode/directory"
         else runCatching { context.contentResolver.getType(item.uri) }.getOrNull()
@@ -744,7 +744,7 @@ private fun folderName(context: android.content.Context, uri: Uri): String {
     return docFile?.name ?: "Folder"
 }
 
-/** Mirrors FilePreviewAdapter's "first/.../last" path shortening. */
+/** Shortens a display path to "first/.../last". */
 private fun shortName(displayPath: String): String {
     val parts = displayPath.split("/")
     return if (parts.size > 1) "${parts[0]}/.../${parts.last()}" else parts.last()

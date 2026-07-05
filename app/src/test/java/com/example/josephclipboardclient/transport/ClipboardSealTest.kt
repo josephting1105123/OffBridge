@@ -54,6 +54,21 @@ class ClipboardSealTest {
     }
 
     @Test
+    fun `replayed blob is rejected even when first accepted at the early clock edge`() {
+        // Models a receiver whose clock trails the sender's embedded timestamp by nearly the
+        // whole window at first accept. The nonce cache must age by the blob's own timestamp
+        // (not the acceptance clock), or the replay below slips through. Regression for the
+        // XP-DEF-06 clock-model fix.
+        val window = ClipboardSeal.FRESHNESS_WINDOW_MS
+        val replayKey = ByteArray(32) { (0x40 + it).toByte() } // distinct key → isolated nonce cache
+        val blob = ClipboardSeal.seal(replayKey, "cmd: wipe".toByteArray(), now)
+        // First accept at the early edge (abs == window, still fresh): recorded.
+        assertArrayEquals("cmd: wipe".toByteArray(), ClipboardSeal.open(replayKey, blob, now - window))
+        // Replay of the identical blob later, still inside the timestamp's window → must be null.
+        assertNull(ClipboardSeal.open(replayKey, blob, now + window - 1))
+    }
+
+    @Test
     fun `legacy CBC-style blob is not mistaken for the sealed format`() {
         val legacyIvPlusCt = ByteArray(48) { 0x11 } // looks like IV(16)+ciphertext, no magic prefix
         assertFalse(ClipboardSeal.isSealed(legacyIvPlusCt))

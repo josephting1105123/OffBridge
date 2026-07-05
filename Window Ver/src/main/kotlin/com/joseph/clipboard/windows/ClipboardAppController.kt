@@ -605,7 +605,19 @@ class ClipboardAppController {
             }
             try {
                 socket.soTimeout = 30000
-                val handshake = OffGridQrSender.runHandshake(socket, header, session)
+                // ONE length snapshot drives the wire MANIFEST, the streamer's committed byte
+                // counts, and the history record — three separate file.length() reads let a file
+                // change size between them and desync the receiver's positional read (XP-DEF-04).
+                val outSession = OutgoingFileSession(
+                    session.sessionId,
+                    socket.inetAddress.hostAddress ?: "",
+                    session.files,
+                    transport = "p2p"
+                )
+                val handshake = OffGridQrSender.runHandshake(
+                    socket, header, session,
+                    outSession.files.mapIndexed { i, f -> f.name to outSession.fileSizes[i] }
+                )
                 if (!handshake.accepted) {
                     // Restore the window (only if no newer QR replaced it) so a genuine retry works.
                     qrHost.restorePendingSession(session)
@@ -617,12 +629,6 @@ class ClipboardAppController {
                 // SOFTAP_JOIN or its own direct join, since the TCP dial is the ground truth.
                 qrHost.notifyTransferStarted()
 
-                val outSession = OutgoingFileSession(
-                    session.sessionId,
-                    socket.inetAddress.hostAddress ?: "",
-                    session.files,
-                    transport = "p2p"
-                )
                 activeOutgoingFileSessions[session.sessionId] = outSession
 
                 val record = TransferRecord(
@@ -630,12 +636,12 @@ class ClipboardAppController {
                     deviceName = socket.inetAddress.hostAddress ?: "QR",
                     direction = "outgoing",
                     fileNames = session.files.map { it.name },
-                    totalBytes = session.files.sumOf { it.length() },
+                    totalBytes = outSession.fileSizes.sum(),
                     timestamp = System.currentTimeMillis(),
                     status = "transferring",
                     filesCompleted = 0,
                     totalFiles = session.files.size,
-                    fileSizes = session.files.map { it.length() },
+                    fileSizes = outSession.fileSizes,
                     currentFileOffset = 0L,
                     transport = "p2p"
                 )
@@ -788,7 +794,14 @@ class ClipboardAppController {
      */
     private fun senderFileKey(ip: String, fgcm: Boolean): ByteArray? {
         return when (DowngradePolicy.decide(peerOffersAead = fgcm, pinned = SecurityVault.isFileGcmPinned(ip))) {
-            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(ip); SecurityVault.getAesKey(ip) }
+            // The key can vanish between the trust gate and here (unpair race). Null would read
+            // as "legitimate plaintext" and silently stream cleartext to a peer that asked for
+            // AEAD — fail closed instead (XP-DEF-02, mirrors Android TransferKeys.senderFileKey).
+            DowngradePolicy.Decision.SEAL -> {
+                SecurityVault.pinFileGcm(ip)
+                SecurityVault.getAesKey(ip)
+                    ?: throw DowngradeBlockedException("FileSeal key missing for $ip after SEAL decision — refusing plaintext fallback")
+            }
             DowngradePolicy.Decision.PLAINTEXT -> null
             DowngradePolicy.Decision.BLOCK ->
                 throw DowngradeBlockedException("FileSeal downgrade blocked (sender) for $ip (receiver dropped fgcm)")

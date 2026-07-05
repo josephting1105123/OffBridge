@@ -1,4 +1,4 @@
-﻿package com.EntropicSoftwareLab.ClipboardShare.offgrid
+package com.EntropicSoftwareLab.ClipboardShare.offgrid
 
 import android.Manifest
 import android.content.Context
@@ -70,15 +70,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Receiver screen: CameraX + ML Kit QR scanning and NFC reader mode run
- * simultaneously â€” a tap works on the same screen as the scan, no mode
+ * simultaneously — a tap works on the same screen as the scan, no mode
  * switch. The first valid payload wins; both sources then disarm.
  *
- * V4 receiver state machine (Â§3):
- *   IDLE â†’ SCANNING â†’ PARSING â†’ CONNECTING â†’ HANDSHAKE â†’ RECEIVING â†’ TEARDOWN
+ * V4 receiver state machine (§3):
+ *   IDLE → SCANNING → PARSING → CONNECTING → HANDSHAKE → RECEIVING → TEARDOWN
  *
  * CONNECTING is the whole transport ladder: the [ReceiverSessionController]
  * either executes sender-coordinated TRY_TRANSPORT tiers (BLE control channel
- * up) or runs the local T1 â†’ T0 â†’ T2 ladder (degraded mode). The fragment is
+ * up) or runs the local T1 → T0 → T2 ladder (degraded mode). The fragment is
  * a thin UI over it; the handshake runs over whatever [TransportRoute] wins.
  */
 class QrScannerFragment : Fragment() {
@@ -93,7 +93,7 @@ class QrScannerFragment : Fragment() {
     // is hopped onto the UI scope before touching fragment state.
     private val nfcReader = NfcPayloadReader(
         onRawPayload = { raw -> uiScope.launch { onCandidatePayload(raw) } },
-        // Accumulate read breadcrumbs (binder thread â†’ hop to main) into whichever diagnostic area
+        // Accumulate read breadcrumbs (binder thread → hop to main) into whichever diagnostic area
         // is on screen, so a failed tap shows WHERE it stopped (e.g. "SELECT AID rejected").
         onEvent = { msg ->
             uiScope.launch {
@@ -130,7 +130,7 @@ class QrScannerFragment : Fragment() {
     /** Session-scoped: suppresses the hotspot banner until the user leaves and returns (reset in onResume). */
     private var hotspotWarningDismissed = false
     private lateinit var receiveBlockedOverlay: View
-    /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) â€” suppresses scanning. */
+    /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) — suppresses scanning. */
     @Volatile private var receiveBlocked = false
     private var tvDiag: TextView? = null
     private var diagScroll: android.widget.ScrollView? = null
@@ -156,7 +156,7 @@ class QrScannerFragment : Fragment() {
     private var sessionController: ReceiverSessionController? = null
     /** The live transport once a tier wins (specifier network, P2P join or BT link). */
     private var activeRoute: TransportRoute? = null
-    /** Exact sender endpoint from DATA_READY â€” overrides candidate guessing (Â§9 #8). */
+    /** Exact sender endpoint from DATA_READY — overrides candidate guessing (§9 #8). */
     private var exactSenderIp: String? = null
     private var exactSenderPort: Int? = null
     /** Stashed across the nearby-permission request round-trip. Null = the grant
@@ -169,7 +169,7 @@ class QrScannerFragment : Fragment() {
     @Volatile private var activeSessionId: String? = null
     @Volatile private var activeConnection: TransportConnection? = null
 
-    /** Set once the live joiner is handed to [OffGridLiveTransfer] and we leave for history â€”
+    /** Set once the live joiner is handed to [OffGridLiveTransfer] and we leave for history —
      *  tells onDestroyView NOT to tear the transport down (the holder owns it until the download ends). */
     @Volatile private var handedOff = false
 
@@ -180,7 +180,7 @@ class QrScannerFragment : Fragment() {
     private var receiveNfcGuideView: NfcTapGuideView? = null
     private var receiveNfcGuideHint: TextView? = null
     private var receiveNfcDiag: TextView? = null
-    /** Last NFC read breadcrumbs for the on-screen diagnostic (newest last, capped) â€” so the real
+    /** Last NFC read breadcrumbs for the on-screen diagnostic (newest last, capped) — so the real
      *  failure step stays visible instead of being overwritten by the final generic line. */
     private val nfcDiagLines = ArrayDeque<String>(6)
 
@@ -211,10 +211,10 @@ class QrScannerFragment : Fragment() {
         }
 
     /**
-     * Transport-ladder permission bundle, asked ONCE up front (Â§3.1
+     * Transport-ladder permission bundle, asked ONCE up front (§3.1
      * permission-aware ordering): nearby/fine-location for the true-P2P tiers
      * (T1/T2) plus the runtime Bluetooth pair (API 31+) for the BLE control
-     * channel and the T4 data tier. Either way the ladder runs â€” denials just
+     * channel and the T4 data tier. Either way the ladder runs — denials just
      * reduce it to the permissionless tiers.
      */
     private val requestFallbackPermission =
@@ -226,7 +226,7 @@ class QrScannerFragment : Fragment() {
             pendingFallbackPayload = null
 
             // If the request couldn't show a dialog (nearby permanently denied / OEM-suppressed),
-            // launch() returns immediately still-denied â€” the "Grant" button then appears dead and the
+            // launch() returns immediately still-denied — the "Grant" button then appears dead and the
             // Nearby setting never changes (the reported bug). Escalate to the app's permission settings
             // (where the Nearby devices toggle lives) and DON'T start a doomed degraded ladder (which
             // would pop the flaky Wi-Fi picker over the settings screen); leave a retry for when they
@@ -269,7 +269,7 @@ class QrScannerFragment : Fragment() {
 
     /**
      * One-time Bluetooth-permission ask for the PC-QR (SoftAP) path. A PC that advertises a BLE
-     * control channel lets the phone link the instant it scans â€” live PC status + coordinated retry
+     * control channel lets the phone link the instant it scans — live PC status + coordinated retry
      * instead of the PC waiting blind. That needs BLUETOOTH_SCAN/CONNECT (API 31+), which the SoftAP
      * path never requested before (it only ever needed CHANGE_WIFI_STATE to join). Denial is fine:
      * [connectToGroup] proceeds into the same direct SoftAP join regardless of the grant, so the
@@ -472,7 +472,7 @@ class QrScannerFragment : Fragment() {
             ensureLadderPermissions()
         } else if (nfcMode) {
             // NFC receive: show the tap-position guide, never start the camera. The already-armed NFC
-            // reader (onResume) feeds onCandidatePayload exactly like a QR scan â†’ same confirm/connect.
+            // reader (onResume) feeds onCandidatePayload exactly like a QR scan → same confirm/connect.
             setupNfcReceivePresentation()
             ensureLadderPermissions()
         } else {
@@ -495,8 +495,8 @@ class QrScannerFragment : Fragment() {
 
     /**
      * NFC receive presentation: hide the camera surfaces and show the tap-position guide. The NFC
-     * reader is armed by onResume (state == SCANNING), so a tap runs the IDENTICAL onCandidatePayload â†’
-     * confirm â†’ handshake â†’ transfer path as a QR scan. Mirrors the send-side QrDisplayFragment.nfcMode.
+     * reader is armed by onResume (state == SCANNING), so a tap runs the IDENTICAL onCandidatePayload →
+     * confirm → handshake → transfer path as a QR scan. Mirrors the send-side QrDisplayFragment.nfcMode.
      */
     private fun setupNfcReceivePresentation() {
         // Make the onResume NFC-arm guard (state == SCANNING) pass without starting the camera.
@@ -512,7 +512,7 @@ class QrScannerFragment : Fragment() {
         refreshNfcReceiveHint()
     }
 
-    /** Keep the NFC guide hint honest about the adapter state: unavailable / off (â†’ settings) / ready. */
+    /** Keep the NFC guide hint honest about the adapter state: unavailable / off (→ settings) / ready. */
     private fun refreshNfcReceiveHint() {
         val hint = receiveNfcGuideHint ?: return
         val adapter = NfcAdapter.getDefaultAdapter(requireContext())
@@ -542,10 +542,10 @@ class QrScannerFragment : Fragment() {
     /**
      * Scanner tip. Standalone (no chain) it is a one-shot single step gated by
      * the SharedPreferences flag. When reached via the Receive-screen chain
-     * ([ARG_TUTORIAL]) it renders as "3 / 3 â€” Done" with the offset applied.
+     * ([ARG_TUTORIAL]) it renders as "3 / 3 — Done" with the offset applied.
      */
     private fun maybeShowFirstLaunchTip() {
-        // No camera scan-tip in NFC receive mode â€” the guide replaces the camera + reticle (which the
+        // No camera scan-tip in NFC receive mode — the guide replaces the camera + reticle (which the
         // tip would spotlight). The NFC path is never launched with the tutorial/forced-tour args.
         if (nfcMode) return
         val tutorialMode = arguments?.getBoolean(ARG_TUTORIAL) == true
@@ -553,7 +553,7 @@ class QrScannerFragment : Fragment() {
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
 
         if (!tutorialMode) {
-            // The confirm card is already up for a preset payload â€” no scan tip needed.
+            // The confirm card is already up for a preset payload — no scan tip needed.
             if (arguments?.getString(ARG_PRESET_PAYLOAD) != null) return
             if (prefs.getBoolean("scanner_tutorial_shown", false)) return
         }
@@ -596,7 +596,7 @@ class QrScannerFragment : Fragment() {
                         }
                     }
                 }
-                // Chained from the Receive screen (non-forced): step 3 is the last receive step â€”
+                // Chained from the Receive screen (non-forced): step 3 is the last receive step —
                 // return to the Receive interface instead of leaving the user on the camera.
                 tutorialMode -> {
                     { if (isAdded) requireActivity().finish() }
@@ -618,7 +618,7 @@ class QrScannerFragment : Fragment() {
             analysisExecutor = Executors.newSingleThreadExecutor()
             barcodeScanner = newBarcodeScanner()
         }
-        // Camera-bind is the worst perceived lag in the flow â€” mask it (~300â€“700 ms).
+        // Camera-bind is the worst perceived lag in the flow — mask it (~300–700 ms).
         SkeletonHelper.show(skeletonCameraContainer, R.layout.skeleton_device_card, 2, horizontal = false)
 
         val providerFuture = ProcessCameraProvider.getInstance(requireContext())
@@ -713,7 +713,7 @@ class QrScannerFragment : Fragment() {
     /**
      * On a failed SoftAP-bridge join (the sender is on its hotspot) when THIS device is already
      * occupied by a different Wi-Fi: a single-radio device can't join the hotspot while on another
-     * Wi-Fi, and Android forbids a normal app from disconnecting/connecting Wi-Fi for the user â€” so
+     * Wi-Fi, and Android forbids a normal app from disconnecting/connecting Wi-Fi for the user — so
      * guide them to free it. Once they disconnect (or connect to the hotspot), SOFTAP_JOIN works and
      * the OS auto-restores their network when the transfer ends. Otherwise show the generic error.
      */
@@ -757,7 +757,7 @@ class QrScannerFragment : Fragment() {
             )
             return true
         }
-        // No hotspot/Wi-Fi-radio guidance applied â€” show the generic copy, or name the Bluetooth
+        // No hotspot/Wi-Fi-radio guidance applied — show the generic copy, or name the Bluetooth
         // coordination link when that's the likely cause (sender's CONTROL_FAILED / local degrade).
         tvStatus.text = getString(
             if (controlFailed) R.string.offgrid_error_control_failed else R.string.offgrid_error_all_methods
@@ -767,9 +767,9 @@ class QrScannerFragment : Fragment() {
 
     /**
      * Re-evaluate the radio conflicts that affect receiving, off the main thread:
-     *  - hotspot ON **and** this phone is on another Wi-Fi â†’ receiving can't work at all â†’ HARD BLOCK
+     *  - hotspot ON **and** this phone is on another Wi-Fi → receiving can't work at all → HARD BLOCK
      *    (full-screen modal + scanning suppressed).
-     *  - hotspot ON only â†’ soft dismissible banner (Wi-Fi Direct may be impaired, but a transfer can
+     *  - hotspot ON only → soft dismissible banner (Wi-Fi Direct may be impaired, but a transfer can
      *    still work, e.g. the sender joining this hotspot).
      * detectHotspotIp / isConnectedToOtherWifi iterate NetworkInterface, so they run on Dispatchers.IO.
      */
@@ -778,10 +778,10 @@ class QrScannerFragment : Fragment() {
         uiScope.launch {
             val hotspotOn = withContext(Dispatchers.IO) { Net.detectHotspotIp(appCtx) != null }
             val onOtherWifi = hotspotOn && withContext(Dispatchers.IO) { Net.isConnectedToOtherWifi(appCtx) }
-            // State may have advanced (a scan slipped in) during the IO â€” don't paint over a non-scan UI.
+            // State may have advanced (a scan slipped in) during the IO — don't paint over a non-scan UI.
             if (!isAdded || state != ReceiverState.SCANNING) return@launch
             val hardBlock = hotspotOn && onOtherWifi
-            TransportDiag.log("RX: pre-scan radio check â€” hotspot=$hotspotOn otherWifi=$onOtherWifi â†’ ${if (hardBlock) "BLOCKED" else "ok"}")
+            TransportDiag.log("RX: pre-scan radio check — hotspot=$hotspotOn otherWifi=$onOtherWifi → ${if (hardBlock) "BLOCKED" else "ok"}")
             receiveBlocked = hardBlock
             receiveBlockedOverlay.visibility = if (hardBlock) View.VISIBLE else View.GONE
             hotspotWarningBanner.visibility =
@@ -803,7 +803,7 @@ class QrScannerFragment : Fragment() {
         val adapter = NfcAdapter.getDefaultAdapter(requireContext())
         when {
             adapter == null -> {
-                // In nfcMode the header (and this chip) is hidden â€” the guide hint covers NFC state.
+                // In nfcMode the header (and this chip) is hidden — the guide hint covers NFC state.
                 if (!nfcMode) tvNfcChip.visibility = View.VISIBLE
                 tvNfcChip.text = getString(R.string.offgrid_nfc_unavailable)
                 tvNfcChip.setOnClickListener(null)
@@ -817,7 +817,7 @@ class QrScannerFragment : Fragment() {
             }
             else -> {
                 tvNfcChip.visibility = View.GONE
-                // NFC is armed by evaluateReceiveBlockers() in the onResume tail â€” only AFTER confirming
+                // NFC is armed by evaluateReceiveBlockers() in the onResume tail — only AFTER confirming
                 // receiving isn't hard-blocked (hotspot + other-Wi-Fi), so a tap can't slip through the
                 // async check window into a doomed transfer. The (!payloadConsumed && SCANNING) guard is
                 // applied there too. (NFC starts disarmed on resume: onPause disarms it.)
@@ -826,7 +826,7 @@ class QrScannerFragment : Fragment() {
         // Keep the NFC guide hint honest about the adapter state (e.g. user toggled NFC in settings).
         if (nfcMode) refreshNfcReceiveHint()
 
-        // Proactive "your hotspot is on" warning â€” re-evaluated on every return (e.g. from the
+        // Proactive "your hotspot is on" warning — re-evaluated on every return (e.g. from the
         // tethering screen), and only while actively scanning so it never coexists with the failure
         // card or runs during the ladder. Reset the dismiss first so a return always re-checks the
         // live hotspot state.
@@ -862,7 +862,7 @@ class QrScannerFragment : Fragment() {
                 }
             }
             OffGridPayload.ParseResult.Invalid -> {
-                // Wrong-app QR â€” ignore and keep scanning (edge case 10).
+                // Wrong-app QR — ignore and keep scanning (edge case 10).
             }
         }
     }
@@ -872,7 +872,7 @@ class QrScannerFragment : Fragment() {
         state = ReceiverState.PARSING
         acceptedPayload = payload
         disarmSources()
-        hotspotWarningBanner.visibility = View.GONE  // a payload arrived â€” drop the pre-scan warning
+        hotspotWarningBanner.visibility = View.GONE  // a payload arrived — drop the pre-scan warning
         receiveBlockedOverlay.visibility = View.GONE
 
         tvConfirmTitle.text = getString(R.string.offgrid_confirm_title, payload.senderName.ifEmpty { getString(R.string.unknown_device) })
@@ -890,7 +890,7 @@ class QrScannerFragment : Fragment() {
     private fun disarmSources() {
         try { cameraProvider?.unbindAll() } catch (_: Exception) {}
         // H-h1: this runs from onDestroyView too, where the fragment may already be
-        // detached â€” requireActivity() would throw IllegalStateException. Use the
+        // detached — requireActivity() would throw IllegalStateException. Use the
         // nullable activity so disarm is skipped instead of crashing teardown.
         activity?.let { NfcPayloadReader.disarm(it) }
     }
@@ -936,7 +936,7 @@ class QrScannerFragment : Fragment() {
     private fun connectToGroup(payload: OffGridPayload) {
         // Preflight: WifiNetworkSpecifier never resolves with Wi-Fi off (mobile-data
         // case), and the OS scan results feeding the picker are gated on Location on
-        // API 29â€“30. Re-run on every Retry.
+        // API 29–30. Re-run on every Retry.
         if (!receiverPreflight()) return
 
         messageCard.visibility = View.GONE
@@ -952,22 +952,22 @@ class QrScannerFragment : Fragment() {
         )
 
         // LAN-only (sender on an existing hotspot / shared network) needs no Wi-Fi Direct or
-        // Bluetooth â€” connect straight over LAN, skipping the ladder permission gate.
+        // Bluetooth — connect straight over LAN, skipping the ladder permission gate.
         if (payload.isLanOnly()) {
             startTransportLadder(payload, hasNearbyPermission = false)
             return
         }
 
         // SoftAP bridge: the sender's mobile hotspot is joined via WifiNetworkSpecifier, which needs
-        // only CHANGE_WIFI_STATE/CHANGE_NETWORK_STATE (normal, manifest-declared) â€” NOT
+        // only CHANGE_WIFI_STATE/CHANGE_NETWORK_STATE (normal, manifest-declared) — NOT
         // NEARBY_WIFI_DEVICES. Skip the nearby-permission gate (mirrors LAN-only) so a receiver that
         // denied NEARBY_WIFI_DEVICES can still join the hotspot. BLE control is still attempted
         // opportunistically inside the ladder (gated only on its own BLUETOOTH_SCAN permission).
         if (payload.softApBridge) {
             // PC-QR case: when the sender (a PC) advertises a BLE control channel, asking for the
-            // Bluetooth runtime permission ONCE here lets the phone link over BLE â€” giving the PC live
+            // Bluetooth runtime permission ONCE here lets the phone link over BLE — giving the PC live
             // status and coordinated retry instead of waiting blind. PC-only users never granted it via
-            // the phoneâ†”phone flow, so without this the rescue would silently never engage. Ask only if
+            // the phone↔phone flow, so without this the rescue would silently never engage. Ask only if
             // askable and not asked before; the transfer proceeds into the same direct join either way.
             if ((payload.cap and TransportCaps.BLE_ADVERTISE) != 0 &&
                 !btControlPermRequested() &&
@@ -983,7 +983,7 @@ class QrScannerFragment : Fragment() {
             return
         }
 
-        // Â§3.1 permission-aware ordering: without the nearby/Bluetooth grant the
+        // §3.1 permission-aware ordering: without the nearby/Bluetooth grant the
         // ladder collapses to the flaky SPECIFIER picker, so make the grant
         // reachable instead of silently degrading.
         val missing = missingLadderPermissions()
@@ -1021,8 +1021,8 @@ class QrScannerFragment : Fragment() {
 
     /**
      * Hands the connection problem to the [ReceiverSessionController]: control
-     * channel when the pair supports BLE, the local T1 â†’ T0 â†’ T2 ladder
-     * otherwise. The UI never dead-ends on a single tier any more â€” it shows
+     * channel when the pair supports BLE, the local T1 → T0 → T2 ladder
+     * otherwise. The UI never dead-ends on a single tier any more — it shows
      * "trying method k of n" until a route wins or the whole ladder fails.
      */
     private fun startTransportLadder(payload: OffGridPayload, hasNearbyPermission: Boolean) {
@@ -1040,18 +1040,18 @@ class QrScannerFragment : Fragment() {
         // a fast failure falls through to the Wi-Fi Direct ladder.
         val lanIp = payload.lanIp
         if (lanIp != null) {
-            TransportDiag.log("LAN: probing $lanIp:${payload.port} over current networkâ€¦")
+            TransportDiag.log("LAN: probing $lanIp:${payload.port} over current network…")
             uiScope.launch {
                 val conn = withContext(Dispatchers.IO) { probeLanConnect(lanIp, payload.port) }
                 if (!isAdded || state != ReceiverState.CONNECTING) {
                     conn?.let { try { it.close() } catch (_: Exception) {} }
                     return@launch
                 }
-                TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable âœ“ (same network)" else "unreachable â†’ ladder"}")
+                TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable ✓ (same network)" else "unreachable → ladder"}")
                 when {
                     conn != null -> startHandshake(payload, LanRoute(conn))
                     payload.isLanOnly() -> {
-                        // No AP credentials to join â€” the sender is on its own hotspot / a shared
+                        // No AP credentials to join — the sender is on its own hotspot / a shared
                         // network and expects this phone to already be on it. (Bluetooth is no longer
                         // a data fallback.)
                         state = ReceiverState.FAILED
@@ -1093,7 +1093,7 @@ class QrScannerFragment : Fragment() {
                     if (!isAdded) return
                     val status = when (tier) {
                         TransportDescriptor.SPECIFIER, TransportDescriptor.LOHS ->
-                            // The OS picker dialog is about to appear â€” tell the user why.
+                            // The OS picker dialog is about to appear — tell the user why.
                             getString(R.string.offgrid_status_connecting, payload.senderName)
                         TransportDescriptor.P2P_NEGOTIATED ->
                             getString(R.string.offgrid_status_trying_direct)
@@ -1124,7 +1124,7 @@ class QrScannerFragment : Fragment() {
                     btnReceive.isEnabled = true
                     btnReceive.text = getString(R.string.action_retry)
                     btnReceive.setOnClickListener { connectToGroup(payload) }
-                    // Skip the developer diag dialog when we showed the actionable Wi-Fi guidance card â€”
+                    // Skip the developer diag dialog when we showed the actionable Wi-Fi guidance card —
                     // it'd pop on top and block the "Go to Settings" button.
                     if (!showSoftApGuidanceOrGeneric(payload, controlFailed)) showDiagDialog()
                 }
@@ -1204,7 +1204,7 @@ class QrScannerFragment : Fragment() {
                     }
                 }
                 OffGridHandshake.HandshakeOutcome.BUSY -> {
-                    TransportDiag.log("QR handshake: P2P_BUSY â†’ waiting and retrying")
+                    TransportDiag.log("QR handshake: P2P_BUSY → waiting and retrying")
                     sessionController?.reportHostHandshakeRejected()
                     connectingOverlay.visibility = View.GONE
                     tvStatus.text = getString(R.string.offgrid_error_sender_busy)
@@ -1213,7 +1213,7 @@ class QrScannerFragment : Fragment() {
                     btnReceive.setOnClickListener { connectToGroup(payload) }
                 }
                 OffGridHandshake.HandshakeOutcome.EXPIRED -> {
-                    TransportDiag.log("QR handshake: EXPIRED â†’ waiting and retrying")
+                    TransportDiag.log("QR handshake: EXPIRED → waiting and retrying")
                     sessionController?.reportHostHandshakeRejected()
                     connectingOverlay.visibility = View.GONE
                     tvStatus.text = getString(R.string.offgrid_error_code_expired)
@@ -1229,7 +1229,7 @@ class QrScannerFragment : Fragment() {
                     btnReceive.text = getString(R.string.action_retry)
                     sessionController?.reportHandshakeFailed()
                     // The route may still be usable (specifier OK, socket failed):
-                    // retry the handshake on it â€” no second OS dialog.
+                    // retry the handshake on it — no second OS dialog.
                     btnReceive.setOnClickListener {
                         btnReceive.isEnabled = false
                         startHandshake(payload, route)
@@ -1248,7 +1248,7 @@ class QrScannerFragment : Fragment() {
             while (isActive) {
                 val session = TransferDaemon.activeSessions[sessionId]
                 if (session == null) {
-                    // Session gone: completed (or cancelled) â€” read the record.
+                    // Session gone: completed (or cancelled) — read the record.
                     val record = TransferHistoryManager.getRecords(requireContext())
                         .find { it.sessionId == sessionId }
                     if (record?.status == "completed") {
@@ -1285,11 +1285,11 @@ class QrScannerFragment : Fragment() {
     }
 
     /**
-     * Download started â†’ hand the live Wi-Fi joiner/ladder to the process-lifetime [OffGridLiveTransfer]
+     * Download started → hand the live Wi-Fi joiner/ladder to the process-lifetime [OffGridLiveTransfer]
      * holder (so leaving the camera doesn't tear the link down) and start the foreground session service
      * to keep the process alive while the download runs off-screen, then finish to the transfer-history
      * details page. The holder runs this teardown when the download reaches a terminal state (driven from
-     * TransferDaemon's finally â†’ finishIfArmed). Captures only app context + the controller, never the
+     * TransferDaemon's finally → finishIfArmed). Captures only app context + the controller, never the
      * fragment.
      */
     private fun handOffAndOpenHistory(sessionId: String) {
@@ -1333,7 +1333,7 @@ class QrScannerFragment : Fragment() {
     /**
      * Resume after a mid-transfer drop reuses RESUME_REQUEST verbatim, but
      * requires the group (and our specifier network) to still exist; if
-     * teardown already ran, the UX is "re-scan to resume" â€” the session
+     * teardown already ran, the UX is "re-scan to resume" — the session
      * record persists in history as paused (edge case 11).
      */
     private fun resumeReceive() {
@@ -1410,7 +1410,7 @@ class QrScannerFragment : Fragment() {
         fragmentJob.cancel()
         disarmSources()
         // When the download was handed off (we left the camera mid-transfer), OffGridLiveTransfer now
-        // owns the joiner and tears it down on completion â€” tearing it down here would kill the
+        // owns the joiner and tears it down on completion — tearing it down here would kill the
         // in-flight download. Otherwise release the control channel + every joiner the ladder drove
         // (the specifier request, P2P groups, BT links); the phone returns to its home Wi-Fi.
         if (!handedOff) sessionController?.teardown()
@@ -1432,7 +1432,7 @@ class QrScannerFragment : Fragment() {
         const val ARG_TUTORIAL = "ARG_TUTORIAL"
         /** Renders the scanner tip as the final step 22 / 22 of the forced first-launch tour. */
         const val ARG_FORCED_TOUR = "ARG_FORCED_TOUR"
-        /** Presentation forwarded from OffGridSendActivity; PRESENTATION_NFC â†’ NFC tap-guide (no camera). */
+        /** Presentation forwarded from OffGridSendActivity; PRESENTATION_NFC → NFC tap-guide (no camera). */
         const val ARG_PRESENTATION = "ARG_PRESENTATION"
 
         /** Brief dwell on the "complete" state before opening history details. */
@@ -1442,12 +1442,12 @@ class QrScannerFragment : Fragment() {
          *  to Wi-Fi Direct quickly. */
         private const val LAN_PROBE_TIMEOUT_MS = 2_500
 
-        /** H-h4: hard cap on a single control line â€” guards against a hostile peer on
+        /** H-h4: hard cap on a single control line — guards against a hostile peer on
          *  the joined group streaming an unbounded line to OOM the receiver. */
         private const val MAX_LINE_BYTES = 64 * 1024
 
         /** Shared prefs file (app-wide) + key tracking whether the ladder-permission
-         *  bundle has been requested at least once â€” disambiguates "never asked"
+         *  bundle has been requested at least once — disambiguates "never asked"
          *  from "permanently denied" for [isPermanentlyDenied]. */
         private const val PERM_PREFS = "FileBridgePrefs"
         private const val KEY_LADDER_PERM_REQUESTED = "ladder_perm_requested_v1"

@@ -1,4 +1,4 @@
-﻿package com.EntropicSoftwareLab.ClipboardShare
+package com.EntropicSoftwareLab.ClipboardShare
 
 import android.content.Intent
 import android.os.Bundle

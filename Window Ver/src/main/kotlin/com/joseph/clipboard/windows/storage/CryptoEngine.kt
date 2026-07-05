@@ -1,7 +1,5 @@
 package com.joseph.clipboard.windows.storage
 
-import java.io.InputStream
-import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.KeyFactory
@@ -13,8 +11,6 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
 import javax.crypto.KeyAgreement
 import javax.crypto.Mac
 import javax.crypto.spec.IvParameterSpec
@@ -116,23 +112,10 @@ object CryptoEngine {
         return bytes
     }
 
-    fun getEncryptingStream(outStream: OutputStream, key: ByteArray, iv: ByteArray): CipherOutputStream {
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val secretKeySpec = SecretKeySpec(key, "AES")
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivSpec)
-
-        return CipherOutputStream(outStream, cipher)
-    }
-
-    fun getDecryptingStream(inStream: InputStream, key: ByteArray, iv: ByteArray): CipherInputStream {
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val secretKeySpec = SecretKeySpec(key, "AES")
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivSpec)
-
-        return CipherInputStream(inStream, cipher)
-    }
+    // getEncryptingStream/getDecryptingStream (unauthenticated AES/CBC stream wrappers) were
+    // removed in 3.5.1 (XP-DEF-07, mirroring the Android CryptoEngine): zero callers since
+    // FileSeal became the only bulk cipher, and a live CBC stream primitive invited silent
+    // reintroduction onto the transfer path.
 
     // Authenticated discrete payload (AES-256-GCM via ClipboardSeal) — the only clipboard cipher
     // since the CBC retirement in 3.5.0. Output is standard Base64 of the sealed blob, matching

@@ -1,4 +1,4 @@
-﻿package com.EntropicSoftwareLab.ClipboardShare
+package com.EntropicSoftwareLab.ClipboardShare
 
 import android.content.Context
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
@@ -23,7 +23,7 @@ object DownloadEngine {
     }
 
     /**
-     * V4 Â§2: the carrier-neutral download path. Protocol bytes are identical
+     * V4 §2: the carrier-neutral download path. Protocol bytes are identical
      * over TCP and Bluetooth; only the duplex-stream carrier differs.
      * A non-null [fileKey] (the shared pairing key) means the bulk stream is FileSeal-sealed and is
      * decrypted here; null keeps the legacy plaintext read (off-grid + legacy peers).
@@ -157,10 +157,10 @@ object DownloadEngine {
                 }
 
                 // End-to-end delivery confirmation: tell the sender every byte is on disk so it
-                // declares "completed" on delivery, not on its own TCP write. Best-effort â€” an old
+                // declares "completed" on delivery, not on its own TCP write. Best-effort — an old
                 // sender (no COMPLETION_ACK cap) never set this flag and isn't waiting for it.
                 // Gate "completed" on the delivery ack actually reaching the sender. If the ack write
-                // fails, the sender still sees the transfer as incomplete and will resume â€” so mark it
+                // fails, the sender still sees the transfer as incomplete and will resume — so mark it
                 // paused here too (keeping the session) rather than falsely declaring it completed.
                 val ackDelivered = if (session.completionAckRequired) {
                     try {
@@ -188,7 +188,7 @@ object DownloadEngine {
                     session.isPaused = true
                     session.lastUpdated = System.currentTimeMillis()
                     TransferHistoryManager.updateStatus(context, session.sessionId, "paused", session.currentFileIndex, session.currentOffset)
-                    // Transient drop while the L2 route persists â†’ re-dial automatically (bounded +
+                    // Transient drop while the L2 route persists → re-dial automatically (bounded +
                     // backed off). A genuinely dead route makes every attempt fail with no progress
                     // and the session is left paused for a manual resume after the budget runs out.
                     TransferDaemon.scheduleAutoResume(context, session)
@@ -205,7 +205,7 @@ object DownloadEngine {
 
     /**
      * Make a finished download visible to the gallery / Files app. The receiver writes to Download
-     * via the raw File API, which never inserts a MediaStore row â€” so images and videos sit on disk
+     * via the raw File API, which never inserts a MediaStore row — so images and videos sit on disk
      * but appear in no gallery until some eventual system scan. Hand the file to the media scanner
      * explicitly to create that row now. It infers the MIME from the file (so non-media files are
      * harmless) and keys on the path (so re-scanning the same file is idempotent). No storage
@@ -285,7 +285,7 @@ object DownloadEngine {
 
                 executeDownloadStream(context, socket, session, fileKey)
             } catch (e: DowngradeBlockedException) {
-                // The sender's FileSeal capability vanished after a prior sealed transfer â€” refuse the
+                // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
                 // Mark cancelled and drop the session from the active map (as every other terminal path
                 // does) so it can't linger as a zombie or be re-driven by a later frame.
@@ -360,7 +360,7 @@ object DownloadEngine {
 
                 executeDownloadStream(context, socket, session, fileKey)
             } catch (e: DowngradeBlockedException) {
-                // The sender's FileSeal capability vanished after a prior sealed transfer â€” refuse the
+                // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
                 // Mark cancelled and drop the session from the active map (as every other terminal path
                 // does) so it can't linger as a zombie or be re-driven by a later frame.

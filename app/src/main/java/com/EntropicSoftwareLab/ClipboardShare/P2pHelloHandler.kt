@@ -1,4 +1,4 @@
-﻿package com.EntropicSoftwareLab.ClipboardShare
+package com.EntropicSoftwareLab.ClipboardShare
 
 import android.content.Context
 import android.content.Intent
@@ -19,16 +19,16 @@ import java.util.UUID
 
 object P2pHelloHandler {
     internal fun handleP2pHello(context: Context, connection: TransportConnection, header: String) {
-        TransportDiag.log("TX: P2P_HELLO received from ${connection.remoteIdentifier} â€” validating")
+        TransportDiag.log("TX: P2P_HELLO received from ${connection.remoteIdentifier} — validating")
         val ctx = TransferDaemon.p2pContext
         if (ctx == null) {
             // A receiver hosting as GO can dial its own GO IP and reach THIS server (no send context
             // here). Name that case so it isn't mis-triaged as "sender closed / token mismatch".
             val remote = connection.remoteIdentifier
             if (remote.isNotEmpty() && remote in Net.localIpv4Addresses()) {
-                TransportDiag.log("TX: P2P_HELLO dropped â€” self-connection (dialed our own GO IP $remote)")
+                TransportDiag.log("TX: P2P_HELLO dropped — self-connection (dialed our own GO IP $remote)")
             } else {
-                TransportDiag.log("TX: P2P_HELLO dropped â€” no active send context (TransferDaemon.p2pContext=null)")
+                TransportDiag.log("TX: P2P_HELLO dropped — no active send context (TransferDaemon.p2pContext=null)")
             }
             try { connection.close() } catch (_: Exception) {}
             return
@@ -36,13 +36,13 @@ object P2pHelloHandler {
 
         val parts = header.split('|')
         if (parts.size < 5) {
-            TransportDiag.log("TX: P2P_HELLO dropped â€” malformed (${parts.size} fields)")
+            TransportDiag.log("TX: P2P_HELLO dropped — malformed (${parts.size} fields)")
             try { connection.close() } catch (_: Exception) {}
             return
         }
 
         if (ctx.busy) {
-            TransportDiag.log("TX: P2P_HELLO â€” already busy with another peer â†’ sent P2P_BUSY")
+            TransportDiag.log("TX: P2P_HELLO — already busy with another peer → sent P2P_BUSY")
             // A peer is already in HANDSHAKE/TRANSFERRING (edge case 9).
             TransferDaemon.daemonScope.launch(Dispatchers.IO) {
                 try {
@@ -66,36 +66,36 @@ object P2pHelloHandler {
             receiverPubKey = android.util.Base64.decode(parts[2], android.util.Base64.NO_WRAP)
             helloHmac = android.util.Base64.decode(parts[4], android.util.Base64.NO_WRAP)
         } catch (_: Exception) {
-            TransportDiag.log("TX: P2P_HELLO dropped â€” base64 decode failed")
+            TransportDiag.log("TX: P2P_HELLO dropped — base64 decode failed")
             try { connection.close() } catch (_: Exception) {}
             return
         }
         val receiverName = parts[3].ifEmpty { "Unknown Device" }
 
         // Token comparison must be constant-time (stale/expired tokens are
-        // silently ignored â€” edge case 8: receiver times out client-side).
+        // silently ignored — edge case 8: receiver times out client-side).
         if (!java.security.MessageDigest.isEqual(tokenBytes, ctx.token)) {
-            TransportDiag.log("TX: P2P_HELLO dropped â€” TOKEN mismatch (stale QR / wrong session)")
+            TransportDiag.log("TX: P2P_HELLO dropped — TOKEN mismatch (stale QR / wrong session)")
             try { connection.close() } catch (_: Exception) {}
             return
         }
 
-        // K = SHA-256(ECDH(senderPriv, receiverPub)) â€” same derivation as pairing.
+        // K = SHA-256(ECDH(senderPriv, receiverPub)) — same derivation as pairing.
         val sharedKey = try {
             ctx.ecdh.deriveSecrets(receiverPubKey).first
         } catch (_: Exception) {
-            TransportDiag.log("TX: P2P_HELLO dropped â€” ECDH key derivation failed")
+            TransportDiag.log("TX: P2P_HELLO dropped — ECDH key derivation failed")
             try { connection.close() } catch (_: Exception) {}
             return
         }
 
         val expectedHmac = SessionCrypto.hmacSha256(sharedKey, tokenBytes)
         if (!java.security.MessageDigest.isEqual(helloHmac, expectedHmac)) {
-            TransportDiag.log("TX: P2P_HELLO dropped â€” HMAC mismatch (key disagreement)")
+            TransportDiag.log("TX: P2P_HELLO dropped — HMAC mismatch (key disagreement)")
             try { connection.close() } catch (_: Exception) {}
             return
         }
-        TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' â†’ sending P2P_WELCOME + OFFER")
+        TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' → sending P2P_WELCOME + OFFER")
 
         ctx.busy = true
         val sessionId = UUID.randomUUID().toString()
@@ -120,7 +120,7 @@ object P2pHelloHandler {
                 outStream.write(offerHeader.toByteArray(Charsets.UTF_8))
                 outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
                 outStream.flush()
-                TransportDiag.log("TX: P2P_WELCOME+OFFER+MANIFEST flushed â€” awaiting ACCEPT_OFFER (30s)")
+                TransportDiag.log("TX: P2P_WELCOME+OFFER+MANIFEST flushed — awaiting ACCEPT_OFFER (30s)")
 
                 val session = TransferSession(
                     sessionId = sessionId,
@@ -152,12 +152,12 @@ object P2pHelloHandler {
                 ctx.onPeerConnected(receiverName)
 
                 // Receiver replies ACCEPT_OFFER on the same socket. A COMPLETION_ACK-capable
-                // receiver appends "|ack" â€” it will send TRANSFER_COMPLETE once everything is
+                // receiver appends "|ack" — it will send TRANSFER_COMPLETE once everything is
                 // on disk, so we hold off declaring completion until then.
                 val reply = TransferUtils.readUntilNewline(connection.input)
                 val replyParts = reply.split('|')
                 if (replyParts.getOrNull(0) != "ACCEPT_OFFER" || replyParts.getOrNull(1) != sessionId) {
-                    TransportDiag.log("TX: expected ACCEPT_OFFER, got '${reply.take(24)}' â†’ aborting")
+                    TransportDiag.log("TX: expected ACCEPT_OFFER, got '${reply.take(24)}' → aborting")
                     TransferDaemon.removeActiveSession(sessionId)
                     TransferHistoryManager.updateStatus(context, sessionId, "declined")
                     ctx.onTransferError(false)
@@ -165,7 +165,7 @@ object P2pHelloHandler {
                 }
                 val ackExpected = replyParts.getOrNull(2) == "ack"
 
-                TransportDiag.log("TX: ACCEPT_OFFER received â†’ streaming files")
+                TransportDiag.log("TX: ACCEPT_OFFER received → streaming files")
                 TransferHistoryManager.updateStatus(context, sessionId, "transferring")
                 val myGen = session.sendGeneration.incrementAndGet()
 
@@ -189,7 +189,7 @@ object P2pHelloHandler {
                         TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
                         ctx.onTransferError(false)
                     } else if (session.sendGeneration.get() == myGen) {
-                        // Only the current send generation may pause the session â€” a stale write here
+                        // Only the current send generation may pause the session — a stale write here
                         // (this send timed out ~20 s after a drop) must not clobber a fresh resume.
                         session.isPaused = true
                         session.lastUpdated = System.currentTimeMillis()

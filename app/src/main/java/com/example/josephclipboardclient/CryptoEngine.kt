@@ -1,8 +1,6 @@
 package com.EntropicSoftwareLab.ClipboardShare
 
 import android.util.Base64
-import java.io.InputStream
-import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.KeyFactory
@@ -13,8 +11,6 @@ import java.security.SecureRandom
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
-import javax.crypto.CipherInputStream
-import javax.crypto.CipherOutputStream
 import javax.crypto.KeyAgreement
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -109,27 +105,9 @@ object CryptoEngine {
         return bytes
     }
 
-    // 2. O(1) Stream Wrapper for Outbound File Transfers
-    fun getEncryptingStream(outStream: OutputStream, key: ByteArray, iv: ByteArray): CipherOutputStream {
-        requireValidAesKey(key) // H-26: fail fast on bad key size before SecretKeySpec/cipher.init
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val secretKeySpec = SecretKeySpec(key, "AES")
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivSpec)
-
-        return CipherOutputStream(outStream, cipher)
-    }
-
-    // 3. O(1) Stream Wrapper for Inbound File Transfers
-    fun getDecryptingStream(inStream: InputStream, key: ByteArray, iv: ByteArray): CipherInputStream {
-        requireValidAesKey(key) // H-26: fail fast on bad key size before SecretKeySpec/cipher.init
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val secretKeySpec = SecretKeySpec(key, "AES")
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivSpec)
-
-        return CipherInputStream(inStream, cipher)
-    }
+    // getEncryptingStream/getDecryptingStream (unauthenticated AES/CBC stream wrappers) were
+    // removed in 3.5.1 (XP-DEF-07): zero callers since FileSeal became the only bulk cipher,
+    // and keeping a live CBC stream primitive invited silent reintroduction.
 
     // 4a. Authenticated discrete payload (AES-256-GCM via ClipboardSeal). Preferred for clipboard
     // text/commands with peers that advertise the GCM capability; gives integrity + replay bounding

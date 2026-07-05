@@ -1,4 +1,4 @@
-﻿package com.EntropicSoftwareLab.ClipboardShare
+package com.EntropicSoftwareLab.ClipboardShare
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,7 +13,6 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
-import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import kotlinx.coroutines.*
 import java.io.InputStream
@@ -76,7 +75,7 @@ object TransferDaemon {
         _p2pContext = context
     }
 
-    // A failed child (uncaught exception) must not tear down its siblings â€” one dead discovery/
+    // A failed child (uncaught exception) must not tear down its siblings — one dead discovery/
     // transfer coroutine should never silently kill the whole daemon. SupervisorJob isolates
     // failures; the handler logs the escape so it isn't swallowed without trace.
     private val daemonExceptionHandler = CoroutineExceptionHandler { _, e ->
@@ -86,7 +85,7 @@ object TransferDaemon {
         }
     }
 
-    // var (not val) so [stop] can cancel the scope and a later [start] can rebuild it â€” a cancelled
+    // var (not val) so [stop] can cancel the scope and a later [start] can rebuild it — a cancelled
     // CoroutineScope cannot relaunch, so the daemon needs a fresh Job/scope on restart.
     private var daemonJob = SupervisorJob()
     internal var daemonScope = CoroutineScope(Dispatchers.IO + daemonJob + daemonExceptionHandler)
@@ -125,7 +124,7 @@ object TransferDaemon {
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "JosephClipboardClient:TransferDaemonWakeLock")
             // Bounded acquire so a missed release() (e.g. process killed before stop()) can't pin the
-            // CPU/radio awake for the whole process life â€” the lock auto-releases after the timeout.
+            // CPU/radio awake for the whole process life — the lock auto-releases after the timeout.
             wakeLock?.acquire(WAKELOCK_TIMEOUT_MS)
 
             // WifiLock has no timed acquire() overload; the CPU wake lock (above) carries the bounded
@@ -158,7 +157,7 @@ object TransferDaemon {
                         // the LAN can spoof. Only auto-dial a paired peer (we hold its key); and if the
                         // session was authenticated (AES-GCM) once, refuse an IP that isn't FGCM-pinned
                         // so a same-name impostor can't force an unauthenticated downgrade. A blocked
-                        // match is treated as "sender not present" â€” the session stays paused.
+                        // match is treated as "sender not present" — the session stays paused.
                         val senderIp = _discoveredNodes.entries.find { it.value.name == session.senderName }?.key
                             ?.takeIf { ip ->
                                 SecurityVault.getKeyForNode(context, ip) != null &&
@@ -219,12 +218,12 @@ object TransferDaemon {
     }
 
     /**
-     * Full shutdown â€” the counterpart [start] never had. Cancels the discovery / TCP-server /
+     * Full shutdown — the counterpart [start] never had. Cancels the discovery / TCP-server /
      * resume coroutines and releases the three radio/CPU locks [start] acquires. Without this the
      * PARTIAL_WAKE_LOCK + Wi-Fi lock + multicast lock stayed held for the entire process lifetime
      * (pinning the CPU awake and the radio in high-power mode) with no way for the user to release
      * them short of force-stop. Idempotent; safe to call when not running. Call only on a genuine
-     * app shutdown (Power Off) â€” the daemon is a shared singleton many screens [start]; a later
+     * app shutdown (Power Off) — the daemon is a shared singleton many screens [start]; a later
      * [start] rebuilds the scope.
      */
     fun stop() {
@@ -244,41 +243,6 @@ object TransferDaemon {
     }
 
 
-    /**
-     * Â§2.3 protocol extension. Off-grid handshake, sender side:
-     *
-     *   Receiver â†’ P2P_HELLO|token|receiverPubKey|deviceName|HMAC(K, token)
-     *   Sender   â†’ P2P_WELCOME|sessionId|HMAC(K, token || "ack")  (or P2P_BUSY)
-     *
-     * then OFFER + MANIFEST on the same socket, receiver replies
-     * ACCEPT_OFFER|sessionId on the same socket (no reconnect â€” there is no
-     * discovery to re-resolve the peer), then raw 8 KiB chunk streaming.
-     *
-     * The paired-device key check is bypassed: admission is by token + HMAC.
-     * This branch is unreachable without a registered advertising context.
-     */
-    /**
-     * Generic entry point for an out-of-band [TransportConnection] (one accepted outside the main
-     * 0.0.0.0 TCP listener): it is dispatched into the same P2P_HELLO protocol the TCP listener
-     * speaks. Reads the first line on IO and routes; non-HELLO traffic is dropped. (Carrier-agnostic
-     * â€” the retired BT data tier used this; a future network-bound SoftAP server would reuse it.)
-     */
-    fun dispatchTransportConnection(context: Context, connection: TransportConnection) {
-        daemonScope.launch(Dispatchers.IO) {
-            try {
-                val header = TransferUtils.readUntilNewline(connection.input)
-                if (header.startsWith("P2P_HELLO|")) {
-                    P2pHelloHandler.handleP2pHello(context, connection, header)
-                } else {
-                    connection.close()
-                }
-            } catch (_: Exception) {
-                try { connection.close() } catch (_: Exception) {}
-            }
-        }
-    }
-
-
 
 
     /**
@@ -291,7 +255,7 @@ object TransferDaemon {
 
     /**
      * Auto-reconnect budget for a dropped incoming transfer. Each no-progress retry backs off
-     * linearly ([AUTO_RESUME_BASE_DELAY_MS] Ã— attempt, i.e. 1.5s/3s/4.5s/6s); after
+     * linearly ([AUTO_RESUME_BASE_DELAY_MS] × attempt, i.e. 1.5s/3s/4.5s/6s); after
      * [MAX_AUTO_RESUME_ATTEMPTS] consecutive failures with no advance the session is left paused
      * for a manual resume. Any byte of progress resets the counter (see [TransferSession]).
      */
@@ -300,12 +264,12 @@ object TransferDaemon {
 
     /**
      * Adaptive discovery cadence. Broadcasting starts at [DISCOVERY_INTERVAL_MIN_MS] and doubles
-     * each stable cycle up to [DISCOVERY_INTERVAL_MAX_MS] (3s â†’ 6s â†’ 12s), collapsing back to MIN
+     * each stable cycle up to [DISCOVERY_INTERVAL_MAX_MS] (3s → 6s → 12s), collapsing back to MIN
      * whenever the daemon (re)starts, a new peer appears, or the discovered-device set changes.
      * [DISCOVERY_WAKE_WINDOW_MS] is how long a wake event pins the fast cadence. The staleness
      * window [DISCOVERY_NODE_TIMEOUT_MS] is widened from the old hard-coded 8s (which assumed a 3s
      * broadcast) so a peer heard only on the slow cadence isn't flickered out of the list between
-     * broadcasts â€” it gives ~8s of margin over the MAX interval. Wire format is unchanged, so this
+     * broadcasts — it gives ~8s of margin over the MAX interval. Wire format is unchanged, so this
      * stays fully interoperable with the Windows client (which keeps its own cadence).
      */
     /**
@@ -335,15 +299,15 @@ object TransferDaemon {
     /**
      * OFFER admission-proof capability token, advertised comma-joined after [FILE_GCM_CAP_V2]
      * (`...|Android|GCM1,FGCM1,FGCM2,AUTH2`). Presence means the peer will answer an OFFER_CHALLENGE
-     * with an HMAC proof of the shared pairing key before the receiver shows the incoming-file popup â€”
+     * with an HMAC proof of the shared pairing key before the receiver shows the incoming-file popup —
      * closing the "spoof a paired peer's IP to raise a popup without holding the key" hole. A receiver
      * only issues the challenge to a sender that advertises this; a sender always tolerates both the
-     * challenge and the direct OFFER_RECEIVED, so oldâ†”new stays byte-identical. Parsed into
+     * challenge and the direct OFFER_RECEIVED, so old↔new stays byte-identical. Parsed into
      * [DiscoveredDevice.supportsAuth2].
      */
     const val OFFER_AUTH_CAP = "AUTH2"
 
-    /** Capability list advertised in discovery â€” comma-joined, order-stable, parsed by `contains`. */
+    /** Capability list advertised in discovery — comma-joined, order-stable, parsed by `contains`. */
     internal val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP"
     internal const val DISCOVERY_INTERVAL_MIN_MS = 3000L
     internal const val DISCOVERY_INTERVAL_MAX_MS = 12000L
@@ -361,7 +325,7 @@ object TransferDaemon {
 
     /**
      * A dropped incoming transfer auto-reconnects by re-invoking [resumeIncomingTransfer] (which
-     * re-dials the sender, recomputes the on-disk offset, and re-streams) â€” bounded and backed off
+     * re-dials the sender, recomputes the on-disk offset, and re-streams) — bounded and backed off
      * so transient blips self-heal without a tap while a dead route still degrades to manual resume.
      */
     internal fun scheduleAutoResume(context: Context, session: TransferSession): Boolean {
@@ -372,16 +336,16 @@ object TransferDaemon {
         // dials that can never connect only delays the paused state, so leave p2p sessions for a
         // route-aware manual resume from the off-grid scan screen instead.
         if (session.transport == "p2p") {
-            TransportDiag.log("RX: auto-resume skipped for off-grid (p2p) session ${session.sessionId} â€” needs route-aware manual resume")
+            TransportDiag.log("RX: auto-resume skipped for off-grid (p2p) session ${session.sessionId} — needs route-aware manual resume")
             return false
         }
-        // Progress since the last attempt â†’ the link is alive and moving; forgive prior failures.
+        // Progress since the last attempt → the link is alive and moving; forgive prior failures.
         if (session.currentOffset > session.lastResumeOffset) {
             session.autoResumeAttempts = 0
         }
         session.lastResumeOffset = session.currentOffset
         if (session.autoResumeAttempts >= MAX_AUTO_RESUME_ATTEMPTS) {
-            TransportDiag.log("RX: auto-resume gave up after $MAX_AUTO_RESUME_ATTEMPTS no-progress attempts â€” left paused for manual resume")
+            TransportDiag.log("RX: auto-resume gave up after $MAX_AUTO_RESUME_ATTEMPTS no-progress attempts — left paused for manual resume")
             return false
         }
         session.autoResumeAttempts++

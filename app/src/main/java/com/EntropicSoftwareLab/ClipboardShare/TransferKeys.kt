@@ -43,7 +43,15 @@ object TransferKeys {
             peerOffersAead = fgcmRequested,
             pinned = SecurityVault.isFileGcmPinned(context, ip)
         )) {
-            DowngradePolicy.Decision.SEAL -> { SecurityVault.pinFileGcm(context, ip); SecurityVault.getKeyForNode(context, ip) }
+            DowngradePolicy.Decision.SEAL -> {
+                SecurityVault.pinFileGcm(context, ip)
+                // The trust gate admitted this IP, but the key can still vanish between the gate
+                // and here (unpair race, corrupt-keyset recreate). Returning null would be read
+                // as "legitimate plaintext" and silently stream cleartext to a peer that asked
+                // for AEAD — fail closed instead (XP-DEF-02).
+                SecurityVault.getKeyForNode(context, ip)
+                    ?: throw DowngradeBlockedException("FileSeal key missing for $ip after SEAL decision — refusing plaintext fallback")
+            }
             DowngradePolicy.Decision.PLAINTEXT -> null
             DowngradePolicy.Decision.BLOCK ->
                 throw DowngradeBlockedException("FileSeal downgrade blocked (sender) for $ip (receiver dropped fgcm)")

@@ -78,7 +78,7 @@ object ClipboardSeal {
             if (abs(nowMs - ts) > windowMs) return null // stale / replayed
             // Authenticated + fresh: reject if this exact nonce was already accepted from this peer
             // inside the window (a straight replay of a still-fresh, still-valid blob).
-            if (!recordNonce(peerKey(pairKey), nonce, nowMs, windowMs)) return null
+            if (!recordNonce(peerKey(pairKey), nonce, nowMs, ts, windowMs)) return null
             body.copyOfRange(TS_LEN, body.size)
         } catch (_: Exception) {
             null
@@ -86,19 +86,35 @@ object ClipboardSeal {
     }
 
     /**
-     * Records [nonce] as seen for [peer] at [nowMs]. Returns false if it was already seen within
-     * [windowMs] (a replay). Prunes stale entries and bounds the per-peer set to [MAX_NONCES_PER_PEER].
+     * Records [nonce] as seen for [peer]. [ts] is the blob's OWN embedded timestamp (not the
+     * receiver clock [nowMs]): storing it means a nonce is retained for exactly as long as a blob
+     * carrying it could still pass the freshness gate `abs(nowMs - ts) <= windowMs`. Storing the
+     * acceptance clock instead let a nonce accepted near the early edge of its window be swept
+     * while a replay of the same still-fresh blob was re-accepted. Returns false on a replay.
+     * Prunes stale entries and bounds the per-peer set to [MAX_NONCES_PER_PEER].
+     * Mirrors Android ClipboardSeal.recordNonce exactly.
      */
-    private fun recordNonce(peer: String, nonce: ByteArray, nowMs: Long, windowMs: Long): Boolean {
+    private fun recordNonce(peer: String, nonce: ByteArray, nowMs: Long, ts: Long, windowMs: Long): Boolean {
         val key = nonce.joinToString("") { "%02x".format(it) }
         synchronized(seenLock) {
+            // Sweep OTHER peers' aged-out nonces and drop empty peers, so the outer map is
+            // bounded by peers active inside the freshness window instead of growing one
+            // entry per distinct pair key forever (XP-DEF-06, mirrors Android ClipboardSeal).
+            val outer = seenNonces.entries.iterator()
+            while (outer.hasNext()) {
+                val entry = outer.next()
+                if (entry.key == peer) continue
+                entry.value.entries.removeAll { abs(nowMs - it.value) > windowMs }
+                if (entry.value.isEmpty()) outer.remove()
+            }
             val forPeer = seenNonces.getOrPut(peer) {
                 object : LinkedHashMap<String, Long>(64, 0.75f, false) {
                     override fun removeEldestEntry(eldest: Map.Entry<String, Long>): Boolean =
                         size > MAX_NONCES_PER_PEER
                 }
             }
-            // Drop entries that have aged out of the window; they can no longer be replayed.
+            // Drop entries whose blob timestamp has aged out of the window; they can no longer
+            // pass the freshness gate, so they can no longer be replayed.
             forPeer.entries.iterator().let { it ->
                 while (it.hasNext()) {
                     if (abs(nowMs - it.next().value) > windowMs) it.remove()
@@ -106,7 +122,7 @@ object ClipboardSeal {
             }
             val prev = forPeer[key]
             if (prev != null && abs(nowMs - prev) <= windowMs) return false
-            forPeer[key] = nowMs
+            forPeer[key] = ts
             return true
         }
     }
