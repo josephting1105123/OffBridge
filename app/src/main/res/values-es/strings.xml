@@ -143,6 +143,10 @@
     <string name="theme_system">Sistema</string>
     <string name="language_setting">Idioma</string>
     <string name="save_to_setting">Guardar en</string>
+    <string name="save_file_to_setting">Guardar archivos en</string>
+    <string name="save_media_to_setting">Guardar multimedia en</string>
+    <string name="save_media_gallery">Galería</string>
+    <string name="save_media_same_as_files">Igual que los archivos</string>
     <string name="save_location_downloads">Downloads (fotos y videos: Galería)</string>
     <string name="settings_section_others">OTROS</string>
     <string name="support_setting">Soporte</string>
@@ -456,7 +460,7 @@
     <string name="perm_request_permission_label">Solicitar Permiso</string>
     <string name="perm_granted_by_default_label">Concedido por Defecto</string>
     <string name="perm_battery_settings_error_toast">No se pudieron abrir los ajustes de batería automáticamente.</string>
-    <string name="settings_save_location_downloads">Downloads (fotos y videos: Galería)</string>
+    <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">No se pudo abrir el navegador</string>
     <string name="settings_dialog_choose_language">Elegir Idioma</string>
     <string name="settings_toast_rebooting_engine">Reiniciando el motor de Clipboard Share...</string>

@@ -143,6 +143,10 @@
     <string name="theme_system">System</string>
     <string name="language_setting">Sprache</string>
     <string name="save_to_setting">Speichern unter</string>
+    <string name="save_file_to_setting">Dateien speichern unter</string>
+    <string name="save_media_to_setting">Medien speichern unter</string>
+    <string name="save_media_gallery">Galerie</string>
+    <string name="save_media_same_as_files">Wie Dateien</string>
     <string name="save_location_downloads">Downloads (Fotos &amp; Videos: Galerie)</string>
     <string name="settings_section_others">SONSTIGES</string>
     <string name="support_setting">Unterstützung</string>
@@ -454,7 +458,7 @@
     <string name="perm_request_permission_label">Berechtigung anfordern</string>
     <string name="perm_granted_by_default_label">Standardmäßig erteilt</string>
     <string name="perm_battery_settings_error_toast">Akku-Einstellungen konnten nicht automatisch geöffnet werden.</string>
-    <string name="settings_save_location_downloads">Downloads (Fotos &amp; Videos: Galerie)</string>
+    <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">Browser konnte nicht geöffnet werden</string>
     <string name="settings_dialog_choose_language">Sprache auswählen</string>
     <string name="settings_toast_rebooting_engine">Clipboard Share Engine wird neu gestartet...</string>

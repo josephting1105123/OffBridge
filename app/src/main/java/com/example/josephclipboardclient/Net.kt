@@ -333,17 +333,35 @@ object Net {
     /** True if [ip] is loopback, unspecified, or bound to any local interface. (Moved from TransferDaemon.) */
     fun isMyOwnIp(ip: String?): Boolean {
         if (ip == null || ip == "127.0.0.1" || ip == "0.0.0.0") return true
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces()
-            for (intf in java.util.Collections.list(interfaces)) {
+        return ownAddresses().contains(ip)
+    }
+
+    // Cached snapshot of this host's own addresses, rebuilt at most once per TTL. isMyOwnIp runs on
+    // the discovery receive path per datagram, and getNetworkInterfaces() is a heavyweight syscall;
+    // the local address set changes on the order of minutes, not packets. On enumeration failure we
+    // keep the last good snapshot rather than returning empty — failing open would re-list this
+    // device as its own peer. Mirrors the Windows Net.ownAddresses cache.
+    @Volatile private var ownIpCache: Set<String> = emptySet()
+    @Volatile private var ownIpCacheAtMs: Long = 0L
+    private const val OWN_IP_TTL_MS = 5_000L
+
+    private fun ownAddresses(): Set<String> {
+        val now = System.currentTimeMillis()
+        val cached = ownIpCache
+        if (cached.isNotEmpty() && now - ownIpCacheAtMs < OWN_IP_TTL_MS) return cached
+        return try {
+            val set = HashSet<String>()
+            for (intf in java.util.Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 for (addr in java.util.Collections.list(intf.inetAddresses)) {
-                    if (addr.hostAddress == ip) return true
+                    addr.hostAddress?.let { set.add(it) }
                 }
             }
+            ownIpCache = set
+            ownIpCacheAtMs = now
+            set
         } catch (ex: Exception) {
-            // Ignore
+            cached
         }
-        return false
     }
 
     /** DHCP-derived + per-interface broadcast addresses, with 255.255.255.255 fallback. (Moved from TransferDaemon.) */

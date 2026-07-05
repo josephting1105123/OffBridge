@@ -75,3 +75,14 @@ No separate, approved plan exists, so perform both roles in a single pass to get
 2. **Then, as the senior Implementation Engineer**, implement that self-authored design exactly: do not deviate from it, do not alter the schemas, and do not substitute dependencies unless absolutely impossible to execute (and if forced, surface it rather than improvise). Output production-ready code.
 
 Keep the architect step tight (it is not a full standalone document), but never skip it — the discipline of specifying the plan first is what produces a faithful, production-ready implementation.
+
+## Fallback Discipline (non-Fable models)
+
+The quality bar in this repo was set by Fable 5 sessions. Check which model you are (stated in the environment info of your system prompt); if it is not Fable — Opus, Sonnet, or anything else — every section above still applies, and these rules raise the floor. They trade speed for an extra verification round; take that trade every time.
+
+- **The two-role flow is never optional.** Every non-trivial change goes through Architect-then-Engineer (see *Operating Modes*) even outside plan mode: spec, edge cases, and verification criteria first, then a faithful implementation. No designing mid-edit.
+- **Raise the review floor.** Run the `code-review` skill on every non-trivial pending diff at **medium** effort minimum, **high** for concurrency, wire-framing, crypto, or anything touching the transfer daemons, `Net`, or pairing. Reserve the low tier for doc-only changes. Your own first pass is untrusted until reviewed.
+- **Never edit protocol code from memory.** Before changing any frame, control token, or pairing payload, re-read the current implementation on both platforms (Android app + `Window Ver`) to confirm the wire contract, and update the interop check together with the change.
+- **Verification is the deliverable.** Both platform builds green (`verify` skill) before reporting done, `ship` before committing. If a build was not run, say "unverified" — never imply it passed.
+- **Graph first, code wins.** Query the memory graph before touching a component, but re-verify any fact you are about to rely on against the code; on conflict the code is the truth and the graph gets corrected in the same session.
+- **Decide out loud.** When two approaches are viable, state the tradeoff in a line or two and pick one with a reason — don't silently choose, and don't ask the user something the code can answer.

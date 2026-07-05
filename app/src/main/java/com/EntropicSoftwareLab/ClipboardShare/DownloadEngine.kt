@@ -39,6 +39,9 @@ object DownloadEngine {
             } else {
                 null
             }
+            // "Save media to": GALLERY (default) publishes photos/videos into the Pictures|Movies
+            // gallery collections; SAME_AS_FILES keeps them in the file save folder like everything else.
+            val saveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY) ?: TransferUtils.SAVE_MEDIA_GALLERY
 
             try {
                 connection.setReadTimeout(10000) // 10 second network timeout (no-op on BT)
@@ -84,7 +87,12 @@ object DownloadEngine {
                     // is on disk, so a mid-transfer drop leaves a .part instead of a truncated real file.
                     val partName = "$finalName.part"
                     val append = session.currentOffset > 0
-                    val saveTree = saveDir
+                    // Media under "Save media to: Gallery" is staged in Download and then published into
+                    // Pictures|Movies/"Clipboard Share" — even when a custom file folder is set, so it
+                    // bypasses the SAF folder. Everything else (all files, plus media under "Same as
+                    // files") goes to the file folder: the SAF tree if chosen, otherwise Download.
+                    val routeToGallery = TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
+                    val saveTree = if (routeToGallery) null else saveDir
                     var partDoc: androidx.documentfile.provider.DocumentFile? = null
                     var partFile: java.io.File? = null
                     val outputStream = if (saveTree != null && saveTree.canWrite()) {
@@ -143,28 +151,35 @@ object DownloadEngine {
                         val finalFile = java.io.File(pf.parentFile, finalName)
                         if (finalFile.exists()) finalFile.delete()
                         if (pf.renameTo(finalFile)) {
-                            // Images/videos move on into Pictures|Movies/"Clipboard Share" so
-                            // gallery apps actually list them (scanning them inside Download never
-                            // surfaces them in a gallery's photo view); other types stay here and
-                            // just get indexed. Runs on its own coroutine: the MediaStore fallback
-                            // re-copies the whole file, and done inline that would stall the next
-                            // file's bytes and could blow the sender's 30s completion-ack window,
-                            // flipping a fully delivered transfer to "paused" on the sender. The
-                            // internal catch also keeps any publish/history-write failure from
-                            // reaching this loop's outer catch (which would pause the session).
-                            // A cancel arriving after promotion still publishes — the file is
-                            // fully received.
-                            val fileIndex = i
-                            TransferDaemon.daemonScope.launch(Dispatchers.IO) {
-                                try {
-                                    val publishedName = TransferUtils.publishReceivedMedia(context, finalFile)
-                                    if (publishedName != finalFile.name) {
-                                        // Destination dedupe (or MediaStore auto-rename) changed the
-                                        // leaf name — keep history pointing at the real file.
-                                        session.localFileNames[fileIndex] = publishedName
-                                        TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
-                                    }
-                                } catch (_: Exception) { }
+                            if (routeToGallery) {
+                                // Images/videos move on into Pictures|Movies/"Clipboard Share" so
+                                // gallery apps actually list them (scanning them inside Download never
+                                // surfaces them in a gallery's photo view). Runs on its own coroutine:
+                                // the MediaStore fallback re-copies the whole file, and done inline that
+                                // would stall the next file's bytes and could blow the sender's 30s
+                                // completion-ack window, flipping a fully delivered transfer to "paused"
+                                // on the sender. The internal catch also keeps any publish/history-write
+                                // failure from reaching this loop's outer catch (which would pause the
+                                // session). A cancel arriving after promotion still publishes — the file
+                                // is fully received.
+                                val fileIndex = i
+                                TransferDaemon.daemonScope.launch(Dispatchers.IO) {
+                                    try {
+                                        val publishedName = TransferUtils.publishReceivedMedia(context, finalFile)
+                                        if (publishedName != finalFile.name) {
+                                            // Destination dedupe (or MediaStore auto-rename) changed the
+                                            // leaf name — keep history pointing at the real file.
+                                            session.localFileNames[fileIndex] = publishedName
+                                            TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
+                                        }
+                                    } catch (_: Exception) { }
+                                }
+                            } else {
+                                // Stays in Download — a non-media file, or media the user routed to
+                                // "Same as files" with no custom folder. Just index it in place so file
+                                // browsers/galleries that read Download can find it; no move, so the leaf
+                                // name is unchanged and history stays valid.
+                                TransferUtils.indexForGallery(context, finalFile)
                             }
                         }
                     }
@@ -252,8 +267,12 @@ object DownloadEngine {
                     val finalName = session.localFileNames[session.currentFileIndex]
                     val prefs = context.getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
                     val saveLocationUriString = prefs.getString("save_location_uri", null)
-                    if (saveLocationUriString != null) {
-                        val saveDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(saveLocationUriString))
+                    val saveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY) ?: TransferUtils.SAVE_MEDIA_GALLERY
+                    // Match the write path's destination: gallery-bound media stages in Download even
+                    // when a custom file folder is set, so read its offset from Download, not the SAF tree.
+                    val useSaf = saveLocationUriString != null && !TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
+                    if (useSaf) {
+                        val saveDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(saveLocationUriString!!))
                         val targetFile = saveDir?.findFile(finalName)
                         if (targetFile != null) {
                             trueOffset = targetFile.length()

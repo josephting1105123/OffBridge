@@ -96,6 +96,8 @@ fun SendToDevicesScreen(
 
     val allSelected = devices.isNotEmpty() && selectedIps.size == devices.size
     val canSend = previews.isNotEmpty() && selectedIps.isNotEmpty() && !sending
+    // No paired device online (the empty state is showing) → the bottom button becomes "Go to Pairing".
+    val isPairingMode = !loading && devices.isEmpty() && !sending
 
     Column(
         modifier = Modifier
@@ -140,7 +142,9 @@ fun SendToDevicesScreen(
             )
         }
 
-        // Scrollable middle: file previews + paired-device list.
+        // Middle: file previews + recipients header + device tray. The whole column scrolls so
+        // every child stays reachable on short viewports (landscape / split-screen); the tray keeps
+        // a one-card min height so it never collapses to an invisible sliver.
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -214,8 +218,9 @@ fun SendToDevicesScreen(
             }
 
             // Device list on the Send-Files tray surface (same rounded bottomSheet box as the
-            // "Selected files" grid) — skeletons while the first poll is in flight. The min
-            // height keeps the tray from collapsing to a sliver mid-send if every device drops.
+            // "Selected files" grid). A one-card min height (not weight) so the tray grows with its
+            // content and the outer column scrolls when the viewport is short, instead of the tray
+            // being starved to 0dp; skeletons/empty-state/list are the three exclusive contents.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -236,18 +241,27 @@ fun SendToDevicesScreen(
                         }
                     }
                 } else if (devices.isEmpty() && !sending) {
-                    // System-Status-style empty state: no paired device is online, so offer the
-                    // direct fix — jump to the Pairing tab. Suppressed mid-send so a transient
-                    // device dropout can't dangle a tab-switch button under an in-flight batch.
-                    EmptyState(
-                        icon = ImageVector.vectorResource(R.drawable.ic_device),
-                        title = stringResource(R.string.send_no_devices_title),
-                        subtitle = stringResource(R.string.send_no_devices_hint),
-                        actionLabel = stringResource(R.string.action_go_to_pairing),
-                        onAction = onGoToPairing,
-                    )
+                    // System-Status-style empty state: no paired device is online. The "go pair"
+                    // action lives on the bottom button (it becomes "Go to Pairing"), not here.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = DEVICE_CARD_HEIGHT),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            icon = ImageVector.vectorResource(R.drawable.ic_device),
+                            title = stringResource(R.string.send_no_devices_title),
+                            subtitle = stringResource(R.string.send_no_devices_hint),
+                        )
+                    }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(dimens.spaceMd)) {
+                    // Plain column (no inner scroll): the outer column owns scrolling, so nesting a
+                    // second vertical scroller here would swallow the gesture. The tray grows to fit.
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(dimens.spaceMd),
+                    ) {
                         devices.forEach { device ->
                             SelectableDeviceCard(
                                 device = device,
@@ -264,21 +278,29 @@ fun SendToDevicesScreen(
             Spacer(Modifier.height(dimens.spaceLg))
         }
 
-        // Bottom Send button (green when items + selection present and not already sending).
+        // Bottom button. In pairing mode it's an active "Go to Pairing" jump; otherwise it's the
+        // green Send action (active when items + selection present and not already sending).
+        val buttonActive = isPairingMode || canSend
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = dimens.spaceXl, end = dimens.spaceXl, top = dimens.spaceMd, bottom = dimens.spaceXl)
                 .height(64.dp)
                 .clip(RoundedCornerShape(dimens.radiusLg))
-                .background(if (canSend) colors.green else colors.card)
-                .clickable(enabled = canSend) { onSend() },
+                .background(if (buttonActive) colors.green else colors.card)
+                .clickable(enabled = buttonActive) { if (isPairingMode) onGoToPairing() else onSend() },
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                stringResource(if (sending) R.string.action_sending else R.string.action_send),
+                stringResource(
+                    when {
+                        isPairingMode -> R.string.action_go_to_pairing
+                        sending -> R.string.action_sending
+                        else -> R.string.action_send
+                    }
+                ),
                 style = MaterialTheme.typography.titleMedium,
-                color = if (canSend) Color.Black else colors.textSecondary,
+                color = if (buttonActive) Color.Black else colors.textSecondary,
                 fontWeight = FontWeight.Bold,
             )
         }

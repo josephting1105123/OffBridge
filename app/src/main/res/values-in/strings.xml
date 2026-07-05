@@ -143,6 +143,10 @@
     <string name="theme_system">Sistem</string>
     <string name="language_setting">Bahasa</string>
     <string name="save_to_setting">Simpan Ke</string>
+    <string name="save_file_to_setting">Simpan file ke</string>
+    <string name="save_media_to_setting">Simpan media ke</string>
+    <string name="save_media_gallery">Galeri</string>
+    <string name="save_media_same_as_files">Sama seperti file</string>
     <string name="save_location_downloads">Downloads (foto &amp; video: Galeri)</string>
     <string name="settings_section_others">LAINNYA</string>
     <string name="support_setting">Dukungan</string>
@@ -456,7 +460,7 @@
     <string name="perm_request_permission_label">Minta Izin</string>
     <string name="perm_granted_by_default_label">Diberikan secara Default</string>
     <string name="perm_battery_settings_error_toast">Tidak dapat membuka pengaturan baterai secara otomatis.</string>
-    <string name="settings_save_location_downloads">Downloads (foto &amp; video: Galeri)</string>
+    <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">Tidak dapat membuka browser</string>
     <string name="settings_dialog_choose_language">Pilih Bahasa</string>
     <string name="settings_toast_rebooting_engine">Memulai Ulang Mesin Clipboard Share...</string>

@@ -79,6 +79,27 @@ class MediaRoutingTest {
     }
 
     @Test
+    fun gallerySettingRoutesOnlyMediaToGallery() {
+        // "Save media to: Gallery" — images/videos publish to the gallery collections, everything else
+        // stays with files.
+        assertTrue(TransferUtils.routeMediaToGallery("photo.jpg", TransferUtils.SAVE_MEDIA_GALLERY))
+        assertTrue(TransferUtils.routeMediaToGallery("CLIP.MP4", TransferUtils.SAVE_MEDIA_GALLERY))
+        assertEquals(false, TransferUtils.routeMediaToGallery("doc.pdf", TransferUtils.SAVE_MEDIA_GALLERY))
+        // The in-flight sidecar must never route to the gallery, or a publish could grab it mid-write.
+        assertEquals(false, TransferUtils.routeMediaToGallery("photo.jpg.part", TransferUtils.SAVE_MEDIA_GALLERY))
+    }
+
+    @Test
+    fun sameAsFilesSettingNeverRoutesToGallery() {
+        // "Save media to: Same as files" — even media goes to the file save folder, so nothing routes.
+        assertEquals(false, TransferUtils.routeMediaToGallery("photo.jpg", TransferUtils.SAVE_MEDIA_SAME_AS_FILES))
+        assertEquals(false, TransferUtils.routeMediaToGallery("clip.mp4", TransferUtils.SAVE_MEDIA_SAME_AS_FILES))
+        assertEquals(false, TransferUtils.routeMediaToGallery("doc.pdf", TransferUtils.SAVE_MEDIA_SAME_AS_FILES))
+        // An unrecognised setting value is treated as "not gallery" (the pref read supplies the real default).
+        assertEquals(false, TransferUtils.routeMediaToGallery("photo.jpg", "bogus"))
+    }
+
+    @Test
     fun dedupeNameAcrossDirectoriesIsFreeInEveryDir() {
         // Receive-time dedupe must clear both Download and the publish destination, or a
         // same-named earlier-published photo shadows the new file for history opens.

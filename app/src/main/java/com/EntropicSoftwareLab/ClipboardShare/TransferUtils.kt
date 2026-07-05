@@ -8,6 +8,20 @@ import java.io.IOException
 object TransferUtils {
     enum class MediaCategory { IMAGE, VIDEO, OTHER }
 
+    /** Persisted values of the "save_media_to" preference (where received photos/videos land).
+     *  GALLERY publishes into the Pictures|Movies gallery collections; SAME_AS_FILES keeps them in
+     *  the same folder as ordinary files ("Save file to"). GALLERY is the default (see receive path). */
+    const val SAVE_MEDIA_GALLERY = "gallery"
+    const val SAVE_MEDIA_SAME_AS_FILES = "same_as_files"
+
+    /** Whether a received file named [fileName] should be published into the gallery collections
+     *  rather than written to the file save folder, given the "save_media_to" [saveMediaTo] setting.
+     *  Only images/videos route to the gallery, and only when the setting is GALLERY; everything
+     *  else (all non-media, and any media under SAME_AS_FILES) goes to the file folder. Pure so the
+     *  routing decision is unit-testable without a running receive stream. */
+    fun routeMediaToGallery(fileName: String, saveMediaTo: String): Boolean =
+        saveMediaTo == SAVE_MEDIA_GALLERY && mediaCategory(fileName) != MediaCategory.OTHER
+
     /** Subfolder inside Pictures/ and Movies/ where received media is published. Not localized:
      *  it is an on-disk path that must stay stable across locale changes. */
     private const val MEDIA_SUBDIR = "Clipboard Share"

@@ -374,3 +374,108 @@ DECLINED = user decided not to pursue
 
 **Principle:** When a codebase has a fan-out invariant (one logical change = N mechanical copies), capture the copy discipline and its verification command as a checklist; correctness by grep-count beats correctness by memory.
 **Status:** OPEN
+
+### Observation 26: verify skill — combine both platform builds into one Gradle invocation
+
+**Status:** OPEN
+**Date:** 2026-07-04
+**Session context:** Send-flow UI polish (device-card tray + Go to Pairing restyle, Android + Windows)
+**Skill:** verify
+**Type:** internal
+**Phase/Area:** Steps 1-2 (build commands)
+
+**Issue:** The verify skill lists the Android and Windows builds as two separate gradlew invocations. Running them as one command (`./gradlew.bat :app:compileDebugKotlin :window-ver:compileKotlin`) verified both platforms in a single 9s run, paying Gradle configuration cost once instead of twice.
+
+**Suggested improvement:** In the verify skill, add the combined invocation as the default for cross-platform changes, keeping the separate commands for single-platform work.
+
+**Principle:** When a verification ritual always runs multiple tasks of the same build tool, batching them into one invocation amortizes the tool's startup/configuration overhead.
+
+### Observation 27: Ship skill not invoked when its ritual was performed manually
+
+**Date:** 2026-07-05
+**Session context:** Gallery-visibility fix for received photos/videos (publish to Pictures/Movies), user asked to "perform git commit after finishing"
+**Skill:** ship
+**Type:** internal
+**Phase/Area:** Skill activation / end-of-task ritual
+
+**Issue:** The task ended with the exact sequence the ship skill encodes (worktree check, code-review skill on the pending diff, build verify, scoped commit), and the steps were all performed — but by following CLAUDE.md quality gates manually rather than invoking /ship. The outcome was equivalent this time, yet the skill's codified ritual (e.g. its exact ordering and any future improvements to it) was bypassed.
+
+**Suggested improvement:** In the ship skill description or CLAUDE.md skill-activation rule, add the trigger phrase "commit after finishing" / "commit when done" alongside "ship"/"build and commit", so end-of-task commit requests route through the skill instead of ad-hoc reimplementation of its steps.
+
+**Principle:** When a user request matches a skill's ritual semantically but not lexically, description trigger phrases should cover the common paraphrases — otherwise the agent re-derives the ritual by hand and silently forks from the skill's maintained version.
+
+### Observation 28: Release-notes generation is a recurring, localizable deliverable
+
+**Date:** 2026-07-05
+**Session context:** User asked for English release notes covering 2.1 -> 3.5.1 during release prep (keystore creation, GitHub lane).
+**Skill:** New skill candidate: release-notes
+**Type:** internal
+**Phase/Area:** Release workflow (Lane A GitHub / Lane B Play)
+
+**Issue:** Release notes had to be assembled manually from CHANGELOG.md, post-version-bump commits, and pre-repo-history knowledge gaps (2.x era predates the migrated repo). The phrasing "for english" implies localized notes in the app's 9 other locales will be needed next, and Play requires per-locale "what's new" text with a 500-char limit.
+
+**Suggested improvement:** A skill that: reads CHANGELOG.md + commits since the last release tag, drafts user-facing notes (not internal codenames like FGCM2), flags history gaps instead of inventing content, applies the humanizer voice, and optionally emits per-locale variants + a 500-char Play whatsnew cut. Should note the app-id rebrand caveat for pre-3.2 upgraders.
+
+**Principle:** Deliverables that recur every release cycle and fan out across locales (notes, store listings) are skill candidates the first time they appear, because the second occurrence lands under release-deadline pressure.
+
+**Status:** OPEN
+
+### Observation 29: Runtime-quirk workarounds need runtime verification, not hard-coded compensation
+
+**Date:** 2026-07-05
+**Session context:** Fixing the Windows maximize button sizing the window to ~2/3 of the screen at 150% display scale
+**Skill:** New skill candidate / cross-cutting principle
+**Type:** open-source
+**Phase/Area:** Platform-quirk workarounds in desktop UI code
+
+**Issue:** A prior session measured a JBR HiDPI quirk (setMaximizedBounds allegedly double-scaling) and baked an unconditional pre-divide into the maximize path. On the user's live setup the runtime scales once, so the "fix" itself became the bug: every maximize landed at workArea/scale. Two contradictory observations of the same runtime existed and the hard-coded compensation picked the wrong one.
+
+**Suggested improvement:** When compensating for a platform/runtime quirk that can't be verified across environments, prefer self-calibration: apply the spec-correct behavior first, measure the actual outcome, and only then apply the compensation (cached per session). The maximize fix now does exactly this.
+
+**Principle:** A workaround based on a single environment measurement encodes that environment forever. If the quirk's presence can be detected cheaply at runtime, detect it — don't assume it.
+
+
+### Observation 30: Model-fallback discipline belongs in always-loaded config, not in skills
+
+**Date:** 2026-07-06
+**Session context:** User asked to edit global and project CLAUDE.md so that when Fable 5 leaves the subscription tier, Opus/Sonnet sessions inherit the established working discipline ("logic base") and land between stock-Opus and Fable quality.
+**Skill:** All skills
+**Type:** open-source
+**Phase/Area:** Skill/config architecture — where behavioral rules should live
+
+**Issue:** The discipline that distinguishes a stronger model's sessions (verify before claiming, adversarial self-review of own diffs, root-cause errors instead of retrying, spec-before-code) mostly lives in habits, not files. Encoding it as a skill would be fragile: a weaker model is precisely the one most likely to skip invoking an optional skill. The fix was to encode it in CLAUDE.md (global baseline + project overlay conditioned on "check which model you are"), which is loaded unconditionally every session.
+
+**Suggested improvement:** When capturing methodology meant to survive a capability downgrade, put the enforcement in always-loaded config (CLAUDE.md / project instructions) with a self-check condition the model can evaluate (its own model name from environment info), and keep skills as the detailed reference the config points to. Same pattern as the existing Operating Modes persona-by-mode conditional.
+
+**Principle:** Rules that must hold when the agent is weakest cannot depend on the agent choosing to load them. Discipline meant as a floor goes in unconditional context; skills are for depth, not for enforcement.
+
+**Status:** OPEN
+
+### Observation 31: Manual Claude Code plugin install workflow on CLI-less machines
+
+**Date:** 2026-07-06
+**Session context:** Installing the claude-plugins-official marketplace plus kotlin-lsp, skill-creator, and context7 plugins on a machine where the `claude` CLI is not on PATH (VSCode-extension-only sessions).
+**Skill:** New skill candidate: plugin-ops (or fold into dev-machine memory)
+**Type:** internal
+**Phase/Area:** Environment tooling / plugin management
+
+**Issue:** `claude plugin marketplace add` / `claude plugin install` are unavailable, but the whole flow is reproducible by hand: (1) clone marketplace repo into `~/.claude/plugins/marketplaces/<name>` and register it in `known_marketplaces.json`; (2) copy plugin dir into `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>`; (3) for `strict: false` plugins whose manifest lives only in marketplace.json (e.g. kotlin-lsp's lspServers block), synthesize `.claude-plugin/plugin.json` in the cache copy; (4) append to `installed_plugins.json`; (5) add `<plugin>@<marketplace>: true` to `enabledPlugins` in `~/.claude/settings.json`. Separately: kotlin-lsp's `kotlin-lsp.cmd` launcher is deprecated and prints a warning that could corrupt LSP stdio — shim `bin\intellij-server.exe` instead.
+
+**Suggested improvement:** If plugin installs recur on this machine, capture the five-step recipe as a small internal skill; until then the dev-machine-tooling memory note suffices.
+
+**Principle:** For any tool that speaks a protocol over stdio, verify the launcher emits nothing extra on stdout before wiring it in — a version-check with streams separated (`2>/dev/null`) is a 5-second test that prevents silent protocol corruption.
+
+### Observation 32: Ship skill has no untracked-file/secrets sweep before commit
+
+**Date:** 2026-07-06
+**Session context:** User asked to "commit if the last committed version is not the latest". Repo root contained an untracked "JDK Passkey/" folder holding the ADB private key, debug.keystore, and the new release keystore (clipboardshare_key.jks), plus a 19 MB app-release.aab in "Installation package (Latest only)/" — none of it gitignored (adbkey has no extension, so the *.jks/*.keystore patterns missed it).
+**Skill:** ship
+**Type:** internal
+**Phase/Area:** Pre-commit checks (between step 1 worktree confirm and step 4 commit)
+
+**Issue:** The ship skill reviews and builds the tracked diff but never looks at untracked files. A `git add -A` or `git add .` at step 4 would have committed private key material and a 19 MB build artifact. It was caught this session only because the commit request happened to coincide with an open-sourcing question that made secrets top-of-mind.
+
+**Suggested improvement:** Add a step to ship before committing: run `git status --porcelain`, inspect untracked paths for key material (keystores, *key*, *.pem, extensionless private keys), build artifacts (.aab/.apk/.msi/large binaries), and personal files; extend .gitignore for anything that must never land; stage explicitly by path rather than `git add -A`.
+
+**Principle:** A commit ritual that only validates the diff-to-be-committed is blind to the adjacent failure mode — accidentally committing what should never be tracked. Pre-commit hygiene needs one glance at the untracked set, not just the staged one.
+**Status:** OPEN

@@ -35,6 +35,7 @@ class SettingsFragment : Fragment() {
     private val themeLabelState = mutableStateOf("")
     private val languageLabelState = mutableStateOf("")
     private val saveLocationLabelState = mutableStateOf("")
+    private val saveMediaLabelState = mutableStateOf("")
     private val hotspotAutoConnectState = mutableStateOf(false)
     private val acceptClipboardState = mutableStateOf(false)
     private val discoverableState = mutableStateOf(false)
@@ -76,12 +77,14 @@ class SettingsFragment : Fragment() {
                         themeLabel = themeLabelState.value,
                         languageLabel = languageLabelState.value,
                         saveLocationLabel = saveLocationLabelState.value,
+                        saveMediaLabel = saveMediaLabelState.value,
                         hotspotAutoConnect = hotspotAutoConnectState.value,
                         acceptClipboard = acceptClipboardState.value,
                         discoverable = discoverableState.value,
                         onChangeTheme = { showThemeDialog() },
                         onChangeLanguage = { showLanguageDialog() },
                         onChangeSaveLocation = { openDirectoryLauncher.launch(null) },
+                        onChangeSaveMedia = { showSaveMediaDialog() },
                         onHotspotAutoConnectChange = ::onHotspotAutoConnectChange,
                         onAcceptClipboardChange = { enabled ->
                             ClipboardService.isSyncEnabled = enabled
@@ -114,6 +117,9 @@ class SettingsFragment : Fragment() {
         } else {
             saveLocationLabelState.value = getString(R.string.settings_save_location_downloads)
         }
+
+        // Save-media label (Gallery by default; see DownloadEngine routing).
+        updateSaveMediaText()
 
         // Toggles.
         syncHotspotState()
@@ -310,5 +316,40 @@ class SettingsFragment : Fragment() {
         }
         val folderName = docId?.substringAfterLast(':', selectedFolderLabel)?.ifEmpty { selectedFolderLabel }
         saveLocationLabelState.value = folderName ?: selectedFolderLabel
+    }
+
+    // ==================== Save Media ====================
+
+    private fun updateSaveMediaText() {
+        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val value = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY)
+        saveMediaLabelState.value = if (value == TransferUtils.SAVE_MEDIA_SAME_AS_FILES) {
+            getString(R.string.save_media_same_as_files)
+        } else {
+            getString(R.string.save_media_gallery)
+        }
+    }
+
+    /** Two-choice picker for where received photos/videos land: the gallery collections, or the
+     *  same folder as ordinary files. Mirrors the theme/language single-choice dialog pattern. */
+    private fun showSaveMediaDialog() {
+        val keys = arrayOf(TransferUtils.SAVE_MEDIA_GALLERY, TransferUtils.SAVE_MEDIA_SAME_AS_FILES)
+        val names = arrayOf(getString(R.string.save_media_gallery), getString(R.string.save_media_same_as_files))
+        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val current = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY)
+        var checkedItem = keys.indexOf(current)
+        if (checkedItem == -1) checkedItem = 0
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.save_media_to_setting))
+            .setSingleChoiceItems(names, checkedItem) { dialog, which ->
+                prefs.edit().putString("save_media_to", keys[which]).apply()
+                updateSaveMediaText()
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.action_cancel), null)
+            .create()
+            .also { it.applyModalPolish() }
+            .show()
     }
 }

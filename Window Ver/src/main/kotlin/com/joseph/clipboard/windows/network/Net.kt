@@ -83,6 +83,49 @@ object Net {
                 (ip.startsWith("172.") && (ip.substringAfter('.').substringBefore('.').toIntOrNull() ?: 0) in 16..31)
     }
 
+    /**
+     * True when [ip] is one of THIS host's own addresses — any address on any interface, plus the
+     * loopback/wildcard literals. Used to drop our own looped-back discovery broadcast.
+     *
+     * A single "primary" IP ([localLanIpv4]) is not enough: a PC with more than one active adapter
+     * (Wi-Fi + Ethernet, or a Hyper-V / WSL / VMware / VPN virtual adapter holding a site-local IP)
+     * can receive its own 255.255.255.255 broadcast with a source IP that egressed a *different*
+     * adapter than the one we advertise, so a single-IP compare misses and the PC lists itself.
+     * Enumerating every local address closes that gap. Mirrors Android's Net.isMyOwnIp.
+     */
+    fun isMyOwnIp(ip: String?): Boolean {
+        if (ip == null || ip == "127.0.0.1" || ip == "0.0.0.0") return true
+        return ownAddresses().contains(ip)
+    }
+
+    // Cached snapshot of this host's own addresses. getNetworkInterfaces() is a heavyweight native
+    // call (tens of ms on adapter-heavy Windows boxes — Hyper-V/WSL/VPN) and isMyOwnIp runs on the
+    // discovery receive path for every incoming datagram, so enumerate at most once per TTL. The
+    // local address set changes on the order of minutes, not packets.
+    @Volatile private var ownIpCache: Set<String> = emptySet()
+    @Volatile private var ownIpCacheAtMs: Long = 0L
+    private const val OWN_IP_TTL_MS = 5_000L
+
+    private fun ownAddresses(): Set<String> {
+        val now = System.currentTimeMillis()
+        val cached = ownIpCache
+        if (cached.isNotEmpty() && now - ownIpCacheAtMs < OWN_IP_TTL_MS) return cached
+        return try {
+            val set = NetworkInterface.getNetworkInterfaces().asSequence()
+                .flatMap { it.inetAddresses.asSequence() }
+                .mapNotNull { it.hostAddress }
+                .toSet()
+            ownIpCache = set
+            ownIpCacheAtMs = now
+            set
+        } catch (e: Exception) {
+            // Keep the last good snapshot rather than failing open: returning an empty set here would
+            // let our own looped-back broadcast through and re-list this PC as its own peer during
+            // adapter churn (VPN connect, Wi-Fi roam) — the exact bug this filter exists to prevent.
+            cached
+        }
+    }
+
     /** Reads bytes until '\n' or EOF; returns UTF-8 string without the newline.
      *  1 MiB cap (~20k-file manifests) so large multi-file/folder OFFER manifests aren't truncated. */
     fun readLineUtf8(input: InputStream, maxBytes: Int = 1024 * 1024): String {

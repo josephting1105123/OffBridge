@@ -677,10 +677,14 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                     folderUri = saveDir.uri
                     fileExists = true
                 }
-            } else {
-                // Received images/videos are published into Pictures|Movies/"Clipboard Share";
-                // older receives (and any publish fallback that stayed put) are still in Download.
-                // Check the routed folder first, then fall back.
+            }
+            // Fall back to the gallery/Download locations whenever the SAF lookup missed — not only
+            // when no custom folder is set. Under "Save media to: Gallery" (the default), received
+            // photos/videos bypass the SAF tree entirely: they are published into
+            // Pictures|Movies/"Clipboard Share" and staged in Download. Without this fallback a
+            // custom-folder user would get "file not found" for every received photo. Older receives
+            // and any publish fallback that stayed put are still in Download.
+            if (!fileExists) {
                 val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 val mediaFile = TransferUtils.publicMediaDir(category)?.let { java.io.File(it, name) }?.takeIf { it.exists() }
                 val file = mediaFile ?: java.io.File(downloadsDir, name)

@@ -59,6 +59,7 @@ import com.joseph.clipboard.windows.os.SystemTrayManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
@@ -551,23 +552,65 @@ fun main() = application {
         // Undecorated windows maximize to the FULL screen (covering the Windows taskbar) unless we
         // constrain the maximized bounds to the monitor's work area. Recompute before each maximize so
         // it follows the window onto whichever monitor it currently sits on.
-        val refreshMaximizedBounds = {
-            window.graphicsConfiguration?.let { gc ->
-                val b = gc.bounds
-                val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
-                // The bundled JBR applies the HiDPI scale to maximizedBounds twice (measured on
-                // JBR 21.0.10: a user-space rect comes out scale× too large), so pre-divide by the
-                // monitor scale to land on the actual work area. Re-verify if the runtime changes.
+        fun workArea(): java.awt.Rectangle? = window.graphicsConfiguration?.let { gc ->
+            val b = gc.bounds
+            val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
+            java.awt.Rectangle(
+                b.x + insets.left,
+                b.y + insets.top,
+                b.width - insets.left - insets.right,
+                b.height - insets.top - insets.bottom,
+            )
+        }
+        // setMaximizedBounds takes the same user-space coordinates gc.bounds/getScreenInsets report,
+        // and a spec-correct runtime scales them to device pixels exactly once. A previous build
+        // pre-divided by the monitor scale unconditionally (countering a JBR seen applying the scale
+        // twice), which on single-scaling runtimes shrank every maximize to workArea/scale — the
+        // "maximized window fills only ~2/3 of the screen at 150%" bug. Neither behavior can be
+        // assumed, so calibrate at runtime instead: apply the spec-correct rect, and if the
+        // post-maximize check (calibrateMaximizedBoundsOnce below) sees the real bounds overflowing
+        // the work area, flip to the pre-divided rect and re-maximize once, keeping that answer for
+        // the rest of the session.
+        val divideMaximizedBounds = remember { mutableStateOf(false) }
+        fun refreshMaximizedBounds() {
+            val gc = window.graphicsConfiguration ?: return
+            val wa = workArea() ?: return
+            window.maximizedBounds = if (divideMaximizedBounds.value) {
                 val sx = gc.defaultTransform.scaleX
                 val sy = gc.defaultTransform.scaleY
-                window.maximizedBounds = java.awt.Rectangle(
-                    ((b.x + insets.left) / sx).toInt(),
-                    ((b.y + insets.top) / sy).toInt(),
-                    ((b.width - insets.left - insets.right) / sx).toInt(),
-                    ((b.height - insets.top - insets.bottom) / sy).toInt(),
+                java.awt.Rectangle(
+                    (wa.x / sx).toInt(),
+                    (wa.y / sy).toInt(),
+                    (wa.width / sx).toInt(),
+                    (wa.height / sy).toInt(),
                 )
+            } else wa
+        }
+        val uiScope = rememberCoroutineScope()
+        fun calibrateMaximizedBoundsOnce() {
+            if (divideMaximizedBounds.value) return // already calibrated this session
+            uiScope.launch {
+                // Bounded wait for the native maximize to land. This scope inherits the UI
+                // dispatcher (AWT EDT), so the window reads/writes below are thread-safe.
+                var waitedMs = 0L
+                while ((window.extendedState and java.awt.Frame.MAXIMIZED_BOTH) != java.awt.Frame.MAXIMIZED_BOTH && waitedMs < 1000L) {
+                    delay(50); waitedMs += 50
+                }
+                if ((window.extendedState and java.awt.Frame.MAXIMIZED_BOTH) != java.awt.Frame.MAXIMIZED_BOTH) return@launch
+                delay(50) // let the bounds settle before measuring
+                val wa = workArea() ?: return@launch
+                // >10% overflow can't be insets noise, and the smallest real Windows scale step
+                // (125%) overshoots by 25%, so this cleanly separates the two runtime behaviors.
+                // A floating window can never exceed the work area by that much, so a user racing
+                // the measurement with a restore can't trip a false positive.
+                if (window.width > wa.width * 1.1 || window.height > wa.height * 1.1) {
+                    divideMaximizedBounds.value = true
+                    refreshMaximizedBounds()
+                    windowState.placement = WindowPlacement.Floating
+                    delay(50) // let the restore apply; same-frame placement writes would coalesce
+                    windowState.placement = WindowPlacement.Maximized
+                }
             }
-            Unit
         }
         LaunchedEffect(Unit) {
             refreshMaximizedBounds()
@@ -599,6 +642,7 @@ fun main() = application {
                                 } else {
                                     refreshMaximizedBounds()
                                     windowState.placement = WindowPlacement.Maximized
+                                    calibrateMaximizedBoundsOnce()
                                 }
                             }, modifier = Modifier.size(40.dp)) {
                                 Box(modifier = Modifier.size(12.dp).border(1.5.dp, MaterialTheme.colors.onBackground))

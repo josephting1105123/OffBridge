@@ -226,7 +226,7 @@ fun GlassToggleRow(
     }
 }
 
-/** Centered empty-state: icon, title, optional subtitle (+ optional primary action) — Android parity. */
+/** Centered empty-state: icon, title, optional subtitle (+ optional pairing-style action) — Android parity. */
 @Composable
 fun EmptyState(
     icon: ImageVector,
@@ -249,10 +249,21 @@ fun EmptyState(
         }
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(Dimens.spaceLg))
-            AppButton(text = actionLabel, onClick = onAction)
+            // Same transparent, hairline-outlined pill as the System Status Pair button,
+            // 20% under the 56dp CTA baseline.
+            BaseButton(
+                actionLabel, onAction,
+                fill = Color.Transparent,
+                contentColor = LocalExtraColors.current.greenText,
+                border = LocalExtraColors.current.divider,
+                height = EMPTY_ACTION_HEIGHT,
+                shape = RoundedCornerShape(Dimens.radiusPill),
+            )
         }
     }
 }
+
+private val EMPTY_ACTION_HEIGHT = 45.dp
 
 /** Hairline horizontal divider in the theme divider color. */
 @Composable

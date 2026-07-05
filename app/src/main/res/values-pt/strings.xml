@@ -143,6 +143,10 @@
     <string name="theme_system">Sistema</string>
     <string name="language_setting">Idioma</string>
     <string name="save_to_setting">Salvar em</string>
+    <string name="save_file_to_setting">Salvar arquivos em</string>
+    <string name="save_media_to_setting">Salvar mídia em</string>
+    <string name="save_media_gallery">Galeria</string>
+    <string name="save_media_same_as_files">Igual aos arquivos</string>
     <string name="save_location_downloads">Downloads (fotos e vídeos: Galeria)</string>
     <string name="settings_section_others">OUTROS</string>
     <string name="support_setting">Suporte</string>
@@ -456,7 +460,7 @@
     <string name="perm_request_permission_label">Solicitar Permissão</string>
     <string name="perm_granted_by_default_label">Concedido por Padrão</string>
     <string name="perm_battery_settings_error_toast">Não foi possível abrir as configurações de bateria automaticamente.</string>
-    <string name="settings_save_location_downloads">Downloads (fotos e vídeos: Galeria)</string>
+    <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">Não foi possível abrir o navegador</string>
     <string name="settings_dialog_choose_language">Escolher Idioma</string>
     <string name="settings_toast_rebooting_engine">Reiniciando motor Clipboard Share...</string>

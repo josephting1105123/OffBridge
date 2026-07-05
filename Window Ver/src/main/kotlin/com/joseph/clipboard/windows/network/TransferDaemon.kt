@@ -186,8 +186,12 @@ class TransferDaemon(
             // unreachable or spoofed IP. The declared IP is left unused for tracking.
             val ipToTrack = sender.hostAddress ?: return
 
-            // Ignore our own broadcast
-            if (ipToTrack == getLocalIpAddress()) return
+            // Ignore our own broadcast. Compare against ALL of this host's addresses, not just the
+            // single localLanIpv4() we advertise: a PC with >1 active adapter (Wi-Fi + Ethernet, or a
+            // Hyper-V / WSL / VPN virtual adapter) can receive its own broadcast with a source IP that
+            // egressed a different adapter, which a single-IP compare misses — so the PC lists itself.
+            // Mirrors Android's Net.isMyOwnIp self-filter in LanDiscovery.
+            if (Net.isMyOwnIp(ipToTrack)) return
 
             val now = System.currentTimeMillis()
             val existing = discoveredNodes[ipToTrack]
@@ -234,11 +238,11 @@ class TransferDaemon(
     }
 
     private fun getLocalIpAddress(): String {
-        // InetAddress.getLocalHost() often returns 127.0.0.1 or a virtual-adapter
-        // IP on Windows, so peers would store an unreachable IP and the PC could list
-        // itself as discovered. Prefer Net.localLanIpv4() (resolves the real LAN adapter)
-        // for both the advertised broadcast IP and the self-broadcast filter; only fall
-        // back to the old getLocalHost() value when no LAN IPv4 can be determined.
+        // The IP we advertise as our reachable endpoint in DISCOVERY/REPLY payloads.
+        // InetAddress.getLocalHost() often returns 127.0.0.1 or a virtual-adapter IP on Windows, so
+        // peers would store an unreachable address. Prefer Net.localLanIpv4() (resolves the real LAN
+        // adapter); fall back to getLocalHost() only when no LAN IPv4 can be determined. The self-
+        // broadcast filter no longer relies on this single value — see Net.isMyOwnIp above.
         Net.localLanIpv4()?.let { return it }
         return try {
             InetAddress.getLocalHost().hostAddress

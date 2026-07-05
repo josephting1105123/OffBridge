@@ -129,63 +129,75 @@ fun SendToDevicesDialog(
                         )
                     }
                 }
-                // Three exclusive states: first-poll skeletons, empty state, device list.
-                when {
-                    showSkeleton && devices.isEmpty() -> Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
-                    ) {
-                        repeat(2) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp)
-                                    .clip(RoundedCornerShape(Dimens.radiusSm))
-                                    .shimmer()
+                // Three exclusive states — first-poll skeletons, empty state, device list — all on
+                // a Send-Files-style tray surface (rounded surface box, Android parity).
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(Dimens.radiusLg))
+                        .background(MaterialTheme.colors.surface)
+                        .padding(Dimens.spaceSm)
+                ) {
+                    when {
+                        showSkeleton && devices.isEmpty() -> Column(
+                            verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
+                        ) {
+                            repeat(2) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(56.dp)
+                                        .clip(RoundedCornerShape(Dimens.radiusSm))
+                                        .shimmer()
+                                )
+                            }
+                        }
+                        devices.isEmpty() -> Box(
+                            // System-Status-style empty state: no paired device is online. The "go pair"
+                            // action lives on the bottom button (it becomes "Go to Pairing"), not here.
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyState(
+                                icon = Icons.Filled.Smartphone,
+                                title = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_title").takeIf { it != "send_no_devices_title" } ?: "No connected devices",
+                                subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_hint").takeIf { it != "send_no_devices_hint" } ?: "Pair with a nearby device to send files to it."
                             )
                         }
-                    }
-                    devices.isEmpty() -> Box(
-                        // System-Status-style empty state: no paired device is online, so instead
-                        // of a "scanning" line that never resolves, offer the direct fix — go pair.
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        EmptyState(
-                            icon = Icons.Filled.Smartphone,
-                            title = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_title").takeIf { it != "send_no_devices_title" } ?: "No connected devices",
-                            subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_hint").takeIf { it != "send_no_devices_hint" } ?: "Pair with a nearby device to send files to it.",
-                            actionLabel = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_go_to_pairing").takeIf { it != "action_go_to_pairing" } ?: "Go to Pairing",
-                            onAction = onGoToPairing
-                        )
-                    }
-                    else -> LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
-                    ) {
-                        items(devices.size) { index ->
-                            val device = devices[index]
-                            val isSelected = selectedRecipients.contains(device)
-                            DeviceListItem(
-                                device = device,
-                                isSelected = isSelected,
-                                onToggle = {
-                                    if (it) selectedRecipients.add(device) else selectedRecipients.remove(device)
-                                }
-                            )
+                        else -> LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
+                        ) {
+                            items(devices.size) { index ->
+                                val device = devices[index]
+                                val isSelected = selectedRecipients.contains(device)
+                                DeviceListItem(
+                                    device = device,
+                                    isSelected = isSelected,
+                                    onToggle = {
+                                        if (it) selectedRecipients.add(device) else selectedRecipients.remove(device)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
 
-                // Bottom send button — enabled iff ≥ 1 recipient
+                // Bottom button. With no device connected (empty state) it becomes "Go to Pairing";
+                // otherwise it's the send action, enabled iff ≥ 1 recipient is checked.
+                val isPairingMode = devices.isEmpty() && !showSkeleton
                 val canSend = selectedRecipients.isNotEmpty()
+                val buttonEnabled = if (isPairingMode) true else canSend
                 Button(
                     onClick = {
-                        if (canSend) {
+                        if (isPairingMode) {
+                            onGoToPairing()
+                        } else if (canSend) {
                             onSend(selectedRecipients.toList())
                         }
                     },
-                    enabled = canSend,
+                    enabled = buttonEnabled,
                     modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.primary,
@@ -193,10 +205,15 @@ fun SendToDevicesDialog(
                     ),
                     shape = RoundedCornerShape(Dimens.radiusSm)
                 ) {
+                    val label = if (isPairingMode) {
+                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_go_to_pairing").takeIf { it != "action_go_to_pairing" } ?: "Go to Pairing"
+                    } else {
+                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_send").takeIf { it != "action_send" } ?: "Send"
+                    }
                     Text(
-                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_send").takeIf { it != "action_send" } ?: "Send",
+                        label,
                         style = MaterialTheme.typography.button,
-                        color = if (canSend) MaterialTheme.colors.onPrimary else androidx.compose.ui.graphics.Color.LightGray
+                        color = if (buttonEnabled) MaterialTheme.colors.onPrimary else androidx.compose.ui.graphics.Color.LightGray
                     )
                 }
             }

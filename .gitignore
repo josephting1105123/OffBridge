@@ -33,6 +33,10 @@ keystore.properties
 *.jks
 *.keystore
 
+# Local key material (adbkey has no extension) and installer staging — never commit
+JDK Passkey/
+Installation package (Latest only)/
+
 # Personal interview prep — never publish (see PORTFOLIO.md header)
 PORTFOLIO.md
 

@@ -140,6 +140,10 @@
     <string name="theme_system">システム</string>
     <string name="language_setting">言語</string>
     <string name="save_to_setting">保存先</string>
+    <string name="save_file_to_setting">ファイルの保存先</string>
+    <string name="save_media_to_setting">メディアの保存先</string>
+    <string name="save_media_gallery">ギャラリー</string>
+    <string name="save_media_same_as_files">ファイルと同じ</string>
     <string name="save_location_downloads">Downloads（写真・動画：ギャラリー）</string>
     <string name="settings_section_others">その他</string>
     <string name="support_setting">サポート</string>
@@ -451,7 +455,7 @@
     <string name="perm_request_permission_label">権限をリクエスト</string>
     <string name="perm_granted_by_default_label">デフォルトで許可</string>
     <string name="perm_battery_settings_error_toast">バッテリー設定を自動的に開けませんでした。</string>
-    <string name="settings_save_location_downloads">Downloads（写真・動画：ギャラリー）</string>
+    <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">ブラウザを開けませんでした</string>
     <string name="settings_dialog_choose_language">言語の選択</string>
     <string name="settings_toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>

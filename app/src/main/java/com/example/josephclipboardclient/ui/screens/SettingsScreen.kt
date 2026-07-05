@@ -51,12 +51,14 @@ fun SettingsScreen(
     themeLabel: String,
     languageLabel: String,
     saveLocationLabel: String,
+    saveMediaLabel: String,
     hotspotAutoConnect: Boolean,
     acceptClipboard: Boolean,
     discoverable: Boolean,
     onChangeTheme: () -> Unit,
     onChangeLanguage: () -> Unit,
     onChangeSaveLocation: () -> Unit,
+    onChangeSaveMedia: () -> Unit,
     onHotspotAutoConnectChange: (Boolean) -> Unit,
     onAcceptClipboardChange: (Boolean) -> Unit,
     onDiscoverableChange: (Boolean) -> Unit,
@@ -110,11 +112,18 @@ fun SettingsScreen(
                 onClick = onChangeLanguage,
             )
             SettingPillRow(
-                label = stringResource(R.string.save_to_setting),
+                label = stringResource(R.string.save_file_to_setting),
                 pillText = saveLocationLabel,
                 colors = colors,
                 dimens = dimens,
                 onClick = onChangeSaveLocation,
+            )
+            SettingPillRow(
+                label = stringResource(R.string.save_media_to_setting),
+                pillText = saveMediaLabel,
+                colors = colors,
+                dimens = dimens,
+                onClick = onChangeSaveMedia,
                 bottomPadding = dimens.spaceLg,
             )
 
