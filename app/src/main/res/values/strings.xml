@@ -69,7 +69,7 @@
     <string name="transaction_details_title">Transaction Details</string>
     <string name="type_text">Text</string>
     <string name="receiving_files_title">Receiving Files</string>
-    <string name="save_to_folder_downloads">Save to folder: Downloads</string>
+    <string name="save_to_folder_downloads">Save to folder: Downloads (photos &amp; videos: Gallery)</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_close_with_check">Close</string>
     <string name="incoming_transfer_title">Incoming Transfer</string>
@@ -122,7 +122,7 @@
     <string name="theme_system">System</string>
     <string name="language_setting">Language</string>
     <string name="save_to_setting">Save To</string>
-    <string name="save_location_downloads">Downloads</string>
+    <string name="save_location_downloads">Downloads (photos &amp; videos: Gallery)</string>
     <string name="settings_history_backup_note">Your clipboard and transfer history is saved here as a plain file and restored when you pick this folder again — for example after reinstalling. Choose a private folder; avoid shared or cloud-synced ones if your clipboard holds sensitive text.</string>
     <string name="settings_history_recovered">Recovered %1$d clipboard items and %2$d transfers</string>
     <string name="settings_section_others">OTHERS</string>
@@ -539,7 +539,7 @@
     <string name="offgrid_nearby_grant_in_settings">Allow \"Nearby devices\" for this app in Settings → Permissions, then retry.</string>
     <string name="perm_granted_by_default_label">Granted by Default</string>
     <string name="perm_battery_settings_error_toast">Could not open battery settings automatically.</string>
-    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_save_location_downloads">Downloads (photos &amp; videos: Gallery)</string>
     <string name="settings_toast_could_not_open_browser">Could not open browser</string>
     <string name="settings_dialog_choose_language">Choose Language</string>
     <string name="settings_toast_rebooting_engine">Rebooting Clipboard Share Engine...</string>

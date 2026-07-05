@@ -82,7 +82,7 @@
     <string name="select_multiple_apps">选择多个应用</string>
     <string name="action_select">选择</string>
     <string name="receiving_files_title">正在接收文件</string>
-    <string name="save_to_folder_downloads">保存到文件夹：Downloads</string>
+    <string name="save_to_folder_downloads">保存到文件夹：Downloads（照片和视频：图库）</string>
     <string name="action_cancel">取消</string>
     <string name="action_close_with_check">关闭</string>
     <string name="incoming_transfer_title">传入的传输</string>
@@ -130,7 +130,7 @@
     <string name="theme_system">系统</string>
     <string name="language_setting">语言</string>
     <string name="save_to_setting">保存至</string>
-    <string name="save_location_downloads">Downloads</string>
+    <string name="save_location_downloads">Downloads（照片和视频：图库）</string>
     <string name="settings_section_others">其他</string>
     <string name="support_setting">支持</string>
     <string name="action_donate">捐赠</string>
@@ -441,7 +441,7 @@
     <string name="perm_request_permission_label">请求权限</string>
     <string name="perm_granted_by_default_label">默认授予</string>
     <string name="perm_battery_settings_error_toast">无法自动打开电池设置。</string>
-    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_save_location_downloads">Downloads（照片和视频：图库）</string>
     <string name="settings_toast_could_not_open_browser">无法打开浏览器</string>
     <string name="settings_dialog_choose_language">选择语言</string>
     <string name="settings_toast_rebooting_engine">正在重启 Clipboard Share 引擎…</string>

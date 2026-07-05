@@ -82,7 +82,7 @@
     <string name="select_multiple_apps">選擇多個應用程式</string>
     <string name="action_select">選擇</string>
     <string name="receiving_files_title">正在接收檔案</string>
-    <string name="save_to_folder_downloads">儲存到資料夾：Downloads</string>
+    <string name="save_to_folder_downloads">儲存到資料夾：Downloads（相片和影片：圖庫）</string>
     <string name="action_cancel">取消</string>
     <string name="action_close_with_check">關閉</string>
     <string name="incoming_transfer_title">傳入的傳輸</string>
@@ -130,7 +130,7 @@
     <string name="theme_system">系統</string>
     <string name="language_setting">語言</string>
     <string name="save_to_setting">儲存至</string>
-    <string name="save_location_downloads">Downloads</string>
+    <string name="save_location_downloads">Downloads（相片和影片：圖庫）</string>
     <string name="settings_section_others">其他</string>
     <string name="support_setting">支援</string>
     <string name="action_donate">贊助</string>
@@ -441,7 +441,7 @@
     <string name="perm_request_permission_label">請求權限</string>
     <string name="perm_granted_by_default_label">預設授予</string>
     <string name="perm_battery_settings_error_toast">無法自動開啟電池設定。</string>
-    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_save_location_downloads">Downloads（相片和影片：圖庫）</string>
     <string name="settings_toast_could_not_open_browser">無法開啟瀏覽器</string>
     <string name="settings_dialog_choose_language">選擇語言</string>
     <string name="settings_toast_rebooting_engine">正在重啟 Clipboard Share 引擎…</string>

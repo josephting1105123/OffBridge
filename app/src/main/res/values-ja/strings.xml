@@ -92,7 +92,7 @@
     <string name="select_multiple_apps">複数のアプリを選択</string>
     <string name="action_select">選択</string>
     <string name="receiving_files_title">ファイルを受信中</string>
-    <string name="save_to_folder_downloads">保存先フォルダ：Downloads</string>
+    <string name="save_to_folder_downloads">保存先フォルダ：Downloads（写真・動画：ギャラリー）</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_close_with_check">閉じる</string>
     <string name="incoming_transfer_title">着信転送</string>
@@ -140,7 +140,7 @@
     <string name="theme_system">システム</string>
     <string name="language_setting">言語</string>
     <string name="save_to_setting">保存先</string>
-    <string name="save_location_downloads">Downloads</string>
+    <string name="save_location_downloads">Downloads（写真・動画：ギャラリー）</string>
     <string name="settings_section_others">その他</string>
     <string name="support_setting">サポート</string>
     <string name="action_donate">寄付</string>
@@ -451,7 +451,7 @@
     <string name="perm_request_permission_label">権限をリクエスト</string>
     <string name="perm_granted_by_default_label">デフォルトで許可</string>
     <string name="perm_battery_settings_error_toast">バッテリー設定を自動的に開けませんでした。</string>
-    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_save_location_downloads">Downloads（写真・動画：ギャラリー）</string>
     <string name="settings_toast_could_not_open_browser">ブラウザを開けませんでした</string>
     <string name="settings_dialog_choose_language">言語の選択</string>
     <string name="settings_toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>

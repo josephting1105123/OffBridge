@@ -58,15 +58,12 @@ object DownloadEngine {
                         var finalName = TransferUtils.sanitizeIncomingFileName(m.first)
                         if (session.currentOffset == 0L) {
                             val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                            var targetFile = java.io.File(downloadDir, finalName)
-                            var counter = 1
-                            val nameWithoutExt = finalName.substringBeforeLast('.')
-                            val ext = if (finalName.contains('.')) "." + finalName.substringAfterLast('.') else ""
-                            while (targetFile.exists()) {
-                                finalName = "$nameWithoutExt ($counter)$ext"
-                                targetFile = java.io.File(downloadDir, finalName)
-                                counter++
-                            }
+                            // Media names must also be free in the publish destination
+                            // (Pictures|Movies/"Clipboard Share"): a name unique only in Download
+                            // could be shadowed by a same-named, earlier-published photo when
+                            // history's "open" probes the media folder first.
+                            val publishDir = TransferUtils.publicMediaDir(TransferUtils.mediaCategory(finalName))
+                            finalName = TransferUtils.dedupeName(listOfNotNull(downloadDir, publishDir), finalName)
                         }
                         session.localFileNames.add(finalName)
                     }
@@ -146,10 +143,29 @@ object DownloadEngine {
                         val finalFile = java.io.File(pf.parentFile, finalName)
                         if (finalFile.exists()) finalFile.delete()
                         if (pf.renameTo(finalFile)) {
-                            // Raw File writes into Download never register the file in MediaStore,
-                            // so images/videos land on disk but show up in no gallery. Poke the media
-                            // scanner to create that entry now (best-effort).
-                            TransferUtils.indexForGallery(context, finalFile)
+                            // Images/videos move on into Pictures|Movies/"Clipboard Share" so
+                            // gallery apps actually list them (scanning them inside Download never
+                            // surfaces them in a gallery's photo view); other types stay here and
+                            // just get indexed. Runs on its own coroutine: the MediaStore fallback
+                            // re-copies the whole file, and done inline that would stall the next
+                            // file's bytes and could blow the sender's 30s completion-ack window,
+                            // flipping a fully delivered transfer to "paused" on the sender. The
+                            // internal catch also keeps any publish/history-write failure from
+                            // reaching this loop's outer catch (which would pause the session).
+                            // A cancel arriving after promotion still publishes — the file is
+                            // fully received.
+                            val fileIndex = i
+                            TransferDaemon.daemonScope.launch(Dispatchers.IO) {
+                                try {
+                                    val publishedName = TransferUtils.publishReceivedMedia(context, finalFile)
+                                    if (publishedName != finalFile.name) {
+                                        // Destination dedupe (or MediaStore auto-rename) changed the
+                                        // leaf name — keep history pointing at the real file.
+                                        session.localFileNames[fileIndex] = publishedName
+                                        TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
+                                    }
+                                } catch (_: Exception) { }
+                            }
                         }
                     }
                     session.currentFileIndex = i + 1
@@ -202,30 +218,6 @@ object DownloadEngine {
             }
         }
     }
-
-    /**
-     * Make a finished download visible to the gallery / Files app. The receiver writes to Download
-     * via the raw File API, which never inserts a MediaStore row — so images and videos sit on disk
-     * but appear in no gallery until some eventual system scan. Hand the file to the media scanner
-     * explicitly to create that row now. It infers the MIME from the file (so non-media files are
-     * harmless) and keys on the path (so re-scanning the same file is idempotent). No storage
-     * permission is needed since we own the file we just wrote. Best-effort: indexing must never
-     * fail the transfer.
-     *
-     * Only covers the default Download path. A user-chosen SAF location writes through the documents
-     * provider and has no stable absolute path to scan, so it keeps its existing behaviour.
-     */
-    private fun TransferUtils.indexForGallery(context: Context, file: java.io.File) {
-        try {
-            android.media.MediaScannerConnection.scanFile(
-                context.applicationContext,
-                arrayOf(file.absolutePath),
-                null,
-                null
-            )
-        } catch (_: Exception) { }
-    }
-
 
     fun resumeIncomingTransfer(context: Context, sessionId: String) {
         val session = TransferDaemon.activeSessions[sessionId] ?: return

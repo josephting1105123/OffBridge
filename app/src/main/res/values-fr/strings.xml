@@ -95,7 +95,7 @@
     <string name="select_multiple_apps">Sélectionner plusieurs applications</string>
     <string name="action_select">Sélectionner</string>
     <string name="receiving_files_title">Réception de fichiers</string>
-    <string name="save_to_folder_downloads">Enregistrer dans : Downloads</string>
+    <string name="save_to_folder_downloads">Enregistrer dans : Downloads (photos et vidéos : Galerie)</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_close_with_check">Fermer</string>
     <string name="incoming_transfer_title">Transfert entrant</string>
@@ -143,7 +143,7 @@
     <string name="theme_system">Système</string>
     <string name="language_setting">Langue</string>
     <string name="save_to_setting">Enregistrer sous</string>
-    <string name="save_location_downloads">Downloads</string>
+    <string name="save_location_downloads">Downloads (photos et vidéos : Galerie)</string>
     <string name="settings_section_others">AUTRES</string>
     <string name="support_setting">Assistance</string>
     <string name="action_donate">Faire un don</string>
@@ -454,7 +454,7 @@
     <string name="perm_request_permission_label">Demander l\'autorisation</string>
     <string name="perm_granted_by_default_label">Accordée par défaut</string>
     <string name="perm_battery_settings_error_toast">Impossible d\'ouvrir les paramètres de batterie automatiquement.</string>
-    <string name="settings_save_location_downloads">Downloads</string>
+    <string name="settings_save_location_downloads">Downloads (photos et vidéos : Galerie)</string>
     <string name="settings_toast_could_not_open_browser">Impossible d\'ouvrir le navigateur</string>
     <string name="settings_dialog_choose_language">Choisir la langue</string>
     <string name="settings_toast_rebooting_engine">Redémarrage du moteur Clipboard Share...</string>

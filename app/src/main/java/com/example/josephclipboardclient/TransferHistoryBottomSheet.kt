@@ -667,6 +667,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             var fileUri: android.net.Uri? = null
             var folderUri: android.net.Uri? = null
             var fileExists = false
+            val category = TransferUtils.mediaCategory(name)
 
             if (saveLocationUriString != null) {
                 val saveDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(requireContext(), android.net.Uri.parse(saveLocationUriString))
@@ -677,19 +678,23 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                     fileExists = true
                 }
             } else {
+                // Received images/videos are published into Pictures|Movies/"Clipboard Share";
+                // older receives (and any publish fallback that stayed put) are still in Download.
+                // Check the routed folder first, then fall back.
                 val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                val file = java.io.File(downloadsDir, name)
+                val mediaFile = TransferUtils.publicMediaDir(category)?.let { java.io.File(it, name) }?.takeIf { it.exists() }
+                val file = mediaFile ?: java.io.File(downloadsDir, name)
                 if (file.exists()) {
                     fileUri = androidx.core.content.FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
-                    folderUri = android.net.Uri.fromFile(downloadsDir)
+                    folderUri = android.net.Uri.fromFile(file.parentFile ?: downloadsDir)
                     fileExists = true
                 }
             }
 
             if (fileExists && fileUri != null) {
                 val ext = name.substringAfterLast('.', "").lowercase()
-                val isImage = ext in listOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "heic")
-                val isVideo = ext in listOf("mp4", "mkv", "avi", "mov", "webm", "ts")
+                val isImage = category == TransferUtils.MediaCategory.IMAGE
+                val isVideo = category == TransferUtils.MediaCategory.VIDEO
                 val isApk = ext == "apk"
                 val isPdf = ext == "pdf"
 
