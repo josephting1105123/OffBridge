@@ -47,7 +47,7 @@
     "uniform float u_dark;",
     "uniform vec2 u_mouse;",
     "uniform int u_ripCount;",
-    "uniform vec3 u_rip[" + MAX_RIP + "];", // x, y, startTime
+    "uniform vec4 u_rip[" + MAX_RIP + "];", // x, y, startTime, travelDir
 
     "float ambient(vec2 p, float t){",
     "  float h = 0.0;",
@@ -61,13 +61,23 @@
     "  float h = 0.0;",
     "  for(int i=0;i<" + MAX_RIP + ";i++){",
     "    if(i >= u_ripCount) break;",
-    "    vec3 r = u_rip[i];",
+    "    vec4 r = u_rip[i];",
     "    float age = t - r.z;",
-    "    float dist = length(p - r.xy);",
-    "    float front = age * 0.72;",             // ring speed
-    "    float ring = sin((dist - front) * 52.0);",
-    "    float env = exp(-abs(dist - front) * 9.0) * exp(-age * 1.7);",
-    "    h += 0.3 * ring * env;",
+    "    vec2 d = p - r.xy;",
+    // Rotate into the ripple's travel frame and stretch along it, so the front
+    // is elongated by the motion (a wake) rather than a perfect circle...
+    "    float c = cos(r.w), s = sin(r.w);",
+    "    vec2 q = vec2(d.x*c + d.y*s, -d.x*s + d.y*c);",
+    "    q.x /= 1.6;",
+    "    float dist = length(q);",
+    // ...then wobble the radius by angle so the ring reads as organic water,
+    // not a geometric ring.
+    "    float ang = atan(q.y, q.x);",
+    "    dist += 0.020 * sin(ang*5.0 + r.z*4.0) + 0.012 * sin(ang*9.0 - t*0.6);",
+    "    float front = age * 0.32;",             // slower propagation
+    "    float ring = sin((dist - front) * 22.0);", // lower frequency (wider, gentler)
+    "    float env = exp(-abs(dist - front) * 8.0) * exp(-age * 1.6);",
+    "    h += 0.14 * ring * env;",               // weaker
     "  }",
     "  return h;",
     "}",
@@ -75,7 +85,7 @@
     "float height(vec2 p, float t){",
     "  float h = ambient(p, t) + ripples(p, t);",
     "  float md = length(p - u_mouse);",
-    "  h -= 0.5 * exp(-md * 20.0);",             // the object resting in the surface
+    "  h -= 0.32 * exp(-md * 20.0);",            // the object resting in the surface (gentle)
     "  return h;",
     "}",
 
@@ -171,8 +181,9 @@
   resize();
   window.addEventListener("resize", resize, { passive: true });
 
-  // Ripple ring buffer (positions in the shader's normalized space).
-  var rips = new Float32Array(MAX_RIP * 3);
+  // Ripple ring buffer: (x, y, startTime, travelDir) per ripple, in the
+  // shader's normalized space.
+  var rips = new Float32Array(MAX_RIP * 4);
   var ripCount = 0;
   var mouseX = -9999;
   var mouseY = -9999;
@@ -187,17 +198,19 @@
   var mouseTmp = [0, 0];
   var start = performance.now();
 
-  function spawn(cx, cy) {
+  function spawn(cx, cy, dir) {
     var t = (performance.now() - start) / 1000;
     // Shift the newest ripples to the front, drop the oldest if full.
     var n = Math.min(ripCount + 1, MAX_RIP);
     for (var i = n - 1; i > 0; i--) {
-      rips[i * 3] = rips[(i - 1) * 3];
-      rips[i * 3 + 1] = rips[(i - 1) * 3 + 1];
-      rips[i * 3 + 2] = rips[(i - 1) * 3 + 2];
+      rips[i * 4] = rips[(i - 1) * 4];
+      rips[i * 4 + 1] = rips[(i - 1) * 4 + 1];
+      rips[i * 4 + 2] = rips[(i - 1) * 4 + 2];
+      rips[i * 4 + 3] = rips[(i - 1) * 4 + 3];
     }
     toShader(cx, cy, rips, 0);
     rips[2] = t;
+    rips[3] = dir || 0;
     ripCount = n;
   }
 
@@ -217,7 +230,11 @@
         // Drop a ripple only after ~46px of travel AND at least 300ms since the
         // last one, so the wake stays sparse instead of a dense pile-up.
         if (d2 > 2100 && now - lastSpawnMs >= 300) {
-          spawn(e.clientX, e.clientY);
+          // Travel direction in shader space (y is flipped) → elongates the ripple.
+          var dir = have
+            ? Math.atan2(-(e.clientY - lastY), e.clientX - lastX)
+            : 0;
+          spawn(e.clientX, e.clientY, dir);
           lastX = e.clientX;
           lastY = e.clientY;
           have = true;
@@ -230,7 +247,7 @@
       "pointerdown",
       function (e) {
         if (e.pointerType && e.pointerType === "touch") return;
-        spawn(e.clientX, e.clientY); // a firmer splash on click
+        spawn(e.clientX, e.clientY, 0); // a splash on click
       },
       { passive: true }
     );
@@ -252,12 +269,13 @@
       toShader(mouseX, mouseY, mouseTmp, 0);
       gl.uniform2f(uMouse, mouseTmp[0], mouseTmp[1]);
     }
-    // Prune ripples older than ~3.5s so the loop stays cheap.
-    while (ripCount > 0 && t - rips[(ripCount - 1) * 3 + 2] > 3.5) {
+    // Prune ripples older than ~4.5s so the loop stays cheap (they last longer
+    // now that they travel more slowly).
+    while (ripCount > 0 && t - rips[(ripCount - 1) * 4 + 2] > 4.5) {
       ripCount--;
     }
     gl.uniform1i(uRipCount, ripCount);
-    gl.uniform3fv(uRip, rips);
+    gl.uniform4fv(uRip, rips);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
