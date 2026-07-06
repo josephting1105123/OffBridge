@@ -21,6 +21,7 @@
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var EASE = "cubic-bezier(0.16, 1, 0.3, 1)"; // ease-out-expo, matches --ease
+  var FADE = "cubic-bezier(0.4, 0, 0.2, 1)"; // even ease for collapse crossfade
   var DUR = 520; // ms — expand/collapse flight time
   var MARGIN = 16; // min gap from panel to viewport edge
 
@@ -239,7 +240,13 @@
     if (open && open.card === card && open.closeBtn) open.closeBtn.focus();
   }
 
-  /* --- Collapse ------------------------------------------------------------ */
+  /* --- Collapse ------------------------------------------------------------
+     Smooth minimize. A reverse-FLIP looked rough: it slid the *expanded* panel
+     (mismatched, squished content) into the slot, then hard-swapped to the mini
+     card at the very end — reading as something banging in from the side. So
+     instead the panel fades out IN PLACE, we restore the mini card to its slot
+     while it's fully invisible (the content/layout swap the user must not see),
+     then fade the mini card back in. */
   function collapse() {
     if (!open || busy) return;
     busy = true;
@@ -247,13 +254,13 @@
     open = null;
     var card = current.card;
     var ph = current.ph;
-    var done = false;
+    var swapped = false;
 
     scrim.classList.remove("is-on");
 
-    function cleanup() {
-      if (done) return;
-      done = true;
+    // Put the real node back in its grid slot and drop all the overlay state.
+    // Leaves opacity/transition alone — the fades manage those.
+    function restore() {
       card.classList.remove("is-expanded");
       [
         "position",
@@ -263,8 +270,6 @@
         "height",
         "transform",
         "transform-origin",
-        "transition",
-        "opacity",
         "z-index"
       ].forEach(function (p) {
         card.style.removeProperty(p);
@@ -285,24 +290,53 @@
       if (current.prevFocus && current.prevFocus.focus) {
         current.prevFocus.focus({ preventScroll: true });
       }
-      busy = false;
+    }
+
+    // Runs once the panel is invisible: swap it for the mini card in its slot,
+    // then fade the mini card back in from 0.
+    function swap() {
+      if (swapped) return;
+      swapped = true;
+      restore();
+      if (reduce) {
+        card.style.removeProperty("opacity");
+        card.style.removeProperty("transition");
+        busy = false;
+        return;
+      }
+      card.style.transition = "none";
+      card.style.opacity = "0"; // normal priority now that is-expanded is gone
+      void card.offsetWidth; // commit the 0 so the fade-in animates
+      card.style.transition = "opacity 220ms " + FADE;
+      window.requestAnimationFrame(function () {
+        card.style.opacity = "1";
+      });
+      var finish = function () {
+        card.style.removeProperty("opacity");
+        card.style.removeProperty("transition");
+        busy = false;
+      };
+      onTransitionEndProp(card, "opacity", finish);
+      window.setTimeout(finish, 260); // safety net
     }
 
     if (reduce) {
-      card.style.transition = "opacity 160ms linear";
-      card.style.opacity = "0";
-      window.setTimeout(cleanup, 180);
+      swap();
       return;
     }
 
-    // FLIP back toward the placeholder's current position.
-    var rect1 = card.getBoundingClientRect();
-    var rectP = ph.getBoundingClientRect();
-    card.style.transformOrigin = "0 0";
-    card.style.transition = "transform " + DUR + "ms " + EASE;
-    card.style.transform = invertTransform(rectP, rect1);
-    onTransformEnd(card, cleanup);
-    window.setTimeout(cleanup, DUR + 140); // safety net if transitionend misfires
+    // Fade + gently shrink the panel in place. is-expanded pins
+    // `opacity: 1 !important`, so override it with an inline !important to let
+    // the fade actually take; the content stays expanded until it's invisible.
+    var OUT = 240;
+    card.style.transformOrigin = "50% 50%";
+    card.style.transition =
+      "opacity " + OUT + "ms " + FADE + ", transform " + OUT + "ms " + FADE;
+    void card.offsetWidth;
+    card.style.setProperty("opacity", "0", "important");
+    card.style.transform = "scale(0.96)";
+    onTransitionEndProp(card, "opacity", swap);
+    window.setTimeout(swap, OUT + 120); // safety net if transitionend misfires
   }
 
   /* --- Reposition an open panel on resize (no animation) ------------------- */
@@ -337,8 +371,12 @@
   }
 
   function onTransformEnd(el, cb) {
+    onTransitionEndProp(el, "transform", cb);
+  }
+
+  function onTransitionEndProp(el, prop, cb) {
     el.addEventListener("transitionend", function te(ev) {
-      if (ev.target !== el || ev.propertyName !== "transform") return;
+      if (ev.target !== el || ev.propertyName !== prop) return;
       el.removeEventListener("transitionend", te);
       cb();
     });

@@ -192,6 +192,41 @@
   --delay: -14s;
 }
 
+/* --- Page-wide cursor glow -----------------------------------------------
+   A soft light that trails the pointer across the whole page (position driven
+   by main.js with a lerp lag). The layer clips overflow so the disk never adds
+   a scrollbar, and sits above content but below the nav (z 60 < nav 100).
+   Mouse-only + reduced-motion off are enforced in JS and the query below. */
+.cursor-glow-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cursor-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px; /* centre the disk on the transform origin */
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate3d(-9999px, -9999px, 0);
+  transition: opacity 380ms var(--ease-std);
+  will-change: transform;
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in srgb, var(--accent) 20%, transparent),
+    color-mix(in srgb, var(--hue-indigo) 10%, transparent) 45%,
+    transparent 72%
+  );
+}
+.cursor-glow.is-on {
+  opacity: 1;
+}
+
 /* --- Reduced motion: snap everything to its final frame ------------------- */
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] {
@@ -211,5 +246,8 @@
   }
   .amb-pill {
     animation: none !important;
+  }
+  .cursor-glow-layer {
+    display: none;
   }
 }

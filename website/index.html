@@ -115,6 +115,12 @@
     <span class="amb-pill"></span>
   </div>
 
+  <!-- Cursor glow: a soft light that trails the pointer across the whole page
+       (driven by main.js with the same lerp lag as the card spotlights). The
+       clipping layer sits above content but below the nav, so the disk never
+       adds a scrollbar. Mouse-only; hidden under reduced motion. -->
+  <div class="cursor-glow-layer" aria-hidden="true"><span class="cursor-glow"></span></div>
+
   <!-- ============================== NAV ================================== -->
   <header class="nav" id="nav">
     <div class="container container--wide nav__inner">
