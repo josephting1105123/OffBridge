@@ -8,18 +8,18 @@
   <meta name="theme-color" content="#141414" />
   <meta name="color-scheme" content="dark light" />
 
-  <!-- Canonical + social. These need an ABSOLUTE url — replace REPLACE_SITE_URL
-       with the deployed origin (e.g. https://owner.github.io/repo) before launch.
+  <!-- Canonical + social. These point at the live Cloudflare Pages origin. Update them
+       if you move to a custom domain (keep privacy.html's canonical in sync).
        Everything else on the page stays relative; see website/README.md. -->
-  <link rel="canonical" href="https://REPLACE_SITE_URL/" />
+  <link rel="canonical" href="https://clipboard-share-a8e.pages.dev/" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Clipboard Share" />
-  <meta property="og:url" content="https://REPLACE_SITE_URL/" />
+  <meta property="og:url" content="https://clipboard-share-a8e.pages.dev/" />
   <meta property="og:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
   <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
-  <meta property="og:image" content="https://REPLACE_SITE_URL/assets/og-image.png" />
+  <meta property="og:image" content="https://clipboard-share-a8e.pages.dev/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Clipboard Share — off-grid clipboard sync and file transfer for Android and Windows" />
@@ -28,7 +28,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
   <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
-  <meta name="twitter:image" content="https://REPLACE_SITE_URL/assets/og-image.png" />
+  <meta name="twitter:image" content="https://clipboard-share-a8e.pages.dev/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="site.webmanifest" />
@@ -55,7 +55,7 @@
     "name": "Clipboard Share",
     "operatingSystem": "Android, Windows",
     "applicationCategory": "UtilitiesApplication",
-    "softwareVersion": "3.5.1",
+    "softwareVersion": "3.5.2",
     "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
@@ -167,14 +167,14 @@
           </h1>
           <p class="hero__lead" data-reveal>
             Clipboard Share syncs text and sends files between your Android phone and
-            Windows PC — directly, device to device. Pair once by confirming a 6-digit
+            Windows PC, directly, device to device. Pair once by confirming a 6-digit
             code, then move files over your network or completely off-grid via QR or NFC.
             Encrypted end to end; nothing ever touches a server.
           </p>
           <div class="hero__cta" data-reveal>
             <a class="btn btn--primary btn--lg" data-cta="android" href="#download">
               <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
-              Android APK
+              Get on Google Play
             </a>
             <a class="btn btn--ghost btn--lg" data-cta="windows" href="#download">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
@@ -238,10 +238,10 @@
           <span class="eyebrow">Clipboard sync</span>
           <h2 id="clip-title">Copy here. Paste there. Instantly.</h2>
           <p class="section-lead">Copy a link, a code snippet, an address on one device and it's
-            ready to paste on the other. Sync runs quietly in the background — or push on demand.</p>
+            ready to paste on the other. Sync runs quietly in the background, or push it on demand.</p>
           <ul class="feat-list">
             <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Real-time &amp; background.</strong> Paired devices stay in sync automatically.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Push on demand.</strong> One tap — or the Android quick-settings tile.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Push on demand.</strong> One tap, or the Android quick-settings tile.</span></li>
             <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>History you keep.</strong> Recent copies are saved locally and recoverable.</span></li>
           </ul>
         </div>
@@ -265,7 +265,7 @@
         <div class="split__copy">
           <span class="eyebrow">File transfer</span>
           <h2 id="xfer-title">Send anything. Even when there's no network.</h2>
-          <p class="section-lead">Photos, videos, documents, whole folders — even APKs. Multi-gigabyte
+          <p class="section-lead">Photos, videos, documents, whole folders, even APKs. Multi-gigabyte
             transfers move device to device, and pick up right where they left off if the link drops.</p>
           <ul class="feat-list">
             <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Any file, any size.</strong> Manifest-based batches with live progress.</span></li>
@@ -300,7 +300,7 @@
           <span class="eyebrow">Connectivity</span>
           <h2 id="features-title">One app. Every way to connect.</h2>
           <p class="section-lead">Clipboard Share automatically finds the fastest link between your
-            devices — and falls back gracefully when there's no router in sight.</p>
+            devices, and falls back gracefully when there's no router in sight.</p>
         </div>
 
         <div class="bento" data-stagger>
@@ -309,7 +309,7 @@
             <div>
               <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg></div>
               <h3>The transport ladder</h3>
-              <p>Tries the fastest path first and steps down only if needed — no settings to fiddle with.</p>
+              <p>Tries the fastest path first and steps down only if needed, with no settings to fiddle with.</p>
             </div>
             <div class="ladder">
               <div class="ladder-step"><span class="ladder-dot"></span> LAN (same Wi-Fi) <span class="speed">fastest</span></div>
@@ -321,7 +321,7 @@
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg></div>
             <h3>NFC tap to send</h3>
-            <p>Tap two phones to start an off-grid file transfer — no network needed. <span class="badge">Android</span></p>
+            <p>Tap two phones to start an off-grid file transfer, no network needed. <span class="badge">Android</span></p>
           </article>
 
           <article class="glass tile col-3" data-reveal>
@@ -333,7 +333,7 @@
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg></div>
             <h3>Hotspot bridge</h3>
-            <p>One device hosts; the other joins. No shared network required.</p>
+            <p>One device hosts and the other joins, with no shared network required.</p>
           </article>
 
           <article class="glass tile col-3" data-reveal>
@@ -355,13 +355,13 @@
           <article class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg></div>
             <h3>Quick-settings tile</h3>
-            <p>“Push to PC” from the Android pull-down — no app open needed. <span class="badge">Android</span></p>
+            <p>“Push to PC” from the Android pull-down, without opening the app. <span class="badge">Android</span></p>
           </article>
 
           <article class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg></div>
             <h3>Light &amp; dark</h3>
-            <p>A considered theme on both platforms — try the toggle up top.</p>
+            <p>A considered theme on both platforms. Try the toggle up top.</p>
           </article>
         </div>
       </div>
@@ -379,17 +379,17 @@
           <div class="step">
             <div class="step__num">1</div>
             <h3>Find your device</h3>
-            <p>On the same network, devices discover each other automatically — ready to pair.</p>
+            <p>On the same network, devices discover each other automatically, ready to pair.</p>
           </div>
           <div class="step">
             <div class="step__num">2</div>
             <h3>Verify the code</h3>
-            <p>Both devices show a 6-digit code. Confirm they match and accept — that blocks impostors.</p>
+            <p>Both devices show a 6-digit code. Confirm they match and accept; that blocks impostors.</p>
           </div>
           <div class="step">
             <div class="step__num">3</div>
             <h3>Sync &amp; send</h3>
-            <p>Clipboard syncs automatically; send files over the network — or off-grid via QR / NFC when there's no shared Wi-Fi.</p>
+            <p>Clipboard syncs automatically; send files over the network, or off-grid via QR / NFC when there's no shared Wi-Fi.</p>
           </div>
         </div>
       </div>
@@ -417,17 +417,17 @@
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg></div>
             <h3>Verified pairing (SAS)</h3>
-            <p>A 6-digit code from an ECDH key exchange — you confirm it matches, stopping man-in-the-middle attacks.</p>
+            <p>A 6-digit code from an ECDH key exchange. You confirm it matches, which stops man-in-the-middle attacks.</p>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
-            <p>Every clipboard payload and file is AES-256 encrypted in flight — clipboard with authenticated AES-GCM. Nothing travels in the clear.</p>
+            <p>Every clipboard payload and file is AES-256 encrypted in flight; the clipboard uses authenticated AES-GCM. Nothing travels in the clear.</p>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg></div>
             <h3>Keys stay local</h3>
-            <p>Per-pairing keys live only on your devices — never uploaded, never shared.</p>
+            <p>Per-pairing keys live only on your devices, never uploaded or shared.</p>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg></div>
@@ -469,7 +469,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
               <h3>Windows</h3>
-              <span class="badge">v3.5.1</span>
+              <span class="badge">v3.5.2</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -490,9 +490,9 @@
         <div class="dl-head">
           <span class="eyebrow">Get it</span>
           <h2 id="dl-title">Download Clipboard Share</h2>
-          <p class="section-lead">Free. No account. Pick your platform — your device is highlighted below.</p>
+          <p class="section-lead">It's free, with no account. Pick your platform; your device is highlighted below.</p>
           <p class="dl-note" data-dl-othernote hidden>You're on another platform. Clipboard Share runs on
-            Android and Windows — grab a build below and install it on a supported device.</p>
+            Android and Windows. Grab a build below and install it on a supported device.</p>
         </div>
 
         <div class="dl-grid">
@@ -502,7 +502,7 @@
             <h3>Android</h3>
             <div class="dl-card__badges">
               <span class="badge" data-dl-version>v3.5.1</span>
-              <span class="badge badge--muted" data-dl-type>APK</span>
+              <span class="badge badge--muted" data-dl-type>Google Play</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
             <a class="btn btn--primary btn--lg btn--block is-disabled" data-dl-link href="#download" rel="nofollow noopener" aria-disabled="true">
@@ -518,7 +518,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg></div>
             <h3>Windows</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.5.1</span>
+              <span class="badge" data-dl-version>v3.5.2</span>
               <span class="badge badge--muted" data-dl-type>Installer</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -531,7 +531,7 @@
           </article>
         </div>
 
-        <p class="dl-todo">Builds are being published — check back shortly.</p>
+        <p class="dl-todo">Builds are published for Android and Windows.</p>
       </div>
     </section>
 
@@ -553,15 +553,15 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>What is the 6-digit code?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>It's a Short Authentication String derived from a secure key exchange. Both devices show the same number — confirming they match proves you're connected to the right device and not an impostor.</p></div></div>
+            <div class="faq__body"><div><p>It's a Short Authentication String derived from a secure key exchange. Both devices show the same number, and confirming they match proves you're connected to the right device and not an impostor.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>How large a file can I send?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
             <div class="faq__body"><div><p>Multi-gigabyte transfers are supported, with live per-file progress. If the connection drops mid-transfer it resumes rather than starting over.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
-            <summary>Why does the Android app install from an APK?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>The app is distributed directly as an APK. You may need to allow “Install unknown apps” for your browser the first time. The Windows version ships as a standard installer with a bundled runtime — no Java needed.</p></div></div>
+            <summary>How do I install it?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
+            <div class="faq__body"><div><p>Android installs from Google Play. The Windows version is a standard installer with a bundled runtime, so there is no Java to set up. It is not code-signed yet, so Windows may show a SmartScreen unknown-publisher notice the first time; choose More info, then Run anyway.</p></div></div>
           </details>
         </div>
       </div>
@@ -577,7 +577,7 @@
             <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--accent-text)"><use href="#i-clip-check"></use></svg>
             Clipboard&nbsp;Share
           </a>
-          <p>Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, no telemetry — by EntropicSoftwareLab.</p>
+          <p>Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, no telemetry. Built by EntropicSoftwareLab.</p>
         </div>
         <div class="footer__col">
           <h3>Product</h3>
@@ -592,7 +592,7 @@
           <h3>Versions</h3>
           <ul>
             <li><a href="#download">Android 3.5.1</a></li>
-            <li><a href="#download">Windows 3.5.1</a></li>
+            <li><a href="#download">Windows 3.5.2</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>
