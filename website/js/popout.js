@@ -80,6 +80,8 @@
     hint.innerHTML = '<svg class="icon"><use href="#i-expand"></use></svg>';
     card.appendChild(hint);
 
+    trackSpotlight(card);
+
     card.addEventListener("click", function (e) {
       if (e.target.closest(".popout__close")) return; // handled separately
       if (busy) return;
@@ -93,6 +95,29 @@
       if (open && open.card === card) collapse();
       else if (!open) expand(card);
     });
+  }
+
+  /* --- Cursor-tracking spotlight: feed --mx/--my as % of the card --------- */
+  function trackSpotlight(card) {
+    var raf = 0;
+    var mx = 50;
+    var my = 50;
+    function apply() {
+      raf = 0;
+      card.style.setProperty("--mx", mx.toFixed(1) + "%");
+      card.style.setProperty("--my", my.toFixed(1) + "%");
+    }
+    card.addEventListener("pointermove", function (e) {
+      var r = card.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      mx = clamp01to100(((e.clientX - r.left) / r.width) * 100);
+      my = clamp01to100(((e.clientY - r.top) / r.height) * 100);
+      if (!raf) raf = window.requestAnimationFrame(apply);
+    });
+  }
+
+  function clamp01to100(v) {
+    return v < 0 ? 0 : v > 100 ? 100 : v;
   }
 
   /* --- Expand -------------------------------------------------------------- */

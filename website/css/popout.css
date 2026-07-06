@@ -80,9 +80,14 @@
   max-height: 88vh;
   padding: clamp(var(--s-24), 3vw, var(--s-48));
   gap: var(--s-16);
-  border-color: var(--hairline-strong);
-  box-shadow: var(--shadow-8);
   cursor: default;
+  /* Hint-of-multicolor: solid card interior, a subtle gradient border, and a
+     soft indigo glow in the drop shadow. Emerald still dominates. */
+  border: 1px solid transparent;
+  background: linear-gradient(var(--card), var(--card)) padding-box,
+    var(--grad-multi) border-box;
+  box-shadow: var(--shadow-8),
+    0 40px 120px -55px color-mix(in srgb, var(--hue-indigo) 55%, transparent);
 }
 .is-expanded .expand-hint {
   display: none;
@@ -134,9 +139,101 @@
   height: 18px;
 }
 
+/* --- Cursor-tracking gradient spotlight (the "alive" sheen) --------------- */
+/* The card owns a stacking context so the spotlight can sit at z-index:-1 —
+   above the card's own background but below all real content — without
+   disturbing the absolutely-positioned hint / close button. */
+.expandable {
+  isolation: isolate;
+}
+.expandable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-std);
+  background: radial-gradient(
+      240px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--accent) 24%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      360px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--hue-indigo) 13%, transparent),
+      transparent 62%
+    );
+}
+.expandable:hover::after,
+.expandable:focus-visible::after,
+.is-expanded::after {
+  opacity: 1;
+}
+
+/* --- Extra info revealed only when a card is expanded -------------------- */
+.card-more {
+  display: none;
+  margin-top: var(--s-16);
+  padding-top: var(--s-16);
+  border-top: 1px solid var(--hairline);
+}
+.is-expanded .card-more {
+  display: block;
+  animation: moreIn 420ms var(--ease) 140ms both;
+}
+@keyframes moreIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.card-more__lead {
+  color: var(--text-secondary);
+  margin-bottom: var(--s-16);
+}
+
+.detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.detail-list li {
+  display: flex;
+  gap: var(--s-12);
+  align-items: flex-start;
+  padding: var(--s-8);
+  border-radius: var(--r-sm);
+  color: var(--text-secondary);
+  font-size: var(--t-small);
+  transition: background-color var(--dur-fast) var(--ease-std);
+}
+.detail-list li:hover {
+  background: var(--surface);
+}
+.detail-list .icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--accent-text);
+  margin-top: 2px;
+}
+.detail-list strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* --- Reduced motion: the JS crossfades instead of FLIP; nothing to add ---- */
 @media (prefers-reduced-motion: reduce) {
   .popout-scrim {
     transition: opacity var(--dur-med) linear, visibility var(--dur-med) linear;
+  }
+  .expandable::after {
+    transition: none;
   }
 }

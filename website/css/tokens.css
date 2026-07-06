@@ -32,6 +32,20 @@
   --accent-muted: rgba(34, 197, 94, 0.14);
   --accent-glow: rgba(34, 197, 94, 0.30);
 
+  /* Hint-of-multicolor: emerald stays primary; these secondary hues only ever
+     appear as low-opacity glow on card hover/expand and in the floating-pill
+     backdrop. Never as text or a solid fill (keeps the emerald identity). */
+  --hue-indigo: #6366F1;
+  --hue-pink: #EC4899;
+  --hue-teal: #2DD4BF;
+  --grad-multi: linear-gradient(
+    120deg,
+    var(--accent) 0%,
+    var(--hue-teal) 32%,
+    var(--hue-indigo) 66%,
+    var(--hue-pink) 100%
+  );
+
   /* ----- Semantic ----- */
   --success: #34D399;
   --error: #EF4444;

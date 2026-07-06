@@ -81,6 +81,120 @@
   box-shadow: 0 0 8px 1px var(--accent-glow);
 }
 
+/* --- Floating-pill ambient backdrop (Connectivity section) ---------------
+   Decorative gradient lozenges that drift behind the bento. Kept low-opacity
+   and blurred so nothing competes with card/text contrast. Emerald leads; the
+   indigo/teal/pink hues are the "hint of multicolor". */
+#features {
+  isolation: isolate; /* contain the pill stacking context */
+}
+#features > .container {
+  position: relative;
+  z-index: 1;
+}
+.pill-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pill {
+  position: absolute;
+  width: clamp(220px, 26vw, 420px);
+  aspect-ratio: 5 / 2;
+  border-radius: 999px;
+  filter: blur(34px);
+  opacity: 0.2;
+  transform: rotate(var(--rot, 0deg));
+  will-change: transform;
+  animation: pill-drift var(--dur, 28s) var(--ease-std) infinite alternate;
+  animation-delay: var(--delay, 0s);
+}
+[data-theme="light"] .pill {
+  opacity: 0.12;
+}
+@keyframes pill-drift {
+  from {
+    transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg));
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), var(--dy, -24px), 0)
+      rotate(calc(var(--rot, 0deg) + 3deg));
+  }
+}
+/* Placement, hue, angle and cadence per pill (emerald-dominant mix). */
+.pill:nth-child(1) {
+  top: 4%;
+  left: -8%;
+  background: linear-gradient(120deg, var(--accent), var(--hue-teal));
+  --rot: -18deg;
+  --dx: 52px;
+  --dy: 30px;
+  --dur: 26s;
+}
+.pill:nth-child(2) {
+  top: 56%;
+  left: 2%;
+  background: linear-gradient(120deg, var(--hue-indigo), var(--accent));
+  --rot: -26deg;
+  --dx: 40px;
+  --dy: -34px;
+  --dur: 32s;
+  --delay: -8s;
+}
+.pill:nth-child(3) {
+  top: -6%;
+  left: 38%;
+  background: linear-gradient(120deg, var(--hue-teal), var(--accent));
+  --rot: 14deg;
+  --dx: -30px;
+  --dy: 42px;
+  --dur: 28s;
+  --delay: -4s;
+}
+.pill:nth-child(4) {
+  top: 60%;
+  left: 46%;
+  background: linear-gradient(120deg, var(--accent), var(--hue-indigo));
+  --rot: 20deg;
+  --dx: 46px;
+  --dy: -28px;
+  --dur: 30s;
+  --delay: -12s;
+}
+.pill:nth-child(5) {
+  top: 8%;
+  right: 2%;
+  background: linear-gradient(120deg, var(--hue-pink), var(--hue-indigo));
+  opacity: 0.14;
+  --rot: -12deg;
+  --dx: -44px;
+  --dy: 32px;
+  --dur: 34s;
+  --delay: -6s;
+}
+.pill:nth-child(6) {
+  top: 66%;
+  right: 6%;
+  background: linear-gradient(120deg, var(--accent), var(--hue-teal));
+  --rot: 22deg;
+  --dx: -38px;
+  --dy: -30px;
+  --dur: 27s;
+  --delay: -2s;
+}
+.pill:nth-child(7) {
+  top: 28%;
+  right: 28%;
+  background: linear-gradient(120deg, var(--hue-indigo), var(--accent));
+  --rot: -8deg;
+  --dx: 30px;
+  --dy: 36px;
+  --dur: 31s;
+  --delay: -14s;
+}
+
 /* --- Reduced motion: snap everything to its final frame ------------------- */
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] {
@@ -97,5 +211,8 @@
   }
   .stepline__fill {
     transform: scaleX(1) !important;
+  }
+  .pill {
+    animation: none !important;
   }
 }

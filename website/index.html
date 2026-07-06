@@ -297,6 +297,13 @@
 
     <!-- ========================= BENTO FEATURES ======================= -->
     <section id="features" aria-labelledby="features-title">
+      <!-- Ambient floating-pill backdrop (decorative). Drifts under reduced-motion
+           is disabled; opacity kept low so card/text contrast is unaffected. -->
+      <div class="pill-field" aria-hidden="true">
+        <span class="pill"></span><span class="pill"></span><span class="pill"></span>
+        <span class="pill"></span><span class="pill"></span><span class="pill"></span>
+        <span class="pill"></span>
+      </div>
       <div class="container container--wide">
         <div class="section-head section-head--center">
           <span class="eyebrow">Connectivity</span>
@@ -318,30 +325,70 @@
               <div class="ladder-step"><span class="ladder-dot"></span> Wi-Fi Direct / Hotspot <span class="speed">no router</span></div>
               <div class="ladder-step"><span class="ladder-dot"></span> QR / NFC off-grid <span class="speed">no network</span></div>
             </div>
+            <div class="card-more">
+              <p class="card-more__lead">Every send starts at the top rung and only steps down when a faster path isn't available. You never pick a mode; the app probes and commits in under a second.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg><span><strong>LAN.</strong> Same router, direct over your Wi-Fi at full local speed.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Wi-Fi Direct / hotspot.</strong> A peer link or a hosted hotspot when there's no router.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a link from nothing; bytes stay AES-256 sealed.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg></div>
             <h3>NFC tap to send</h3>
             <p>Tap two phones to start an off-grid file transfer, no network needed. <span class="badge">Android</span></p>
+            <div class="card-more">
+              <p class="card-more__lead">Hold two Android phones back-to-back and the bump hands off the connection details, so the transfer starts without a pairing screen or a shared network.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap to begin.</strong> The NFC bump seeds an off-grid handshake between the two phones.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Then the fastest link.</strong> Bytes move over the quickest path the phones can form.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Still encrypted.</strong> Off-grid doesn't mean in the clear; it's AES-256 end to end.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></div>
             <h3>QR off-grid</h3>
             <p>Scan a QR to send or receive files with no shared Wi-Fi. Both platforms.</p>
+            <div class="card-more">
+              <p class="card-more__lead">When there's no network to join, one device shows a QR that carries the link details and the other scans it to connect. No typing, no router.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Show, then scan.</strong> The code holds everything the two devices need to meet.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Both platforms.</strong> Windows presents the code; Android scans it with the camera.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Sealed transfer.</strong> The session it opens is AES-256 encrypted like any other.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg></div>
             <h3>Hotspot bridge</h3>
             <p>One device hosts and the other joins, with no shared network required.</p>
+            <div class="card-more">
+              <p class="card-more__lead">One device raises a local hotspot and the other joins it, forming a private two-device network. It's the fallback when there's no LAN and Wi-Fi Direct isn't available.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Host and join.</strong> A short-lived local access point that only the pair sees.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>No router, no internet.</strong> The bridge is entirely between your two devices.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>Cleaned up after.</strong> The hotspot is torn down when the transfer is done.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg></div>
             <h3>Share-sheet</h3>
             <p>Send straight from any Android app's share button. <span class="badge">Android</span></p>
+            <div class="card-more">
+              <p class="card-more__lead">Clipboard Share registers as a share target, so a photo, PDF or link goes to your PC straight from whatever app you're already in. No need to open the app first.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg><span><strong>From anywhere.</strong> Gallery, browser, files, chat; if it can share, it can send.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>One or many.</strong> Batch-select several items and they queue as one transfer.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Straight to the PC.</strong> Picks the same transport ladder as an in-app send.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-4" data-reveal>
@@ -352,18 +399,42 @@
               <span class="capsule capsule--on">All</span><span class="capsule">Sent</span>
               <span class="capsule">Received</span><span class="capsule">Pending</span>
             </div>
+            <div class="card-more">
+              <p class="card-more__lead">Every copy and transfer is logged on the device so you can find something later and send it again without hunting for the original.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>Filter fast.</strong> Narrow to Sent, Received or Pending in a tap.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Stored locally.</strong> The log lives only on your device, never a server.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Re-send in a tap.</strong> Reopen or resend a past item straight from the list.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg></div>
             <h3>Quick-settings tile</h3>
             <p>“Push to PC” from the Android pull-down, without opening the app. <span class="badge">Android</span></p>
+            <div class="card-more">
+              <p class="card-more__lead">Drop a Push to PC tile into the Android quick-settings panel and your current clipboard lands on the paired PC in one tap, without ever leaving what you're doing.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>One tap from the shade.</strong> Pull down, tap, done; no app switch.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Current clipboard.</strong> Sends whatever you last copied to the PC.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Only to paired devices.</strong> The tile respects your verified pairings.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg></div>
             <h3>Light &amp; dark</h3>
             <p>A considered theme on both platforms. Try the toggle up top.</p>
+            <div class="card-more">
+              <p class="card-more__lead">Both apps ship a hand-tuned light and dark theme that follows your system by default and flips on demand, so Clipboard Share looks at home wherever it runs.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-sun"></use></svg><span><strong>Follows the system.</strong> Matches your OS light or dark setting out of the box.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg><span><strong>Or flip it yourself.</strong> A manual toggle overrides when you want the other.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Consistent across both.</strong> The same considered palette on Android and Windows.</span></li>
+              </ul>
+            </div>
           </article>
         </div>
       </div>
@@ -422,21 +493,53 @@
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg></div>
             <h3>Verified pairing (SAS)</h3>
             <p>A 6-digit code from an ECDH key exchange. You confirm it matches, which stops man-in-the-middle attacks.</p>
+            <div class="card-more">
+              <p class="card-more__lead">Pairing runs an ECDH key exchange, then shows a 6-digit Short Authentication String on both screens. If the numbers match, no one is sitting in the middle.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg><span><strong>ECDH on the curve.</strong> A fresh secp256r1 exchange derives the shared key.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>You are the check.</strong> Confirming the six digits is what defeats an impostor.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Pinned after first trust.</strong> A later key swap fails closed instead of silently downgrading.</span></li>
+              </ul>
+            </div>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
             <p>Every clipboard payload and file is AES-256 encrypted in flight; the clipboard uses authenticated AES-GCM. Nothing travels in the clear.</p>
+            <div class="card-more">
+              <p class="card-more__lead">Whatever you send is sealed with AES-256 before it leaves the device. The clipboard path uses authenticated AES-GCM, so tampering is detected, not just hidden.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Authenticated.</strong> AES-GCM verifies integrity, not only confidentiality.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Files too.</strong> Large transfers are sealed the same way, chunk by chunk.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Never in the clear.</strong> On-grid or off-grid, the bytes are always encrypted.</span></li>
+              </ul>
+            </div>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg></div>
             <h3>Keys stay local</h3>
             <p>Per-pairing keys live only on your devices, never uploaded or shared.</p>
+            <div class="card-more">
+              <p class="card-more__lead">The keys that protect your data are generated on your devices and kept in the OS keystore. They're never uploaded, never shared, and never escrowed anywhere.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg><span><strong>Per pairing.</strong> Each paired device gets its own key material.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>In the keystore.</strong> Stored encrypted on-device, tied to your hardware.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg><span><strong>Gone on unpair.</strong> Remove a device and its keys are wiped with it.</span></li>
+              </ul>
+            </div>
           </article>
           <article class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg></div>
             <h3>Zero telemetry</h3>
             <p>No analytics, no ads, no third parties. The app simply doesn't phone home.</p>
+            <div class="card-more">
+              <p class="card-more__lead">There are no analytics SDKs, no ad networks and no crash-reporting that phones home. The app has nothing to send about you and nowhere to send it.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>No third parties.</strong> No trackers, no ad libraries, no hidden SDKs.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Only your devices.</strong> The only network traffic is to the device you paired.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Nothing to leak.</strong> No account and no profile means nothing to breach.</span></li>
+              </ul>
+            </div>
           </article>
         </div>
       </div>
