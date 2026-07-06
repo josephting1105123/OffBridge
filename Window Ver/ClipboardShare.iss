@@ -1,5 +1,5 @@
 #define MyAppName "Clipboard Share"
-#define MyAppVersion "3.5.2"
+#define MyAppVersion "3.5.3"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "Clipboard Share.exe"
 
@@ -22,6 +22,26 @@ OutputBaseFilename=ClipboardShareSetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+
+; --- Branding ----------------------------------------------------------------
+; Custom setup look, all rendered from the emerald clipboard brand mark by
+; installer\make-brand-assets.ps1 (re-run that script to regenerate). SetupIconFile
+; is the same app.ico the packaged app uses, so the setup .exe and the installed app
+; share one icon. The Wizard images are supplied at 100/150/200% DPI sizes.
+SetupIconFile=src\main\resources\windows\app.ico
+WizardImageFile=installer\wizard-164.bmp,installer\wizard-246.bmp,installer\wizard-328.bmp
+WizardSmallImageFile=installer\wizard-small-55.bmp,installer\wizard-small-83.bmp,installer\wizard-small-110.bmp
+
+; --- Upgrade behaviour: one install, never two copies ------------------------
+; Show the Welcome page so the [Code] block can confirm the detected previous
+; version on it (see InitializeWizard).
+DisableWelcomePage=no
+; Auto-hide the "Select Destination Location" page when a previous install of this
+; AppId is detected. UsePreviousAppDir (yes by default) then reuses that folder, so an
+; upgrade always overwrites in place and the user cannot browse elsewhere to create a
+; second parallel copy. On a fresh install (no prior version) the directory page still
+; shows as normal.
+DisableDirPage=auto
 
 ; --- Code signing (Authenticode) ---------------------------------------------
 ; The installer ships UNSIGNED today, so a brand-new publisher trips SmartScreen
@@ -76,3 +96,115 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 [UninstallRun]
 ; Remove the firewall rule when the app is uninstalled.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
+
+[Code]
+// ---------------------------------------------------------------------------
+// Previous-version detection.
+// If Clipboard Share is already installed, confirm its version and update in
+// place (never a second copy). If nothing is installed, do a normal fresh install.
+//
+// UninstKey is "<AppId>_is1" and the GUID MUST stay in sync with [Setup] AppId
+// (8A19B1A0-7A0B-48F8-95BA-153D7614B27C). A 32-bit installer on 64-bit Windows
+// reads/writes this under the WOW6432Node view automatically, which is exactly
+// where this installer wrote it, so the plain HKLM query below resolves correctly.
+// (Only // line comments in here — brace comments would swallow the GUID's '}'.)
+// ---------------------------------------------------------------------------
+const
+  UninstKey = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{8A19B1A0-7A0B-48F8-95BA-153D7614B27C}_is1';
+  // Newline as a named constant so no line below has to START with '#': the ISPP
+  // preprocessor reads a leading '#' as a directive and chokes on '#13#10'.
+  NL = #13#10;
+
+var
+  gInstalledVer: String;
+  gIsUpgrade: Boolean;
+
+function GetInstalledVersion(): String;
+var
+  V: String;
+begin
+  Result := '';
+  // HKLM is authoritative for the shipped all-users installer. The HKCU fallback only
+  // helps a non-elevated per-user prior install whose hive matches the current user; it
+  // will NOT see a per-user install from a different/original user once this setup elevates
+  // for {autopf}. That path isn't shipped (the Compose per-user MSI is not the release
+  // artifact), so this is an accepted gap, not full per-user coverage.
+  if RegQueryStringValue(HKLM, UninstKey, 'DisplayVersion', V) then
+    Result := V
+  else if RegQueryStringValue(HKCU, UninstKey, 'DisplayVersion', V) then
+    Result := V;
+end;
+
+// Pop the leading dotted-integer component off S and return it; S advances past the dot.
+function PopVerPart(var S: String): Integer;
+var
+  P: Integer;
+  Part: String;
+begin
+  P := Pos('.', S);
+  if P = 0 then
+  begin
+    Part := S;
+    S := '';
+  end
+  else
+  begin
+    Part := Copy(S, 1, P - 1);
+    S := Copy(S, P + 1, Length(S));
+  end;
+  Result := StrToIntDef(Part, 0);
+end;
+
+// Numeric version compare: -1 if A<B, 0 if equal, 1 if A>B (so 3.5.2 < 3.5.10).
+function CompareVersions(A, B: String): Integer;
+var
+  An, Bn: Integer;
+begin
+  Result := 0;
+  while ((Length(A) > 0) or (Length(B) > 0)) and (Result = 0) do
+  begin
+    An := PopVerPart(A);
+    Bn := PopVerPart(B);
+    if An < Bn then Result := -1
+    else if An > Bn then Result := 1;
+  end;
+end;
+
+function InitializeSetup(): Boolean;
+var
+  Cmp: Integer;
+begin
+  Result := True;
+  gInstalledVer := GetInstalledVersion();
+  gIsUpgrade := (gInstalledVer <> '');
+  if not gIsUpgrade then
+    Exit;
+
+  Cmp := CompareVersions(gInstalledVer, '{#MyAppVersion}');
+  if Cmp = 0 then
+  begin
+    if MsgBox('Clipboard Share {#MyAppVersion} is already installed.' + NL + NL +
+        'Do you want to reinstall (repair) it?', mbConfirmation, MB_YESNO) = IDNO then
+      Result := False;
+  end
+  else if Cmp > 0 then
+  begin
+    if MsgBox('A newer version of Clipboard Share (' + gInstalledVer + ') is already installed.' + NL + NL +
+        'Do you want to replace it with the older version {#MyAppVersion}? ' +
+        'This is not recommended.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDNO then
+      Result := False;
+  end;
+  // Cmp < 0 (normal update): proceed; the Welcome page confirms the version being replaced.
+end;
+
+procedure InitializeWizard();
+begin
+  if gIsUpgrade then
+    // Neutral wording: correct whether the installed version is older (upgrade), the
+    // same (repair), or newer (user-confirmed downgrade) than {#MyAppVersion}.
+    WizardForm.WelcomeLabel2.Caption :=
+      'Clipboard Share ' + gInstalledVer + ' is already installed on this computer.' + NL + NL +
+      'Setup will replace it with version {#MyAppVersion} in the existing location, so you will ' +
+      'not end up with a second copy of the app.' + NL + NL +
+      'Click Next to continue, or Cancel to exit.';
+end;

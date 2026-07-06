@@ -43,7 +43,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             packageName = "Clipboard Share"
-            packageVersion = "3.5.2"
+            packageVersion = "3.5.3"
             description = "Off-grid file transfer and clipboard sync between Windows and Android"
             vendor = "EntropicSoftwareLab" // must match the Inno installer's MyAppPublisher
             windows {
@@ -53,10 +53,10 @@ compose.desktop {
                 perUserInstall = true
                 dirChooser = true
                 upgradeUuid = "12255bbe-e53b-408b-8866-27ab965d1394"
-                // No iconFile is set (the repo has no .ico asset yet), so the packaged app and its
-                // Start Menu/desktop shortcuts use the generic default icon. When an app.ico lands,
-                // wire it with:
-                //   iconFile.set(project.file("src/main/resources/windows/app.ico"))
+                // Brand icon for the launcher exe and the Start Menu/desktop shortcuts. The same
+                // app.ico is reused by the Inno installer (SetupIconFile) so the setup .exe and the
+                // installed app share one icon. Regenerate it with installer/make-brand-assets.ps1.
+                iconFile.set(project.file("src/main/resources/windows/app.ico"))
             }
         }
         buildTypes.release.proguard {
