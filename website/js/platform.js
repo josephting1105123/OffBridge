@@ -23,8 +23,36 @@
       );
     }
 
+    initHighlightFollow();
     detectOS().then(highlight);
   });
+
+  /* The green neon ring follows the pointer/keyboard: hovering or focusing a
+     download card moves the highlight to it and it stays on the last one
+     pointed at (it does not revert on mouse-out). The detected card starts
+     highlighted via highlight(); this only makes it interactive afterwards. */
+  function initHighlightFollow() {
+    var cards = toArr(document.querySelectorAll("[data-dl-card]"));
+    if (cards.length < 2) return;
+    function setHighlight(card) {
+      for (var i = 0; i < cards.length; i++) {
+        cards[i].classList.toggle("is-highlight", cards[i] === card);
+      }
+    }
+    cards.forEach(function (card) {
+      card.addEventListener("pointerenter", function () {
+        setHighlight(card);
+      });
+      // Keyboard parity: focusing anything inside a card lights that card.
+      card.addEventListener("focusin", function () {
+        setHighlight(card);
+      });
+    });
+  }
+
+  function toArr(nl) {
+    return Array.prototype.slice.call(nl);
+  }
 
   function wireCard(key, data) {
     var card = document.querySelector('[data-dl-card="' + key + '"]');
@@ -143,6 +171,12 @@
       var card = document.querySelector('[data-dl-card="' + os + '"]');
       if (card) {
         card.classList.add("is-detected");
+        // Initial ring on the detected card. Clear any other card's ring first
+        // so a hover that landed before this async detection resolved can't
+        // leave two cards highlighted at once.
+        toArr(document.querySelectorAll("[data-dl-card]")).forEach(function (c) {
+          c.classList.toggle("is-highlight", c === card);
+        });
         var tag = card.querySelector("[data-dl-detected]");
         if (tag) tag.textContent = "Detected — recommended for you";
         // Put the detected card first on small screens.

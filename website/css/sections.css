@@ -476,7 +476,11 @@
     border-color var(--dur-med) var(--ease-std),
     box-shadow var(--dur-med) var(--ease-std);
 }
-.dl-card.is-detected {
+/* The green neon ring is interactive: it follows whichever card the pointer or
+   keyboard last landed on (see platform.js), so it's decoupled from .is-detected
+   — which only drives the "Detected — recommended for you" tag. On load the
+   detected card starts highlighted. */
+.dl-card.is-highlight {
   border-color: color-mix(in srgb, var(--accent) 60%, transparent);
   box-shadow: 0 0 0 1px var(--accent) inset, 0 18px 50px -22px var(--accent-glow);
   transform: scale(1.02);

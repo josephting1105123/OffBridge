@@ -102,6 +102,19 @@
     <symbol id="i-send" viewBox="0 0 24 24"><path d="m21 4-9 16-2.5-6.5L3 11z"/></symbol>
   </svg>
 
+  <!-- ================= Page-wide ambient backdrop (decorative) ============
+       Drifting gradient lozenges behind ALL sections as one continuous, fixed
+       layer — so the ambience never clips at a section edge (no seam). Sits at
+       z-index:-1 (above the flat page colour, below every content layer);
+       low-opacity + blurred so card/text contrast is untouched. Disabled under
+       reduced-motion. Uses .amb-pill (NOT the badge .pill) to avoid clashing
+       with the hero chip. -->
+  <div class="page-ambient" aria-hidden="true">
+    <span class="amb-pill"></span><span class="amb-pill"></span><span class="amb-pill"></span>
+    <span class="amb-pill"></span><span class="amb-pill"></span><span class="amb-pill"></span>
+    <span class="amb-pill"></span>
+  </div>
+
   <!-- ============================== NAV ================================== -->
   <header class="nav" id="nav">
     <div class="container container--wide nav__inner">
@@ -297,13 +310,6 @@
 
     <!-- ========================= BENTO FEATURES ======================= -->
     <section id="features" aria-labelledby="features-title">
-      <!-- Ambient floating-pill backdrop (decorative). Drifts under reduced-motion
-           is disabled; opacity kept low so card/text contrast is unaffected. -->
-      <div class="pill-field" aria-hidden="true">
-        <span class="pill"></span><span class="pill"></span><span class="pill"></span>
-        <span class="pill"></span><span class="pill"></span><span class="pill"></span>
-        <span class="pill"></span>
-      </div>
       <div class="container container--wide">
         <div class="section-head section-head--center">
           <span class="eyebrow">Connectivity</span>
@@ -570,6 +576,14 @@
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Quick-settings tile &amp; share-sheet</li>
               <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> System-tray (desktop only)</li>
             </ul>
+            <div class="card-more">
+              <p class="card-more__lead">On phones, Clipboard Share is the full toolkit: every off-grid path plus the OS hooks only Android exposes.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg><span><strong>On Google Play.</strong> Installs and updates from the Play Store; runs on Android 10 (API 29) and up.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap, scan, share.</strong> NFC hand-off, camera QR scanning and the system share-sheet are Android-only.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Push from the shade.</strong> A quick-settings tile sends your clipboard to the PC without opening the app.</span></li>
+              </ul>
+            </div>
           </article>
 
           <article class="glass plat-card" data-reveal="right">
@@ -586,6 +600,14 @@
               <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> NFC tap (no hardware)</li>
               <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> Camera scan-to-receive</li>
             </ul>
+            <div class="card-more">
+              <p class="card-more__lead">The desktop build runs quietly from the system tray and ships its own runtime, so there's no Java to install.</p>
+              <ul class="detail-list">
+                <li><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg><span><strong>Installer, bundled runtime.</strong> A standard .exe for Windows 10/11 (64-bit); nothing else to set up.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Lives in the tray.</strong> Stays in the background and shows a QR code for off-grid sends.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Same crypto.</strong> AES-256 and verified 6-digit pairing, identical to the Android client.</span></li>
+              </ul>
+            </div>
           </article>
         </div>
       </div>

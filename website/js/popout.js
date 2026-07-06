@@ -31,7 +31,9 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     var cards = toArr(
-      document.querySelectorAll("#features .tile, #security .assure")
+      document.querySelectorAll(
+        "#features .tile, #security .assure, #platforms .plat-card"
+      )
     );
     if (!cards.length) return;
 
@@ -97,22 +99,41 @@
     });
   }
 
-  /* --- Cursor-tracking spotlight: feed --mx/--my as % of the card --------- */
+  /* --- Cursor-tracking spotlight: lerp --mx/--my toward the pointer -------
+     The rendered position (curX/curY) eases toward the pointer target
+     (tgtX/tgtY) a fraction each frame, so the glow trails the cursor with a
+     slight, Antigravity-style delay instead of snapping. Each pointermove
+     retargets and (re)starts the loop; the loop self-stops once it has settled
+     within 0.1% of the target — so a resting pointer costs nothing, and after
+     the pointer leaves the glow simply glides to a stop at its last spot. */
   function trackSpotlight(card) {
+    var curX = 50,
+      curY = 50; // rendered spotlight position (% of card)
+    var tgtX = 50,
+      tgtY = 50; // pointer target (% of card)
     var raf = 0;
-    var mx = 50;
-    var my = 50;
-    function apply() {
-      raf = 0;
-      card.style.setProperty("--mx", mx.toFixed(1) + "%");
-      card.style.setProperty("--my", my.toFixed(1) + "%");
+    var K = reduce ? 1 : 0.13; // per-frame ease fraction (lower = more lag)
+
+    function frame() {
+      var dx = tgtX - curX;
+      var dy = tgtY - curY;
+      curX += dx * K;
+      curY += dy * K;
+      card.style.setProperty("--mx", curX.toFixed(2) + "%");
+      card.style.setProperty("--my", curY.toFixed(2) + "%");
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        raf = window.requestAnimationFrame(frame);
+      } else {
+        raf = 0;
+      }
     }
+
     card.addEventListener("pointermove", function (e) {
       var r = card.getBoundingClientRect();
       if (!r.width || !r.height) return;
-      mx = clamp01to100(((e.clientX - r.left) / r.width) * 100);
-      my = clamp01to100(((e.clientY - r.top) / r.height) * 100);
-      if (!raf) raf = window.requestAnimationFrame(apply);
+      tgtX = clamp01to100(((e.clientX - r.left) / r.width) * 100);
+      tgtY = clamp01to100(((e.clientY - r.top) / r.height) * 100);
+      if (!raf) raf = window.requestAnimationFrame(frame);
     });
   }
 

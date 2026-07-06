@@ -153,7 +153,10 @@
   border-radius: inherit;
   z-index: -1;
   pointer-events: none;
-  opacity: 0;
+  /* A resting glow stays on even with no cursor on the card; hover/focus/expand
+     lift it to full. Its position (--mx/--my) is lerp-smoothed in popout.js so
+     it trails the cursor with a slight delay. */
+  opacity: 0.5;
   transition: opacity var(--dur-med) var(--ease-std);
   background: radial-gradient(
       240px circle at var(--mx, 50%) var(--my, 50%),
@@ -170,6 +173,12 @@
 .expandable:focus-visible::after,
 .is-expanded::after {
   opacity: 1;
+}
+
+/* Platform cards carry a version badge in the top-right corner; inset the head
+   so the on-hover expand hint doesn't land on top of it. */
+#platforms .plat-card__head {
+  padding-right: var(--s-32);
 }
 
 /* --- Extra info revealed only when a card is expanded -------------------- */
