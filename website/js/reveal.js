@@ -1,10 +1,13 @@
 /* ==========================================================================
-   reveal.js — scroll-SCRUBBED motion engine.
+   reveal.js — scroll-SCRUBBED motion engine with lerp smoothing.
    Each [data-reveal] / [data-parallax] element gets a CSS var --p (0..1) tied
-   directly to its position in the viewport, updated every animation frame on
-   scroll. CSS maps --p to opacity / transform, so motion advances as you
-   scroll down and rewinds as you scroll up. Count-ups fire once when revealed.
-   Honors prefers-reduced-motion (everything snaps to its final frame).
+   to its position in the viewport. Rather than snap --p to the raw scroll
+   position, we ease the displayed --p toward its scroll TARGET each frame
+   (exponential smoothing), which turns coarse scroll steps into fluid,
+   decelerating motion. The rAF loop self-stops once everything has settled and
+   restarts on the next scroll/resize, so idle pages cost nothing.
+   Count-ups fire once when revealed. Honors prefers-reduced-motion (everything
+   snaps to its final frame; no loop).
    ========================================================================== */
 (function () {
   "use strict";
@@ -13,23 +16,34 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Per-frame fraction of the remaining gap to close. ~0.16 settles in ~13
+  // frames (~215ms) — smooth without feeling disconnected from the scroll.
+  var SMOOTH = 0.16;
+  var EPS = 0.0015; // within this of target = settled (stop animating that el)
+
   var reveals = [];
   var parallax = [];
   var counted = [];
+  var running = false;
+  var needsMeasure = true;
 
   document.addEventListener("DOMContentLoaded", function () {
-    reveals = toArr(document.querySelectorAll("[data-reveal]"));
-    parallax = toArr(document.querySelectorAll("[data-parallax]"));
+    reveals = toArr(document.querySelectorAll("[data-reveal]")).map(function (el) {
+      return { el: el, cur: 0, tgt: 0 };
+    });
+    parallax = toArr(document.querySelectorAll("[data-parallax]")).map(function (el) {
+      return { el: el, cur: 0.5, tgt: 0.5 };
+    });
     counted = toArr(document.querySelectorAll("[data-countup]")).map(function (el) {
       return { el: el, done: false };
     });
 
     if (reduce || !("requestAnimationFrame" in window)) {
-      reveals.forEach(function (el) {
-        el.style.setProperty("--p", "1");
+      reveals.forEach(function (r) {
+        r.el.style.setProperty("--p", "1");
       });
-      parallax.forEach(function (el) {
-        el.style.setProperty("--p", "0.5");
+      parallax.forEach(function (p) {
+        p.el.style.setProperty("--p", "0.5");
       });
       counted.forEach(function (c) {
         c.el.textContent = c.el.getAttribute("data-countup");
@@ -37,46 +51,48 @@
       return;
     }
 
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    // a couple of delayed passes so late layout (fonts/images) is accounted for
-    window.setTimeout(update, 300);
-    window.addEventListener("load", update);
+    measure(); // seed targets (+ any count-ups already in view)
+    start();
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request, { passive: true });
+    // Late layout (fonts / lazy images) can shift positions after first paint.
+    window.setTimeout(request, 300);
+    window.addEventListener("load", request);
   });
 
-  var ticking = false;
-  function onScroll() {
-    if (!ticking) {
-      window.requestAnimationFrame(function () {
-        update();
-        ticking = false;
-      });
-      ticking = true;
+  // Mark targets stale and make sure the loop is spinning.
+  function request() {
+    needsMeasure = true;
+    start();
+  }
+
+  function start() {
+    if (!running) {
+      running = true;
+      window.requestAnimationFrame(tick);
     }
   }
 
-  function update() {
+  // Read layout and compute each element's scroll TARGET (no visual writes here,
+  // so it only runs when scroll/resize marked things stale).
+  function measure() {
     var vh = window.innerHeight || document.documentElement.clientHeight;
+    var startY = vh * 0.92; // element top here -> 0
+    var endY = vh * 0.5; //   element top here -> 1
+    var span = startY - endY;
 
     for (var i = 0; i < reveals.length; i++) {
-      var el = reveals[i];
-      var r = el.getBoundingClientRect();
-      if (r.height === 0 && r.width === 0) continue;
-      // 0 when the element's top is near the bottom of the viewport,
-      // 1 by the time it has risen to ~55% up. Clamped + reversible.
-      var start = vh * 0.92;
-      var end = vh * 0.5;
-      var p = clamp01((start - r.top) / (start - end));
-      el.style.setProperty("--p", p.toFixed(3));
+      var r = reveals[i];
+      var rect = r.el.getBoundingClientRect();
+      if (rect.height === 0 && rect.width === 0) continue; // hidden/off-layout
+      r.tgt = clamp01((startY - rect.top) / span);
     }
 
     for (var j = 0; j < parallax.length; j++) {
-      var pel = parallax[j];
-      var pr = pel.getBoundingClientRect();
-      // pass-through progress: 0 entering bottom -> 1 leaving top (0.5 = centered)
-      var pp = clamp01((vh - pr.top) / (vh + pr.height));
-      pel.style.setProperty("--p", pp.toFixed(3));
+      var p = parallax[j];
+      var pr = p.el.getBoundingClientRect();
+      // pass-through: 0 entering bottom -> 1 leaving top (0.5 = centered)
+      p.tgt = clamp01((vh - pr.top) / (vh + pr.height));
     }
 
     for (var k = 0; k < counted.length; k++) {
@@ -87,6 +103,46 @@
         c.done = true;
         countUp(c.el);
       }
+    }
+
+    needsMeasure = false;
+  }
+
+  function tick() {
+    if (needsMeasure) measure();
+
+    var moving = false;
+
+    for (var i = 0; i < reveals.length; i++) {
+      var r = reveals[i];
+      var d = r.tgt - r.cur;
+      if (d > EPS || d < -EPS) {
+        r.cur += d * SMOOTH;
+        moving = true;
+      } else {
+        r.cur = r.tgt;
+      }
+      r.el.style.setProperty("--p", r.cur.toFixed(4));
+    }
+
+    for (var j = 0; j < parallax.length; j++) {
+      var p = parallax[j];
+      var pd = p.tgt - p.cur;
+      if (pd > EPS || pd < -EPS) {
+        p.cur += pd * SMOOTH;
+        moving = true;
+      } else {
+        p.cur = p.tgt;
+      }
+      p.el.style.setProperty("--p", p.cur.toFixed(4));
+    }
+
+    // Keep looping while anything is still easing, or while a fresh measure is
+    // pending; otherwise park until the next scroll/resize wakes us.
+    if (moving || needsMeasure) {
+      window.requestAnimationFrame(tick);
+    } else {
+      running = false;
     }
   }
 
@@ -107,10 +163,10 @@
     var prefix = target.slice(0, target.search(/[0-9.]/));
     var suffix = target.slice(prefix.length + String(num).length);
     var dur = 1100;
-    var start = null;
+    var startTs = null;
     function frame(ts) {
-      if (start === null) start = ts;
-      var p = Math.min((ts - start) / dur, 1);
+      if (startTs === null) startTs = ts;
+      var p = Math.min((ts - startTs) / dur, 1);
       var eased = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
       el.textContent = prefix + Math.round(num * eased) + suffix;
       if (p < 1) window.requestAnimationFrame(frame);

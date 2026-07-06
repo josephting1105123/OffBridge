@@ -8,7 +8,9 @@
 [data-reveal] {
   opacity: var(--p, 0);
   transform: translateY(calc((1 - var(--p, 0)) * 22px));
-  transition: opacity 160ms linear, transform 160ms linear;
+  /* No CSS transition here: reveal.js lerp-smooths --p toward its scroll target every
+     frame (exponential ease-out), so --p maps straight through. A CSS transition on top
+     would low-pass an already-smoothed value and add visible lag. */
   will-change: opacity, transform;
 }
 [data-reveal="left"] {
@@ -27,7 +29,7 @@
 /* --- Parallax: drift by pass-through progress (0.5 = neutral/centered) ----- */
 [data-parallax] {
   transform: translateY(calc((0.5 - var(--p, 0.5)) * var(--par, 32px)));
-  transition: transform 120ms linear;
+  /* Smoothed in JS (same lerp loop as reveals). */
   will-change: transform;
 }
 
