@@ -35,7 +35,7 @@
     return;
   }
 
-  var MAX_RIP = 12;
+  var MAX_RIP = 28;
 
   var VERT =
     "attribute vec2 a_pos;" + "void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }";
@@ -68,21 +68,21 @@
     // wake reads as gently moving water rather than stamped shapes.
     "    float c = cos(r.w), s = sin(r.w);",
     "    vec2 q = vec2(d.x*c + d.y*s, -d.x*s + d.y*c);",
-    "    q.x /= 1.25;",
-    "    float w = length(q) - age * 0.30;",
-    // One soft, localized ripple (a Gaussian-windowed crest) instead of
-    // concentric rings; spawned densely so overlaps blend into a soft trail.
-    "    float band = sin(w * 16.0) * exp(-w * w * 60.0);",
-    "    h += 0.09 * band * exp(-age * 1.9);",
+    "    q.x /= 1.3;",
+    // A STATIONARY pluck: a localized displacement (no travelling front, so it
+    // doesn't tear the pattern) that relaxes very slowly, like a plucked string
+    // easing back to rest with one gentle swing.
+    "    float spatial = exp(-dot(q, q) * 200.0);",
+    "    float env = cos(age * 1.2) * exp(-age * 0.7);",
+    "    h += 0.11 * spatial * env;",
     "  }",
     "  return h;",
     "}",
 
     "float height(vec2 p, float t){",
-    "  float h = ambient(p, t) + ripples(p, t);",
-    "  float md = length(p - u_mouse);",
-    "  h -= 0.32 * exp(-md * 20.0);",            // the object resting in the surface (gentle)
-    "  return h;",
+    // No persistent dimple at the cursor — when you stop, the surface eases all
+    // the way back to its resting pattern.
+    "  return ambient(p, t) + ripples(p, t);",
     "}",
 
     "void main(){",
@@ -94,23 +94,30 @@
     "  float hy = height(p + vec2(0.0, e), t);",
     "  vec2 g = vec2(hx - hc, hy - hc) / e;",
     "  vec3 n = normalize(vec3(-g * 0.06, 1.0));",
-    "  vec3 L = normalize(vec3(0.45, 0.75, 0.85));",
+    // The light keeps a fixed tilt (so flat water stays dark) but its AZIMUTH
+    // rotates with position + time — the highlight direction depends on where
+    // you are on the surface instead of sitting in one fixed corner.
+    "  float az = p.x*1.7 - p.y*1.3 + t*0.08;",
+    "  vec3 L = normalize(vec3(0.72*cos(az), 0.72*sin(az), 0.85));",
     "  vec3 Hh = normalize(L + vec3(0.0, 0.0, 1.0));",
-    "  float spec = pow(max(dot(n, Hh), 0.0), 55.0);",
+    "  float spec = pow(max(dot(n, Hh), 0.0), 45.0);",
     "  float fres = pow(1.0 - max(n.z, 0.0), 3.0);",
     "  float depth = clamp(hc * 0.5 + 0.5, 0.0, 1.0);",
-    "  vec3 glint = mix(vec3(0.16, 0.83, 0.52), vec3(0.17, 0.80, 0.74), 0.5);",
+    // Colour shifts across the surface with position + height, so different
+    // areas of the design read as different emerald/teal shades.
+    "  float hue = 0.5 + 0.5 * sin(p.x*2.2 - p.y*1.7 + hc*4.0 + t*0.15);",
+    "  vec3 glint = mix(vec3(0.10, 0.78, 0.55), vec3(0.20, 0.78, 0.92), hue);",
     "  vec3 col;",
     "  if(u_dark > 0.5){",
-    "    vec3 deep = vec3(0.048, 0.058, 0.068);",
-    "    vec3 shallow = vec3(0.034, 0.082, 0.076);",
+    "    vec3 deep = vec3(0.045, 0.056, 0.066);",
+    "    vec3 shallow = mix(vec3(0.030, 0.082, 0.072), vec3(0.052, 0.070, 0.098), hue);",
     "    col = mix(deep, shallow, depth * 0.6);",
-    "    col += glint * spec * 0.55;",
+    "    col += glint * spec * 0.34;",
     "    col += glint * fres * 0.04;",
     "  } else {",
     "    vec3 baseL = vec3(0.90, 0.94, 0.97);",
-    "    col = baseL - vec3(0.05, 0.03, 0.02) * (1.0 - depth);",
-    "    col += vec3(0.03, 0.22, 0.18) * spec * 0.45;",
+    "    col = baseL - mix(vec3(0.05,0.03,0.02), vec3(0.02,0.05,0.04), hue) * (1.0 - depth);",
+    "    col += glint * spec * 0.4;",
     "  }",
     "  gl_FragColor = vec4(col, 1.0);",
     "}"
@@ -223,9 +230,9 @@
         mouseY = e.clientY;
         var now = performance.now();
         var d2 = have ? (e.clientX - lastX) * (e.clientX - lastX) + (e.clientY - lastY) * (e.clientY - lastY) : 1e9;
-        // Drop soft ripples densely along the path (~26px, ~90ms) so they
-        // overlap into one continuous gentle wake rather than discrete stamps.
-        if (d2 > 700 && now - lastSpawnMs >= 90) {
+        // Pluck the surface along the path (~32px, ~120ms); overlapping plucks
+        // blend into one soft trail that then relaxes back very slowly.
+        if (d2 > 1000 && now - lastSpawnMs >= 120) {
           // Travel direction in shader space (y is flipped) → elongates the ripple.
           var dir = have
             ? Math.atan2(-(e.clientY - lastY), e.clientX - lastX)
@@ -265,9 +272,9 @@
       toShader(mouseX, mouseY, mouseTmp, 0);
       gl.uniform2f(uMouse, mouseTmp[0], mouseTmp[1]);
     }
-    // Prune ripples older than ~2s (they fade fast, so the wake settles quickly
-    // behind the pointer and the loop stays cheap).
-    while (ripCount > 0 && t - rips[(ripCount - 1) * 4 + 2] > 2.0) {
+    // Prune plucks older than ~3.5s (by then they've relaxed back to rest);
+    // keeps the loop cheap when the pointer is idle.
+    while (ripCount > 0 && t - rips[(ripCount - 1) * 4 + 2] > 3.5) {
       ripCount--;
     }
     gl.uniform1i(uRipCount, ripCount);
