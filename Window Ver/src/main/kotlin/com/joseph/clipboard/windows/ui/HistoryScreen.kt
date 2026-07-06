@@ -88,17 +88,6 @@ fun HistoryScreen(
                 HowToUseChip(onClick = { showTutorial = true })
             }
 
-            // Push Current Clipboard Button
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                tutorialBounds["pushButton"] = coords.boundsInWindow()
-            }) {
-                AppButton(
-                    text = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
-                    onClick = { appController.pushCurrentClipboard() },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.spaceLg)
-                )
-            }
-
             // Accept Clipboard Switch (moved to above the line)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.spaceLg)
@@ -163,6 +152,20 @@ fun HistoryScreen(
                 }
             }
 
+            // Push Current Clipboard button — pinned at the bottom, below the recent-copies
+            // list. The list scrolls inside its own weighted region above, so it never covers
+            // this button and the button never moves as the list scrolls.
+            Spacer(Modifier.height(Dimens.spaceLg))
+            Box(modifier = Modifier.onGloballyPositioned { coords ->
+                tutorialBounds["pushButton"] = coords.boundsInWindow()
+            }) {
+                AppButton(
+                    text = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
+                    onClick = { appController.pushCurrentClipboard() },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
         }
 
         if (showTutorial) {
@@ -170,9 +173,7 @@ fun HistoryScreen(
                 steps = listOf(
                     TutorialStep(
                         "pushButton",
-                        "Tap here to instantly push your current clipboard text to all paired devices.",
-                        // The capture box includes the button's 16dp bottom padding — trim it back
-                        spotlightBottomTrim = 5.dp
+                        "Tap here to instantly push your current clipboard text to all paired devices."
                     ),
                     TutorialStep(
                         "acceptSwitch",
