@@ -16,9 +16,10 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Per-frame fraction of the remaining gap to close. ~0.16 settles in ~13
-  // frames (~215ms) — smooth without feeling disconnected from the scroll.
-  var SMOOTH = 0.16;
+  // Per-frame fraction of the remaining gap to close. ~0.12 settles in ~18
+  // frames (~300ms) — a silkier, more gradual ease-out. Raise toward 0.18 for a
+  // snappier feel, drop toward 0.10 for even softer motion.
+  var SMOOTH = 0.12;
   var EPS = 0.0015; // within this of target = settled (stop animating that el)
 
   var reveals = [];

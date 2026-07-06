@@ -93,6 +93,12 @@
   --shadow-3: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
   --shadow-8: 0 24px 60px -16px rgba(0, 0, 0, 0.7);
 
+  /* ----- Z-index scale (semantic; keep ordered) ----- */
+  --z-nav: 100;
+  --z-scrim: 900;
+  --z-popout: 910;
+  --z-skip: 1000;
+
   /* ----- Misc ----- */
   --nav-h: 64px;
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-text);

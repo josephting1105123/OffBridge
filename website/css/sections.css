@@ -325,6 +325,31 @@
   }
 }
 
+/* Screenshot showcase under the security copy: centered, with a soft accent
+   glow so the phone reads as a deliberate visual rather than an orphan. */
+.security__media {
+  position: relative;
+  margin-top: var(--s-48);
+  display: grid;
+  place-items: center;
+}
+.security__media::before {
+  content: "";
+  position: absolute;
+  inset: -6% -14%;
+  background: radial-gradient(
+    58% 52% at 50% 44%,
+    var(--accent-glow),
+    transparent 70%
+  );
+  filter: blur(28px);
+  opacity: 0.5;
+  z-index: -1;
+}
+.security__media .device--phone {
+  width: clamp(220px, 30vw, 288px);
+}
+
 .assure-grid {
   display: grid;
   grid-template-columns: 1fr;

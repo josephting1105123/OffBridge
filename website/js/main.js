@@ -7,9 +7,63 @@
   document.addEventListener("DOMContentLoaded", function () {
     initNavScroll();
     initMobileMenu();
+    initSmoothAnchors();
     stampYear();
     initLadder();
   });
+
+  /* --- Precise in-page anchor scrolling ----------------------------------
+     Native `#anchor` jumps land on the target's top edge. Our sections carry
+     several rem of top padding, so a raw jump to #download parks you on empty
+     space above the heading. Instead we scroll to the section's HEADING and
+     offset by the fixed nav height, so every link lands the content just below
+     the bar. Falls back to the element itself for non-section targets. */
+  function initSmoothAnchors() {
+    var reduce =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var navH =
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue("--nav-h"),
+        10
+      ) || 64;
+
+    document.addEventListener("click", function (e) {
+      var link = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!link) return;
+      var hash = link.getAttribute("href");
+      if (!hash || hash === "#") return;
+
+      var target;
+      try {
+        target = document.querySelector(hash);
+      } catch (err) {
+        return; // malformed selector
+      }
+      if (!target) return;
+
+      // For a section, prefer its heading so we skip the section's top padding.
+      var anchor = target;
+      if (target.matches("section")) {
+        anchor =
+          target.querySelector(".section-head, .dl-head, h1, h2") || target;
+      }
+
+      e.preventDefault();
+      var y =
+        window.scrollY + anchor.getBoundingClientRect().top - (navH + 14);
+      window.scrollTo({
+        top: Math.max(0, Math.round(y)),
+        behavior: reduce ? "auto" : "smooth"
+      });
+      // Keep the URL and focus in sync without a second scroll jump.
+      history.replaceState(null, "", hash);
+      if (target.getAttribute("tabindex") === null) {
+        target.setAttribute("tabindex", "-1");
+      }
+      if (target.focus) target.focus({ preventScroll: true });
+    });
+  }
 
   /* --- Transport-ladder loop: cycle the active rung while on screen ------- */
   function initLadder() {

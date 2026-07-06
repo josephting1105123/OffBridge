@@ -45,6 +45,7 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/device.css" />
   <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/popout.css" />
   <link rel="stylesheet" href="css/animations.css" />
 
   <!-- Structured data for search engines -->
@@ -96,6 +97,7 @@
     <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></symbol>
     <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v3"/><path d="M15 4h3a2 2 0 0 1 2 2v3"/><path d="M9 20H6a2 2 0 0 1-2-2v-3"/><path d="M15 20h3a2 2 0 0 0 2-2v-3"/></symbol>
     <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2M20 14v2M14 18v2h2M18 18h2v2"/></symbol>
     <symbol id="i-send" viewBox="0 0 24 24"><path d="m21 4-9 16-2.5-6.5L3 11z"/></symbol>
   </svg>
@@ -405,10 +407,12 @@
             face-to-face with a 6-digit code, and everything in flight is encrypted with keys that exist
             only on your hardware.</p>
           <a class="btn btn--ghost" href="#faq">Read the FAQ <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
-          <div class="device device--phone" data-parallax style="--par:30px;margin-top:var(--s-32)">
-            <div class="device__screen">
-              <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-              <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+          <div class="security__media">
+            <div class="device device--phone" data-parallax style="--par:30px">
+              <div class="device__screen">
+                <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+              </div>
             </div>
           </div>
         </div>
@@ -615,5 +619,6 @@
   <script defer src="js/main.js"></script>
   <script defer src="js/reveal.js"></script>
   <script defer src="js/platform.js"></script>
+  <script defer src="js/popout.js"></script>
 </body>
 </html>

@@ -1,0 +1,309 @@
+/* ==========================================================================
+   popout.js — expand a Connectivity tile or a Private-by-design card into a
+   centred, enlarged panel and back, using a FLIP transition.
+
+   How it works:
+   - Click / Enter / Space on a card → the REAL node is lifted to position:fixed
+     and a same-sized placeholder (cloned classes) holds its grid slot so nothing
+     around it reflows.
+   - We measure the card's start rect (First), apply the expanded geometry to get
+     its end rect (Last), Invert with a transform back onto the start, then Play
+     to identity — so only transform/opacity move on the compositor.
+   - Close (× / scrim / Esc) runs the FLIP in reverse toward the placeholder, then
+     restores the node to its slot.
+   - prefers-reduced-motion swaps the FLIP for a short crossfade.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var reduce =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var EASE = "cubic-bezier(0.16, 1, 0.3, 1)"; // ease-out-expo, matches --ease
+  var DUR = 520; // ms — expand/collapse flight time
+  var MARGIN = 16; // min gap from panel to viewport edge
+
+  var scrim = null;
+  var navH = 64;
+  var open = null; // { card, ph, closeBtn, prevFocus, targetW }
+  var busy = false; // true while a FLIP is animating
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var cards = toArr(
+      document.querySelectorAll("#features .tile, #security .assure")
+    );
+    if (!cards.length) return;
+
+    navH =
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue("--nav-h"),
+        10
+      ) || 64;
+
+    scrim = document.createElement("div");
+    scrim.className = "popout-scrim";
+    scrim.setAttribute("aria-hidden", "true");
+    document.body.appendChild(scrim);
+    scrim.addEventListener("click", collapse);
+
+    cards.forEach(setupCard);
+
+    document.addEventListener("keydown", function (e) {
+      if (!open) return;
+      if (e.key === "Escape" && !busy) {
+        e.preventDefault();
+        collapse();
+      } else if (e.key === "Tab" && open.closeBtn) {
+        // Single-action dialog: keep focus on the close button (basic trap).
+        e.preventDefault();
+        open.closeBtn.focus();
+      }
+    });
+    window.addEventListener("resize", function () {
+      if (open && !busy) reposition();
+    });
+  });
+
+  function setupCard(card) {
+    card.classList.add("expandable");
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("aria-expanded", "false");
+
+    var title = headingText(card);
+    if (title) card.setAttribute("aria-label", title + " — expand for details");
+
+    var hint = document.createElement("span");
+    hint.className = "expand-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.innerHTML = '<svg class="icon"><use href="#i-expand"></use></svg>';
+    card.appendChild(hint);
+
+    card.addEventListener("click", function (e) {
+      if (e.target.closest(".popout__close")) return; // handled separately
+      if (busy) return;
+      if (open) return; // ignore clicks on an already-open card / while one is open
+      expand(card);
+    });
+    card.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      e.preventDefault();
+      if (busy) return;
+      if (open && open.card === card) collapse();
+      else if (!open) expand(card);
+    });
+  }
+
+  /* --- Expand -------------------------------------------------------------- */
+  function expand(card) {
+    busy = true;
+    var rect0 = card.getBoundingClientRect();
+
+    // Lock the page scroll, compensating for the scrollbar so nothing shifts.
+    var sbw = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (sbw > 0) document.body.style.paddingRight = sbw + "px";
+
+    // Placeholder keeps the grid slot (same classes → same span, same cell).
+    var ph = document.createElement(card.tagName.toLowerCase());
+    ph.className =
+      card.className.replace(/\bexpandable\b/, "").trim() + " popout-placeholder";
+    ph.style.height = rect0.height + "px";
+    ph.setAttribute("aria-hidden", "true");
+    card.parentNode.insertBefore(ph, card);
+
+    // Apply expanded geometry, then measure the end rect.
+    var vw = document.documentElement.clientWidth;
+    var vh = window.innerHeight;
+    var width = Math.min(vw * 0.92, Math.max(560, rect0.width + 200));
+
+    card.classList.add("is-expanded");
+    card.style.transition = "none";
+    card.style.transform = "none";
+    card.style.width = width + "px";
+    card.style.left = Math.round((vw - width) / 2) + "px";
+    card.style.top = "0px";
+    var h1 = card.getBoundingClientRect().height;
+    card.style.top = clampTop(h1, vh) + "px";
+
+    // Close button.
+    var closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "popout__close";
+    closeBtn.setAttribute("aria-label", "Close");
+    closeBtn.innerHTML = '<svg class="icon"><use href="#i-x"></use></svg>';
+    closeBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      collapse();
+    });
+    card.appendChild(closeBtn);
+
+    // Dialog semantics.
+    card.setAttribute("role", "dialog");
+    card.setAttribute("aria-modal", "true");
+    card.setAttribute("aria-label", headingText(card) || "Details");
+    card.setAttribute("aria-expanded", "true");
+
+    open = {
+      card: card,
+      ph: ph,
+      closeBtn: closeBtn,
+      prevFocus: document.activeElement,
+      targetW: width
+    };
+
+    requestAnimationFrame(function () {
+      scrim.classList.add("is-on");
+    });
+
+    if (reduce) {
+      card.style.transition = "opacity 200ms linear";
+      card.style.opacity = "0";
+      requestAnimationFrame(function () {
+        card.style.opacity = "1";
+      });
+      settleOpen(card);
+      return;
+    }
+
+    // FLIP: invert onto the start rect, then play to identity.
+    var rect1 = card.getBoundingClientRect();
+    card.style.transformOrigin = "0 0";
+    card.style.transform = invertTransform(rect0, rect1);
+    void card.offsetWidth; // force reflow so the invert is the starting frame
+    card.style.transition = "transform " + DUR + "ms " + EASE;
+    card.style.transform = "none";
+    onTransformEnd(card, function () {
+      card.style.transition = "";
+      settleOpen(card);
+    });
+    // Safety net: never let `busy` stick if transitionend misfires (would
+    // otherwise deadlock collapse, which refuses to run while busy).
+    window.setTimeout(function () {
+      if (busy && open && open.card === card) {
+        card.style.transition = "";
+        settleOpen(card);
+      }
+    }, DUR + 140);
+  }
+
+  function settleOpen(card) {
+    busy = false;
+    if (open && open.card === card && open.closeBtn) open.closeBtn.focus();
+  }
+
+  /* --- Collapse ------------------------------------------------------------ */
+  function collapse() {
+    if (!open || busy) return;
+    busy = true;
+    var current = open;
+    open = null;
+    var card = current.card;
+    var ph = current.ph;
+    var done = false;
+
+    scrim.classList.remove("is-on");
+
+    function cleanup() {
+      if (done) return;
+      done = true;
+      card.classList.remove("is-expanded");
+      [
+        "position",
+        "top",
+        "left",
+        "width",
+        "height",
+        "transform",
+        "transform-origin",
+        "transition",
+        "opacity",
+        "z-index"
+      ].forEach(function (p) {
+        card.style.removeProperty(p);
+      });
+      card.setAttribute("role", "button");
+      card.removeAttribute("aria-modal");
+      card.setAttribute(
+        "aria-label",
+        (headingText(card) || "") + " — expand for details"
+      );
+      card.setAttribute("aria-expanded", "false");
+      if (current.closeBtn && current.closeBtn.parentNode) {
+        current.closeBtn.parentNode.removeChild(current.closeBtn);
+      }
+      if (ph && ph.parentNode) ph.parentNode.removeChild(ph);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      if (current.prevFocus && current.prevFocus.focus) {
+        current.prevFocus.focus({ preventScroll: true });
+      }
+      busy = false;
+    }
+
+    if (reduce) {
+      card.style.transition = "opacity 160ms linear";
+      card.style.opacity = "0";
+      window.setTimeout(cleanup, 180);
+      return;
+    }
+
+    // FLIP back toward the placeholder's current position.
+    var rect1 = card.getBoundingClientRect();
+    var rectP = ph.getBoundingClientRect();
+    card.style.transformOrigin = "0 0";
+    card.style.transition = "transform " + DUR + "ms " + EASE;
+    card.style.transform = invertTransform(rectP, rect1);
+    onTransformEnd(card, cleanup);
+    window.setTimeout(cleanup, DUR + 140); // safety net if transitionend misfires
+  }
+
+  /* --- Reposition an open panel on resize (no animation) ------------------- */
+  function reposition() {
+    var card = open.card;
+    var vw = document.documentElement.clientWidth;
+    var vh = window.innerHeight;
+    var width = Math.min(vw * 0.92, open.targetW);
+    card.style.transition = "none";
+    card.style.transform = "none";
+    card.style.width = width + "px";
+    card.style.left = Math.round((vw - width) / 2) + "px";
+    card.style.top = "0px";
+    var h = card.getBoundingClientRect().height;
+    card.style.top = clampTop(h, vh) + "px";
+  }
+
+  /* --- Helpers ------------------------------------------------------------- */
+  function invertTransform(from, to) {
+    var dx = from.left - to.left;
+    var dy = from.top - to.top;
+    var sx = from.width / to.width;
+    var sy = from.height / to.height;
+    return "translate(" + dx + "px," + dy + "px) scale(" + sx + "," + sy + ")";
+  }
+
+  function clampTop(h, vh) {
+    var top = Math.round((vh - h) / 2);
+    if (top < navH + 12) top = navH + 12;
+    if (top + h > vh - MARGIN) top = Math.max(MARGIN, vh - MARGIN - h);
+    return top;
+  }
+
+  function onTransformEnd(el, cb) {
+    el.addEventListener("transitionend", function te(ev) {
+      if (ev.target !== el || ev.propertyName !== "transform") return;
+      el.removeEventListener("transitionend", te);
+      cb();
+    });
+  }
+
+  function headingText(card) {
+    var h = card.querySelector("h3, h2");
+    return h ? h.textContent.trim() : "";
+  }
+
+  function toArr(nl) {
+    return Array.prototype.slice.call(nl);
+  }
+})();
