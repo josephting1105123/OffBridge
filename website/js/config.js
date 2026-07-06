@@ -21,20 +21,20 @@ window.CS_CONFIG = {
   // Set these once you know your repo. Used only to BUILD the latest-download
   // URLs below if you prefer; you can also paste full URLs directly.
   repo: {
-    owner: "REPLACE_OWNER",
-    name: "REPLACE_REPO",
+    owner: "josephting1105123",
+    name: "ClipboardShare-Showcase",
   },
 
   android: {
-    label: "Download for Android",
+    label: "Get it on Google Play",
     os: "Android",
-    fileType: "APK",
+    fileType: "Google Play",
     version: "3.5.1",
-    size: "TBD", // e.g. "42.7 MB"
-    // Paste the real direct-download URL here. "#" = not wired yet.
-    url: "#",
+    size: "TBD", // store link — no size/sha shown
+    // Store listing, not a direct APK: the button opens Google Play.
+    url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
     sha256: "",
-    note: "Android 10+ (API 29). Sideload — enable “Install unknown apps”.",
+    note: "Android 10+ (API 29). Free on Google Play.",
   },
 
   windows: {
@@ -42,9 +42,10 @@ window.CS_CONFIG = {
     os: "Windows",
     fileType: "Installer (.exe)",
     version: "3.5.1",
-    size: "TBD", // e.g. "124 MB"
-    url: "#",
-    sha256: "",
+    size: "83 MB",
+    // Direct release asset — downloads instantly, hosted free on GitHub.
+    url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
+    sha256: "f0d6e8350ee45bc821d9b8079a251b7b9cb7f72a97cd1897afc714264fd673e8",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
