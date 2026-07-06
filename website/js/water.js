@@ -64,20 +64,16 @@
     "    vec4 r = u_rip[i];",
     "    float age = t - r.z;",
     "    vec2 d = p - r.xy;",
-    // Rotate into the ripple's travel frame and stretch along it, so the front
-    // is elongated by the motion (a wake) rather than a perfect circle...
+    // Faint elongation along the pointer's travel — NO angular wobble, so the
+    // wake reads as gently moving water rather than stamped shapes.
     "    float c = cos(r.w), s = sin(r.w);",
     "    vec2 q = vec2(d.x*c + d.y*s, -d.x*s + d.y*c);",
-    "    q.x /= 1.6;",
-    "    float dist = length(q);",
-    // ...then wobble the radius by angle so the ring reads as organic water,
-    // not a geometric ring.
-    "    float ang = atan(q.y, q.x);",
-    "    dist += 0.020 * sin(ang*5.0 + r.z*4.0) + 0.012 * sin(ang*9.0 - t*0.6);",
-    "    float front = age * 0.32;",             // slower propagation
-    "    float ring = sin((dist - front) * 22.0);", // lower frequency (wider, gentler)
-    "    float env = exp(-abs(dist - front) * 8.0) * exp(-age * 1.6);",
-    "    h += 0.14 * ring * env;",               // weaker
+    "    q.x /= 1.25;",
+    "    float w = length(q) - age * 0.30;",
+    // One soft, localized ripple (a Gaussian-windowed crest) instead of
+    // concentric rings; spawned densely so overlaps blend into a soft trail.
+    "    float band = sin(w * 16.0) * exp(-w * w * 60.0);",
+    "    h += 0.09 * band * exp(-age * 1.9);",
     "  }",
     "  return h;",
     "}",
@@ -227,9 +223,9 @@
         mouseY = e.clientY;
         var now = performance.now();
         var d2 = have ? (e.clientX - lastX) * (e.clientX - lastX) + (e.clientY - lastY) * (e.clientY - lastY) : 1e9;
-        // Drop a ripple only after ~46px of travel AND at least 300ms since the
-        // last one, so the wake stays sparse instead of a dense pile-up.
-        if (d2 > 2100 && now - lastSpawnMs >= 300) {
+        // Drop soft ripples densely along the path (~26px, ~90ms) so they
+        // overlap into one continuous gentle wake rather than discrete stamps.
+        if (d2 > 700 && now - lastSpawnMs >= 90) {
           // Travel direction in shader space (y is flipped) → elongates the ripple.
           var dir = have
             ? Math.atan2(-(e.clientY - lastY), e.clientX - lastX)
@@ -269,9 +265,9 @@
       toShader(mouseX, mouseY, mouseTmp, 0);
       gl.uniform2f(uMouse, mouseTmp[0], mouseTmp[1]);
     }
-    // Prune ripples older than ~4.5s so the loop stays cheap (they last longer
-    // now that they travel more slowly).
-    while (ripCount > 0 && t - rips[(ripCount - 1) * 4 + 2] > 4.5) {
+    // Prune ripples older than ~2s (they fade fast, so the wake settles quickly
+    // behind the pointer and the loop stays cheap).
+    while (ripCount > 0 && t - rips[(ripCount - 1) * 4 + 2] > 2.0) {
       ripCount--;
     }
     gl.uniform1i(uRipCount, ripCount);
