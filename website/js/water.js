@@ -67,7 +67,7 @@
     "    float front = age * 0.72;",             // ring speed
     "    float ring = sin((dist - front) * 52.0);",
     "    float env = exp(-abs(dist - front) * 9.0) * exp(-age * 1.7);",
-    "    h += 0.6 * ring * env;",
+    "    h += 0.3 * ring * env;",
     "  }",
     "  return h;",
     "}",
@@ -205,19 +205,23 @@
     var lastX = 0;
     var lastY = 0;
     var have = false;
+    var lastSpawnMs = -1e9;
     window.addEventListener(
       "pointermove",
       function (e) {
         if (e.pointerType && e.pointerType === "touch") return; // avoid touch spam
         mouseX = e.clientX;
         mouseY = e.clientY;
+        var now = performance.now();
         var d2 = have ? (e.clientX - lastX) * (e.clientX - lastX) + (e.clientY - lastY) * (e.clientY - lastY) : 1e9;
-        if (d2 > 2100) {
-          // moved > ~46px → drop another ripple, forming a wake
+        // Drop a ripple only after ~46px of travel AND at least 300ms since the
+        // last one, so the wake stays sparse instead of a dense pile-up.
+        if (d2 > 2100 && now - lastSpawnMs >= 300) {
           spawn(e.clientX, e.clientY);
           lastX = e.clientX;
           lastY = e.clientY;
           have = true;
+          lastSpawnMs = now;
         }
       },
       { passive: true }
