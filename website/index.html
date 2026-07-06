@@ -102,24 +102,12 @@
     <symbol id="i-send" viewBox="0 0 24 24"><path d="m21 4-9 16-2.5-6.5L3 11z"/></symbol>
   </svg>
 
-  <!-- ================= Page-wide ambient backdrop (decorative) ============
-       Drifting gradient lozenges behind ALL sections as one continuous, fixed
-       layer — so the ambience never clips at a section edge (no seam). Sits at
-       z-index:-1 (above the flat page colour, below every content layer);
-       low-opacity + blurred so card/text contrast is untouched. Disabled under
-       reduced-motion. Uses .amb-pill (NOT the badge .pill) to avoid clashing
-       with the hero chip. -->
-  <div class="page-ambient" aria-hidden="true">
-    <span class="amb-pill"></span><span class="amb-pill"></span><span class="amb-pill"></span>
-    <span class="amb-pill"></span><span class="amb-pill"></span><span class="amb-pill"></span>
-    <span class="amb-pill"></span>
-  </div>
-
-  <!-- Cursor glow: a soft light that trails the pointer across the whole page
-       (driven by main.js with the same lerp lag as the card spotlights). The
-       clipping layer sits above content but below the nav, so the disk never
-       adds a scrollbar. Mouse-only; hidden under reduced motion. -->
-  <div class="cursor-glow-layer" aria-hidden="true"><span class="cursor-glow"></span></div>
+  <!-- ================= Animated water background =========================
+       A full-screen WebGL layer behind all content (js/water.js): a moving
+       water surface plus ripples that spawn under the pointer, so the cursor
+       reads as an object breaking the surface. Sits at z-index:-1; a static
+       CSS gradient shows if WebGL is unavailable or under reduced motion. -->
+  <canvas class="water-bg" aria-hidden="true"></canvas>
 
   <!-- ============================== NAV ================================== -->
   <header class="nav" id="nav">
@@ -751,5 +739,6 @@
   <script defer src="js/reveal.js"></script>
   <script defer src="js/platform.js"></script>
   <script defer src="js/popout.js"></script>
+  <script defer src="js/water.js"></script>
 </body>
 </html>

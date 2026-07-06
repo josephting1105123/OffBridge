@@ -241,12 +241,13 @@
   }
 
   /* --- Collapse ------------------------------------------------------------
-     Smooth minimize. A reverse-FLIP looked rough: it slid the *expanded* panel
-     (mismatched, squished content) into the slot, then hard-swapped to the mini
-     card at the very end — reading as something banging in from the side. So
-     instead the panel fades out IN PLACE, we restore the mini card to its slot
-     while it's fully invisible (the content/layout swap the user must not see),
-     then fade the mini card back in. */
+     Physical minimize: the panel visibly shrinks and travels back into its grid
+     slot (no fade-out-then-reappear). To keep content crisp — a single transform
+     scale would stretch the taller expanded content — we animate real geometry
+     (top/left/width/height). First the expanded-only extras (card-more + close)
+     fade so the panel simplifies toward the mini card, then the box shrinks into
+     the slot showing mini content the whole way; at the end it's handed back to
+     normal flow exactly where it landed. */
   function collapse() {
     if (!open || busy) return;
     busy = true;
@@ -254,13 +255,11 @@
     open = null;
     var card = current.card;
     var ph = current.ph;
-    var swapped = false;
+    var closeBtn = current.closeBtn;
 
     scrim.classList.remove("is-on");
 
-    // Put the real node back in its grid slot and drop all the overlay state.
-    // Leaves opacity/transition alone — the fades manage those.
-    function restore() {
+    function landInSlot() {
       card.classList.remove("is-expanded");
       [
         "position",
@@ -268,12 +267,21 @@
         "left",
         "width",
         "height",
+        "overflow",
         "transform",
         "transform-origin",
+        "transition",
+        "opacity",
         "z-index"
       ].forEach(function (p) {
         card.style.removeProperty(p);
       });
+      // Clear the extras' inline fade so a later re-expand shows them again.
+      var m = card.querySelector(".card-more");
+      if (m) {
+        m.style.removeProperty("opacity");
+        m.style.removeProperty("transition");
+      }
       card.setAttribute("role", "button");
       card.removeAttribute("aria-modal");
       card.setAttribute(
@@ -281,8 +289,8 @@
         (headingText(card) || "") + " — expand for details"
       );
       card.setAttribute("aria-expanded", "false");
-      if (current.closeBtn && current.closeBtn.parentNode) {
-        current.closeBtn.parentNode.removeChild(current.closeBtn);
+      if (closeBtn && closeBtn.parentNode) {
+        closeBtn.parentNode.removeChild(closeBtn);
       }
       if (ph && ph.parentNode) ph.parentNode.removeChild(ph);
       document.body.style.overflow = "";
@@ -290,53 +298,59 @@
       if (current.prevFocus && current.prevFocus.focus) {
         current.prevFocus.focus({ preventScroll: true });
       }
-    }
-
-    // Runs once the panel is invisible: swap it for the mini card in its slot,
-    // then fade the mini card back in from 0.
-    function swap() {
-      if (swapped) return;
-      swapped = true;
-      restore();
-      if (reduce) {
-        card.style.removeProperty("opacity");
-        card.style.removeProperty("transition");
-        busy = false;
-        return;
-      }
-      card.style.transition = "none";
-      card.style.opacity = "0"; // normal priority now that is-expanded is gone
-      void card.offsetWidth; // commit the 0 so the fade-in animates
-      card.style.transition = "opacity 220ms " + FADE;
-      window.requestAnimationFrame(function () {
-        card.style.opacity = "1";
-      });
-      var finish = function () {
-        card.style.removeProperty("opacity");
-        card.style.removeProperty("transition");
-        busy = false;
-      };
-      onTransitionEndProp(card, "opacity", finish);
-      window.setTimeout(finish, 260); // safety net
+      busy = false;
     }
 
     if (reduce) {
-      swap();
+      landInSlot();
       return;
     }
 
-    // Fade + gently shrink the panel in place. is-expanded pins
-    // `opacity: 1 !important`, so override it with an inline !important to let
-    // the fade actually take; the content stays expanded until it's invisible.
-    var OUT = 240;
-    card.style.transformOrigin = "50% 50%";
-    card.style.transition =
-      "opacity " + OUT + "ms " + FADE + ", transform " + OUT + "ms " + FADE;
-    void card.offsetWidth;
-    card.style.setProperty("opacity", "0", "important");
-    card.style.transform = "scale(0.96)";
-    onTransitionEndProp(card, "opacity", swap);
-    window.setTimeout(swap, OUT + 120); // safety net if transitionend misfires
+    var rectBig = card.getBoundingClientRect();
+
+    // Phase 1: fade the expanded-only extras so the panel reads like the mini
+    // card before it shrinks (they're display:none in the mini layout, so they
+    // must fade while is-expanded is still on).
+    var more = card.querySelector(".card-more");
+    if (more) {
+      more.style.transition = "opacity 130ms " + FADE;
+      more.style.opacity = "0";
+    }
+    if (closeBtn) {
+      closeBtn.style.transition = "opacity 130ms " + FADE;
+      closeBtn.style.opacity = "0";
+    }
+
+    // Phase 2: switch to mini styling, pin the box at its current big rect, then
+    // transition its geometry down into the slot (crisp content, no stretch).
+    window.setTimeout(function () {
+      var rectMini = ph.getBoundingClientRect();
+      card.classList.remove("is-expanded");
+      card.style.position = "fixed";
+      card.style.zIndex = "910";
+      card.style.overflow = "hidden";
+      card.style.top = rectBig.top + "px";
+      card.style.left = rectBig.left + "px";
+      card.style.width = rectBig.width + "px";
+      card.style.height = rectBig.height + "px";
+      void card.offsetWidth; // commit the big rect as the starting frame
+      card.style.transition =
+        "top " + DUR + "ms " + EASE + ", left " + DUR + "ms " + EASE +
+        ", width " + DUR + "ms " + EASE + ", height " + DUR + "ms " + EASE;
+      card.style.top = rectMini.top + "px";
+      card.style.left = rectMini.left + "px";
+      card.style.width = rectMini.width + "px";
+      card.style.height = rectMini.height + "px";
+
+      var done = false;
+      var end = function () {
+        if (done) return;
+        done = true;
+        landInSlot();
+      };
+      onTransitionEndProp(card, "width", end);
+      window.setTimeout(end, DUR + 120); // safety net
+    }, 140);
   }
 
   /* --- Reposition an open panel on resize (no animation) ------------------- */

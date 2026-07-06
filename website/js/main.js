@@ -10,72 +10,7 @@
     initSmoothAnchors();
     stampYear();
     initLadder();
-    initCursorGlow();
   });
-
-  /* --- Page-wide cursor glow: a soft light that trails the pointer ----------
-     The rendered position eases toward the pointer each frame (same lerp feel
-     as the card spotlights), so the glow follows wherever the cursor goes with
-     a slight lag. Mouse-only (no persistent cursor on touch) and skipped under
-     reduced motion. The rAF loop self-stops when the pointer rests. */
-  function initCursorGlow() {
-    var glow = document.querySelector(".cursor-glow");
-    if (!glow) return;
-    var mm = window.matchMedia;
-    if (mm && mm("(prefers-reduced-motion: reduce)").matches) return;
-    if (mm && !mm("(hover: hover) and (pointer: fine)").matches) return;
-
-    var curX = 0,
-      curY = 0,
-      tgtX = 0,
-      tgtY = 0;
-    var raf = 0;
-    var on = false;
-    var K = 0.16; // per-frame ease fraction — lower trails further behind
-
-    function frame() {
-      var dx = tgtX - curX;
-      var dy = tgtY - curY;
-      curX += dx * K;
-      curY += dy * K;
-      glow.style.transform =
-        "translate3d(" + curX.toFixed(1) + "px," + curY.toFixed(1) + "px,0)";
-      if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) {
-        raf = window.requestAnimationFrame(frame);
-      } else {
-        raf = 0;
-      }
-    }
-
-    window.addEventListener(
-      "pointermove",
-      function (e) {
-        if (e.pointerType && e.pointerType !== "mouse") return;
-        tgtX = e.clientX;
-        tgtY = e.clientY;
-        if (!on) {
-          // First move: snap so the glow doesn't streak in from the corner.
-          on = true;
-          curX = tgtX;
-          curY = tgtY;
-          glow.style.transform =
-            "translate3d(" + curX + "px," + curY + "px,0)";
-          glow.classList.add("is-on");
-        }
-        if (!raf) raf = window.requestAnimationFrame(frame);
-      },
-      { passive: true }
-    );
-
-    // Fade out when the pointer leaves the window; restore when it returns.
-    var root = document.documentElement;
-    root.addEventListener("mouseleave", function () {
-      glow.classList.remove("is-on");
-    });
-    root.addEventListener("mouseenter", function () {
-      if (on) glow.classList.add("is-on");
-    });
-  }
 
   /* --- Precise in-page anchor scrolling ----------------------------------
      Native `#anchor` jumps land on the target's top edge. Our sections carry

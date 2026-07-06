@@ -81,150 +81,24 @@
   box-shadow: 0 0 8px 1px var(--accent-glow);
 }
 
-/* --- Page-wide floating-pill ambient backdrop ----------------------------
-   Decorative gradient lozenges that drift behind EVERY section as one fixed,
-   continuous layer (markup lives at body level — see .page-ambient in
-   index.html). A single layer means the ambience never clips at a section box,
-   so there's no seam between sections. Kept low-opacity and blurred so nothing
-   competes with card/text contrast. Emerald leads; the indigo/teal/pink hues
-   are the "hint of multicolor". Scoped to .amb-pill so it never collides with
-   the badge .pill (which the hero chip uses). */
-.page-ambient {
+/* --- Animated water background -------------------------------------------
+   Full-screen WebGL layer behind every section (js/water.js): a moving water
+   surface with ripples that spawn under the pointer. Sits at z-index:-1 (above
+   the flat page colour, below all content). The CSS background is the pre-JS /
+   no-WebGL / reduced-motion fallback — a deep still "water" gradient so the
+   page never flashes an empty canvas. */
+.water-bg {
   position: fixed;
   inset: 0;
-  z-index: -1; /* above the flat page colour, below every content layer */
-  overflow: hidden;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-}
-.amb-pill {
-  position: absolute;
-  width: clamp(220px, 26vw, 420px);
-  aspect-ratio: 5 / 2;
-  border-radius: 999px;
-  filter: blur(34px);
-  opacity: 0.2;
-  transform: rotate(var(--rot, 0deg));
-  will-change: transform;
-  animation: pill-drift var(--dur, 28s) var(--ease-std) infinite alternate;
-  animation-delay: var(--delay, 0s);
-}
-[data-theme="light"] .amb-pill {
-  opacity: 0.12;
-}
-@keyframes pill-drift {
-  from {
-    transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg));
-  }
-  to {
-    transform: translate3d(var(--dx, 40px), var(--dy, -24px), 0)
-      rotate(calc(var(--rot, 0deg) + 3deg));
-  }
-}
-/* Placement, hue, angle and cadence per pill (emerald-dominant mix). */
-.amb-pill:nth-child(1) {
-  top: 4%;
-  left: -8%;
-  background: linear-gradient(120deg, var(--accent), var(--hue-teal));
-  --rot: -18deg;
-  --dx: 52px;
-  --dy: 30px;
-  --dur: 26s;
-}
-.amb-pill:nth-child(2) {
-  top: 56%;
-  left: 2%;
-  background: linear-gradient(120deg, var(--hue-indigo), var(--accent));
-  --rot: -26deg;
-  --dx: 40px;
-  --dy: -34px;
-  --dur: 32s;
-  --delay: -8s;
-}
-.amb-pill:nth-child(3) {
-  top: -6%;
-  left: 38%;
-  background: linear-gradient(120deg, var(--hue-teal), var(--accent));
-  --rot: 14deg;
-  --dx: -30px;
-  --dy: 42px;
-  --dur: 28s;
-  --delay: -4s;
-}
-.amb-pill:nth-child(4) {
-  top: 60%;
-  left: 46%;
-  background: linear-gradient(120deg, var(--accent), var(--hue-indigo));
-  --rot: 20deg;
-  --dx: 46px;
-  --dy: -28px;
-  --dur: 30s;
-  --delay: -12s;
-}
-.amb-pill:nth-child(5) {
-  top: 8%;
-  right: 2%;
-  background: linear-gradient(120deg, var(--hue-pink), var(--hue-indigo));
-  opacity: 0.14;
-  --rot: -12deg;
-  --dx: -44px;
-  --dy: 32px;
-  --dur: 34s;
-  --delay: -6s;
-}
-.amb-pill:nth-child(6) {
-  top: 66%;
-  right: 6%;
-  background: linear-gradient(120deg, var(--accent), var(--hue-teal));
-  --rot: 22deg;
-  --dx: -38px;
-  --dy: -30px;
-  --dur: 27s;
-  --delay: -2s;
-}
-.amb-pill:nth-child(7) {
-  top: 28%;
-  right: 28%;
-  background: linear-gradient(120deg, var(--hue-indigo), var(--accent));
-  --rot: -8deg;
-  --dx: 30px;
-  --dy: 36px;
-  --dur: 31s;
-  --delay: -14s;
-}
-
-/* --- Page-wide cursor glow -----------------------------------------------
-   A soft light that trails the pointer across the whole page (position driven
-   by main.js with a lerp lag). The layer clips overflow so the disk never adds
-   a scrollbar, and sits above content but below the nav (z 60 < nav 100).
-   Mouse-only + reduced-motion off are enforced in JS and the query below. */
-.cursor-glow-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  overflow: hidden;
-  pointer-events: none;
-}
-.cursor-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 620px;
-  height: 620px;
-  margin: -310px 0 0 -310px; /* centre the disk on the transform origin */
-  border-radius: 50%;
-  opacity: 0;
-  transform: translate3d(-9999px, -9999px, 0);
-  transition: opacity 380ms var(--ease-std);
-  will-change: transform;
-  background: radial-gradient(
-    circle closest-side,
-    color-mix(in srgb, var(--accent) 20%, transparent),
-    color-mix(in srgb, var(--hue-indigo) 10%, transparent) 45%,
-    transparent 72%
-  );
-}
-.cursor-glow.is-on {
-  opacity: 1;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(45, 212, 191, 0.06), transparent 55%),
+    radial-gradient(90% 70% at 80% 100%, rgba(34, 197, 94, 0.05), transparent 60%),
+    var(--bg-deep);
 }
 
 /* --- Reduced motion: snap everything to its final frame ------------------- */
@@ -243,11 +117,5 @@
   }
   .stepline__fill {
     transform: scaleX(1) !important;
-  }
-  .amb-pill {
-    animation: none !important;
-  }
-  .cursor-glow-layer {
-    display: none;
   }
 }
