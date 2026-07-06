@@ -688,7 +688,11 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>How do I install it?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Android installs from Google Play. The Windows version is a standard installer with a bundled runtime, so there is no Java to set up. It is not code-signed yet, so Windows may show a SmartScreen unknown-publisher notice the first time; choose More info, then Run anyway.</p></div></div>
+            <div class="faq__body"><div><p>Android installs from Google Play. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></div></div>
+          </details>
+          <details class="faq__item" data-reveal>
+            <summary>Windows blocked the installer or can't verify the publisher?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
+            <div class="faq__body"><div><p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p><p>Clipboard Share is off-grid, has no account and runs nothing in the background; it's simply an unsigned indie build with no reputation yet. You can confirm the download with the SHA-256 on the Windows card above. The build has been submitted to Microsoft for review and a properly signed release is on the way, so if Smart App Control is blocking you, the signed build (or checking back once the review clears) is the fix. We don't suggest turning the feature off.</p></div></div>
           </details>
         </div>
       </div>
