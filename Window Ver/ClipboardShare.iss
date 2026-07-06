@@ -16,7 +16,9 @@ DisableProgramGroupPage=yes
 CloseApplications=yes
 RestartApplications=no
 OutputDir=build2\inno-setup
-OutputBaseFilename=Clipboard Share Setup
+; No spaces: GitHub Releases sanitizes spaces in asset filenames, which would break the
+; clean ClipboardShareSetup.exe download link published on the website / downloads repo.
+OutputBaseFilename=ClipboardShareSetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
