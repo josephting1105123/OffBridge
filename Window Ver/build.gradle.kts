@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.EntropicSoftwareLab.ClipboardShare"
-version = "3.5.2"
+version = "3.5.4"
 
 layout.buildDirectory.set(file("build2"))
 
