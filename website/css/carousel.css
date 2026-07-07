@@ -1,54 +1,53 @@
 /* ==========================================================================
-   carousel.css — mobile-only styles for the swipeable card carousel that
-   replaces the Connectivity (#features) and Private-by-design (#security) card
-   grids on phones. Built and torn down by carousel.js at the <=760px
-   breakpoint; desktop keeps the original grid + expandable popout untouched.
+   carousel.css — mobile-only styles for the stacked card DECK that replaces the
+   Connectivity (#features) and Private-by-design (#security) card grids on
+   phones. carousel.js drives each card's transform/opacity/z-index inline; this
+   file only sets the stacking context and layout. Desktop keeps the original
+   grid + expandable popout untouched.
    ========================================================================== */
 @media (max-width: 760px) {
   .mcar {
     position: relative;
-    /* Security's grid places .mcar in a grid cell; without min-width:0 the flex
-       track's intrinsic width forces the column (and the whole section) wide.
-       Pin it to the available width so it never drives its parent's size. */
+    /* Security places .mcar in a grid cell; min-width:0 keeps its content from
+       forcing the column (and the section) wide. */
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    overflow-x: clip; /* contain the off-screen slides; keep vertical shadows */
     margin-top: var(--s-24);
   }
 
-  /* The card grid, repurposed as a horizontal track that carousel.js slides. */
-  .mcar-track {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch; /* equal-height slides so the height never jumps */
-    gap: 0 !important;
+  /* The card grid, repurposed as the deck: a fixed-height stacking context with
+     the cards absolutely positioned on top of each other. Height is set inline
+     by carousel.js (tallest card + room for the peeking stack). */
+  .mcar-deck {
+    position: relative;
+    display: block !important;
     grid-template-columns: none !important;
+    gap: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    will-change: transform;
+    overflow: hidden; /* a retracting card clips out the bottom edge */
     touch-action: pan-y; /* vertical scroll passes through; JS owns horizontal */
     -webkit-user-select: none;
     user-select: none;
   }
 
-  .mcar-track > * {
-    flex: 0 0 100% !important;
-    width: 100% !important;
-    max-width: 100% !important;
+  .mcar-deck > * {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
     margin: 0 !important;
     grid-column: auto !important; /* drop col-3/col-4/col-6 spans */
     grid-row: auto !important; /* drop row-2 */
+    transform-origin: center top;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    /* transform / opacity / z-index / min-height set inline by carousel.js */
   }
 
-  /* Keep cards fully visible in the carousel regardless of scroll-reveal state. */
-  .mcar-track [data-reveal] {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  /* No tap-to-expand affordance while the cards live in the carousel. */
-  .mcar-track .expand-hint {
+  /* No tap-to-expand affordance while the cards live in the deck. */
+  .mcar-deck .expand-hint {
     display: none !important;
   }
 

@@ -1,19 +1,17 @@
 /* ==========================================================================
    carousel.js — On phones (<=760px), turn the Connectivity (#features .bento)
-   and Private-by-design (#security .assure-grid) card grids into a swipeable,
-   auto-advancing, infinite (circular) carousel — one card per view.
+   and Private-by-design (#security .assure-grid) card grids into a stacked
+   DECK OF CARDS: the top card sits on a short stack of the others peeking out
+   below it.
 
-   - Autoplays to the next card every 2.5s and loops forever (last -> first).
-   - Touch-drag to swipe either way; both directions wrap infinitely.
-   - Infinite loop: a clone of the last card is prepended and a clone of the
-     first appended; landing on a clone teleports (no animation) to the matching
-     real card, so the wrap is seamless in both directions.
-   - Desktop (>760px) keeps the original grid + tap-to-expand popout. This
-     builds when entering the mobile breakpoint and tears down when leaving, so
-     rotating a phone to landscape restores the grid cleanly.
-   - prefers-reduced-motion: no autoplay, no slide animation (still swipeable).
-   - Autoplay pauses while dragging, while the tab is hidden, and while the
-     carousel is scrolled off-screen.
+   - Swipe LEFT  -> the top card retracts down and out the bottom, revealing the next.
+   - Swipe RIGHT -> the top card tucks down to the back (bottom) of the deck.
+   - Either way the deck advances to the next card; it's forward-only and, because
+     the deck cycles by a modulo pointer, inherently circular (no clones).
+   - Autoplays (tuck) every 2.5s; pauses off-screen, on a hidden tab, and while dragging.
+   - Desktop (>760px) keeps the original grid + tap-to-expand popout. This builds on
+     entering the mobile breakpoint and tears down on leaving (handles rotation).
+   - prefers-reduced-motion: no autoplay, instant advance (still swipeable).
    ========================================================================== */
 (function () {
   "use strict";
@@ -24,9 +22,12 @@
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var AUTO_MS = 2500; // time each card is shown before auto-advancing
-  var DUR = 460; // slide animation duration (ms)
-  var EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-  var SWIPE_RATIO = 0.18; // drag past this fraction of a card width -> change card
+  var DECK_TRANS =
+    "transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease";
+  var PEEK = 20; // px each deeper card is offset downward
+  var STEP = 0.035; // scale reduction per depth
+  var VISIBLE = 2; // depths shown behind the front card (front + 2 peeks)
+  var SWIPE_RATIO = 0.18; // drag past this fraction of the deck width -> advance
   var SWIPE_MIN = 36; // ...or this many px, whichever is larger
 
   var TARGETS = ["#features .bento", "#security .assure-grid"];
@@ -40,9 +41,8 @@
 
   function sync() {
     if (mq.matches) {
-      // If a desktop popout is open as we cross into mobile, close it first so
-      // the carousel never wraps an expanded (position:fixed) card + placeholder.
-      // Dispatch is synchronous, so popout collapses before buildAll runs.
+      // If a desktop popout is open as we cross into mobile, close it first so the
+      // deck doesn't wrap an expanded (position:fixed) card. Dispatch is synchronous.
       document.dispatchEvent(new Event("carousel:takeover"));
       buildAll();
     } else {
@@ -51,14 +51,13 @@
   }
 
   function buildAll() {
-    // Safety net: release any popout scroll-lock before the carousel takes over.
     if (document.body.style.overflow === "hidden") {
-      document.body.style.overflow = "";
+      document.body.style.overflow = ""; // safety: release any popout scroll-lock
       document.body.style.paddingRight = "";
     }
     TARGETS.forEach(function (sel) {
       var grid = document.querySelector(sel);
-      if (grid && !grid._mcar) instances.push(new Carousel(grid));
+      if (grid && !grid._mcar) instances.push(new Deck(grid));
     });
   }
   function destroyAll() {
@@ -68,41 +67,49 @@
     instances = [];
   }
 
-  /* --- One carousel over a card grid -------------------------------------- */
-  function Carousel(grid) {
+  /* --- One deck over a card grid ------------------------------------------ */
+  function Deck(grid) {
     var self = this;
     this.grid = grid;
     grid._mcar = this;
 
-    // Exclude any leftover popout placeholder (from a popout open across the
-    // breakpoint) so the slide count and clones stay correct.
-    var reals = slice(grid.children).filter(function (el) {
+    // Real cards (drop any leftover popout placeholder).
+    this.cards = slice(grid.children).filter(function (el) {
       return !el.classList.contains("popout-placeholder");
     });
     slice(grid.querySelectorAll(".popout-placeholder")).forEach(removeNode);
-    this.n = reals.length;
+    this.n = this.cards.length;
     if (this.n < 2) {
       grid._mcar = null;
-      return; // nothing to loop through
+      return;
     }
 
-    // Viewport wrapper (clips the off-screen slides).
+    // Measure the tallest card BEFORE the deck styling makes them absolute, then
+    // give the deck a fixed height and each card a uniform min-height so the stack
+    // is even and its footprint doesn't jump as cards cycle.
+    var maxH = 0;
+    this.cards.forEach(function (el) {
+      maxH = Math.max(maxH, el.offsetHeight);
+    });
+    this.maxH = maxH;
+
     var mcar = document.createElement("div");
     mcar.className = "mcar";
     grid.parentNode.insertBefore(mcar, grid);
     mcar.appendChild(grid);
     this.mcar = mcar;
-    grid.classList.add("mcar-track");
+    grid.classList.add("mcar-deck");
+    grid.style.height = maxH + VISIBLE * PEEK + 10 + "px";
 
-    // Clones for the seamless wrap.
-    this.cloneLast = cloneSlide(reals[this.n - 1]);
-    this.cloneFirst = cloneSlide(reals[0]);
-    grid.insertBefore(this.cloneLast, reals[0]);
-    grid.appendChild(this.cloneFirst);
+    this.cards.forEach(function (el, i) {
+      el._i = i;
+      el.style.minHeight = maxH + "px";
+    });
 
-    this.index = 1; // first real card sits at slot 1 (slot 0 is the prepended clone)
+    this.front = 0;
+    this.deckW = mcar.clientWidth;
 
-    // Dots.
+    // Dots — built before the first layout(), which calls updateDots().
     var dots = document.createElement("div");
     dots.className = "mcar-dots";
     dots.setAttribute("role", "tablist");
@@ -118,26 +125,18 @@
     mcar.appendChild(dots);
     this.dots = dots;
 
-    this.slideW = mcar.clientWidth;
-    this.apply(false);
-    this.updateDots();
+    this.layout(false);
 
-    // Bind handlers (per-instance so add/removeEventListener match).
-    this.onDown = Carousel.prototype.onDown.bind(this);
-    this.onMove = Carousel.prototype.onMove.bind(this);
-    this.onUp = Carousel.prototype.onUp.bind(this);
+    // Drag on the top card.
+    this.onDown = Deck.prototype.onDown.bind(this);
+    this.onMove = Deck.prototype.onMove.bind(this);
+    this.onUp = Deck.prototype.onUp.bind(this);
     grid.addEventListener("pointerdown", this.onDown);
 
-    this.onTEnd = function (e) {
-      if (e.target === grid && e.propertyName === "transform") self.afterSlide();
-    };
-    grid.addEventListener("transitionend", this.onTEnd);
-
     this.onResize = function () {
-      if (!mq.matches) return; // leaving the breakpoint is handled by sync()
-      self.slideW = mcar.clientWidth;
-      self.afterSlide(); // reconcile clone-parking; apply(false) inside repositions
-      self.apply(false);
+      if (!mq.matches) return;
+      self.deckW = mcar.clientWidth;
+      self.layout(false);
     };
     window.addEventListener("resize", this.onResize);
 
@@ -147,7 +146,6 @@
     };
     document.addEventListener("visibilitychange", this.onVis);
 
-    // Only autoplay while on screen.
     if ("IntersectionObserver" in window) {
       this.io = new IntersectionObserver(
         function (ents) {
@@ -155,7 +153,7 @@
           if (self.inView) self.play();
           else self.pause();
         },
-        { threshold: 0.35 }
+        { threshold: 0.3 }
       );
       this.io.observe(mcar);
     } else {
@@ -164,103 +162,100 @@
     }
   }
 
-  Carousel.prototype.apply = function (animate) {
-    var g = this.grid;
-    g.style.transition =
-      animate && !reduce ? "transform " + DUR + "ms " + EASE : "none";
-    g.style.transform =
-      "translate3d(" + -this.index * this.slideW + "px,0,0)";
+  Deck.prototype.depthOf = function (i) {
+    return (i - this.front + this.n) % this.n;
   };
 
-  Carousel.prototype.goTo = function (i, animate) {
-    this.index = i;
-    this.apply(animate);
-    this.updateDots();
-    if (!animate || reduce) this.afterSlide(); // no transition -> settle now
-  };
-  // afterSlide() first reconciles any interrupted wrap: if a prior slide's
-  // transition was cancelled (resize/tap/scroll) the index can be parked on a
-  // clone; normalize it to the identical real slide before advancing so we never
-  // walk index past the clones into blank space.
-  Carousel.prototype.next = function () {
-    this.afterSlide();
-    this.goTo(this.index + 1, true);
-  };
-  Carousel.prototype.prev = function () {
-    this.afterSlide();
-    this.goTo(this.index - 1, true);
+  // Place one card at a stack depth (0 = front). Deeper than VISIBLE = hidden
+  // behind, parked at the last visible pose so it fades in when promoted.
+  Deck.prototype.poseAt = function (el, d, animate) {
+    el.style.transition = animate && !reduce ? DECK_TRANS : "none";
+    var vis = d < VISIBLE ? d : VISIBLE;
+    el.style.transform =
+      "translateY(" + vis * PEEK + "px) scale(" + (1 - vis * STEP).toFixed(3) + ")";
+    el.style.opacity = d > VISIBLE ? "0" : "1";
+    el.style.zIndex = String(100 - d);
   };
 
-  // After a slide finishes, jump off a clone onto the matching real card.
-  // Guarded against re-entry: apply(false) cancels any in-flight transition,
-  // which can synchronously re-fire transitionend -> afterSlide; without the
-  // flag that could recurse.
-  Carousel.prototype.afterSlide = function () {
-    if (this._settling) return;
-    this._settling = true;
-    if (this.index === this.n + 1) {
-      this.index = 1;
-      this.apply(false);
-    } else if (this.index === 0) {
-      this.index = this.n;
-      this.apply(false);
+  Deck.prototype.layout = function (animate) {
+    for (var i = 0; i < this.n; i++) {
+      if (this.cards[i]._exiting) continue; // don't disturb a card mid-retract
+      this.poseAt(this.cards[i], this.depthOf(i), animate);
     }
     this.updateDots();
-    this._settling = false;
   };
 
-  Carousel.prototype.realIndex = function () {
-    // Slot 0 (last-clone) -> n-1 and slot n+1 (first-clone) -> 0 fall out of the
-    // modulo, so no special-casing is needed.
-    return (((this.index - 1) % this.n) + this.n) % this.n;
+  // Advance to the next card. dir "left" flings the top card out the bottom;
+  // anything else (right / autoplay) tucks it down to the back of the deck.
+  Deck.prototype.advance = function (dir) {
+    if (this.n < 2) return;
+    var self = this;
+    var exiting = this.cards[this.front];
+    this.front = (this.front + 1) % this.n;
+
+    if (dir === "left" && !reduce) {
+      exiting._exiting = true;
+      exiting.style.transition = DECK_TRANS;
+      exiting.style.zIndex = "200"; // stay on top while it flies out
+      exiting.style.opacity = "0";
+      exiting.style.transform =
+        "translate(-8%, 92%) scale(0.9) rotate(-4deg)";
+      onDeckExit(exiting, function () {
+        exiting._exiting = false;
+        self.poseAt(exiting, self.depthOf(exiting._i), false); // snap to back
+      });
+    }
+    this.layout(true);
   };
-  Carousel.prototype.updateDots = function () {
-    var ri = this.realIndex();
+
+  Deck.prototype.updateDots = function () {
+    if (!this.dotBtns) return;
     for (var i = 0; i < this.dotBtns.length; i++) {
-      this.dotBtns[i].setAttribute("aria-current", i === ri ? "true" : "false");
+      this.dotBtns[i].setAttribute(
+        "aria-current",
+        i === this.front ? "true" : "false"
+      );
     }
   };
 
   /* --- Autoplay ----------------------------------------------------------- */
-  Carousel.prototype.play = function () {
+  Deck.prototype.play = function () {
     if (reduce || this.timer || this.dragging || this.inView === false) return;
     var self = this;
     this.timer = window.setInterval(function () {
-      self.next();
+      self.advance(); // tuck to the back
     }, AUTO_MS);
   };
-  Carousel.prototype.pause = function () {
+  Deck.prototype.pause = function () {
     if (this.timer) {
       window.clearInterval(this.timer);
       this.timer = 0;
     }
-    window.clearTimeout(this._rt); // also cancel a pending resume, so pause holds
+    window.clearTimeout(this._rt);
   };
-  Carousel.prototype.resumeSoon = function () {
+  Deck.prototype.resumeSoon = function () {
     var self = this;
-    this.pause(); // also clears any pending _rt
+    this.pause();
     this._rt = window.setTimeout(function () {
       self.play();
     }, AUTO_MS);
   };
 
-  /* --- Drag / swipe ------------------------------------------------------- */
-  Carousel.prototype.onDown = function (e) {
+  /* --- Drag / swipe the top card ------------------------------------------ */
+  Deck.prototype.onDown = function (e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    this.afterSlide(); // reconcile any clone-parked state before we grab baseTx
     this.dragging = true;
     this.decided = false;
     this.horizontal = false;
     this.startX = e.clientX;
     this.startY = e.clientY;
-    this.baseTx = -this.index * this.slideW;
+    this.frontEl = this.cards[this.front];
     this.pause();
-    this.grid.style.transition = "none";
     document.addEventListener("pointermove", this.onMove, { passive: false });
     document.addEventListener("pointerup", this.onUp);
     document.addEventListener("pointercancel", this.onUp);
   };
-  Carousel.prototype.onMove = function (e) {
+  Deck.prototype.onMove = function (e) {
     if (!this.dragging) return;
     var dx = e.clientX - this.startX;
     var dy = e.clientY - this.startY;
@@ -270,35 +265,37 @@
       this.horizontal = Math.abs(dx) > Math.abs(dy);
       if (this.horizontal) {
         try {
-          this.grid.setPointerCapture(e.pointerId);
+          this.frontEl.setPointerCapture(e.pointerId);
         } catch (x) {}
+        this.frontEl.style.transition = "none";
+        this.frontEl.style.zIndex = "200";
       }
     }
     if (!this.horizontal) {
-      // Vertical gesture: release so the page scrolls normally.
-      this.endDrag();
+      this.endDrag(); // vertical gesture: let the page scroll
       this.resumeSoon();
       return;
     }
     e.preventDefault();
-    this.grid.style.transform =
-      "translate3d(" + (this.baseTx + dx) + "px,0,0)";
+    this.frontEl.style.transform =
+      "translate(" + dx + "px," + Math.abs(dx) * 0.06 + "px) rotate(" +
+      dx * 0.03 + "deg)";
   };
-  Carousel.prototype.onUp = function (e) {
+  Deck.prototype.onUp = function (e) {
     if (!this.dragging) return;
-    var canceled = e.type === "pointercancel"; // system took the gesture; don't commit
+    var canceled = e.type === "pointercancel";
     var dx = e.clientX - this.startX;
     var wasHorizontal = this.horizontal;
     this.endDrag();
     if (wasHorizontal) {
-      var thresh = Math.max(SWIPE_MIN, this.slideW * SWIPE_RATIO);
-      if (!canceled && dx <= -thresh) this.next();
-      else if (!canceled && dx >= thresh) this.prev();
-      else this.apply(true); // snap back to the current card
+      var thresh = Math.max(SWIPE_MIN, this.deckW * SWIPE_RATIO);
+      if (!canceled && dx <= -thresh) this.advance("left");
+      else if (!canceled && dx >= thresh) this.advance("right");
+      else this.poseAt(this.frontEl, 0, true); // snap the top card back
     }
     this.resumeSoon();
   };
-  Carousel.prototype.endDrag = function () {
+  Deck.prototype.endDrag = function () {
     this.dragging = false;
     document.removeEventListener("pointermove", this.onMove, { passive: false });
     document.removeEventListener("pointerup", this.onUp);
@@ -306,7 +303,7 @@
   };
 
   /* --- Teardown (restore the original grid) ------------------------------- */
-  Carousel.prototype.destroy = function () {
+  Deck.prototype.destroy = function () {
     this.pause();
     window.clearTimeout(this._rt);
     this.endDrag();
@@ -316,13 +313,17 @@
     document.removeEventListener("visibilitychange", this.onVis);
     window.removeEventListener("resize", this.onResize);
     g.removeEventListener("pointerdown", this.onDown);
-    g.removeEventListener("transitionend", this.onTEnd);
-    removeNode(this.cloneLast);
-    removeNode(this.cloneFirst);
     removeNode(this.dots);
-    g.classList.remove("mcar-track");
-    g.style.removeProperty("transform");
-    g.style.removeProperty("transition");
+    this.cards.forEach(function (el) {
+      el._exiting = false;
+      ["transform", "opacity", "transition", "z-index", "min-height"].forEach(
+        function (p) {
+          el.style.removeProperty(p);
+        }
+      );
+    });
+    g.classList.remove("mcar-deck");
+    g.style.removeProperty("height");
     if (mcar && mcar.parentNode) {
       mcar.parentNode.insertBefore(g, mcar); // unwrap
       mcar.parentNode.removeChild(mcar);
@@ -331,25 +332,26 @@
   };
 
   /* --- Helpers ------------------------------------------------------------ */
-  function cloneSlide(el) {
-    var c = el.cloneNode(true);
-    c.classList.add("mcar-clone");
-    c.setAttribute("aria-hidden", "true");
-    // Strip interactivity/identity that cloneNode copied (popout attrs, ids).
-    c.removeAttribute("id");
-    c.removeAttribute("role");
-    c.removeAttribute("tabindex");
-    c.removeAttribute("aria-expanded");
-    c.removeAttribute("aria-label");
-    var ids = c.querySelectorAll("[id]");
-    for (var i = 0; i < ids.length; i++) ids[i].removeAttribute("id");
-    return c; // cloneNode does not copy event listeners, so clones are inert
+  function onDeckExit(el, cb) {
+    var done = false;
+    function fin() {
+      if (done) return;
+      done = true;
+      el.removeEventListener("transitionend", te);
+      cb();
+    }
+    function te(ev) {
+      if (ev.target === el && ev.propertyName === "transform") fin();
+    }
+    el.addEventListener("transitionend", te);
+    window.setTimeout(fin, 700); // fallback if transitionend is missed
   }
-
   function bindDot(self, btn, idx) {
     btn.addEventListener("click", function () {
       self.pause();
-      self.goTo(idx + 1, true);
+      // Step the deck forward to the tapped card (tuck animation each step).
+      var guard = self.n;
+      while (self.front !== idx && guard-- > 0) self.advance("right");
       self.resumeSoon();
     });
   }
