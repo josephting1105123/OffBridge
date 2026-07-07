@@ -4,6 +4,27 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.5.2 — Android (transfer/receive fixes)
+
+Android bumps to **3.5.2** (versionCode 19). Three transfer bugs reported on the Android client;
+the folder-send fix also lands on the Windows sender/receiver (Windows keeps 3.5.4 until its next build).
+
+### Fixed
+- **Received text files open again.** Tapping a received `.txt` — or any non image/video/apk/pdf file —
+  in transfer history opened the containing folder instead of the file. It now opens the file itself
+  with a MIME resolved from the extension, and only falls back to the folder when nothing on the device
+  can view the type.
+- **Sending a folder works.** The Windows sender handed a picked directory straight to the byte pump,
+  where `FileInputStream(dir)` threw — the transfer stalled on "resume" at 0% and never sent. Folders
+  are now walked into their files before the offer. Two files that flatten to the same leaf name (e.g.
+  `a.txt` under two subfolders) are de-collided on the receiver so neither overwrites the other — mirrored
+  on the Android and Windows receivers.
+- **Incoming requests pop in-app.** When the app is open, an incoming transfer request now shows its
+  accept/decline screen immediately instead of being buried in a notification; the notification is used
+  only when the app is in the background.
+
+---
+
 ## 3.5.1 — Android + Windows (cross-platform transfer fixes, audit pass)
 
 Both platforms now report **3.5.1** (Android versionCode 18). A read-only audit of the Android

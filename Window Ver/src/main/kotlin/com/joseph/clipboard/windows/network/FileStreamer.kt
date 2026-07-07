@@ -50,8 +50,14 @@ object FileStreamer {
         val fs = FileSeal
         val aeadKeySpec = fileKey?.let { fs.keySpec(if (useV2) fs.deriveKeyV2(it, sessionId) else fs.deriveKey(it)) }
 
+        // Give each manifest entry its own on-disk name even when a folder flattened two files to
+        // the same leaf, so the second no longer overwrites the first. Deterministic, so a resume
+        // (which recomputes this) addresses the same .part.
+        val names = deCollideNames(manifest)
+
         for (i in startFileIndex until manifest.size) {
-            val (name, size) = manifest[i]
+            val name = names[i]
+            val size = manifest[i].second
             val isResumingThisFile = (i == startFileIndex && startOffset > 0)
 
             val finalFile = File(saveDir, name)
@@ -240,6 +246,48 @@ object FileStreamer {
         socket.soTimeout = 30000
         Net.readLineUtf8(socket.getInputStream()) == "TRANSFER_COMPLETE|$sessionId"
     } catch (e: Exception) { false }
+
+    /**
+     * Expands a user selection into the flat list of regular files it actually contains: any
+     * directory is walked recursively (depth-first, stable order) and replaced by the files under
+     * it; plain files pass through unchanged. Order is deterministic so the MANIFEST and the byte
+     * stream stay in agreement.
+     *
+     * Without this, a picked directory reached the byte pump as a File, and `FileInputStream(dir)`
+     * throws — which aborted the entire "send folder" at 0% (the reported resume-stuck-at-0% bug).
+     * The receivers still flatten each name to a safe leaf via [sanitizeIncomingFileName], so a sent
+     * folder lands as its files in the save location.
+     */
+    fun expandSelectionToFiles(selection: List<File>): List<File> =
+        selection.flatMap { f ->
+            if (f.isDirectory) f.walkTopDown().filter { it.isFile }.toList()
+            else listOf(f)
+        }
+
+    /**
+     * De-collides duplicate leaf names WITHIN one manifest, deterministically — the result depends
+     * only on the manifest, so a resume recomputes identical names. A sent folder can flatten two
+     * files to the same leaf ("a.txt" under two subfolders); without this the second would delete
+     * and overwrite the first on disk (silent data loss). Non-duplicate manifests are returned
+     * unchanged, so ordinary transfers stay byte-identical. Does NOT dedupe against files already in
+     * the save folder — that pre-existing-file overwrite behavior is intentionally unchanged.
+     */
+    fun deCollideNames(manifest: List<Pair<String, Long>>): List<String> {
+        val out = ArrayList<String>(manifest.size)
+        val used = HashSet<String>()
+        for ((rawName, _) in manifest) {
+            var candidate = rawName
+            var counter = 1
+            val stem = rawName.substringBeforeLast('.')
+            val ext = if (rawName.contains('.')) "." + rawName.substringAfterLast('.') else ""
+            while (!used.add(candidate)) {
+                candidate = "$stem ($counter)$ext"
+                counter++
+            }
+            out.add(candidate)
+        }
+        return out
+    }
 
     /**
      * Reduce an untrusted manifest filename to a safe leaf written into the save folder.

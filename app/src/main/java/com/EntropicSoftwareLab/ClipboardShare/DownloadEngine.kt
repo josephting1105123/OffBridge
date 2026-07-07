@@ -55,6 +55,11 @@ object DownloadEngine {
                 }
 
                 if (session.localFileNames.isEmpty()) {
+                    // Track leaf names already claimed in THIS batch so two manifest entries that
+                    // sanitize to the same leaf (e.g. a sent folder with "a.txt" under two different
+                    // subfolders, both flattened here) don't resolve to the same file and overwrite
+                    // each other on disk.
+                    val assigned = HashSet<String>()
                     for (m in manifest) {
                         // Sanitize the manifest-supplied name before it ever hits the filesystem
                         // (path-traversal / reserved chars), matching the Windows receiver (XP-DEF-03).
@@ -66,8 +71,9 @@ object DownloadEngine {
                             // could be shadowed by a same-named, earlier-published photo when
                             // history's "open" probes the media folder first.
                             val publishDir = TransferUtils.publicMediaDir(TransferUtils.mediaCategory(finalName))
-                            finalName = TransferUtils.dedupeName(listOfNotNull(downloadDir, publishDir), finalName)
+                            finalName = TransferUtils.dedupeName(listOfNotNull(downloadDir, publishDir), finalName, assigned)
                         }
+                        assigned.add(finalName)
                         session.localFileNames.add(finalName)
                     }
                     TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)

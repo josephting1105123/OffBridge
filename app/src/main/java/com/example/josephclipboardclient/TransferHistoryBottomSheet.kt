@@ -733,28 +733,43 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                         }
                     }
                 } else {
+                    // Open the received file itself (e.g. a text viewer for a .txt). Previously this
+                    // branch only revealed the containing folder, so tapping a received .txt — or any
+                    // non image/video/apk/pdf file — never opened it. Resolve a MIME from the
+                    // extension; unknown types fall back to */*. A direct ACTION_VIEW throws
+                    // ActivityNotFoundException when nothing on the device can handle it, so we only
+                    // drop to the old open-the-folder chain when the file genuinely can't be viewed.
+                    val fileMime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
+                    val fileIntent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(fileUri, fileMime)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.setDataAndType(folderUri, "resource/folder")
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
-                    } catch (e1: android.content.ActivityNotFoundException) {
+                        startActivity(fileIntent)
+                    } catch (eFile: android.content.ActivityNotFoundException) {
                         try {
-                            val fallback = Intent(Intent.ACTION_VIEW)
-                            fallback.setDataAndType(folderUri, "vnd.android.document/directory")
-                            fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
-                        } catch (e2: android.content.ActivityNotFoundException) {
+                            val intent = Intent(Intent.ACTION_VIEW)
+                            intent.setDataAndType(folderUri, "resource/folder")
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
+                        } catch (e1: android.content.ActivityNotFoundException) {
                             try {
-                                val dlFallback = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
-                                dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(dlFallback)
-                            } catch (e3: android.content.ActivityNotFoundException) {
-                                val ultimate = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(fileUri, "*/*")
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                                val fallback = Intent(Intent.ACTION_VIEW)
+                                fallback.setDataAndType(folderUri, "vnd.android.document/directory")
+                                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
+                            } catch (e2: android.content.ActivityNotFoundException) {
+                                try {
+                                    val dlFallback = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
+                                    dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(dlFallback)
+                                } catch (e3: android.content.ActivityNotFoundException) {
+                                    val ultimate = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(fileUri, "*/*")
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(Intent.createChooser(ultimate, getString(R.string.history_chooser_open_file)))
                                 }
-                                startActivity(Intent.createChooser(ultimate, getString(R.string.history_chooser_open_file)))
                             }
                         }
                     }

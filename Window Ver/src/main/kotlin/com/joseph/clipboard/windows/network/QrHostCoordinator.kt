@@ -65,7 +65,10 @@ class QrHostCoordinator(private val isTransferActive: () -> Boolean) {
      * This blocks for ~1–4s while the hotspot spins up, so call it off the UI thread.
      */
     fun startQrHostSession(files: List<File>): QrHostInfo? {
-        val realFiles = files.filter { it.exists() && it.isFile }
+        // Expand picked directories into their files first (this method already runs off the UI
+        // thread); otherwise a selected folder was dropped by the isFile filter and an off-grid
+        // "send folder" silently offered nothing.
+        val realFiles = FileStreamer.expandSelectionToFiles(files).filter { it.exists() && it.isFile }
         if (realFiles.isEmpty()) return null
 
         val myEpoch = qrEpoch.incrementAndGet()

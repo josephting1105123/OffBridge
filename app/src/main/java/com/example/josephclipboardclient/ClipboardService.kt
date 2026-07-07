@@ -93,6 +93,12 @@ class ClipboardService : Service() {
             registerReceiver(pairingNotificationReceiver, pairingFilter)
         }
 
+        // Track foreground/visible state so an incoming file OFFER can pop its accept screen
+        // in-app when open, and only notify when backgrounded (see FileTransferServer). Registered
+        // here because the daemon (started next) is what receives OFFERs — the tracker is live for
+        // exactly that window. Idempotent across service restarts.
+        AppForeground.register(application)
+
         TransferDaemon.start(applicationContext)
         PairingDaemon.start(applicationContext)
 

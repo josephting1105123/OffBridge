@@ -407,6 +407,20 @@ object FileTransferServer {
                     putExtra("TOTAL_FILES", totalFiles)
                 }
 
+                // App open → pop the accept/decline screen right away instead of burying the request
+                // in a notification. App backgrounded → raise a high-priority notification (with a
+                // full-screen intent so it can still surface on the lock screen). Background activity
+                // starts are restricted on API 29+, so only start directly when we are genuinely in
+                // the foreground; on any refusal, fall through to the notification.
+                if (AppForeground.isForeground) {
+                    try {
+                        context.startActivity(requestIntent)
+                        return
+                    } catch (_: Exception) {
+                        // fall through to the notification path below
+                    }
+                }
+
                 val pendingRequest = PendingIntent.getActivity(context, sessionId.hashCode(), requestIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

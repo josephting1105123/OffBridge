@@ -81,16 +81,19 @@ object TransferUtils {
      *  "name (N).ext" counter the receive path has always used for Download collisions. */
     fun dedupeName(dir: java.io.File, name: String): String = dedupeName(listOf(dir), name)
 
-    /** Multi-directory variant: the returned name is free in EVERY listed directory. The receive
-     *  path dedupes against Download AND the media publish destination — a name that is only
-     *  unique in Download could be shadowed by a same-named, earlier-published photo when the
-     *  history "open" action later probes the media folder first. */
-    fun dedupeName(dirs: List<java.io.File>, name: String): String {
+    /** Multi-directory variant: the returned name is free in EVERY listed directory, and not already
+     *  claimed in [taken]. The receive path dedupes against Download AND the media publish
+     *  destination — a name that is only unique in Download could be shadowed by a same-named,
+     *  earlier-published photo when the history "open" action later probes the media folder first.
+     *  [taken] additionally guards against duplicate leaf names WITHIN one batch (e.g. a sent folder
+     *  containing "a.txt" in two different subfolders, both flattened to the same leaf) — without it
+     *  the second file would overwrite the first on disk. */
+    fun dedupeName(dirs: List<java.io.File>, name: String, taken: Set<String> = emptySet()): String {
         var candidate = name
         var counter = 1
         val nameWithoutExt = name.substringBeforeLast('.')
         val ext = if (name.contains('.')) "." + name.substringAfterLast('.') else ""
-        while (dirs.any { java.io.File(it, candidate).exists() }) {
+        while (candidate in taken || dirs.any { java.io.File(it, candidate).exists() }) {
             candidate = "$nameWithoutExt ($counter)$ext"
             counter++
         }

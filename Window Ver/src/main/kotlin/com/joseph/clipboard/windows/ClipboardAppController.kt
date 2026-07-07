@@ -497,9 +497,26 @@ class ClipboardAppController {
      * Offers [files] to [targetIp]. Returns the new outgoing sessionId immediately (the offer
      * handshake runs async) so the caller can jump straight to that record's history detail.
      */
-    fun sendFiles(files: List<File>, targetIp: String): String {
+    fun sendFiles(selection: List<File>, targetIp: String): String {
         val sessionId = UUID.randomUUID().toString()
         scope.launch(Dispatchers.IO) {
+            // Expand any selected directory into the files it contains (off the UI thread — it walks
+            // the tree). Without this a directory File reached the byte pump and FileInputStream(dir)
+            // threw, aborting the whole send at 0% and leaving a stuck "resume" (reported bug).
+            val files = FileStreamer.expandSelectionToFiles(selection)
+            if (files.isEmpty()) {
+                // Nothing streamable (e.g. only empty folders were picked). Record a failed attempt
+                // so the send isn't silently dropped, then stop.
+                val emptyRecord = TransferRecord(
+                    sessionId = sessionId, deviceName = targetIp, direction = "outgoing",
+                    fileNames = emptyList(), totalBytes = 0L, timestamp = System.currentTimeMillis(),
+                    status = "failed", filesCompleted = 0, totalFiles = 0,
+                    fileSizes = emptyList(), currentFileOffset = 0L
+                )
+                _transferHistory.update { listOf(emptyRecord) + it }
+                saveHistory()
+                return@launch
+            }
             val session = OutgoingFileSession(sessionId, targetIp, files)
             activeOutgoingFileSessions[sessionId] = session
 
@@ -848,8 +865,9 @@ class ClipboardAppController {
                 if (fileKey == null && startFileIndex < session.manifest.size) {
                     // Plaintext resume recomputes from the .part length. AEAD resume restarts the
                     // in-progress file at chunk 0 (FileSeal records aren't byte-seekable), so offset
-                    // stays 0 and the receiver reopens the .part fresh.
-                    val (name, _) = session.manifest[startFileIndex]
+                    // stays 0 and the receiver reopens the .part fresh. Use the same de-collided name
+                    // receiveToDir writes, so a duplicate-leaf file reads its own .part length.
+                    val name = FileStreamer.deCollideNames(session.manifest)[startFileIndex]
                     val saveDir = File(SecurityVault.getSaveLocation())
                     val partFile = File(saveDir, "$name.part")
                     if (partFile.exists()) {
