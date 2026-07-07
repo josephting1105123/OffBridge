@@ -112,6 +112,12 @@
   .device--phone {
     width: clamp(200px, 62vw, 264px);
   }
+  /* Phone-first hero: drop the desktop window here so a phone visitor sees just
+     the Android app (the Windows client still appears in Platforms/Download).
+     Keeps the hero short instead of trailing a wide, half-relevant screenshot. */
+  .hero__media .device--desktop {
+    display: none;
+  }
 }
 
 /* --- Single-screenshot figure (used in comparison cards) ----------------- */

@@ -15,6 +15,11 @@ html {
   text-size-adjust: 100%;
   scroll-behavior: smooth;
   scroll-padding-top: calc(var(--nav-h) + 16px);
+  /* Guard the mobile layout viewport: decorative accent glows use negative
+     horizontal inset and bleed past the edge on narrow screens. clip (not
+     hidden) contains that overflow without creating a scroll container, so it
+     can't expand the viewport or break position: sticky / fixed. */
+  overflow-x: clip;
 }
 
 body {
@@ -28,7 +33,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow-x: clip;
   transition: background-color var(--dur-med) var(--ease-std),
     color var(--dur-med) var(--ease-std);
 }
