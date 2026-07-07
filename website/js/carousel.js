@@ -1,17 +1,18 @@
 /* ==========================================================================
    carousel.js — On phones (<=760px), turn the Connectivity (#features .bento)
    and Private-by-design (#security .assure-grid) card grids into a stacked
-   DECK OF CARDS: the top card sits on a short stack of the others peeking out
-   below it.
+   DECK OF CARDS: the top card sits on a short stack of the others peeking below.
 
    - Swipe LEFT  -> the top card retracts down and out the bottom, revealing the next.
-   - Swipe RIGHT -> the top card tucks down to the back (bottom) of the deck.
-   - Either way the deck advances to the next card; it's forward-only and, because
-     the deck cycles by a modulo pointer, inherently circular (no clones).
-   - Autoplays (tuck) every 2.5s; pauses off-screen, on a hidden tab, and while dragging.
-   - Desktop (>760px) keeps the original grid + tap-to-expand popout. This builds on
-     entering the mobile breakpoint and tears down on leaving (handles rotation).
-   - prefers-reduced-motion: no autoplay, instant advance (still swipeable).
+   - Swipe RIGHT -> the top card arcs in a half-circle (rotating 180 along the way,
+     tangent to the path) down to the back of the deck.
+   - Autoplays (arc) every 1.5s. Forward-only and, because the deck cycles by a
+     modulo pointer, inherently circular (no clones).
+   - TAP a card to expand it into the popout (same as desktop); a horizontal drag
+     swipes instead. Autoplay pauses while a card is expanded.
+   - Desktop (>760px) keeps the original grid + popout. This builds on entering the
+     mobile breakpoint and tears down on leaving (handles rotation).
+   - prefers-reduced-motion: no autoplay, instant advance (still swipeable/tappable).
    ========================================================================== */
 (function () {
   "use strict";
@@ -21,7 +22,7 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var AUTO_MS = 2500; // time each card is shown before auto-advancing
+  var AUTO_MS = 1500; // time each card is shown before auto-advancing
   var DECK_TRANS =
     "transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease";
   var PEEK = 20; // px each deeper card is offset downward
@@ -29,6 +30,12 @@
   var VISIBLE = 2; // depths shown behind the front card (front + 2 peeks)
   var SWIPE_RATIO = 0.18; // drag past this fraction of the deck width -> advance
   var SWIPE_MIN = 36; // ...or this many px, whichever is larger
+
+  // Right-swipe / autoplay arc (a half-circle to the back of the deck).
+  var ARC_MS = 620;
+  var ARC_BULGE = 60; // px the card bulges to the right at mid-arc
+  var ARC_DIP = 54; // px extra downward sag at mid-arc
+  var ARC_SCALE = 0.6; // the card shrinks to this as it flies
 
   var TARGETS = ["#features .bento", "#security .assure-grid"];
   var instances = [];
@@ -72,6 +79,7 @@
     var self = this;
     this.grid = grid;
     grid._mcar = this;
+    this._held = null; // the card currently expanded into the popout, if any
 
     // Real cards (drop any leftover popout placeholder).
     this.cards = slice(grid.children).filter(function (el) {
@@ -99,7 +107,7 @@
     mcar.appendChild(grid);
     this.mcar = mcar;
     grid.classList.add("mcar-deck");
-    grid.style.height = maxH + VISIBLE * PEEK + 10 + "px";
+    grid.style.height = maxH + VISIBLE * PEEK + 16 + "px";
 
     this.cards.forEach(function (el, i) {
       el._i = i;
@@ -127,11 +135,20 @@
 
     this.layout(false);
 
-    // Drag on the top card.
+    // Drag on the top card; a tap falls through to the popout expand.
     this.onDown = Deck.prototype.onDown.bind(this);
     this.onMove = Deck.prototype.onMove.bind(this);
     this.onUp = Deck.prototype.onUp.bind(this);
     grid.addEventListener("pointerdown", this.onDown);
+    this.onClickCapture = function (e) {
+      if (self._dragged) {
+        // The gesture was a swipe, not a tap — don't let it expand.
+        e.stopPropagation();
+        e.preventDefault();
+        self._dragged = false;
+      }
+    };
+    grid.addEventListener("click", this.onClickCapture, true);
 
     this.onResize = function () {
       if (!mq.matches) return;
@@ -145,6 +162,21 @@
       else self.play();
     };
     document.addEventListener("visibilitychange", this.onVis);
+
+    // Pause + hold while one of our cards is expanded; restore on close.
+    this.onPopoutOpen = function (e) {
+      if (!e.detail || self.cards.indexOf(e.detail.card) < 0) return;
+      self._held = e.detail.card;
+      self.pause();
+    };
+    this.onPopoutClose = function (e) {
+      if (!e.detail || self.cards.indexOf(e.detail.card) < 0) return;
+      self._held = null;
+      self.layout(false); // popout cleared the card's transform — restore its pose
+      self.play();
+    };
+    document.addEventListener("popout:open", this.onPopoutOpen);
+    document.addEventListener("popout:close", this.onPopoutClose);
 
     if ("IntersectionObserver" in window) {
       this.io = new IntersectionObserver(
@@ -179,33 +211,84 @@
 
   Deck.prototype.layout = function (animate) {
     for (var i = 0; i < this.n; i++) {
-      if (this.cards[i]._exiting) continue; // don't disturb a card mid-retract
-      this.poseAt(this.cards[i], this.depthOf(i), animate);
+      var el = this.cards[i];
+      if (el._exiting || el === this._held) continue; // don't disturb these
+      this.poseAt(el, this.depthOf(i), animate);
     }
     this.updateDots();
   };
 
   // Advance to the next card. dir "left" flings the top card out the bottom;
-  // anything else (right / autoplay) tucks it down to the back of the deck.
+  // anything else (right / autoplay) arcs it to the back of the deck.
   Deck.prototype.advance = function (dir) {
-    if (this.n < 2) return;
+    if (this.n < 2 || this._held) return; // don't advance while a card is expanded
     var self = this;
     var exiting = this.cards[this.front];
     this.front = (this.front + 1) % this.n;
 
-    if (dir === "left" && !reduce) {
+    if (reduce) {
+      this.layout(false); // instant
+      return;
+    }
+    if (dir === "left") {
       exiting._exiting = true;
       exiting.style.transition = DECK_TRANS;
       exiting.style.zIndex = "200"; // stay on top while it flies out
       exiting.style.opacity = "0";
-      exiting.style.transform =
-        "translate(-8%, 92%) scale(0.9) rotate(-4deg)";
+      exiting.style.transform = "translate(-8%, 92%) scale(0.9) rotate(-4deg)";
       onDeckExit(exiting, function () {
         exiting._exiting = false;
         self.poseAt(exiting, self.depthOf(exiting._i), false); // snap to back
       });
+    } else if (exiting.animate) {
+      this.arcOut(exiting);
     }
+    // If arcOut didn't run (no Web Animations), exiting stays non-_exiting and
+    // layout() tucks it to the back via the plain transition — a graceful fallback.
     this.layout(true);
+  };
+
+  // Right / autoplay: the card traces a half-circle to the back of the deck,
+  // rotating 180 (tangent to the path) as it goes, then settles hidden at the back.
+  Deck.prototype.arcOut = function (exiting) {
+    var self = this;
+    exiting._exiting = true;
+    exiting.style.transition = "none";
+    exiting.style.zIndex = "200";
+    var backY = VISIBLE * PEEK;
+    var frames = [];
+    var STEPS = 12;
+    for (var s = 0; s <= STEPS; s++) {
+      var t = s / STEPS;
+      var th = Math.PI * t; // 0 .. PI
+      var dx = ARC_BULGE * Math.sin(th);
+      var dy = (backY / 2) * (1 - Math.cos(th)) + ARC_DIP * Math.sin(th);
+      var rot = 180 * t;
+      var sc = ARC_SCALE + (1 - ARC_SCALE) * (1 - t) * (1 - t); // 1 -> ARC_SCALE
+      frames.push({
+        transform:
+          "translate(" + dx.toFixed(2) + "px, " + dy.toFixed(2) + "px) rotate(" +
+          rot.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")",
+        offset: t
+      });
+    }
+    var anim = exiting.animate(frames, {
+      duration: ARC_MS,
+      easing: "cubic-bezier(0.37, 0, 0.63, 1)",
+      fill: "forwards"
+    });
+    var settled = false;
+    function settle() {
+      if (settled) return;
+      settled = true;
+      self.poseAt(exiting, self.depthOf(exiting._i), false); // back pose (hidden, rot 0)
+      exiting._exiting = false;
+      try {
+        anim.cancel();
+      } catch (e) {}
+    }
+    anim.onfinish = settle;
+    window.setTimeout(settle, ARC_MS + 260); // fallback
   };
 
   Deck.prototype.updateDots = function () {
@@ -220,10 +303,11 @@
 
   /* --- Autoplay ----------------------------------------------------------- */
   Deck.prototype.play = function () {
-    if (reduce || this.timer || this.dragging || this.inView === false) return;
+    if (reduce || this.timer || this.dragging || this._held || this.inView === false)
+      return;
     var self = this;
     this.timer = window.setInterval(function () {
-      self.advance(); // tuck to the back
+      self.advance(); // arc to the back
     }, AUTO_MS);
   };
   Deck.prototype.pause = function () {
@@ -244,9 +328,11 @@
   /* --- Drag / swipe the top card ------------------------------------------ */
   Deck.prototype.onDown = function (e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (this._held) return; // a card is expanded; let the popout handle input
     this.dragging = true;
     this.decided = false;
     this.horizontal = false;
+    this._dragged = false;
     this.startX = e.clientX;
     this.startY = e.clientY;
     this.frontEl = this.cards[this.front];
@@ -264,6 +350,7 @@
       this.decided = true;
       this.horizontal = Math.abs(dx) > Math.abs(dy);
       if (this.horizontal) {
+        this._dragged = true; // a swipe, not a tap — suppress the trailing click
         try {
           this.frontEl.setPointerCapture(e.pointerId);
         } catch (x) {}
@@ -311,11 +398,18 @@
     var mcar = this.mcar;
     if (this.io) this.io.disconnect();
     document.removeEventListener("visibilitychange", this.onVis);
+    document.removeEventListener("popout:open", this.onPopoutOpen);
+    document.removeEventListener("popout:close", this.onPopoutClose);
     window.removeEventListener("resize", this.onResize);
     g.removeEventListener("pointerdown", this.onDown);
+    g.removeEventListener("click", this.onClickCapture, true);
     removeNode(this.dots);
     this.cards.forEach(function (el) {
       el._exiting = false;
+      if (el.getAnimations)
+        el.getAnimations().forEach(function (a) {
+          a.cancel(); // stop any in-flight arc so it can't hold a transform on desktop
+        });
       ["transform", "opacity", "transition", "z-index", "min-height"].forEach(
         function (p) {
           el.style.removeProperty(p);
@@ -348,10 +442,10 @@
   }
   function bindDot(self, btn, idx) {
     btn.addEventListener("click", function () {
+      if (self._held) return;
       self.pause();
-      // Step the deck forward to the tapped card (tuck animation each step).
-      var guard = self.n;
-      while (self.front !== idx && guard-- > 0) self.advance("right");
+      self.front = idx; // jump straight to the tapped card (one animated reshuffle)
+      self.layout(true);
       self.resumeSoon();
     });
   }

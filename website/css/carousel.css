@@ -40,15 +40,18 @@
     margin: 0 !important;
     grid-column: auto !important; /* drop col-3/col-4/col-6 spans */
     grid-row: auto !important; /* drop row-2 */
-    transform-origin: center top;
+    transform-origin: center; /* center pivot for the half-circle arc rotation */
     backface-visibility: hidden;
     will-change: transform, opacity;
     /* transform / opacity / z-index / min-height set inline by carousel.js */
   }
 
-  /* No tap-to-expand affordance while the cards live in the deck. */
+  /* Cards are tap-to-expand in the deck; show the corner hint statically (there's
+     no hover on touch). Only the front card's shows — the rest are covered. */
   .mcar-deck .expand-hint {
-    display: none !important;
+    opacity: 1;
+    transform: scale(1);
+    color: var(--accent-text);
   }
 
   /* Position dots */

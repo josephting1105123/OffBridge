@@ -20,13 +20,10 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // On phones, the Connectivity (#features) and Private-by-design (#security)
-  // cards live in a swipeable carousel (carousel.js) instead of expanding, so
-  // suppress expand for those there. Platform cards and all desktop widths keep
-  // the popout. Checked live so a rotate to landscape restores expand.
-  var carouselMQ = window.matchMedia("(max-width: 760px)");
-  function carouselOwns(card) {
-    return carouselMQ.matches && !!card.closest("#features, #security");
+  // Tell the mobile deck (carousel.js) when one of its cards expands/collapses so
+  // it can pause and re-pose. detail.card is the affected card.
+  function emit(name, card) {
+    document.dispatchEvent(new CustomEvent(name, { detail: { card: card } }));
   }
 
   var EASE = "cubic-bezier(0.16, 1, 0.3, 1)"; // ease-out-expo, matches --ease
@@ -75,11 +72,11 @@
     window.addEventListener("resize", function () {
       if (open && !busy) reposition();
     });
-    // When the mobile carousel takes over (breakpoint crossed while a popout is
+    // When the mobile deck takes over (breakpoint crossed while a popout is
     // open), restore the card to flow SYNCHRONOUSLY (not the animated collapse):
-    // the carousel clones the cards immediately after this event, so the open
-    // card must be clean — no is-expanded, no fixed inline styles, no placeholder
-    // — before it's cloned, and the page scroll-lock must be released.
+    // the deck poses the cards immediately after this event, so the open card
+    // must be clean — no is-expanded, no fixed inline styles, no placeholder —
+    // before it's posed, and the page scroll-lock must be released.
     document.addEventListener("carousel:takeover", function () {
       if (!open) return;
       var card = open.card,
@@ -131,12 +128,10 @@
       if (e.target.closest(".popout__close")) return; // handled separately
       if (busy) return;
       if (open) return; // ignore clicks on an already-open card / while one is open
-      if (carouselOwns(card)) return; // the mobile carousel owns this card
       expand(card);
     });
     card.addEventListener("keydown", function (e) {
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
-      if (carouselOwns(card)) return; // the mobile carousel owns this card
       e.preventDefault();
       if (busy) return;
       if (open && open.card === card) collapse();
@@ -244,6 +239,7 @@
       prevFocus: document.activeElement,
       targetW: width
     };
+    emit("popout:open", card); // let the mobile deck pause + hold this card
 
     requestAnimationFrame(function () {
       scrim.classList.add("is-on");
@@ -344,6 +340,7 @@
         current.prevFocus.focus({ preventScroll: true });
       }
       busy = false;
+      emit("popout:close", card); // let the mobile deck restore this card's pose
     }
 
     if (reduce) {
