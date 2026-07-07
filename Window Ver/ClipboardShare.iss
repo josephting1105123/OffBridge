@@ -114,10 +114,21 @@ const
   // Newline as a named constant so no line below has to START with '#': the ISPP
   // preprocessor reads a leading '#' as a directive and chokes on '#13#10'.
   NL = #13#10;
+  // App design language (charcoal + emerald). TColor is $00BBGGRR; greys are symmetric,
+  // and emerald #22C55E -> $005EC522. Used to repaint the whole wizard dark (ApplyDarkTheme).
+  cBg = $141414;          // window / page background (#141414)
+  cSurface = $2A2A2A;     // inputs: dir box, task list, ready memo (#2A2A2A)
+  cTextLight = $F5F5F5;   // primary text (#F5F5F5)
+  cAccent = $5EC522;      // emerald fill #22C55E (accent line)
+  cAccentText = $88DE4A;  // emerald text #4ADE88 (WCAG-safe on dark — page headings)
+  BM_CLICK = $00F5;       // Win32 button-click message (drive native nav from our overlays)
 
 var
   gInstalledVer: String;
   gIsUpgrade: Boolean;
+  gAccentLine: TPanel;   // emerald underline under the interior-page header (brand signature)
+  gBtnNext, gBtnBack, gBtnCancel: TPanel;  // emerald overlays for the native nav buttons
+  gTimerID: Longint;     // re-theme timer id (killed in DeinitializeSetup)
 
 function GetInstalledVersion(): String;
 var
@@ -197,6 +208,167 @@ begin
   // Cmp < 0 (normal update): proceed; the Welcome page confirms the version being replaced.
 end;
 
+// Repaint every wizard control to the app's charcoal + emerald language. Inno's modern
+// wizard is otherwise the OS light style (white pages, black text) — only the banner and
+// icon were branded. Walk the whole control tree so every page is covered.
+procedure DarkenTree(Parent: TWinControl);
+var
+  i: Integer;
+  C: TControl;
+begin
+  for i := 0 to Parent.ControlCount - 1 do
+  begin
+    C := Parent.Controls[i];
+    if C is TNewNotebookPage then TNewNotebookPage(C).Color := cBg
+    else if C is TPanel then
+    begin
+      // Never repaint our own emerald panels (buttons + accent line), or the periodic
+      // re-theme would toggle them dark->emerald every tick and flicker.
+      if (C <> gBtnNext) and (C <> gBtnBack) and (C <> gBtnCancel) and (C <> gAccentLine) then
+        TPanel(C).Color := cBg;
+    end
+    else if C is TNewStaticText then TNewStaticText(C).Font.Color := cTextLight
+    else if C is TNewCheckBox then TNewCheckBox(C).Font.Color := cTextLight
+    else if C is TNewRadioButton then TNewRadioButton(C).Font.Color := cTextLight
+    else if C is TLabel then TLabel(C).Font.Color := cTextLight
+    else if C is TNewEdit then
+    begin
+      TNewEdit(C).Color := cSurface;
+      TNewEdit(C).Font.Color := cTextLight;
+    end
+    else if C is TNewMemo then
+    begin
+      TNewMemo(C).Color := cSurface;
+      TNewMemo(C).Font.Color := cTextLight;
+    end
+    else if C is TNewCheckListBox then
+    begin
+      TNewCheckListBox(C).Color := cSurface;
+      TNewCheckListBox(C).Font.Color := cTextLight;
+    end
+    else if C is TRichEditViewer then
+    begin
+      TRichEditViewer(C).Color := cSurface;
+      TRichEditViewer(C).Font.Color := cTextLight;
+    end;
+
+    if C is TWinControl then
+      DarkenTree(TWinControl(C));
+  end;
+end;
+
+// --- Custom emerald buttons over Inno's native (uncolorable) ones ------------
+// Inno's Next/Back/Cancel are native Windows buttons with no Color property. We cover
+// each with an emerald/dark TPanel that mirrors the native button's caption, bounds,
+// visibility and enabled-state on every page, and forwards clicks to the real button
+// underneath (kept under ours, so Enter/Esc keyboard nav still works). The installer is
+// English-only (no [Languages]) so mirrored captions need no per-locale handling.
+// Inno's Pascal Script can't invoke a native button's OnClick directly, so drive the real
+// button by posting it the standard Win32 BM_CLICK message (runs its full handler, including
+// the Cancel confirmation prompt and page navigation).
+function SendMessage(hWnd: Longint; Msg: Longint; wParam: Longint; lParam: Longint): Longint;
+  external 'SendMessageW@user32.dll stdcall';
+function SetTimer(hWnd: Longint; nIDEvent: Longint; uElapse: Longint; lpTimerFunc: Longint): Longint;
+  external 'SetTimer@user32.dll stdcall';
+function KillTimer(hWnd: Longint; nIDEvent: Longint): Longint;
+  external 'KillTimer@user32.dll stdcall';
+
+procedure FakeNextClick(Sender: TObject);
+begin
+  if WizardForm.NextButton.Enabled then
+    SendMessage(WizardForm.NextButton.Handle, BM_CLICK, 0, 0);
+end;
+
+procedure FakeBackClick(Sender: TObject);
+begin
+  if WizardForm.BackButton.Enabled then
+    SendMessage(WizardForm.BackButton.Handle, BM_CLICK, 0, 0);
+end;
+
+procedure FakeCancelClick(Sender: TObject);
+begin
+  if WizardForm.CancelButton.Enabled then
+    SendMessage(WizardForm.CancelButton.Handle, BM_CLICK, 0, 0);
+end;
+
+function NewFakeButton(Native: TNewButton): TPanel;
+var
+  P: TPanel;
+begin
+  P := TPanel.Create(WizardForm);
+  P.Parent := Native.Parent;
+  P.BevelOuter := bvNone;
+  // Under Windows themes a TPanel defaults to ParentBackground=True, which makes it IGNORE
+  // its Color and paint the parent's background — so the emerald fill never shows. Turn it
+  // off so Color actually paints.
+  P.ParentBackground := False;
+  P.Font.Style := [fsBold];
+  P.SetBounds(Native.Left, Native.Top, Native.Width, Native.Height);
+  P.BringToFront;
+  Result := P;
+end;
+
+// Mirror one native button onto its emerald overlay. Primary = the emerald fill
+// (Next/Install/Finish); secondary = the dark tonal (Back/Cancel).
+procedure StyleFakeButton(P: TPanel; Native: TNewButton; Primary: Boolean);
+begin
+  if P = nil then
+    Exit;
+  P.Visible := Native.Visible;
+  P.Caption := Native.Caption;
+  P.SetBounds(Native.Left, Native.Top, Native.Width, Native.Height);
+  if not Native.Enabled then
+  begin
+    P.Color := cSurface;
+    P.Font.Color := $707070;
+  end
+  else if Primary then
+  begin
+    P.Color := cAccent;
+    P.Font.Color := clBlack;
+  end
+  else
+  begin
+    P.Color := cSurface;
+    P.Font.Color := cTextLight;
+  end;
+end;
+
+procedure SyncFakeButtons();
+begin
+  StyleFakeButton(gBtnNext, WizardForm.NextButton, True);
+  StyleFakeButton(gBtnBack, WizardForm.BackButton, False);
+  StyleFakeButton(gBtnCancel, WizardForm.CancelButton, False);
+end;
+
+procedure ApplyDarkTheme();
+begin
+  WizardForm.Color := cBg;
+  WizardForm.MainPanel.Color := cBg;
+  DarkenTree(WizardForm);
+  // Emerald page heading (re-set after the walk paints it the light default).
+  WizardForm.PageNameLabel.Font.Color := cAccentText;
+  // Emerald underline: DarkenTree just painted it cBg, so re-color it and re-pin it to the
+  // bottom of the header as pages/DPI settle.
+  if gAccentLine <> nil then
+  begin
+    gAccentLine.Color := cAccent;
+    gAccentLine.Width := WizardForm.MainPanel.Width;
+    gAccentLine.Top := WizardForm.MainPanel.Height - gAccentLine.Height;
+  end;
+  // Emerald buttons: re-apply after the walk painted the overlays dark.
+  SyncFakeButtons();
+end;
+
+// Periodic re-theme (WM_TIMER callback) so controls Inno creates AFTER a page is shown get
+// themed too — chiefly the "close applications" radios on the Preparing page.
+procedure ThemeTick(H: Longint; Msg: Longint; IDEvent: Longint; Time: Longint);
+begin
+  // Guard against a tick arriving while the wizard is being torn down.
+  if WizardForm <> nil then
+    ApplyDarkTheme();
+end;
+
 procedure InitializeWizard();
 begin
   if gIsUpgrade then
@@ -207,4 +379,43 @@ begin
       'Setup will replace it with version {#MyAppVersion} in the existing location, so you will ' +
       'not end up with a second copy of the app.' + NL + NL +
       'Click Next to continue, or Cancel to exit.';
+
+  // The website/banner signature: a 2px emerald rule under the interior-page header.
+  gAccentLine := TPanel.Create(WizardForm);
+  gAccentLine.Parent := WizardForm.MainPanel;
+  gAccentLine.BevelOuter := bvNone;
+  gAccentLine.ParentBackground := False;   // paint our emerald, not the themed parent bg
+  gAccentLine.Color := cAccent;
+  gAccentLine.Height := ScaleY(2);
+  gAccentLine.Left := 0;
+
+  // Emerald overlays for the native nav buttons (styled per-page by SyncFakeButtons).
+  gBtnNext := NewFakeButton(WizardForm.NextButton);
+  gBtnNext.OnClick := @FakeNextClick;
+  gBtnBack := NewFakeButton(WizardForm.BackButton);
+  gBtnBack.OnClick := @FakeBackClick;
+  gBtnCancel := NewFakeButton(WizardForm.CancelButton);
+  gBtnCancel.OnClick := @FakeCancelClick;
+
+  // ~5x/second re-theme to catch late-created controls (see ThemeTick). Killed in DeinitializeSetup.
+  gTimerID := SetTimer(0, 0, 200, CreateCallback(@ThemeTick));
+
+  ApplyDarkTheme();
+end;
+
+// Re-assert the dark colors + emerald overlays when a page becomes current: Inno populates
+// or resets some controls (and the native buttons' caption/enabled) as pages are shown.
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  ApplyDarkTheme();
+end;
+
+// Stop the re-theme timer before Setup terminates so it can't fire against a torn-down wizard.
+procedure DeinitializeSetup();
+begin
+  if gTimerID <> 0 then
+  begin
+    KillTimer(0, gTimerID);
+    gTimerID := 0;
+  end;
 end;

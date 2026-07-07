@@ -170,16 +170,17 @@ function Draw-Banner($W, $H, $path) {
     $bmp.Dispose()
 }
 
-# ---- interior corner logo: mark in darker emerald on white (blends into modern header) ----
+# ---- interior corner logo: bright emerald mark on charcoal (#141414), so it blends into the
+#      dark wizard header repainted by the installer's [Code]. Background MUST match cBg there. ----
 function Draw-Small($W, $H, $path) {
     $bmp = New-Object System.Drawing.Bitmap($W, $H, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.SmoothingMode = 'AntiAlias'; $g.PixelOffsetMode = 'HighQuality'
-    $g.Clear([System.Drawing.Color]::White)
+    $g.Clear([System.Drawing.Color]::FromArgb(255, 0x14, 0x14, 0x14))
     $side = [math]::Min($W, $H)
     $m = [int][math]::Round($side * 0.84)
     $mx = [int](($W - $m) / 2); $my = [int](($H - $m) / 2)
-    Draw-Mark $g $mx $my $m ([System.Drawing.Color]::FromArgb(255, 0x22, 0xC5, 0x5E))
+    Draw-Mark $g $mx $my $m ([System.Drawing.Color]::FromArgb(255, 0x4A, 0xDE, 0x88))
     $g.Dispose()
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Bmp)
     $bmp.Dispose()

@@ -195,8 +195,9 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                     ) {
                         Surface(
                             shape = RoundedCornerShape(16.dp),
-                            color = MaterialTheme.colors.surface,
-                            elevation = 8.dp,
+                            color = DarkSurface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+                            elevation = 24.dp,
                             modifier = Modifier.modalPopIn().clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
@@ -206,26 +207,26 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                             Column(
                                 modifier = Modifier.padding(24.dp).width(300.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Box(modifier = Modifier.fillMaxWidth()) {
+                                Box(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
                                     Text(
-                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_title").takeIf { it != "menu_title" } ?: "Power Options",
-                                        fontSize = 20.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colors.onSurface,
+                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_title").takeIf { it != "menu_title" } ?: "Menu",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = com.joseph.clipboard.windows.theme.TextPrimaryDark,
                                         modifier = Modifier.align(Alignment.Center)
                                     )
                                     IconButton(
                                         onClick = { showPowerMenu = false },
-                                        modifier = Modifier.align(Alignment.CenterEnd)
+                                        modifier = Modifier.align(Alignment.CenterEnd).size(28.dp)
                                     ) {
-                                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = MaterialTheme.colors.onSurface)
+                                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = com.joseph.clipboard.windows.theme.TextSecondaryDark, modifier = Modifier.size(18.dp))
                                     }
                                 }
-                                
 
-
+                                // Restart Services — emerald tonal (the safe action), on-brand instead of
+                                // the old flat near-black fill. Flat (0 elevation) + hairline = modern tonal.
                                 Button(
                                     onClick = {
                                         // Restart the network daemons in-process instead of relaunching
@@ -235,20 +236,35 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                         showPowerMenu = false
                                     },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.background),
-                                    shape = RoundedCornerShape(16.dp)
+                                    colors = ButtonDefaults.buttonColors(
+                                        backgroundColor = com.joseph.clipboard.windows.theme.AccentMutedDark,
+                                        contentColor = com.joseph.clipboard.windows.theme.GreenText
+                                    ),
+                                    elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+                                    shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_restart_services"), color = MaterialTheme.colors.onBackground)
+                                    Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp), tint = com.joseph.clipboard.windows.theme.GreenText)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_restart_services"), color = com.joseph.clipboard.windows.theme.GreenText, fontWeight = FontWeight.Medium)
                                 }
 
+                                // Power Off — destructive tonal, same muted-red language as the Decline button.
                                 Button(
                                     // Daemon teardown happens in the JVM shutdown hook (see main()).
                                     onClick = { exitProcess(0) },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.error),
-                                    shape = RoundedCornerShape(16.dp)
+                                    colors = ButtonDefaults.buttonColors(
+                                        backgroundColor = ErrorMuted,
+                                        contentColor = ErrorText
+                                    ),
+                                    elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, ErrorText.copy(alpha = 0.22f)),
+                                    shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_power_off"), color = Color.White)
+                                    Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = ErrorText)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_power_off"), color = ErrorText, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
