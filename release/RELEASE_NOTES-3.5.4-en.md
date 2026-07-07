@@ -1,4 +1,4 @@
-# ClipboardShare 3.5.3 (Windows)
+# ClipboardShare 3.5.4 (Windows)
 
 A Windows-only release. Features, crypto and pairing are the same as 3.5.2 — this release reworks the Windows **installer** and gives the in-app power menu a small visual refresh. Android stays on 3.5.1 (Google Play).
 
@@ -9,10 +9,6 @@ The installer now matches the app's look end to end — charcoal and emerald, no
 - A custom app icon, used by the setup, the app, and its Start Menu and desktop shortcuts.
 - A dark, branded wizard: charcoal pages, emerald headings and accent rule, and emerald primary buttons (Next / Install / Finish) with dark tonal Back / Cancel — all drawn from the Clipboard Share mark.
 
-## Refreshed power menu
-
-The in-app power menu (Restart Services / Power Off) now uses the app's button language — an emerald tonal action and a muted-red destructive one — instead of the older flat style.
-
 ## One install, never two copies
 
 The setup now checks for an existing Clipboard Share before it installs:
@@ -21,6 +17,10 @@ The setup now checks for an existing Clipboard Share before it installs:
 - If the same version is already installed, it asks whether to reinstall (repair) instead of installing again.
 - If a newer version is installed, it warns before downgrading.
 - On a clean machine with nothing installed, it proceeds as a normal fresh install.
+
+## Refreshed power menu
+
+The in-app power menu (Restart Services / Power Off) now uses the app's button language — an emerald tonal action and a muted-red destructive one — instead of the older flat style.
 
 ## Notes
 

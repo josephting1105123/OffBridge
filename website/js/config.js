@@ -41,11 +41,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.5.3",
+    version: "3.5.4",
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
-    sha256: "00c24db50456bd346e2682831a4cfdd9d143abfe0aefe7edf7c84fe01ee97bee",
+    sha256: "2d49b46dcc0fc68263b247b07bda68a7601d71cb7e67e911524b0e1baf847bf5",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
