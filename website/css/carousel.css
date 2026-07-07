@@ -1,0 +1,80 @@
+/* ==========================================================================
+   carousel.css — mobile-only styles for the swipeable card carousel that
+   replaces the Connectivity (#features) and Private-by-design (#security) card
+   grids on phones. Built and torn down by carousel.js at the <=760px
+   breakpoint; desktop keeps the original grid + expandable popout untouched.
+   ========================================================================== */
+@media (max-width: 760px) {
+  .mcar {
+    position: relative;
+    /* Security's grid places .mcar in a grid cell; without min-width:0 the flex
+       track's intrinsic width forces the column (and the whole section) wide.
+       Pin it to the available width so it never drives its parent's size. */
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip; /* contain the off-screen slides; keep vertical shadows */
+    margin-top: var(--s-24);
+  }
+
+  /* The card grid, repurposed as a horizontal track that carousel.js slides. */
+  .mcar-track {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch; /* equal-height slides so the height never jumps */
+    gap: 0 !important;
+    grid-template-columns: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    will-change: transform;
+    touch-action: pan-y; /* vertical scroll passes through; JS owns horizontal */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .mcar-track > * {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    grid-column: auto !important; /* drop col-3/col-4/col-6 spans */
+    grid-row: auto !important; /* drop row-2 */
+  }
+
+  /* Keep cards fully visible in the carousel regardless of scroll-reveal state. */
+  .mcar-track [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* No tap-to-expand affordance while the cards live in the carousel. */
+  .mcar-track .expand-hint {
+    display: none !important;
+  }
+
+  /* Position dots */
+  .mcar-dots {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: var(--s-16);
+  }
+  .mcar-dots button {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+    opacity: 0.4;
+    cursor: pointer;
+    transition: opacity 0.2s var(--ease-std),
+      background-color 0.2s var(--ease-std), transform 0.2s var(--ease-std);
+  }
+  .mcar-dots button[aria-current="true"] {
+    opacity: 1;
+    background: var(--accent-text);
+    transform: scale(1.3);
+  }
+}

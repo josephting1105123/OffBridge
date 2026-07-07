@@ -20,6 +20,15 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // On phones, the Connectivity (#features) and Private-by-design (#security)
+  // cards live in a swipeable carousel (carousel.js) instead of expanding, so
+  // suppress expand for those there. Platform cards and all desktop widths keep
+  // the popout. Checked live so a rotate to landscape restores expand.
+  var carouselMQ = window.matchMedia("(max-width: 760px)");
+  function carouselOwns(card) {
+    return carouselMQ.matches && !!card.closest("#features, #security");
+  }
+
   var EASE = "cubic-bezier(0.16, 1, 0.3, 1)"; // ease-out-expo, matches --ease
   var FADE = "cubic-bezier(0.4, 0, 0.2, 1)"; // even ease for collapse crossfade
   var DUR = 520; // ms — expand/collapse flight time
@@ -66,6 +75,39 @@
     window.addEventListener("resize", function () {
       if (open && !busy) reposition();
     });
+    // When the mobile carousel takes over (breakpoint crossed while a popout is
+    // open), restore the card to flow SYNCHRONOUSLY (not the animated collapse):
+    // the carousel clones the cards immediately after this event, so the open
+    // card must be clean — no is-expanded, no fixed inline styles, no placeholder
+    // — before it's cloned, and the page scroll-lock must be released.
+    document.addEventListener("carousel:takeover", function () {
+      if (!open) return;
+      var card = open.card,
+        ph = open.ph,
+        closeBtn = open.closeBtn;
+      open = null;
+      busy = false;
+      if (scrim) scrim.classList.remove("is-on");
+      card.classList.remove("is-expanded");
+      [
+        "position", "top", "left", "width", "height", "overflow",
+        "transform", "transform-origin", "transition", "opacity", "z-index"
+      ].forEach(function (p) {
+        card.style.removeProperty(p);
+      });
+      var more = card.querySelector(".card-more");
+      if (more) {
+        more.style.removeProperty("opacity");
+        more.style.removeProperty("transition");
+      }
+      card.setAttribute("role", "button");
+      card.removeAttribute("aria-modal");
+      card.setAttribute("aria-expanded", "false");
+      if (closeBtn && closeBtn.parentNode) closeBtn.parentNode.removeChild(closeBtn);
+      if (ph && ph.parentNode) ph.parentNode.removeChild(ph);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    });
   });
 
   function setupCard(card) {
@@ -89,10 +131,12 @@
       if (e.target.closest(".popout__close")) return; // handled separately
       if (busy) return;
       if (open) return; // ignore clicks on an already-open card / while one is open
+      if (carouselOwns(card)) return; // the mobile carousel owns this card
       expand(card);
     });
     card.addEventListener("keydown", function (e) {
       if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      if (carouselOwns(card)) return; // the mobile carousel owns this card
       e.preventDefault();
       if (busy) return;
       if (open && open.card === card) collapse();
@@ -130,6 +174,7 @@
     }
 
     card.addEventListener("pointermove", function (e) {
+      if (e.pointerType === "touch") return; // hover-only glow; skip touch/swipes
       var r = card.getBoundingClientRect();
       if (!r.width || !r.height) return;
       tgtX = clamp01to100(((e.clientX - r.left) / r.width) * 100);
