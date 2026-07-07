@@ -51,9 +51,10 @@
 
     "float ambient(vec2 p, float t){",
     "  float h = 0.0;",
-    "  h += 0.55 * sin(p.x*5.5 + t*0.55) * cos(p.y*4.7 - t*0.42);",
-    "  h += 0.28 * sin(p.x*10.5 - t*0.85 + 1.3) * cos(p.y*8.8 + t*0.66);",
-    "  h += 0.14 * sin((p.x + p.y)*15.0 + t*1.15);",
+    // Fewer, larger, slower swells — deep calm water rather than pond texture.
+    "  h += 0.55 * sin(p.x*2.8 + t*0.38) * cos(p.y*2.4 - t*0.28);",
+    "  h += 0.28 * sin(p.x*5.2 - t*0.58 + 1.3) * cos(p.y*4.4 + t*0.46);",
+    "  h += 0.14 * sin((p.x + p.y)*7.6 + t*0.80);",
     "  return h * 0.36;",
     "}",
 
@@ -93,7 +94,9 @@
     "  float hx = height(p + vec2(e, 0.0), t);",
     "  float hy = height(p + vec2(0.0, e), t);",
     "  vec2 g = vec2(hx - hc, hy - hc) / e;",
-    "  vec3 n = normalize(vec3(-g * 0.06, 1.0));",
+    // Slightly stronger tilt compensates for the calmer (lower-frequency) swell,
+    // so the surface keeps some life without the busy sparkle.
+    "  vec3 n = normalize(vec3(-g * 0.09, 1.0));",
     // The light keeps a fixed tilt (so flat water stays dark) but its AZIMUTH
     // rotates with position + time — the highlight direction depends on where
     // you are on the surface instead of sitting in one fixed corner.
@@ -112,13 +115,17 @@
     "    vec3 deep = vec3(0.045, 0.056, 0.066);",
     "    vec3 shallow = mix(vec3(0.030, 0.082, 0.072), vec3(0.052, 0.070, 0.098), hue);",
     "    col = mix(deep, shallow, depth * 0.6);",
-    "    col += glint * spec * 0.34;",
+    "    col += glint * spec * 0.28;",
     "    col += glint * fres * 0.04;",
     "  } else {",
     "    vec3 baseL = vec3(0.90, 0.94, 0.97);",
     "    col = baseL - mix(vec3(0.05,0.03,0.02), vec3(0.02,0.05,0.04), hue) * (1.0 - depth);",
     "    col += glint * spec * 0.4;",
     "  }",
+    // Depth vignette: gently sink the edges/corners so the surface reads as deep
+    // water and gives content a calmer, darker frame. Aspect-correct via p.
+    "  float vig = 1.0 - smoothstep(0.55, 1.18, length(p));",
+    "  col *= mix(0.66, 1.0, vig);",
     "  gl_FragColor = vec4(col, 1.0);",
     "}"
   ].join("\n");
