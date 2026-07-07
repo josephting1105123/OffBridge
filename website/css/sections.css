@@ -430,11 +430,6 @@
   gap: var(--s-12);
   padding: var(--s-8) var(--s-4);
   font-size: var(--t-small);
-  border-radius: var(--r-sm);
-  transition: background-color var(--dur-fast) var(--ease-std);
-}
-.cap-list li:hover {
-  background: var(--surface);
 }
 .cap-mark {
   width: 18px;

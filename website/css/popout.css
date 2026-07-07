@@ -217,13 +217,8 @@
   gap: var(--s-12);
   align-items: flex-start;
   padding: var(--s-8);
-  border-radius: var(--r-sm);
   color: var(--text-secondary);
   font-size: var(--t-small);
-  transition: background-color var(--dur-fast) var(--ease-std);
-}
-.detail-list li:hover {
-  background: var(--surface);
 }
 .detail-list .icon {
   width: 18px;
