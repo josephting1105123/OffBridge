@@ -224,21 +224,34 @@ fun SystemStatusScreen(
                 }
             }
 
-            // Device list / disconnected state
+            // Device list + action, unified into one section: the rescan/reboot pill sits directly
+            // below the cards inside the same region instead of a fixed band beneath a weight(1f) box.
+            // On short screens the old fixed pill collapsed the list to nothing; folding it in returns
+            // that vertical budget to the cards and lets the pill scroll with them.
             Box(
                 modifier = Modifier.weight(1f).fillMaxWidth().tutorialAnchor(anchors, "deviceCard"),
                 contentAlignment = Alignment.Center,
             ) {
-                if (!isConnected) {
-                    DisconnectedState(colors)
-                } else if (devices.isEmpty()) {
-                    // Real empty-state instead of a blank gap that reads as broken.
-                    EmptyState(
-                        icon = ImageVector.vectorResource(R.drawable.ic_device),
-                        title = stringResource(R.string.status_no_devices_found),
-                        subtitle = stringResource(R.string.status_no_devices_found_hint),
-                    )
+                if (!isConnected || devices.isEmpty()) {
+                    // Centred state message with the action pill beneath it (no scroll needed).
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        if (!isConnected) {
+                            DisconnectedState(colors)
+                        } else {
+                            // Real empty-state instead of a blank gap that reads as broken.
+                            EmptyState(
+                                icon = ImageVector.vectorResource(R.drawable.ic_device),
+                                title = stringResource(R.string.status_no_devices_found),
+                                subtitle = stringResource(R.string.status_no_devices_found_hint),
+                            )
+                        }
+                        RescanRebootPill(isConnected = isConnected, onClick = onActionButton)
+                    }
                 } else {
+                    // Scrollable device cards with the rescan pill as the final item in the same scroll.
                     Column(
                         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(dimens.spaceMd),
@@ -252,36 +265,13 @@ fun SystemStatusScreen(
                                 onUnpair = { onUnpair(device) },
                             )
                         }
+                        RescanRebootPill(
+                            isConnected = isConnected,
+                            onClick = onActionButton,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
                     }
                 }
-            }
-
-            // Action (rescan when connected, reboot when not) — hairline pill with icon + label,
-            // matching the app's button language instead of a lone borderless circle.
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = dimens.spaceLg, bottom = dimens.spaceXxl)
-                    .clip(RoundedCornerShape(dimens.radiusPill))
-                    .background(colors.card)
-                    .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusPill))
-                    .clickable { onActionButton() }
-                    .padding(horizontal = dimens.spaceXl, vertical = dimens.spaceMd),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(dimens.spaceSm),
-            ) {
-                Icon(
-                    painter = painterResource(if (isConnected) R.drawable.ic_retry else R.drawable.ic_power),
-                    contentDescription = null,
-                    tint = colors.textPrimary,
-                    modifier = Modifier.size(dimens.iconSm),
-                )
-                Text(
-                    stringResource(if (isConnected) R.string.action_rescan else R.string.action_reboot),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                )
             }
         }
 
@@ -333,6 +323,40 @@ fun SystemStatusScreen(
         if (showPairedDialog) {
             PairedDevicesDialog(pairedDevices = pairedDevices, onDismiss = { showPairedDialog = false })
         }
+    }
+}
+
+/**
+ * Rescan (connected) / Reboot (disconnected) action — a hairline pill with icon + label matching the
+ * app's button language. Lives inside the device-list region so it flows directly below the cards.
+ */
+@Composable
+private fun RescanRebootPill(isConnected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    Row(
+        modifier = modifier
+            .padding(top = dimens.spaceLg, bottom = dimens.spaceXxl)
+            .clip(RoundedCornerShape(dimens.radiusPill))
+            .background(colors.card)
+            .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusPill))
+            .clickable { onClick() }
+            .padding(horizontal = dimens.spaceXl, vertical = dimens.spaceMd),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dimens.spaceSm),
+    ) {
+        Icon(
+            painter = painterResource(if (isConnected) R.drawable.ic_retry else R.drawable.ic_power),
+            contentDescription = null,
+            tint = colors.textPrimary,
+            modifier = Modifier.size(dimens.iconSm),
+        )
+        Text(
+            stringResource(if (isConnected) R.string.action_rescan else R.string.action_reboot),
+            style = MaterialTheme.typography.labelLarge,
+            color = colors.textPrimary,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 

@@ -1,5 +1,5 @@
 #define MyAppName "Clipboard Share"
-#define MyAppVersion "3.5.5"
+#define MyAppVersion "3.5.6"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "Clipboard Share.exe"
 
@@ -15,6 +15,14 @@ DisableProgramGroupPage=yes
 ; install target isn't wiped silently by the file overwrite below. Do NOT set DirExistsWarning=no.
 CloseApplications=yes
 RestartApplications=no
+; Single-instance mutex the app creates at startup (Kernel32.CreateMutex — see os\SingleInstance.kt).
+; Lets Setup detect a running instance — even one only minimized to the system tray — and tell the user
+; to close it BEFORE files are copied, so an upgrade can't fail renaming an in-use runtime file
+; (runtime\bin\ucrtbase.dll -> "MoveFile failed; code 5. Access is denied."). The name MUST match the
+; app's mutex exactly. NOTE: this only catches instances of a build that already creates the mutex —
+; upgrading FROM a pre-mutex version still relies on CloseApplications + the restartreplace fallback on
+; [Files] + the user quitting from the tray.
+AppMutex=ClipboardShareInstanceMutex
 OutputDir=build2\inno-setup
 ; No spaces: GitHub Releases sanitizes spaces in asset filenames, which would break the
 ; clean ClipboardShareSetup.exe download link published on the website / downloads repo.
@@ -60,6 +68,12 @@ DisableDirPage=auto
 ;   & ISCC.exe /Ssigntool="signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f $qC:\path\to\cert.pfx$q /p $qPFX_PASSWORD$q $f" "ClipboardShare.iss"
 ; -----------------------------------------------------------------------------
 
+[Messages]
+; Make the AppMutex "please close the app" prompt explicit that Clipboard Share hides in the tray —
+; users routinely think it's closed when it's only minimized there, which is what leaves the bundled
+; runtime DLL locked during an upgrade (the code-5 rename failure this whole guard exists to prevent).
+SetupAppRunningError=Clipboard Share is still running.%n%nPlease close it completely — including the icon in the system tray (right-click it and choose Quit) — then click OK to continue, or Cancel to exit Setup.
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
@@ -71,7 +85,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Copy everything from the AppImage directory to {app}
-Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; restartreplace: last-resort safety net. If a file is still in use despite AppMutex + CloseApplications
+; (e.g. an AV scanner holding it, or upgrading from a pre-mutex build the user didn't quit), schedule
+; its replacement on next reboot (MoveFileEx delay-until-reboot) instead of hard-failing with the
+; Retry/Skip/Cancel "code 5" box. No-op per file unless that file is actually locked.
+Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 
 [Icons]
 ; Start Menu Shortcut (Always created unless DisableProgramGroupPage=no and user unchecks, but here we force it to keep it simple or we can add a task)
@@ -80,22 +98,33 @@ Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-; Allow inbound off-grid file transfer (TCP 65433) through Windows Defender Firewall — the daemon
-; listens on 0.0.0.0:65433 and inbound is blocked by default on every interface (LAN and the Wi-Fi
-; Direct hotspot alike). Delete-then-add keeps exactly one rule across reinstalls. Runs elevated.
+; Allow inbound LAN traffic to ALL of Clipboard Share's listening ports through Windows Defender
+; Firewall. Windows blocks unsolicited inbound by default on every interface, and the app never opens
+; these itself — so without these rules any PEER that DIALS this PC (phone-initiated pairing, clipboard
+; push, or a file OFFER) is silently dropped and times out, while this PC dialing the phone still works
+; (outbound is allowed by default). That one-sided block is exactly the "phone can't connect to the
+; laptop, but the laptop connects to the phone" symptom. The daemons bind 0.0.0.0 on: TCP 65432
+; (clipboard), 65433 (file transfer + session control), 65435 (pairing); UDP 50001 (discovery).
+; Delete-then-add keeps exactly one rule across reinstalls; the legacy single-65433 rule name is also
+; deleted so an upgrade doesn't leave a stale duplicate behind.
 ; profile=any is REQUIRED (not a mistake): the primary off-grid path is the Wi-Fi Direct autonomous GO
 ; (HotspotController serves 192.168.49.1:65433). Windows classifies that fresh/unidentified adapter as
-; a PUBLIC network by default, so narrowing this to profile=private would leave the off-grid hotspot
-; inbound blocked and break the core use case. Keep profile=any until the AP interface is provably
-; Private-classified.
+; a PUBLIC network by default, so narrowing to profile=private would leave the off-grid hotspot inbound
+; blocked and break the core use case. Runs elevated. Keep profile=any until the AP interface is
+; provably Private-classified.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (TCP 65433)"" dir=in action=allow protocol=TCP localport=65433 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN TCP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN UDP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 profile=any"; Flags: runhidden
 ; Auto-launch at the end
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
-; Remove the firewall rule when the app is uninstalled.
+; Remove the firewall rules when the app is uninstalled (including the legacy single-65433 rule name).
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN TCP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN UDP)"""; Flags: runhidden
 
 [Code]
 // ---------------------------------------------------------------------------

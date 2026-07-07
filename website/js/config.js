@@ -29,7 +29,7 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
-    version: "3.5.1",
+    version: "3.5.3",
     size: "TBD", // store link — no size/sha shown
     // Store listing, not a direct APK: the button opens Google Play.
     url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
@@ -41,11 +41,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.5.4",
+    version: "3.5.6",
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
-    sha256: "8d413f06bd4e562241d24fa70d33287ee0bc75c46d158fdab837ad467c75d3fb",
+    sha256: "0e6c70f2a649fea469e0f42b4f57e26a472380d007f7f4cd00e8fd0f53342249",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 

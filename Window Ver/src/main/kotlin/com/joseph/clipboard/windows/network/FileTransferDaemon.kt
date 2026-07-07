@@ -1,5 +1,6 @@
 package com.joseph.clipboard.windows.network
 
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.SecurityVault
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -110,6 +111,10 @@ class FileTransferDaemon(
                 clientSocket.soTimeout = 30000
                 val inputStream = clientSocket.getInputStream()
                 val header = Net.readLineUtf8(inputStream)
+                // Diagnostics: record every inbound control connection so a field log can tell
+                // "the phone's OFFER never reached this PC" (firewall/dial) apart from "it reached but
+                // was dropped by the admission gate below" (each drop path logs its own reason).
+                DiagLog.w("inbound ${clientSocket.inetAddress?.hostAddress}: ${header.take(40)}")
 
                 // Trust gate (parity with Android TransferDaemon.handleIncomingConnection): only
                 // paired LAN peers may push files / drive session control. Off-grid P2P_HELLO
@@ -129,6 +134,7 @@ class FileTransferDaemon(
                     val senderIp = clientSocket.inetAddress?.hostAddress
                     if (senderIp == null || SecurityVault.getAesKey(senderIp) == null) {
                         System.err.println("Blocked transfer header '${header.take(16)}' from $senderIp — not a paired LAN node")
+                        DiagLog.w("DROP $senderIp: '${header.take(16)}' — no stored pairing key for this IP (not a paired LAN node). If this is the phone, the PC likely filed the key under a different IP than the phone now sends from.")
                         clientSocket.close()
                         return@thread
                     }
@@ -163,6 +169,7 @@ class FileTransferDaemon(
                         ) else DowngradePolicy.Decision.PLAINTEXT
                         if (auth2Decision == DowngradePolicy.Decision.BLOCK) {
                             System.err.println("Blocked OFFER from $senderIp — AUTH2 downgrade blocked")
+                            DiagLog.w("DROP $senderIp: OFFER — AUTH2 downgrade blocked (peer was pinned AUTH2-capable but this OFFER's discovery advert did not offer it).")
                             clientSocket.close()
                             return@thread
                         }
@@ -170,6 +177,7 @@ class FileTransferDaemon(
                             val pairingKey = SecurityVault.getAesKey(senderIp)
                             if (pairingKey == null) {
                                 // Trust gate said we hold a key for this IP; if it vanished, fail closed.
+                                DiagLog.w("DROP $senderIp: OFFER — pairing key vanished between trust gate and AUTH2 challenge.")
                                 clientSocket.close()
                                 return@thread
                             }
@@ -186,6 +194,7 @@ class FileTransferDaemon(
                                 // Drop the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer
                                 // lands here.)
                                 System.err.println("Blocked OFFER from $senderIp — AUTH2 proof failed")
+                                DiagLog.w("DROP $senderIp: OFFER — AUTH2 proof failed (phone answered the challenge but the HMAC did not match this PC's stored key — key mismatch or wrong IP↔key mapping).")
                                 clientSocket.close()
                                 return@thread
                             }

@@ -237,24 +237,31 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 }
             }
 
-            // Device list area — a centered empty-state when nothing is found (so the text can't be
-            // clipped by the scroll viewport), or a scrollable list of device cards.
+            // Device list + rescan as one section — the rescan pill sits directly below the cards
+            // inside the same region instead of a fixed band beneath a weight(1f) box. On short
+            // windows the old fixed pill squeezed the list to nothing; folding it in returns that
+            // vertical budget to the cards and lets the pill scroll with them.
             Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(bottom = Dimens.spaceLg)) {
                 if (discoveredDevices.isEmpty()) {
-                    // Still the tutorial anchor: the spotlight + placeholder fake device land here.
-                    Box(
+                    // Centered empty-state with the rescan pill beneath it. Still the tutorial anchor:
+                    // the spotlight + placeholder fake device land here.
+                    Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .onGloballyPositioned { coords -> tutorialBounds["deviceCard"] = coords.boundsInWindow() },
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         EmptyState(
                             icon = Icons.Filled.Wifi,
                             title = com.joseph.clipboard.windows.storage.TranslationManager.getString("no_devices_found").takeIf { it != "no_devices_found" } ?: "No devices found yet",
                             subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("no_devices_found_hint").takeIf { it != "no_devices_found_hint" } ?: "Make sure the other device is on the same Wi-Fi or hotspot and is discoverable.",
                         )
+                        Spacer(modifier = Modifier.height(Dimens.spaceLg))
+                        RescanPill(onClick = { appController.clearNetworkCache(); scanTick++ })
                     }
                 } else {
+                    // Scrollable device cards with the rescan pill as the final item in the same scroll.
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -269,37 +276,12 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                                 DiscoveredDeviceItem(device = device, isPaired = isPaired, appController = appController)
                             }
                         }
+                        Spacer(modifier = Modifier.height(Dimens.spaceLg))
+                        RescanPill(
+                            onClick = { appController.clearNetworkCache(); scanTick++ },
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
                     }
-                }
-            }
-
-            // Rescan — hairline pill (matches the app's CapsuleButton language) instead of a lone
-            // borderless circle; also re-triggers the transient "scanning" indicator above.
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(Dimens.radiusPill))
-                        .background(MaterialTheme.colors.surface)
-                        .border(Dimens.hairlineWidth, extra.divider, RoundedCornerShape(Dimens.radiusPill))
-                        .clickable {
-                            appController.clearNetworkCache()
-                            scanTick++
-                        }
-                        .padding(horizontal = Dimens.spaceXl, vertical = Dimens.spaceMd),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
-                ) {
-                    Icon(
-                        Icons.Filled.Refresh,
-                        contentDescription = null,
-                        tint = MaterialTheme.colors.onSurface,
-                        modifier = Modifier.size(Dimens.iconSm)
-                    )
-                    Text(
-                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_rescan").takeIf { it != "action_rescan" } ?: "Rescan",
-                        style = MaterialTheme.typography.button,
-                        color = MaterialTheme.colors.onSurface
-                    )
                 }
             }
         }
@@ -354,6 +336,37 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 }
             )
         }
+    }
+}
+
+/**
+ * Rescan action — hairline pill (matches the app's CapsuleButton language) instead of a lone
+ * borderless circle. Lives inside the device-list region so it flows directly below the cards.
+ */
+@Composable
+private fun RescanPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val extra = LocalExtraColors.current
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .background(MaterialTheme.colors.surface)
+            .border(Dimens.hairlineWidth, extra.divider, RoundedCornerShape(Dimens.radiusPill))
+            .clickable { onClick() }
+            .padding(horizontal = Dimens.spaceXl, vertical = Dimens.spaceMd),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spaceSm)
+    ) {
+        Icon(
+            Icons.Filled.Refresh,
+            contentDescription = null,
+            tint = MaterialTheme.colors.onSurface,
+            modifier = Modifier.size(Dimens.iconSm)
+        )
+        Text(
+            com.joseph.clipboard.windows.storage.TranslationManager.getString("action_rescan").takeIf { it != "action_rescan" } ?: "Rescan",
+            style = MaterialTheme.typography.button,
+            color = MaterialTheme.colors.onSurface
+        )
     }
 }
 

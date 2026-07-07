@@ -4,6 +4,21 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.5.6 — Windows · 3.5.3 — Android (pairing screen layout)
+
+The pairing screen's **Rescan** button now lives inside the device list as one scrolling section,
+directly below the device cards, instead of a fixed bar pinned beneath the list. On short screens
+that pinned bar left too little height to show even a single device card; folding it into the list
+returns that space to the cards. Windows bumps to **3.5.6**, Android to **3.5.3** (versionCode 20).
+No wire-protocol, crypto or pairing changes.
+
+### Fixed
+- **Device cards fit on short screens.** Reclaiming the rescan bar's fixed height lets the list
+  render at least one full card where it used to collapse to nothing. The Rescan / Reboot pill now
+  scrolls with the cards and sits directly below them, on both clients.
+
+---
+
 ## 3.5.5 — Windows (folder send)
 
 A Windows-only release carrying the sender/receiver half of the folder-send fix (see 3.5.2 below);

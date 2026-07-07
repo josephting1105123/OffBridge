@@ -531,6 +531,11 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
 
 fun main() = application {
     val windowState = rememberWindowState()
+    // Publish the single-instance mutex once (not per recomposition) so the Inno installer's AppMutex
+    // can detect a running instance — even one only minimized to the system tray — and prompt the user
+    // to close it before an in-place upgrade replaces an in-use runtime file
+    // (runtime\bin\ucrtbase.dll -> "MoveFile failed; code 5"). Best-effort; see os/SingleInstance.kt.
+    remember { com.joseph.clipboard.windows.os.SingleInstance.acquire() }
     val appController = remember {
         ClipboardAppController().apply {
             start()
