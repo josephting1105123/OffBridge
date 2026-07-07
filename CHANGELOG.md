@@ -4,10 +4,24 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.5.5 — Windows (folder send)
+
+A Windows-only release carrying the sender/receiver half of the folder-send fix (see 3.5.2 below);
+features, crypto and pairing are unchanged. Android stays on 3.5.2.
+
+### Fixed
+- **Sending a folder works.** The sender handed a picked directory straight to the byte pump, where
+  `FileInputStream(dir)` threw — the send stalled on "resume" at 0% and never started. Folders are now
+  walked into their files before the offer (LAN and off-grid QR paths). Two files that flatten to the
+  same leaf name (e.g. `a.txt` under two subfolders) are de-collided on the receiver so neither
+  overwrites the other, on both the receive and plaintext-resume paths.
+
+---
+
 ## 3.5.2 — Android (transfer/receive fixes)
 
 Android bumps to **3.5.2** (versionCode 19). Three transfer bugs reported on the Android client;
-the folder-send fix also lands on the Windows sender/receiver (Windows keeps 3.5.4 until its next build).
+the folder-send fix's sender/receiver half also ships as Windows **3.5.5** (above).
 
 ### Fixed
 - **Received text files open again.** Tapping a received `.txt` — or any non image/video/apk/pdf file —
