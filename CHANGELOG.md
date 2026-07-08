@@ -4,6 +4,26 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.5.4 — Android (Lite mode)
+
+A new **Lite** design is now the default on Android: a simple hub with three big actions — Send,
+Receive, Clipboard — and no bottom navigation, for people who found the full app too dense. The
+original interface is still there as **Pro**, reached from a Basic/Pro switch in the power menu (which
+replaces the old Connection Diagnostics tile — diagnostics moved to Settings → Debugging). Android
+bumps to **3.5.4** (versionCode 21); Windows is unchanged at 3.5.6. No wire-protocol, crypto or
+pairing changes — this is a UI layer over the existing engine.
+
+### Added
+- **Lite mode.** Stacked Send / Receive / Clipboard hub, a streamlined send flow (pick files → same
+  or different network → per-device Send/Pair tray), a calm looping Receive screen, and a Clipboard
+  screen pairing recent copies with a connected-devices list. Switch to Pro any time from the power menu.
+- **Live "Receiving…" indicator** on the Receive screen (Pro and Lite) while a transfer is incoming.
+
+### Changed
+- The Pro clipboard screen's **Push current clipboard** button moved to the bottom, matching Windows.
+
+---
+
 ## 3.5.6 — Windows · 3.5.3 — Android (pairing screen layout)
 
 The pairing screen's **Rescan** button now lives inside the device list as one scrolling section,

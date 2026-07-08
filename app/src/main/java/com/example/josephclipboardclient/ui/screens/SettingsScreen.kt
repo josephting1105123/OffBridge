@@ -64,6 +64,7 @@ fun SettingsScreen(
     onDiscoverableChange: (Boolean) -> Unit,
     onDonate: () -> Unit,
     onPrivacyPolicy: () -> Unit,
+    onConnectionDiagnosis: () -> Unit,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -185,7 +186,21 @@ fun SettingsScreen(
                 colors = colors,
                 dimens = dimens,
                 onClick = onPrivacyPolicy,
+            )
+
+            // ===================== DEBUGGING =====================
+            Divider(colors, dimens)
+            SectionLabel(stringResource(R.string.settings_section_debugging), colors, dimens)
+
+            SettingButtonRow(
+                label = stringResource(R.string.settings_connection_diagnosis),
+                buttonText = stringResource(R.string.action_open),
+                buttonBackground = colors.card,
+                buttonTextColor = colors.textPrimary,
+                colors = colors,
+                dimens = dimens,
                 bottomPadding = dimens.spaceXl,
+                onClick = onConnectionDiagnosis,
             )
         }
     }

@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.ClipboardScreen
+import com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteClipboardScreen
+import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SendDeviceUi
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 
 /**
@@ -27,6 +29,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 class HistoryFragment : Fragment() {
 
     private val historyState = mutableStateOf<List<String>>(emptyList())
+    private val pairedDevicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
     private val acceptSyncState = mutableStateOf(false)
     private val showTutorialState = mutableStateOf(false)
 
@@ -39,11 +42,29 @@ class HistoryFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    ClipboardScreen(
+                    if (isLite) {
+                        LiteClipboardScreen(
+                            history = historyState.value,
+                            pairedDevices = pairedDevicesState.value,
+                            acceptSync = acceptSyncState.value,
+                            onAcceptSyncChange = { enabled ->
+                                ClipboardService.isSyncEnabled = enabled
+                                acceptSyncState.value = enabled
+                            },
+                            onCopy = { copyToClipboard(it) },
+                            onDelete = { deleteEntry(it) },
+                            onPair = { onPair(it) },
+                            onUnpair = { onUnpair(it) }
+                        )
+                    } else {
+                        ClipboardScreen(
                         history = historyState.value,
                         acceptSync = acceptSyncState.value,
                         onAcceptSyncChange = { enabled ->
@@ -56,7 +77,8 @@ class HistoryFragment : Fragment() {
                         showTutorial = showTutorialState.value,
                         onShowTutorial = { showTutorialState.value = true },
                         onTutorialDismiss = { showTutorialState.value = false },
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -75,6 +97,24 @@ class HistoryFragment : Fragment() {
     private fun refreshHistory() {
         val ctx = context ?: return
         historyState.value = ClipboardHistoryManager.getHistory(ctx)
+
+        val onlineNodes = TransferDaemon.discoveredNodes.values
+        val onlineNames = onlineNodes.associate { it.ip to it.name }
+        val onlineOs = onlineNodes.associate { it.ip to it.os }
+
+        pairedDevicesState.value = SecurityVault.getTrustedNodes(ctx).map { ip ->
+            val liveName = onlineNames[ip]
+            val liveOs = onlineOs[ip]
+            if (liveName != null && SecurityVault.getPairedDeviceName(ctx, ip) != liveName) {
+                SecurityVault.savePairedDeviceName(ctx, ip, liveName)
+            }
+            SendDeviceUi(
+                ip = ip,
+                name = liveName ?: SecurityVault.getPairedDeviceName(ctx, ip) ?: ip,
+                isWindows = liveOs?.equals("Windows", ignoreCase = true) ?: false,
+                isPaired = true
+            )
+        }
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -161,6 +201,24 @@ class HistoryFragment : Fragment() {
                 putExtra("PAYLOAD", item)
             },
         )
+        refreshHistory()
+    }
+
+    private fun onPair(ip: String) {
+        val device = pairedDevicesState.value.find { it.ip == ip } ?: return
+        startActivity(
+            Intent(requireContext(), PairingActivity::class.java).apply {
+                putExtra("TARGET_NAME", device.name)
+                putExtra("TARGET_IP", device.ip)
+            }
+        )
+    }
+
+    private fun onUnpair(ip: String) {
+        val device = pairedDevicesState.value.find { it.ip == ip } ?: return
+        PairingDaemon.sendUnpairRequest(requireContext(), ip)
+        SecurityVault.removeTrustedNode(requireContext(), ip)
+        Toast.makeText(requireContext(), getString(R.string.status_unpaired_from, device.name), Toast.LENGTH_SHORT).show()
         refreshHistory()
     }
 }

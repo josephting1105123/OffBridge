@@ -1,6 +1,7 @@
 package com.EntropicSoftwareLab.ClipboardShare.sendvia
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -19,6 +20,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.DiscoveredDevice
 import com.EntropicSoftwareLab.ClipboardShare.MainActivity
+import com.EntropicSoftwareLab.ClipboardShare.PairingActivity
 import com.EntropicSoftwareLab.ClipboardShare.Ports
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
@@ -154,9 +156,11 @@ class SendToDevicesFragment : Fragment() {
         /** First outgoing sessionId of the batch — the listener opens its history detail. */
         const val RESULT_SESSION_ID = "session_id"
 
-        fun newInstance(items: List<TransferItem>): SendToDevicesFragment {
+        fun newInstance(items: List<TransferItem>, isMultiple: Boolean = true): SendToDevicesFragment {
             return SendToDevicesFragment().apply {
-                arguments = TransferItemArgs.toBundle(items)
+                arguments = TransferItemArgs.toBundle(items).apply {
+                    putBoolean("is_multiple", isMultiple)
+                }
             }
         }
     }
@@ -176,7 +180,12 @@ class SendToDevicesFragment : Fragment() {
 
     // Compose state surfaced to SendToDevicesScreen (logic stays here; the screen is pure UI).
     private val previewsState = mutableStateOf<List<FilePreviewUi>>(emptyList())
+    // Paired devices only — feeds Pro's multi-select screen AND Lite's Multiple-device mode, both of
+    // which must only ever let you select/send to an already-paired device.
     private val devicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
+    // Paired + unpaired — feeds ONLY Lite's One-Device tri-state card, which needs to show an
+    // unpaired device with a "Pair" action instead of just hiding it.
+    private val allDevicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
     private val selectedIpsState = mutableStateOf<Set<String>>(emptySet())
     private val loadingState = mutableStateOf(true)
     private val sendingState = mutableStateOf(false)
@@ -186,25 +195,70 @@ class SendToDevicesFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         items = arguments?.let { TransferItemArgs.fromBundle(it) } ?: emptyList()
+        val isMultiple = arguments?.getBoolean("is_multiple", true) ?: true
+
+        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    SendToDevicesScreen(
-                        previews = previewsState.value,
-                        devices = devicesState.value,
-                        selectedIps = selectedIpsState.value,
-                        loading = loadingState.value,
-                        sending = sendingState.value,
-                        onBack = { parentFragmentManager.popBackStack() },
-                        onToggleDevice = ::onToggleDevice,
-                        onToggleSelectAll = ::onToggleSelectAll,
-                        onSend = ::executeMultiDeviceTransfer,
-                        // Tab switch only: this screen stays (hidden) on the back stack with the
-                        // selection intact, so the user pairs a device and returns to send.
-                        onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
-                    )
+                    if (isLite) {
+                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendToScreen(
+                            deviceName = TransferDaemon.customDeviceName,
+                            // Multiple-device mode reuses the same paired-only invariant as Pro's
+                            // multi-select; only the One-Device tri-state card needs unpaired rows
+                            // (to offer "Pair") — see allDevicesState's doc comment above.
+                            devices = if (isMultiple) devicesState.value else allDevicesState.value,
+                            isMultiple = isMultiple,
+                            sendingIp = if (sendingState.value && selectedTargetIps.isNotEmpty()) selectedTargetIps.first() else null,
+                            selectedIps = selectedIpsState.value,
+                            onToggleDevice = ::onToggleDevice,
+                            onSendToDevice = { ip ->
+                                // sendingState is a single fragment-wide flag (one transfer at a
+                                // time). Without this guard, tapping a second device's "Send" while
+                                // the first is still in flight would overwrite selectedTargetIps —
+                                // executeMultiDeviceTransfer's own re-entrancy check would then
+                                // silently drop the second tap, but the "Sending…" label (driven by
+                                // selectedTargetIps.first()) would have already jumped to the wrong
+                                // device. Ignoring taps while a send is in flight keeps both correct.
+                                if (!sendingState.value) {
+                                    selectedTargetIps.clear()
+                                    selectedTargetIps.add(ip)
+                                    selectedIpsState.value = selectedTargetIps.toSet()
+                                    executeMultiDeviceTransfer()
+                                }
+                            },
+                            onSendMultiple = ::executeMultiDeviceTransfer,
+                            // No tab shell in Lite (openPairingTab is a no-op there) — launch pairing
+                            // for this specific device directly, same as HistoryFragment.onPair.
+                            onPairDevice = { ip, name ->
+                                startActivity(
+                                    Intent(requireContext(), PairingActivity::class.java).apply {
+                                        putExtra("TARGET_NAME", name)
+                                        putExtra("TARGET_IP", ip)
+                                    }
+                                )
+                            },
+                            onDone = { parentFragmentManager.popBackStack() }
+                        )
+                    } else {
+                        SendToDevicesScreen(
+                            previews = previewsState.value,
+                            devices = devicesState.value,
+                            selectedIps = selectedIpsState.value,
+                            loading = loadingState.value,
+                            sending = sendingState.value,
+                            onBack = { parentFragmentManager.popBackStack() },
+                            onToggleDevice = ::onToggleDevice,
+                            onToggleSelectAll = ::onToggleSelectAll,
+                            onSend = ::executeMultiDeviceTransfer,
+                            // Tab switch only: this screen stays (hidden) on the back stack with the
+                            // selection intact, so the user pairs a device and returns to send.
+                            onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
+                        )
+                    }
                 }
             }
         }
@@ -307,28 +361,41 @@ class SendToDevicesFragment : Fragment() {
     private fun refreshDeviceListUI() {
         if (!isAdded) return
         val allNodes = TransferDaemon.discoveredNodes.values.toList()
-        val (paired, _) = allNodes.partition { SecurityVault.getKeyForNode(requireContext(), it.ip) != null }
-        val sortedPaired = paired.sortedBy { it.name }
+        val sortedNodes = allNodes.sortedBy { it.name }
 
         pollTicks++
         // First tick that finds a device — or three empty ticks — ends the skeleton phase.
-        if (!firstPollDone && (sortedPaired.isNotEmpty() || pollTicks >= 3)) {
+        if (!firstPollDone && (sortedNodes.isNotEmpty() || pollTicks >= 3)) {
             firstPollDone = true
             loadingState.value = false
         }
         if (!firstPollDone) return
 
-        devicesState.value = sortedPaired.map { it.toUi() }
+        // Build the UI model once (toUi resolves isPaired via a single getKeyForNode per device),
+        // then derive both lists from it: allDevices feeds Lite's One-Device tri-state card, which
+        // needs unpaired rows to offer "Pair"; paired-only feeds Pro's multi-select and Lite's
+        // Multiple mode. (Mapping once avoids decrypting each node's key 2–3× per poll tick.)
+        val allUi = sortedNodes.map { it.toUi() }
+        allDevicesState.value = allUi
+        val pairedUi = allUi.filter { it.isPaired }
+        devicesState.value = pairedUi
 
-        // Prune disconnected devices from the selection so Send can't target a vanished node.
-        val validIps = sortedPaired.map { it.ip }.toSet()
+        // Prune the multi-select set to devices that are still discovered AND still paired, so a node
+        // that goes offline — or loses its pairing mid-session while staying online — can't linger in
+        // the selection and be sent to. validIps must be the paired set, not all discovered nodes.
+        val validIps = pairedUi.map { it.ip }.toSet()
         if (selectedTargetIps.retainAll(validIps)) {
             selectedIpsState.value = selectedTargetIps.toSet()
         }
     }
 
     private fun DiscoveredDevice.toUi(): SendDeviceUi =
-        SendDeviceUi(ip = ip, name = name, isWindows = os.equals("Windows", ignoreCase = true))
+        SendDeviceUi(
+            ip = ip, 
+            name = name, 
+            isWindows = os.equals("Windows", ignoreCase = true),
+            isPaired = SecurityVault.getKeyForNode(requireContext(), ip) != null
+        )
 
     private fun executeMultiDeviceTransfer() {
         val sendItems = items.toList()

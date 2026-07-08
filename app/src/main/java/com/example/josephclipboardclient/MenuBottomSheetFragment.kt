@@ -1,5 +1,6 @@
 package com.EntropicSoftwareLab.ClipboardShare
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -9,6 +10,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import android.app.Dialog
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
+import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -47,7 +52,7 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
 
         val btnSettings = view.findViewById<View>(R.id.btn_menu_settings)
         val btnWindows = view.findViewById<View>(R.id.btn_menu_windows)
-        val btnDiagnostics = view.findViewById<View>(R.id.btn_menu_diagnostics)
+        val toggleDesignMode = view.findViewById<ComposeView>(R.id.toggle_design_mode)
         val btnRestart = view.findViewById<View>(R.id.btn_menu_restart)
         val btnPowerOff = view.findViewById<View>(R.id.btn_menu_power_off)
 
@@ -61,9 +66,28 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        btnDiagnostics.setOnClickListener {
-            startActivity(Intent(requireContext(), DiagnosticsActivity::class.java))
-            dismiss()
+        // Diagnostics moved to Settings -> Debugging; this slot is now the Basic/Pro design-mode
+        // switch. Selecting a mode writes it to FileBridgePrefs and restarts through SplashActivity
+        // (same is_rebooting + NEW_TASK|CLEAR_TASK pattern as "Restart services" / the language
+        // change in SettingsFragment) so MainActivity rebuilds its shell from scratch.
+        toggleDesignMode.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        toggleDesignMode.setContent {
+            AppTheme {
+                val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+                val currentIsLite = prefs.getString("design_mode", "Lite") == "Lite"
+                DesignModeToggle(
+                    options = listOf(getString(R.string.design_mode_basic), getString(R.string.design_mode_pro)),
+                    selectedIndex = if (currentIsLite) 0 else 1,
+                    onSelect = { index ->
+                        val newMode = if (index == 0) "Lite" else "Pro"
+                        if (newMode != prefs.getString("design_mode", "Lite")) {
+                            prefs.edit().putString("design_mode", newMode).apply()
+                            dismiss()
+                            restartApp()
+                        }
+                    },
+                )
+            }
         }
 
         btnRestart.setOnClickListener {
@@ -104,5 +128,26 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
             dismiss()
             requireActivity().finishAndRemoveTask()
         }
+    }
+
+    /** Bounces the daemon service and restarts through SplashActivity — the same shell-reload
+     * pattern "Restart services" and the Settings language change already use — so MainActivity
+     * re-reads design_mode from FileBridgePrefs and rebuilds the correct (Lite/Pro) shell. */
+    private fun restartApp() {
+        try {
+            val serviceIntent = Intent(requireContext(), ClipboardService::class.java)
+            requireContext().stopService(serviceIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                requireContext().startForegroundService(serviceIntent)
+            } else {
+                requireContext().startService(serviceIntent)
+            }
+        } catch (e: Exception) { e.printStackTrace() }
+
+        val restartIntent = Intent(requireContext(), SplashActivity::class.java)
+        restartIntent.putExtra("is_rebooting", true)
+        restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(restartIntent)
+        requireActivity().overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
     }
 }

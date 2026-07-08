@@ -612,4 +612,22 @@
     <string name="a11y_push_clipboard">Envoyer le presse-papiers</string>
     <string name="a11y_transfer_file">Transférer un fichier</string>
     <string name="action_remove_file">Retirer le fichier</string>
+    <string name="settings_section_debugging">Débogage</string>
+    <string name="settings_connection_diagnosis">Diagnostic de connexion</string>
+    <string name="design_mode_basic">Simple</string>
+    <string name="design_mode_pro">Pro</string>
+    <string name="lite_send_files">Envoyer des fichiers</string>
+    <string name="lite_receive_files">Recevoir des fichiers</string>
+    <string name="lite_clipboard">Presse-papiers</string>
+    <string name="send_scope_one_device">Un appareil</string>
+    <string name="send_scope_multiple_device">Plusieurs appareils</string>
+    <string name="net_same_network">Appareil récepteur sur le même réseau</string>
+    <string name="net_different_network">Appareil récepteur sur un réseau différent</string>
+    <string name="receiving_in_progress">Réception en cours...</string>
+    <string name="recent_copies_tap_hint">Copies récentes (Appuyez pour voir)</string>
+    <string name="connected_devices_label">Appareils connectés :</string>
+    <string name="lite_selected_files_count">Fichiers sélectionnés (%1$d)</string>
+    <string name="lite_send_select_method_title">Envoyer des fichiers — Sélectionnez l\'une des options suivantes</string>
+    <string name="lite_select_devices_label">Sélectionner les appareils</string>
 </resources>
+

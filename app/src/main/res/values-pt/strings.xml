@@ -616,4 +616,22 @@
     <string name="a11y_push_clipboard">Enviar área de transferência</string>
     <string name="a11y_transfer_file">Transferir arquivo</string>
     <string name="action_remove_file">Remover arquivo</string>
+    <string name="settings_section_debugging">Depuração</string>
+    <string name="settings_connection_diagnosis">Diagnóstico de Conexão</string>
+    <string name="design_mode_basic">Básico</string>
+    <string name="design_mode_pro">Pro</string>
+    <string name="lite_send_files">Enviar Arquivos</string>
+    <string name="lite_receive_files">Receber Arquivos</string>
+    <string name="lite_clipboard">Área de Transferência</string>
+    <string name="send_scope_one_device">Um Dispositivo</string>
+    <string name="send_scope_multiple_device">Vários Dispositivos</string>
+    <string name="net_same_network">Dispositivo receptor na mesma rede</string>
+    <string name="net_different_network">Dispositivo receptor em uma rede diferente</string>
+    <string name="receiving_in_progress">Recebendo...</string>
+    <string name="recent_copies_tap_hint">Cópias Recentes (Toque para ver)</string>
+    <string name="connected_devices_label">Dispositivos Conectados:</string>
+    <string name="lite_selected_files_count">Arquivos Selecionados (%1$d)</string>
+    <string name="lite_send_select_method_title">Enviar Arquivos — Selecione uma das opções a seguir</string>
+    <string name="lite_select_devices_label">Selecionar Dispositivos</string>
 </resources>
+

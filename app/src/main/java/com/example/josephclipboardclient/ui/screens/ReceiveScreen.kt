@@ -25,8 +25,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
+import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
@@ -97,6 +105,29 @@ fun ReceiveScreen(
                     modifier = Modifier.weight(1f),
                 )
                 HowToUseChip(onClick = onShowTutorial)
+            }
+
+            var isReceiving by remember { mutableStateOf(false) }
+            var dotCount by remember { mutableIntStateOf(1) }
+
+            LaunchedEffect(Unit) {
+                while (true) {
+                    isReceiving = TransferDaemon.activeSessions.values.any { it.isIncoming && !it.isPaused && !it.isCancelled }
+                    if (isReceiving) {
+                        dotCount = (dotCount % 3) + 1
+                    }
+                    delay(500)
+                }
+            }
+
+            if (isReceiving) {
+                val dots = ".".repeat(dotCount)
+                Text(
+                    text = stringResource(R.string.receiving_in_progress).replace("...", dots),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.greenText,
+                    modifier = Modifier.padding(bottom = dimens.spaceLg)
+                )
             }
 
             // Device name (mirrors System Status; sets how senders see this device).
@@ -172,7 +203,7 @@ fun ReceiveScreen(
 }
 
 @Composable
-private fun ReceiveGridButton(
+internal fun ReceiveGridButton(
     iconRes: Int,
     label: String,
     modifier: Modifier = Modifier,

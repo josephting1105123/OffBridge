@@ -96,26 +96,6 @@ fun ClipboardScreen(
                 HowToUseChip(onClick = onShowTutorial)
             }
 
-            // Push current clipboard
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = dimens.spaceLg)
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(dimens.radiusLg))
-                    .background(colors.green)
-                    .tutorialAnchor(anchors, "push")
-                    .clickable { onPushCurrent() },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    stringResource(R.string.action_push_current_clipboard),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-
             // Accept incoming clipboard toggle
             Row(
                 modifier = Modifier
@@ -174,13 +154,35 @@ fun ClipboardScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(dimens.spaceSm),
                 ) {
                     items(history, key = { it }) { entry ->
                         ClipboardCard(entry = entry, colors = colors, dimens = dimens, onOpen = { detailEntry = it }, onDelete = onDelete)
                     }
                 }
+            }
+
+            Spacer(Modifier.height(dimens.spaceLg))
+
+            // Push current clipboard
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = dimens.spaceLg)
+                    .height(64.dp)
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(colors.green)
+                    .tutorialAnchor(anchors, "push")
+                    .clickable { onPushCurrent() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    stringResource(R.string.action_push_current_clipboard),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
 
@@ -219,7 +221,7 @@ fun ClipboardScreen(
 }
 
 @Composable
-private fun ClipboardCard(
+internal fun ClipboardCard(
     entry: String,
     colors: com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors,
     dimens: com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens,
@@ -263,7 +265,7 @@ private fun ClipboardCard(
 
 /** Full-screen detail for one clipboard entry: back arrow, the complete text, and a Copy button. */
 @Composable
-private fun ClipboardDetail(
+internal fun ClipboardDetail(
     entry: String,
     colors: com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors,
     dimens: com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens,

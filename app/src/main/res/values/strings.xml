@@ -611,4 +611,22 @@
     <string name="a11y_push_clipboard">Push clipboard</string>
     <string name="a11y_transfer_file">Transfer file</string>
     <string name="action_remove_file">Remove file</string>
+    <string name="settings_section_debugging">Debugging</string>
+    <string name="settings_connection_diagnosis">Connection Diagnosis</string>
+    <string name="design_mode_basic">Basic</string>
+    <string name="design_mode_pro">Pro</string>
+    <string name="lite_send_files">Send Files</string>
+    <string name="lite_receive_files">Receive Files</string>
+    <string name="lite_clipboard">Clipboard</string>
+    <string name="send_scope_one_device">One Device</string>
+    <string name="send_scope_multiple_device">Multiple Device</string>
+    <string name="net_same_network">Receiving Device on Same Network</string>
+    <string name="net_different_network">Receiving Device on Different Network</string>
+    <string name="receiving_in_progress">Receiving...</string>
+    <string name="recent_copies_tap_hint">Recent Copies (Tap to view)</string>
+    <string name="connected_devices_label">Connected Devices:</string>
+    <string name="lite_selected_files_count">Selected Files (%1$d)</string>
+    <string name="lite_send_select_method_title">Send Files — Select one of the following</string>
+    <string name="lite_select_devices_label">Select Devices</string>
 </resources>
+

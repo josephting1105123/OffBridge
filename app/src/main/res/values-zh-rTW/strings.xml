@@ -599,4 +599,22 @@
     <string name="a11y_push_clipboard">推送剪貼簿</string>
     <string name="a11y_transfer_file">傳輸檔案</string>
     <string name="action_remove_file">移除檔案</string>
+    <string name="settings_section_debugging">偵錯</string>
+    <string name="settings_connection_diagnosis">連線診斷</string>
+    <string name="design_mode_basic">簡易</string>
+    <string name="design_mode_pro">Pro</string>
+    <string name="lite_send_files">傳送檔案</string>
+    <string name="lite_receive_files">接收檔案</string>
+    <string name="lite_clipboard">剪貼簿</string>
+    <string name="send_scope_one_device">單一裝置</string>
+    <string name="send_scope_multiple_device">多部裝置</string>
+    <string name="net_same_network">接收裝置在同一網路</string>
+    <string name="net_different_network">接收裝置在不同網路</string>
+    <string name="receiving_in_progress">接收中...</string>
+    <string name="recent_copies_tap_hint">最近的複製內容（點按檢視）</string>
+    <string name="connected_devices_label">已連線的裝置：</string>
+    <string name="lite_selected_files_count">已選檔案 (%1$d)</string>
+    <string name="lite_send_select_method_title">傳送檔案 — 選擇以下其中一種方式</string>
+    <string name="lite_select_devices_label">選擇裝置</string>
 </resources>
+

@@ -69,6 +69,7 @@ data class SendDeviceUi(
     val ip: String,
     val name: String,
     val isWindows: Boolean,
+    val isPaired: Boolean = true,
 )
 
 /**

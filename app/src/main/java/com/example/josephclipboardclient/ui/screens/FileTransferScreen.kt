@@ -398,16 +398,17 @@ fun FileTransferScreen(
 }
 
 @Composable
-private fun TypeButton(
+internal fun TypeButton(
     iconRes: Int,
     label: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val shape = RoundedCornerShape(dimens.radiusLg)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .width(120.dp)
             .height(80.dp)
             .clip(shape)
@@ -482,14 +483,14 @@ private fun SelectedFilesGrid(
 }
 
 @Composable
-private fun FilePreviewCard(
+internal fun FilePreviewCard(
     item: TransferItem,
-    isDragging: Boolean,
-    dragOffset: Offset,
-    selectionMode: Boolean,
-    selected: Boolean,
     onClick: () -> Unit,
     onRemove: () -> Unit,
+    isDragging: Boolean = false,
+    dragOffset: Offset = Offset.Zero,
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
 ) {
     val context = LocalContext.current
     val colors = AppThemeTokens.colors

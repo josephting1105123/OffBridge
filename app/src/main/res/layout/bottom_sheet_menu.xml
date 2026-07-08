@@ -94,32 +94,12 @@
             android:orientation="horizontal"
             android:layout_marginBottom="@dimen/space_md">
 
-            <LinearLayout
-                android:id="@+id/btn_menu_diagnostics"
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/toggle_design_mode"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="100dp"
-                android:layout_marginEnd="@dimen/space_md"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/rect_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <ImageView
-                    android:layout_width="@dimen/icon_lg"
-                    android:layout_height="@dimen/icon_lg"
-                    android:src="@drawable/ic_diagnostics"
-                    app:tint="?attr/appGreen"
-                    android:contentDescription="@null" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/menu_diagnostics"
-                    android:textColor="?attr/appTextPrimaryColor"
-                    android:textSize="14sp"
-                    android:layout_marginTop="@dimen/space_sm" />
-            </LinearLayout>
+                android:layout_marginEnd="@dimen/space_md" />
 
             <LinearLayout
                 android:id="@+id/btn_menu_restart"

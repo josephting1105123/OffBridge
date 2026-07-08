@@ -96,6 +96,7 @@ class SettingsFragment : Fragment() {
                         },
                         onDonate = ::onDonate,
                         onPrivacyPolicy = { showPrivacyPolicyDialog() },
+                        onConnectionDiagnosis = { startActivity(Intent(requireContext(), DiagnosticsActivity::class.java)) },
                     )
                 }
             }

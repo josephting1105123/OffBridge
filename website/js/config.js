@@ -29,7 +29,7 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
-    version: "3.5.3",
+    version: "3.5.4",
     size: "TBD", // store link — no size/sha shown
     // Store listing, not a direct APK: the button opens Google Play.
     url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",

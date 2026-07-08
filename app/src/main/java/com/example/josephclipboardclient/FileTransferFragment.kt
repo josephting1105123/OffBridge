@@ -52,6 +52,10 @@ class FileTransferFragment : Fragment() {
     private var selectedFiles: MutableList<TransferItem> = mutableListOf()
     private var textCounter = 1
 
+    // Lite's screen calls onSendViaChoose directly (no SendViaOverlay, so showSendViaState never
+    // flips true); the double-fire guard below must not swallow those calls. Set in onCreateView.
+    private var isLiteMode = false
+
     // Compose-observable mirrors of the selection state.
     private val selectedFilesState = mutableStateOf<List<TransferItem>>(emptyList())
     private val sendEnabledState = mutableStateOf(false)
@@ -138,10 +142,25 @@ class FileTransferFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // A present-but-disabled adapter stays enabled; the downstream NFC flow guides turning it on.
         val nfcUnavailable = NfcAdapter.getDefaultAdapter(requireContext()) == null
+        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        isLiteMode = isLite
+
         return ComposeView(requireContext()).apply{
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
+                    if (isLite) {
+                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
+                            selectedFiles = selectedFilesState.value,
+                            onSelectFile = ::onSelectFile,
+                            onSelectMedia = ::onSelectMedia,
+                            onSelectText = ::onSelectText,
+                            onRemoveFile = ::onRemoveFile,
+                            onPreviewFile = ::previewFile,
+                            onSendViaChoose = ::onSendViaChoose
+                        )
+                    } else {
                     FileTransferScreen(
                         selectedFiles = selectedFilesState.value,
                         sendEnabled = sendEnabledState.value,
@@ -176,6 +195,7 @@ class FileTransferFragment : Fragment() {
                         onSendViaChoose = ::onSendViaChoose,
                         onSendViaDismiss = { showSendViaState.value = false },
                     )
+                    }
                 }
             }
         }
@@ -368,20 +388,29 @@ class FileTransferFragment : Fragment() {
 
     /** Routes the Send-Via overlay's choice to the chosen transport. */
     private fun onSendViaChoose(choice: String) {
-        if (!showSendViaState.value) return   // double-fire guard
+        // The double-fire guard only applies to the Pro overlay (SendViaOverlay/SendViaSheet), which
+        // sets showSendViaState true before it can call back. Lite's screens call this directly with
+        // no overlay involved, so showSendViaState never flips true there — skip the guard entirely.
+        if (!isLiteMode && !showSendViaState.value) return
         showSendViaState.value = false
-        when (choice) {
-            SendViaChoice.DEVICES -> openSendToDevices()
-            SendViaChoice.QR -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
-            SendViaChoice.NFC -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_NFC)
+        when {
+            choice == SendViaChoice.DEVICES -> openSendToDevices(isMultiple = true)
+            choice == SendViaChoice.QR -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
+            choice == SendViaChoice.NFC -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_NFC)
+            choice.startsWith("devices_lite_") -> {
+                openSendToDevices(isMultiple = choice.endsWith("1"))
+            }
         }
     }
 
-    private fun openSendToDevices() {
+    private fun openSendToDevices(isMultiple: Boolean = true) {
         if (selectedFiles.isEmpty()) return
+        // Lite skips the overlay's double-fire guard, so a fast double-tap on the "Same network" card
+        // would stack two SendToDevices fragments; dedupe by tag (self-resets once it's popped).
+        if (parentFragmentManager.findFragmentByTag(SendToDevicesFragment.TAG) != null) return
         // Full-screen content fragment over the tab — covers the page, keeps the bottom nav visible.
         parentFragmentManager.beginTransaction()
-            .add(R.id.nav_host_fragment, SendToDevicesFragment.newInstance(selectedFiles), SendToDevicesFragment.TAG)
+            .add(R.id.nav_host_fragment, SendToDevicesFragment.newInstance(selectedFiles, isMultiple), SendToDevicesFragment.TAG)
             .addToBackStack(SendToDevicesFragment.TAG)
             .commit()
     }

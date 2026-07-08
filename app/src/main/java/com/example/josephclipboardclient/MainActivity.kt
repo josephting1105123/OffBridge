@@ -102,46 +102,63 @@ class MainActivity : AppCompatActivity() {
         bottomNavView = findViewById(R.id.bottom_nav_view)
         val fabMenu = findViewById<FloatingActionButton>(R.id.fab_menu)
 
-        fragmentMap[R.id.nav_send_files] = FileTransferFragment()
-        fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
-        fragmentMap[R.id.nav_history] = HistoryFragment()
-        fragmentMap[R.id.nav_receive] = ReceiveFragment()
-
-        // The FragmentManager restores these fragments across recreation; adding a fresh
-        // set on every onCreate stacked hidden duplicates on top of the restored ones and
-        // leaked their views on each rotation (AND-27). Reuse a restored instance when one
-        // exists — it keeps its saved shown/hidden state — and only add+hide fresh ones.
-        val transaction = supportFragmentManager.beginTransaction()
-        for (id in fragmentMap.keys.toList()) {
-            // Tag by resource NAME, not the R.id integer — aapt renumbers ids across builds,
-            // and a task restored after an app upgrade would miss the old int-keyed tags and
-            // stack fresh duplicates on top of the restored fragments.
-            val tag = "main_tab_${resources.getResourceEntryName(id)}"
-            val restored = supportFragmentManager.findFragmentByTag(tag)
-            if (restored != null) {
-                fragmentMap[id] = restored
-            } else {
-                val fragment = fragmentMap.getValue(id)
-                transaction.add(R.id.nav_host_fragment, fragment, tag).hide(fragment)
+        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        
+        if (isLite) {
+            bottomNavView.visibility = android.view.View.GONE
+            // FAB must stay visible per instructions
+            fabMenu.visibility = android.view.View.VISIBLE 
+            
+            if (savedInstanceState == null) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, LiteHubFragment(), "main_tab_hub")
+                    .commitNowAllowingStateLoss()
             }
-        }
-        transaction.commitNowAllowingStateLoss()
-        if (savedInstanceState != null) {
-            // Rebind the active-tab pointer so the next tab switch hides the right fragment
-            // (the restored visible one), not a null.
-            activeFragment = fragmentMap.values.firstOrNull { !it.isHidden }
+        } else {
+            bottomNavView.visibility = android.view.View.VISIBLE
+            fragmentMap[R.id.nav_send_files] = FileTransferFragment()
+            fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
+            fragmentMap[R.id.nav_history] = HistoryFragment()
+            fragmentMap[R.id.nav_receive] = ReceiveFragment()
+
+            val transaction = supportFragmentManager.beginTransaction()
+            for (id in fragmentMap.keys.toList()) {
+                val tag = "main_tab_${resources.getResourceEntryName(id)}"
+                val restored = supportFragmentManager.findFragmentByTag(tag)
+                if (restored != null) {
+                    fragmentMap[id] = restored
+                } else {
+                    val fragment = fragmentMap.getValue(id)
+                    transaction.add(R.id.nav_host_fragment, fragment, tag).hide(fragment)
+                }
+            }
+            transaction.commitNowAllowingStateLoss()
+            if (savedInstanceState != null) {
+                activeFragment = fragmentMap.values.firstOrNull { !it.isHidden }
+            }
         }
 
         if (savedInstanceState == null) {
             // THE FIX: Check the initial intent. If it's a share, handle it. Otherwise, load the default fragment.
             if (intent?.getBooleanExtra("SHOW_HISTORY", false) == true) {
-                switchFragment(R.id.nav_send_files)
-                bottomNavView.selectedItemId = R.id.nav_send_files
+                if (isLite) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.nav_host_fragment, HistoryFragment())
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss()
+                } else {
+                    switchFragment(R.id.nav_send_files)
+                    bottomNavView.selectedItemId = R.id.nav_send_files
+                }
 
                 val targetSessionId = intent.getStringExtra("HISTORY_SESSION_ID")
                 showTransferHistoryDetail(targetSessionId)
                 if (intent.getBooleanExtra("CLEAR_SEND_SELECTION", false)) {
-                    (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
+                    if (isLite) {
+                        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? FileTransferFragment)?.clearSelectedFiles()
+                    } else {
+                        (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
+                    }
                 }
                 setIntent(Intent())
             } else if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE) {
@@ -150,8 +167,10 @@ class MainActivity : AppCompatActivity() {
                 // First launch after onboarding: force the full 22-step guided tour.
                 startForcedTour()
             } else {
-                switchFragment(R.id.nav_send_files)
-                bottomNavView.selectedItemId = R.id.nav_send_files
+                if (!isLite) {
+                    switchFragment(R.id.nav_send_files)
+                    bottomNavView.selectedItemId = R.id.nav_send_files
+                }
             }
         } else if (prefs.getBoolean(TutorialTour.KEY_IN_PROGRESS, false)
             && !prefs.getBoolean(TutorialTour.KEY_COMPLETED_V2, false)
@@ -188,12 +207,25 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent?.getBooleanExtra("SHOW_HISTORY", false) == true) {
-            switchFragment(R.id.nav_send_files)
-            bottomNavView.selectedItemId = R.id.nav_send_files
+            val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+            if (isLite) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, HistoryFragment())
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss()
+            } else {
+                switchFragment(R.id.nav_send_files)
+                bottomNavView.selectedItemId = R.id.nav_send_files
+            }
             val targetSessionId = intent.getStringExtra("HISTORY_SESSION_ID")
             showTransferHistoryDetail(targetSessionId)
             if (intent.getBooleanExtra("CLEAR_SEND_SELECTION", false)) {
-                (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
+                if (isLite) {
+                    (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? FileTransferFragment)?.clearSelectedFiles()
+                } else {
+                    (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
+                }
             }
             setIntent(Intent())
         } else if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE) {
@@ -234,14 +266,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (uris.isNotEmpty()) {
-            val fileTransferFragment = fragmentMap[R.id.nav_send_files] as FileTransferFragment
-            // Ingest directly instead of via setArguments: the fragment's view is already created
-            // (added with commitNow in onCreate), so a post-hoc setArguments is never re-read and the
-            // share silently vanished (AND-28). ingestSharedUris works whenever it's called.
+            val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+            
+            val fileTransferFragment = if (isLite) {
+                val current = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+                if (current is FileTransferFragment) current else FileTransferFragment().also {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.nav_host_fragment, it)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss()
+                }
+            } else {
+                fragmentMap[R.id.nav_send_files] as FileTransferFragment
+            }
+            
             fileTransferFragment.ingestSharedUris(uris)
-            switchFragment(R.id.nav_send_files)
-            // Ensure the UI reflects that we are on the "Send Files" screen
-            bottomNavView.selectedItemId = R.id.nav_send_files
+            
+            if (!isLite) {
+                switchFragment(R.id.nav_send_files)
+                bottomNavView.selectedItemId = R.id.nav_send_files
+            }
         } else {
             // No file streams — a plain-text share ("Share → Clipboard Share" from any app). Push it
             // to paired devices through the clipboard pipeline (the reliable, permission-free
@@ -318,6 +363,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun forcedTourPending(): Boolean {
         val p = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        if (p.getString("design_mode", "Lite") == "Lite") return false
         // Grandfather users who finished the legacy v1 tour — don't re-force the new v2 tour on them.
         val done = p.getBoolean(TutorialTour.KEY_COMPLETED_V2, false) ||
                 p.getBoolean(TutorialTour.KEY_COMPLETED, false)

@@ -29,11 +29,21 @@ class ReceiveFragment : Fragment() {
     private val showTutorialState = mutableStateOf(false)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    ReceiveScreen(
+                    if (isLite) {
+                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteReceiveScreen(
+                            deviceName = deviceNameState.value,
+                            onDeviceNameChange = ::onDeviceNameChange,
+                            onOpenCamera = ::launchScanner
+                        )
+                    } else {
+                        ReceiveScreen(
                         deviceName = deviceNameState.value,
                         onDeviceNameChange = ::onDeviceNameChange,
                         nfcUnavailable = nfcUnavailableState.value,
@@ -43,6 +53,7 @@ class ReceiveFragment : Fragment() {
                         onShowTutorial = { showTutorialState.value = true },
                         onTutorialDismiss = { showTutorialState.value = false },
                     )
+                    }
                 }
             }
         }
