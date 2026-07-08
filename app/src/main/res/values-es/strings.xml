@@ -618,7 +618,11 @@
     <string name="action_remove_file">Quitar archivo</string>
     <string name="settings_section_debugging">Depuración</string>
     <string name="settings_connection_diagnosis">Diagnóstico de Conexión</string>
-    <string name="design_mode_basic">Básico</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">o</string>
+    <string name="receiving_label">Recibiendo</string>
+    <string name="lite_clip_sync_off">Sincronización desactivada</string>
+    <string name="lite_clip_sync_on">Sincronización activada, %d vinculados</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Enviar Archivos</string>
     <string name="lite_receive_files">Recibir Archivos</string>
@@ -631,7 +635,6 @@
     <string name="recent_copies_tap_hint">Copias Recientes (Toca para ver)</string>
     <string name="connected_devices_label">Dispositivos Conectados:</string>
     <string name="lite_selected_files_count">Archivos Seleccionados (%1$d)</string>
-    <string name="lite_send_select_method_title">Enviar Archivos — Selecciona una de las siguientes opciones</string>
     <string name="lite_select_devices_label">Seleccionar Dispositivos</string>
 </resources>
 

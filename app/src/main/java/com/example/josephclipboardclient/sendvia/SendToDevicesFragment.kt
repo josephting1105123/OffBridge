@@ -189,16 +189,29 @@ class SendToDevicesFragment : Fragment() {
     private val selectedIpsState = mutableStateOf<Set<String>>(emptySet())
     private val loadingState = mutableStateOf(true)
     private val sendingState = mutableStateOf(false)
+    private var isLite = false
 
     private val fragmentJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + fragmentJob)
+
+    /** Lite ends the send flow back at the hub (clears the whole child back stack); Pro pops one
+     *  level back to the Send tab, where the history detail then opens. */
+    private fun endSendFlow() {
+        if (isLite) {
+            parentFragmentManager.popBackStack(
+                null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+            )
+        } else {
+            parentFragmentManager.popBackStack()
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         items = arguments?.let { TransferItemArgs.fromBundle(it) } ?: emptyList()
         val isMultiple = arguments?.getBoolean("is_multiple", true) ?: true
 
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        isLite = prefs.getString("design_mode", "Lite") == "Lite"
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -207,14 +220,21 @@ class SendToDevicesFragment : Fragment() {
                     if (isLite) {
                         com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendToScreen(
                             deviceName = TransferDaemon.customDeviceName,
-                            // Multiple-device mode reuses the same paired-only invariant as Pro's
-                            // multi-select; only the One-Device tri-state card needs unpaired rows
-                            // (to offer "Pair") — see allDevicesState's doc comment above.
-                            devices = if (isMultiple) devicesState.value else allDevicesState.value,
-                            isMultiple = isMultiple,
+                            // Editable here (same as System Status): trim and persist only when
+                            // non-empty, mirroring SystemStatusFragment.onDeviceNameChange — otherwise
+                            // clearing the field would advertise/pair the device under a blank name.
+                            onDeviceNameChange = { newName ->
+                                val trimmed = newName.trim()
+                                if (trimmed.isNotEmpty()) {
+                                    TransferDaemon.customDeviceName = trimmed
+                                    prefs.edit().putString("device_name", trimmed).apply()
+                                }
+                            },
+                            // Lite Send-To is always the per-device tri-state card now (One/Multiple was
+                            // removed), so it needs the paired+unpaired list to offer "Pair" on unpaired
+                            // rows — see allDevicesState's doc comment above.
+                            devices = allDevicesState.value,
                             sendingIp = if (sendingState.value && selectedTargetIps.isNotEmpty()) selectedTargetIps.first() else null,
-                            selectedIps = selectedIpsState.value,
-                            onToggleDevice = ::onToggleDevice,
                             onSendToDevice = { ip ->
                                 // sendingState is a single fragment-wide flag (one transfer at a
                                 // time). Without this guard, tapping a second device's "Send" while
@@ -230,7 +250,6 @@ class SendToDevicesFragment : Fragment() {
                                     executeMultiDeviceTransfer()
                                 }
                             },
-                            onSendMultiple = ::executeMultiDeviceTransfer,
                             // No tab shell in Lite (openPairingTab is a no-op there) — launch pairing
                             // for this specific device directly, same as HistoryFragment.onPair.
                             onPairDevice = { ip, name ->
@@ -241,7 +260,7 @@ class SendToDevicesFragment : Fragment() {
                                     }
                                 )
                             },
-                            onDone = { parentFragmentManager.popBackStack() }
+                            onDone = { endSendFlow() }
                         )
                     } else {
                         SendToDevicesScreen(
@@ -447,15 +466,16 @@ class SendToDevicesFragment : Fragment() {
                 PendingOffer(sessionId, targetIp, targetName, session)
             }
 
-            // Close this screen and jump to the (first) outgoing record's history detail right
-            // away — the sender watches progress there while the offers continue below.
+            // Close this screen. Pro reports the result so the Send tab opens the outgoing record's
+            // history detail; Lite instead returns to the hub (endSendFlow clears the whole stack, and
+            // the FileTransferFragment listener is torn down with it, so no detail sheet opens there).
             withContext(Dispatchers.Main) {
                 if (isAdded) {
                     parentFragmentManager.setFragmentResult(
                         RESULT_KEY,
                         bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
                     )
-                    parentFragmentManager.popBackStack()
+                    endSendFlow()
                 }
             }
 

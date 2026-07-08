@@ -613,7 +613,11 @@
     <string name="action_remove_file">Remove file</string>
     <string name="settings_section_debugging">Debugging</string>
     <string name="settings_connection_diagnosis">Connection Diagnosis</string>
-    <string name="design_mode_basic">Basic</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">or</string>
+    <string name="receiving_label">Receiving</string>
+    <string name="lite_clip_sync_off">Auto-sync off</string>
+    <string name="lite_clip_sync_on">Auto-sync on, %d paired</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Send Files</string>
     <string name="lite_receive_files">Receive Files</string>
@@ -626,7 +630,6 @@
     <string name="recent_copies_tap_hint">Recent Copies (Tap to view)</string>
     <string name="connected_devices_label">Connected Devices:</string>
     <string name="lite_selected_files_count">Selected Files (%1$d)</string>
-    <string name="lite_send_select_method_title">Send Files — Select one of the following</string>
     <string name="lite_select_devices_label">Select Devices</string>
 </resources>
 

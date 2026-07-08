@@ -1,6 +1,7 @@
 package com.EntropicSoftwareLab.ClipboardShare.ui.screens
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -8,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,26 +30,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
-import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
-import kotlinx.coroutines.delay
 
 @Composable
 fun LiteReceiveScreen(
@@ -91,69 +90,57 @@ fun LiteReceiveScreen(
                 )
             }
 
-            // Looping animation area
+            // Receive animation: an expanding radar pulse + the word "Receiving" with a shimmer sweep,
+            // signalling the device is in receive mode. Colours are chosen per theme (deep emerald on
+            // light, bright green on dark) so it reads on both. (Reference clip in Context and References
+            // File is a video I can't decode; this is an on-brand interpretation.)
+            val dark = isSystemInDarkTheme()
+            val receivingBase = if (dark) Color(0xFF4ADE88) else Color(0xFF047857)
+            val receivingHi = if (dark) Color.White else Color(0xFF34D399)
+            val infiniteTransition = rememberInfiniteTransition(label = "receive")
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(220.dp)
                     .padding(bottom = dimens.spaceLg),
                 contentAlignment = Alignment.Center
             ) {
-                val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-                val scale by infiniteTransition.animateFloat(
-                    initialValue = 0.8f,
-                    targetValue = 1.2f,
+                val ringT by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(2000, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Reverse
+                        animation = tween(2200, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Restart
                     ),
-                    label = "scale"
+                    label = "ring"
                 )
-                val alpha by infiniteTransition.animateFloat(
-                    initialValue = 0.6f,
-                    targetValue = 0.1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(2000, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "alpha"
-                )
-
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
-                        .scale(scale)
+                        .size(150.dp)
+                        .scale(0.5f + ringT)
                         .clip(CircleShape)
-                        .background(colors.green.copy(alpha = alpha))
+                        .background(receivingBase.copy(alpha = (1f - ringT) * 0.22f))
                 )
-                Icon(
-                    painter = painterResource(R.drawable.ic_hdr_receive),
-                    contentDescription = null,
-                    tint = colors.green,
-                    modifier = Modifier.size(48.dp)
+
+                val sweep by infiniteTransition.animateFloat(
+                    initialValue = -260f,
+                    targetValue = 520f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1600, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "sweep"
                 )
-            }
-
-            var isReceiving by remember { mutableStateOf(false) }
-            var dotCount by remember { mutableIntStateOf(1) }
-
-            LaunchedEffect(Unit) {
-                while (true) {
-                    isReceiving = TransferDaemon.activeSessions.values.any { it.isIncoming && !it.isPaused && !it.isCancelled }
-                    if (isReceiving) {
-                        dotCount = (dotCount % 3) + 1
-                    }
-                    delay(500)
-                }
-            }
-
-            if (isReceiving) {
-                val dots = ".".repeat(dotCount)
+                val shimmer = Brush.linearGradient(
+                    colors = listOf(receivingBase, receivingHi, receivingBase),
+                    start = Offset(sweep, 0f),
+                    end = Offset(sweep + 260f, 0f),
+                )
                 Text(
-                    text = stringResource(R.string.receiving_in_progress).replace("...", dots),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.greenText,
-                    modifier = Modifier.padding(bottom = dimens.spaceLg)
+                    text = stringResource(R.string.receiving_label),
+                    style = MaterialTheme.typography.displaySmall.copy(brush = shimmer),
+                    fontWeight = FontWeight.Bold
                 )
             }
 

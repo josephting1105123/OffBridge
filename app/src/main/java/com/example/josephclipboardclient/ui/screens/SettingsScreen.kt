@@ -15,14 +15,13 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens
@@ -339,13 +339,17 @@ private fun SettingSwitchRow(
             color = colors.textPrimary,
             modifier = Modifier.weight(1f).padding(end = dimens.spaceMd),
         )
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = colors.green,
-            ),
+        // Glass On/Off slider (app-wide slider language). Non-interactive: the whole row is the
+        // toggle target (Role.Switch above), so this just mirrors state. off = red, on = green.
+        DesignModeToggle(
+            options = listOf("off", "on"),
+            selectedIndex = if (checked) 1 else 0,
+            onSelect = {},
+            selectedColors = listOf(colors.error, colors.greenText),
+            showLabels = false,
+            interactive = false,
+            height = 32.dp,
+            modifier = Modifier.width(56.dp),
         )
     }
 }

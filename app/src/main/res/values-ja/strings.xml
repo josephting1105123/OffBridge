@@ -611,7 +611,11 @@
     <string name="action_remove_file">ファイルを削除</string>
     <string name="settings_section_debugging">デバッグ</string>
     <string name="settings_connection_diagnosis">接続診断</string>
-    <string name="design_mode_basic">シンプル</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">または</string>
+    <string name="receiving_label">受信中</string>
+    <string name="lite_clip_sync_off">自動同期オフ</string>
+    <string name="lite_clip_sync_on">自動同期オン、%d台</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">ファイルを送信</string>
     <string name="lite_receive_files">ファイルを受信</string>
@@ -624,7 +628,6 @@
     <string name="recent_copies_tap_hint">最近のコピー（タップして表示）</string>
     <string name="connected_devices_label">接続済みデバイス：</string>
     <string name="lite_selected_files_count">選択したファイル（%1$d）</string>
-    <string name="lite_send_select_method_title">ファイルを送信 — 次のいずれかを選択してください</string>
     <string name="lite_select_devices_label">デバイスを選択</string>
 </resources>
 

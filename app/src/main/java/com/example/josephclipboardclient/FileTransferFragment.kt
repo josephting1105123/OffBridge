@@ -153,11 +153,19 @@ class FileTransferFragment : Fragment() {
                     if (isLite) {
                         com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
                             selectedFiles = selectedFilesState.value,
+                            totalSizeBytes = totalSizeBytesState.value,
                             onSelectFile = ::onSelectFile,
                             onSelectMedia = ::onSelectMedia,
                             onSelectText = ::onSelectText,
                             onRemoveFile = ::onRemoveFile,
+                            onMoveFile = ::onMoveFile,
                             onPreviewFile = ::previewFile,
+                            selectionMode = selectionModeState.value,
+                            selectedIndices = selectedIndicesState.value,
+                            onToggleSelectMode = ::setSelectionMode,
+                            onToggleSelection = ::toggleSelection,
+                            onSelectAll = ::toggleSelectAll,
+                            onDeleteSelected = ::deleteSelectedFiles,
                             onSendViaChoose = ::onSendViaChoose
                         )
                     } else {

@@ -4,6 +4,29 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.1 — Android (Lite mode design pass)
+
+A visual refinement pass over Lite mode. Switching Basic ⇄ Pro now animates in place instead of
+restarting the app, every on/off toggle shares one glass slider design, and the Lite hub is laid out
+as a grouped tile tray. Android bumps to **3.6.1** (versionCode 23); Windows is unchanged at 3.5.6.
+Still no wire-protocol, crypto or pairing changes — a UI layer over the existing engine.
+
+### Changed
+- **In-place Basic/Pro switch.** Flipping the power-menu toggle crossfades the shell in place — the
+  menu stays open and there's no full restart.
+- **Glass sliders everywhere.** Every on/off toggle (Basic/Pro, clipboard auto-sync, accept-incoming,
+  discoverable, and the settings toggles) now uses one sliding glass design — transparent fill with an
+  accent outline, matching the pairing button. Green for on/Lite, red for off/Pro. The old striped
+  thumb is gone.
+- **Lite hub as a tray.** Send Files, Receive Files and Clipboard sit inside a grouped rounded frame —
+  Send/Receive across the top, Clipboard below at half their height.
+- **Lite send flow.** A shared network-choice tray with a Next button, one 3-state per-device button
+  (Pair → Send → Sending), and a bottom-bar Cancel/Done on the QR screen.
+- **Nav alignment.** The Lite bottom bar and power button line up with Pro's positions, and switching
+  modes no longer stretches the navigation bar.
+
+---
+
 ## 3.6.0 — Android (Lite mode)
 
 A new **Lite** design is now the default on Android: a simple hub with three big actions — Send,

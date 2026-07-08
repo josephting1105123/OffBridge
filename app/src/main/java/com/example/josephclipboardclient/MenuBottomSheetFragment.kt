@@ -10,6 +10,10 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import android.app.Dialog
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
@@ -66,24 +70,29 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
             dismiss()
         }
 
-        // Diagnostics moved to Settings -> Debugging; this slot is now the Basic/Pro design-mode
-        // switch. Selecting a mode writes it to FileBridgePrefs and restarts through SplashActivity
-        // (same is_rebooting + NEW_TASK|CLEAR_TASK pattern as "Restart services" / the language
-        // change in SettingsFragment) so MainActivity rebuilds its shell from scratch.
+        // Diagnostics moved to Settings -> Debugging; this slot is now the Lite/Pro design-mode switch.
+        // Selecting a mode writes it to FileBridgePrefs and asks MainActivity to swap the shell IN PLACE
+        // (crossfade, no restart) — this sheet is a separate window so it stays open on top, and the
+        // toggle keeps animating. The sheet is made non-dismissable for the brief switch window.
         toggleDesignMode.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         toggleDesignMode.setContent {
             AppTheme {
                 val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-                val currentIsLite = prefs.getString("design_mode", "Lite") == "Lite"
+                var isLiteSelected by remember { mutableStateOf(prefs.getString("design_mode", "Lite") == "Lite") }
+                val toggleColors = com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens.colors
                 DesignModeToggle(
-                    options = listOf(getString(R.string.design_mode_basic), getString(R.string.design_mode_pro)),
-                    selectedIndex = if (currentIsLite) 0 else 1,
+                    options = listOf(getString(R.string.design_mode_lite), getString(R.string.design_mode_pro)),
+                    selectedIndex = if (isLiteSelected) 0 else 1,
+                    // Lite = green, Pro = red. Use the WCAG-safe greenText so the glass label stays readable.
+                    selectedColors = listOf(toggleColors.greenText, toggleColors.error),
                     onSelect = { index ->
-                        val newMode = if (index == 0) "Lite" else "Pro"
-                        if (newMode != prefs.getString("design_mode", "Lite")) {
-                            prefs.edit().putString("design_mode", newMode).apply()
-                            dismiss()
-                            restartApp()
+                        val toLite = index == 0
+                        if (toLite != isLiteSelected) {
+                            isLiteSelected = toLite  // animate the pill to the new side immediately
+                            prefs.edit().putString("design_mode", if (toLite) "Lite" else "Pro").apply()
+                            isCancelable = false
+                            (activity as? MainActivity)?.requestDesignModeSwitch(toLite)
+                            view?.postDelayed({ if (isAdded) isCancelable = true }, 700)
                         }
                     },
                 )
@@ -130,24 +139,4 @@ class MenuBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
-    /** Bounces the daemon service and restarts through SplashActivity — the same shell-reload
-     * pattern "Restart services" and the Settings language change already use — so MainActivity
-     * re-reads design_mode from FileBridgePrefs and rebuilds the correct (Lite/Pro) shell. */
-    private fun restartApp() {
-        try {
-            val serviceIntent = Intent(requireContext(), ClipboardService::class.java)
-            requireContext().stopService(serviceIntent)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                requireContext().startForegroundService(serviceIntent)
-            } else {
-                requireContext().startService(serviceIntent)
-            }
-        } catch (e: Exception) { e.printStackTrace() }
-
-        val restartIntent = Intent(requireContext(), SplashActivity::class.java)
-        restartIntent.putExtra("is_rebooting", true)
-        restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        startActivity(restartIntent)
-        requireActivity().overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
-    }
 }

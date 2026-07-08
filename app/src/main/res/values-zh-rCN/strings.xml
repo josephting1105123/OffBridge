@@ -601,7 +601,11 @@
     <string name="action_remove_file">移除文件</string>
     <string name="settings_section_debugging">调试</string>
     <string name="settings_connection_diagnosis">连接诊断</string>
-    <string name="design_mode_basic">简易</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">或</string>
+    <string name="receiving_label">接收中</string>
+    <string name="lite_clip_sync_off">自动同步关闭</string>
+    <string name="lite_clip_sync_on">自动同步开启，已配对 %d</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">发送文件</string>
     <string name="lite_receive_files">接收文件</string>
@@ -614,7 +618,6 @@
     <string name="recent_copies_tap_hint">最近的复制内容（点按查看）</string>
     <string name="connected_devices_label">已连接的设备：</string>
     <string name="lite_selected_files_count">已选文件 (%1$d)</string>
-    <string name="lite_send_select_method_title">发送文件 — 选择以下一种方式</string>
     <string name="lite_select_devices_label">选择设备</string>
 </resources>
 

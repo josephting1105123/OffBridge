@@ -1,16 +1,19 @@
 package com.EntropicSoftwareLab.ClipboardShare.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,10 +57,15 @@ fun DeviceSendCard(
             name,
             style = MaterialTheme.typography.bodyLarge,
             color = colors.textPrimary,
-            modifier = Modifier.weight(1f)
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = dimens.spaceSm)
         )
-        Box {
+        Box(contentAlignment = Alignment.CenterEnd) {
             when {
+                // In flight: plain text, no button.
                 isSending -> {
                     Text(
                         stringResource(R.string.action_sending),
@@ -66,25 +74,26 @@ fun DeviceSendCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                isPaired -> {
-                    Text(
-                        stringResource(R.string.action_send),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = colors.green,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onSend() }
-                    )
-                }
-                else -> {
-                    Text(
-                        stringResource(R.string.action_pair),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onPair() }
-                    )
-                }
+                // Paired → "Send", unpaired → "Pair": both the same capsule as DeviceCardRow's Pair.
+                isPaired -> CapsuleAction(stringResource(R.string.action_send), onSend)
+                else -> CapsuleAction(stringResource(R.string.action_pair), onPair)
             }
         }
+    }
+}
+
+/** Transparent, hairline-outlined green capsule — same design as DeviceCardRow's Pair/Unpair button. */
+@Composable
+private fun CapsuleAction(label: String, onClick: () -> Unit) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    OutlinedButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(dimens.radiusPill),
+        border = BorderStroke(dimens.hairlineWidth, colors.divider),
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+        contentPadding = PaddingValues(horizontal = dimens.spaceLg, vertical = dimens.spaceSm),
+    ) {
+        Text(label, color = colors.green, fontWeight = FontWeight.Bold)
     }
 }

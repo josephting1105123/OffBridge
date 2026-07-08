@@ -618,7 +618,11 @@
     <string name="action_remove_file">Hapus file</string>
     <string name="settings_section_debugging">Debugging</string>
     <string name="settings_connection_diagnosis">Diagnostik Koneksi</string>
-    <string name="design_mode_basic">Sederhana</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">atau</string>
+    <string name="receiving_label">Menerima</string>
+    <string name="lite_clip_sync_off">Sinkron otomatis nonaktif</string>
+    <string name="lite_clip_sync_on">Sinkron otomatis aktif, %d terhubung</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Kirim File</string>
     <string name="lite_receive_files">Terima File</string>
@@ -631,7 +635,6 @@
     <string name="recent_copies_tap_hint">Salinan Terbaru (Ketuk untuk melihat)</string>
     <string name="connected_devices_label">Perangkat Terhubung:</string>
     <string name="lite_selected_files_count">File Terpilih (%1$d)</string>
-    <string name="lite_send_select_method_title">Kirim File — Pilih salah satu berikut</string>
     <string name="lite_select_devices_label">Pilih Perangkat</string>
 </resources>
 

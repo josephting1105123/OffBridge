@@ -29,6 +29,20 @@
         android:paddingHorizontal="8dp"
         android:paddingVertical="4dp"/>
 
+    <!-- Lite-mode bottom bar: a chrome strip shown only on the Lite hub (Pro uses bottom_nav_view).
+         Kept separate so Lite never mutates the Pro nav bar's menu/height (that reconfiguration was
+         the source of the stretched-bar bug). EXPLICIT fixed height (grown by the bottom inset at
+         runtime) so a plain View cannot be measured full-height. -->
+    <View
+        android:id="@+id/lite_nav_bar"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:background="?attr/appNavBarColor"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_menu"
         android:layout_width="wrap_content"

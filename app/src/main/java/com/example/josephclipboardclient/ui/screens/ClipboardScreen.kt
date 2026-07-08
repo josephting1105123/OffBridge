@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.withInterNumerals
@@ -110,13 +109,15 @@ fun ClipboardScreen(
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(
-                    checked = acceptSync,
-                    onCheckedChange = onAcceptSyncChange,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = colors.green,
-                    ),
+                // Glass On/Off slider (matches the app-wide slider language): off = red, on = green.
+                DesignModeToggle(
+                    options = listOf("off", "on"),
+                    selectedIndex = if (acceptSync) 1 else 0,
+                    onSelect = { onAcceptSyncChange(it == 1) },
+                    selectedColors = listOf(colors.error, colors.greenText),
+                    showLabels = false,
+                    height = 32.dp,
+                    modifier = Modifier.width(56.dp),
                 )
             }
 

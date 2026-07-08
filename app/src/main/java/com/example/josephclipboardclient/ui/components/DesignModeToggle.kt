@@ -1,13 +1,8 @@
 package com.EntropicSoftwareLab.ClipboardShare.ui.components
 
-import android.provider.Settings
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,105 +26,106 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 
+/**
+ * Two-option slider (e.g. Lite/Pro, On/Off): a track with one thumb that SLIDES between the two
+ * positions in the pairing-button GLASS language — near-transparent fill, a hairline accent-coloured
+ * outline, and the selected label in the accent colour. No stripes, no sheen.
+ *
+ * @param selectedColors per-option accent (outline + label + faint fill) used when that option is
+ *   selected; defaults to green for both. Pass WCAG-safe text colours (e.g. greenText / error) so the
+ *   selected label stays readable on the glass.
+ * @param showLabels when false, only the sliding glass thumb is drawn — a compact switch whose meaning
+ *   is carried by position + colour (used where a translated On/Off word wouldn't fit).
+ * @param interactive when false, the halves aren't clickable; a parent (e.g. a toggleable row) owns the
+ *   tap and this is a pure visual indicator that still animates from [selectedIndex].
+ * @param height track height; defaults to 56.dp (the mode-toggle size). Compact switches pass less.
+ */
 @Composable
 fun DesignModeToggle(
     options: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    bothGreen: Boolean = false
+    selectedColors: List<Color>? = null,
+    showLabels: Boolean = true,
+    interactive: Boolean = true,
+    height: Dp = 56.dp,
 ) {
     if (options.size != 2) return
 
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
-    val context = LocalContext.current
-    // remember it: the always-on sheen invalidates this composable every frame, and re-reading the
-    // settings provider (a binder IPC) on every recomposition would hit it ~60×/sec on the main thread.
-    val reducedMotion = remember {
-        Settings.Global.getFloat(
-            context.contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE, 1f
-        ) == 0f
-    }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "green_sheen")
-    val sheenOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "sheen_offset"
+    val accent = selectedColors?.getOrNull(selectedIndex) ?: colors.green
+    // Ease the accent (green <-> red) alongside the slide so the colour change isn't a hard cut.
+    val thumbColor by animateColorAsState(
+        targetValue = accent,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        label = "thumb_color"
     )
 
-    val lightGreen = colors.green.copy(alpha = 0.7f)
-    val brush = if (reducedMotion) {
-        Brush.linearGradient(listOf(colors.green, colors.green))
-    } else {
-        Brush.linearGradient(
-            colors = listOf(colors.green, lightGreen, colors.green),
-            start = Offset(sheenOffset - 500f, sheenOffset - 500f),
-            end = Offset(sheenOffset, sheenOffset)
-        )
-    }
+    val trackShape = RoundedCornerShape(dimens.radiusMd)
+    val thumbShape = RoundedCornerShape(dimens.radiusSm)
 
     BoxWithConstraints(
         modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(dimens.radiusPill))
+            .height(height)
+            .clip(trackShape)
             .background(colors.card)
-            .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusPill))
+            .border(dimens.hairlineWidth, colors.divider, trackShape)
             .padding(4.dp)
     ) {
         val segmentWidth = maxWidth / 2
-
-        val indicatorOffset by animateDpAsState(
+        val thumbOffset by animateDpAsState(
             targetValue = if (selectedIndex == 1) segmentWidth else 0.dp,
-            animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
-            label = "indicator_offset"
+            animationSpec = tween(300, easing = FastOutSlowInEasing),
+            label = "thumb_offset"
         )
 
-        // Indicator pill
+        // The sliding glass thumb: faint accent tint + accent hairline outline (no fill, no stripes).
         Box(
             modifier = Modifier
                 .width(segmentWidth)
                 .fillMaxHeight()
-                .offset(x = indicatorOffset)
-                .clip(RoundedCornerShape(dimens.radiusPill))
-                .background(brush = brush)
+                .offset(x = thumbOffset)
+                .clip(thumbShape)
+                .background(thumbColor.copy(alpha = 0.12f))
+                .border(1.5.dp, thumbColor, thumbShape)
         )
 
-        // Labels
+        // Tap targets + optional labels; the selected label is in the accent colour.
         Row(modifier = Modifier.fillMaxSize()) {
             options.forEachIndexed { index, text ->
                 val isSelected = index == selectedIndex
-                val useGreenStyle = bothGreen || isSelected
+                val interaction = remember { MutableInteractionSource() }
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(dimens.radiusPill))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { onSelect(index) }
+                        .clip(thumbShape)
+                        .then(
+                            if (interactive) Modifier.clickable(
+                                interactionSource = interaction,
+                                indication = null,
+                                onClick = { onSelect(index) }
+                            ) else Modifier
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (useGreenStyle) Color.White else colors.textSecondary
-                    )
+                    if (showLabels) {
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isSelected) thumbColor else colors.textSecondary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             }
         }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,8 +30,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.PolishDialogWindow
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.BentoTile
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.EmptyState
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
@@ -190,10 +190,15 @@ fun SystemStatusScreen(
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
                 )
-                Switch(
-                    checked = discoverable,
-                    onCheckedChange = onDiscoverableChange,
-                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = colors.green),
+                // Glass On/Off slider (app-wide slider language): off = red, on = green.
+                DesignModeToggle(
+                    options = listOf("off", "on"),
+                    selectedIndex = if (discoverable) 1 else 0,
+                    onSelect = { onDiscoverableChange(it == 1) },
+                    selectedColors = listOf(colors.error, colors.greenText),
+                    showLabels = false,
+                    height = 32.dp,
+                    modifier = Modifier.width(56.dp),
                 )
             }
 

@@ -78,6 +78,7 @@ class QrDisplayFragment : Fragment() {
     private lateinit var tvTransferProgress: TextView
     private lateinit var btnRetry: Button
     private lateinit var btnCancel: Button
+    private lateinit var btnDone: Button
 
     private var state = SenderState.IDLE
     private var groupManager: P2pGroupManager? = null
@@ -155,11 +156,17 @@ class QrDisplayFragment : Fragment() {
         tvTransferProgress = view.findViewById(R.id.tvTransferProgress)
         btnRetry = view.findViewById(R.id.btnRetryGroup)
         btnCancel = view.findViewById(R.id.btnOffGridCancel)
+        btnDone = view.findViewById(R.id.btnOffGridDone)
 
         // The QR must be scannable, so the screen stays on (edge case 17).
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         btnCancel.setOnClickListener { requireActivity().finish() }
+        // "Done" is the affirmative dismiss of this passive QR/advertise screen; like Cancel it just
+        // closes it. There is nothing distinct to "complete" here — a transfer that actually starts
+        // hands itself off and navigates to the history page on its own (onPeerConnected), so both
+        // buttons are only ever reached before that, where closing simply stops advertising.
+        btnDone.setOnClickListener { requireActivity().finish() }
         btnRetry.setOnClickListener {
             btnRetry.visibility = View.GONE
             startGroup()

@@ -614,7 +614,11 @@
     <string name="action_remove_file">Удалить файл</string>
     <string name="settings_section_debugging">Отладка</string>
     <string name="settings_connection_diagnosis">Диагностика подключения</string>
-    <string name="design_mode_basic">Простой</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">или</string>
+    <string name="receiving_label">Приём</string>
+    <string name="lite_clip_sync_off">Автосинхронизация выкл</string>
+    <string name="lite_clip_sync_on">Автосинхронизация вкл, сопряжено %d</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Отправить файлы</string>
     <string name="lite_receive_files">Получить файлы</string>
@@ -627,7 +631,6 @@
     <string name="recent_copies_tap_hint">Последние копии (нажмите для просмотра)</string>
     <string name="connected_devices_label">Подключённые устройства:</string>
     <string name="lite_selected_files_count">Выбранные файлы (%1$d)</string>
-    <string name="lite_send_select_method_title">Отправить файлы — выберите один из вариантов</string>
     <string name="lite_select_devices_label">Выберите устройства</string>
 </resources>
 

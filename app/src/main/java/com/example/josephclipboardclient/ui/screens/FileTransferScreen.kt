@@ -439,7 +439,7 @@ internal fun TypeButton(
  * (mirrors the old ItemTouchHelper drag-reorder); each card has a top-right remove (X) button.
  */
 @Composable
-private fun SelectedFilesGrid(
+internal fun SelectedFilesGrid(
     selectedFiles: List<TransferItem>,
     selectionMode: Boolean,
     selectedIndices: Set<Int>,
@@ -753,7 +753,7 @@ private fun shortName(displayPath: String): String {
 
 /** Pill box beside the "Selected files" title showing the queued total ("0 MB" when nothing is queued). */
 @Composable
-private fun TotalSizeBox(totalSizeBytes: Long) {
+internal fun TotalSizeBox(totalSizeBytes: Long) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     val shape = RoundedCornerShape(dimens.radiusPill)
@@ -774,7 +774,7 @@ private fun TotalSizeBox(totalSizeBytes: Long) {
 }
 
 @Composable
-private fun CapsuleButton(
+internal fun CapsuleButton(
     label: String,
     filled: Boolean,
     enabled: Boolean = true,

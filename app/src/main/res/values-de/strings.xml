@@ -614,7 +614,11 @@
     <string name="action_remove_file">Datei entfernen</string>
     <string name="settings_section_debugging">Fehlerbehebung</string>
     <string name="settings_connection_diagnosis">Verbindungsdiagnose</string>
-    <string name="design_mode_basic">Einfach</string>
+    <string name="design_mode_lite">Lite</string>
+    <string name="lite_send_or">oder</string>
+    <string name="receiving_label">Empfängt</string>
+    <string name="lite_clip_sync_off">Auto-Sync aus</string>
+    <string name="lite_clip_sync_on">Auto-Sync an, %d gekoppelt</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Dateien senden</string>
     <string name="lite_receive_files">Dateien empfangen</string>
@@ -627,7 +631,6 @@
     <string name="recent_copies_tap_hint">Letzte Kopien (Tippen zum Anzeigen)</string>
     <string name="connected_devices_label">Verbundene Geräte:</string>
     <string name="lite_selected_files_count">Ausgewählte Dateien (%1$d)</string>
-    <string name="lite_send_select_method_title">Dateien senden — Wählen Sie eine der folgenden Optionen</string>
     <string name="lite_select_devices_label">Geräte auswählen</string>
 </resources>
 
