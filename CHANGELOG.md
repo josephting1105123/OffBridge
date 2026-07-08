@@ -10,7 +10,7 @@ A new **Lite** design is now the default on Android: a simple hub with three big
 Receive, Clipboard — and no bottom navigation, for people who found the full app too dense. The
 original interface is still there as **Pro**, reached from a Basic/Pro switch in the power menu (which
 replaces the old Connection Diagnostics tile — diagnostics moved to Settings → Debugging). Android
-bumps to **3.6.0** (versionCode 21); Windows is unchanged at 3.5.6. No wire-protocol, crypto or
+bumps to **3.6.0** (versionCode 22); Windows is unchanged at 3.5.6. No wire-protocol, crypto or
 pairing changes — this is a UI layer over the existing engine.
 
 ### Added
