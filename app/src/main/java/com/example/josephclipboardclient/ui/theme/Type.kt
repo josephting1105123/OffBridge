@@ -43,21 +43,21 @@ val PlexSans = FontFamily(
  */
 private val Base = Typography()
 val AppTypography = Base.copy(
-    displayLarge = Base.displayLarge.copy(fontFamily = PlexSans),
-    displayMedium = Base.displayMedium.copy(fontFamily = PlexSans),
-    displaySmall = Base.displaySmall.copy(fontFamily = PlexSans),
-    headlineLarge = Base.headlineLarge.copy(fontFamily = PlexSans),
-    headlineMedium = Base.headlineMedium.copy(fontFamily = PlexSans),
-    headlineSmall = TextStyle(fontFamily = PlexSans, fontWeight = FontWeight.Bold, fontSize = 24.sp), // App.Headline
-    titleLarge = Base.titleLarge.copy(fontFamily = PlexSans),
-    titleMedium = TextStyle(fontFamily = PlexSans, fontWeight = FontWeight.Bold, fontSize = 18.sp),   // App.Title
-    titleSmall = Base.titleSmall.copy(fontFamily = PlexSans),
-    bodyLarge = TextStyle(fontFamily = PlexSans, fontWeight = FontWeight.Normal, fontSize = 15.sp),   // App.Body
-    bodyMedium = Base.bodyMedium.copy(fontFamily = PlexSans),
-    bodySmall = TextStyle(fontFamily = PlexSans, fontWeight = FontWeight.Normal, fontSize = 12.sp),   // App.Caption
-    labelLarge = TextStyle(fontFamily = Geist, fontWeight = FontWeight.Medium, fontSize = 14.sp),     // App.Label
-    labelMedium = Base.labelMedium.copy(fontFamily = Geist),
-    labelSmall = Base.labelSmall.copy(fontFamily = Geist),
+    displayLarge = Base.displayLarge.copy(fontFamily = FontFamily.Serif),
+    displayMedium = Base.displayMedium.copy(fontFamily = FontFamily.Serif),
+    displaySmall = Base.displaySmall.copy(fontFamily = FontFamily.Serif),
+    headlineLarge = Base.headlineLarge.copy(fontFamily = FontFamily.Serif),
+    headlineMedium = Base.headlineMedium.copy(fontFamily = FontFamily.Serif),
+    headlineSmall = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, fontSize = 24.sp), // App.Headline
+    titleLarge = Base.titleLarge.copy(fontFamily = FontFamily.Serif),
+    titleMedium = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, fontSize = 18.sp),   // App.Title
+    titleSmall = Base.titleSmall.copy(fontFamily = FontFamily.Serif),
+    bodyLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 15.sp),   // App.Body
+    bodyMedium = Base.bodyMedium.copy(fontFamily = FontFamily.Serif),
+    bodySmall = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 12.sp),   // App.Caption
+    labelLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, fontSize = 14.sp),     // App.Label (Switched from Geist to Serif)
+    labelMedium = Base.labelMedium.copy(fontFamily = FontFamily.Serif),
+    labelSmall = Base.labelSmall.copy(fontFamily = FontFamily.Serif),
 )
 
 /**

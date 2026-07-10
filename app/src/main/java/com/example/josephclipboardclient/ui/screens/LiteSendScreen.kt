@@ -51,6 +51,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 fun LiteSendScreen(
     selectedFiles: List<TransferItem>,
     totalSizeBytes: Long,
+    onBack: () -> Unit,
     onSelectFile: () -> Unit,
     onSelectMedia: () -> Unit,
     onSelectText: () -> Unit,
@@ -89,29 +90,21 @@ fun LiteSendScreen(
                     .padding(top = 72.dp, bottom = dimens.spaceXl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (currentScreen == 2) {
-                    Box(
-                        modifier = Modifier
-                            .size(dimens.touchTarget)
-                            .clip(RoundedCornerShape(dimens.radiusMd))
-                            .clickable { currentScreen = 1 },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = stringResource(R.string.action_close),
-                            tint = colors.textPrimary,
-                            modifier = Modifier.size(dimens.iconMd)
-                        )
-                    }
-                    Spacer(Modifier.width(dimens.spaceSm))
+                Box(
+                    modifier = Modifier
+                        .size(dimens.headerIcon)
+                        .padding(end = dimens.spaceLg)
+                        .clip(RoundedCornerShape(dimens.radiusMd))
+                        .clickable { if (currentScreen == 2) currentScreen = 1 else onBack() },
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_back),
+                        contentDescription = stringResource(R.string.action_close),
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(dimens.iconMd)
+                    )
                 }
-                Icon(
-                    painter = painterResource(R.drawable.ic_hdr_send),
-                    contentDescription = null,
-                    tint = colors.green,
-                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
-                )
                 Text(
                     stringResource(R.string.lite_send_files),
                     style = MaterialTheme.typography.headlineSmall,

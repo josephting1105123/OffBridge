@@ -1,8 +1,12 @@
 package com.EntropicSoftwareLab.ClipboardShare.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,33 +15,41 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
@@ -51,7 +63,9 @@ fun LiteClipboardScreen(
     onCopy: (String) -> Unit,
     onDelete: (String) -> Unit,
     onPair: (String) -> Unit,
-    onUnpair: (String) -> Unit
+    onUnpair: (String) -> Unit,
+    onRescan: () -> Unit,
+    onBack: () -> Unit
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -70,12 +84,21 @@ fun LiteClipboardScreen(
                     .padding(top = 72.dp, bottom = dimens.spaceLg),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_hdr_history),
-                    contentDescription = null,
-                    tint = colors.green,
-                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(dimens.headerIcon)
+                        .padding(end = dimens.spaceLg)
+                        .clip(RoundedCornerShape(dimens.radiusMd))
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_back),
+                        contentDescription = stringResource(R.string.action_close),
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(dimens.iconMd)
+                    )
+                }
                 Text(
                     stringResource(R.string.lite_clipboard),
                     style = MaterialTheme.typography.headlineSmall,
@@ -114,8 +137,9 @@ fun LiteClipboardScreen(
                 )
                 Spacer(Modifier.size(dimens.spaceSm))
                 Text(
+                    // Only actually-paired devices sync; the list also holds nearby-unpaired rows.
                     text = if (syncActive)
-                        stringResource(R.string.lite_clip_sync_on, pairedDevices.size)
+                        stringResource(R.string.lite_clip_sync_on, pairedDevices.count { it.isPaired })
                     else stringResource(R.string.lite_clip_sync_off),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (syncActive) colors.greenText else colors.textSecondary,
@@ -158,36 +182,123 @@ fun LiteClipboardScreen(
                 }
             }
 
-            Spacer(Modifier.height(dimens.spaceXl))
+            // Add bottom padding so the history tray isn't blocked by the slide-up tray's peek height
+            Spacer(Modifier.height(88.dp))
+        }
 
-            SectionLabel(stringResource(R.string.connected_devices_label), pairedDevices.size)
-            Spacer(Modifier.height(dimens.spaceSm))
+        // Custom Slide-Up Tray for Connected Devices
+        val peekHeightDp = 88.dp
+        val expandedHeightDp = 350.dp
+        val density = LocalDensity.current
+        val maxOffsetPx = with(density) { (expandedHeightDp - peekHeightDp).toPx() }
+        
+        val trayOffset = remember { Animatable(maxOffsetPx) }
+        val coroutineScope = rememberCoroutineScope()
+        // Drag sets this; the bounce hint only runs while the user hasn't touched the tray, and stops
+        // for good once they open it. Keying the effect on a stable Boolean (not trayOffset.targetValue,
+        // which changes every drag frame) stops the per-frame restart churn the first pass had.
+        var trayTouched by remember { mutableStateOf(false) }
 
-            // Connected devices tray — bounded (not weighted) so it never gets squeezed off-screen;
-            // it scrolls internally past the max.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 96.dp, max = 220.dp)
-                    .clip(RoundedCornerShape(dimens.radiusLg))
-                    .background(colors.bottomSheet)
-                    .padding(dimens.spaceSm)
-            ) {
-                if (pairedDevices.isEmpty()) {
-                    EmptyTray(stringResource(R.string.paired_devices_empty))
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(dimens.spaceSm)
-                    ) {
-                        items(pairedDevices) { device ->
-                            DeviceCardRow(
-                                name = device.name,
-                                isWindows = device.isWindows,
-                                isPaired = device.isPaired,
-                                onPair = { onPair(device.ip) },
-                                onUnpair = { onUnpair(device.ip) }
+        // Bounce hint: nudge the collapsed tray up ~40dp a few times so it's discoverable, then rest.
+        LaunchedEffect(trayTouched) {
+            if (trayTouched) return@LaunchedEffect
+            repeat(3) {
+                delay(1500)
+                if (trayTouched) return@LaunchedEffect
+                trayOffset.animateTo(
+                    targetValue = maxOffsetPx - with(density) { 40.dp.toPx() },
+                    animationSpec = tween(250, easing = FastOutSlowInEasing)
+                )
+                trayOffset.animateTo(
+                    targetValue = maxOffsetPx,
+                    animationSpec = tween(300, easing = FastOutSlowInEasing)
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth() // Edge-to-edge slide-up tray
+                .height(expandedHeightDp)
+                .offset { IntOffset(0, trayOffset.value.toInt()) }
+                .clip(RoundedCornerShape(topStart = dimens.radiusXl, topEnd = dimens.radiusXl))
+                .background(colors.background) // Slide-up uses main background color
+                .border(
+                    width = dimens.hairlineWidth,
+                    color = colors.divider,
+                    shape = RoundedCornerShape(topStart = dimens.radiusXl, topEnd = dimens.radiusXl)
+                )
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Draggable Header Area
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onDragStart = { trayTouched = true },
+                                onDragEnd = {
+                                    coroutineScope.launch {
+                                        val target = if (trayOffset.value < maxOffsetPx / 2) 0f else maxOffsetPx
+                                        trayOffset.animateTo(target, tween(300))
+                                    }
+                                },
+                                onVerticalDrag = { change, dragAmount ->
+                                    change.consume()
+                                    coroutineScope.launch {
+                                        val newValue = (trayOffset.value + dragAmount).coerceIn(0f, maxOffsetPx)
+                                        trayOffset.snapTo(newValue)
+                                    }
+                                }
                             )
+                        }
+                        .padding(top = dimens.spaceMd, bottom = dimens.spaceLg),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Drag Handle Pill
+                    Box(
+                        modifier = Modifier
+                            .width(36.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(colors.textSecondary.copy(alpha = 0.5f))
+                    )
+                    Spacer(Modifier.height(dimens.spaceMd))
+                    SectionLabel(stringResource(R.string.lite_paired_nearby_devices), pairedDevices.size)
+                }
+
+                // Device list (no inner tray surface — the slide-up panel is the surface).
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = dimens.spaceXl)
+                        .padding(bottom = dimens.spaceMd)
+                ) {
+                    if (pairedDevices.isEmpty()) {
+                        Column {
+                            EmptyTray(stringResource(R.string.paired_devices_empty))
+                            RescanPill(onRescan)
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(dimens.spaceMd),
+                            contentPadding = PaddingValues(bottom = 120.dp)
+                        ) {
+                            itemsIndexed(pairedDevices) { index, device ->
+                                DeviceCardRow(
+                                    name = device.name,
+                                    isWindows = device.isWindows,
+                                    isPaired = device.isPaired,
+                                    onPair = { onPair(device.ip) },
+                                    onUnpair = { onUnpair(device.ip) }
+                                )
+                                if (index < pairedDevices.size - 1) {
+                                    Spacer(Modifier.height(dimens.spaceMd))
+                                }
+                            }
+                            item { RescanPill(onRescan) }
                         }
                     }
                 }
@@ -204,6 +315,42 @@ fun LiteClipboardScreen(
                     onCopy(entry)
                     detailEntry = null
                 }
+            )
+        }
+    }
+}
+
+/** Hairline capsule with a refresh glyph — flushes discovery and repopulates the device list. */
+@Composable
+private fun RescanPill(onRescan: () -> Unit) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(top = dimens.spaceLg, bottom = dimens.spaceXxl)
+                .clip(RoundedCornerShape(dimens.radiusPill))
+                .background(colors.card)
+                .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusPill))
+                .clickable { onRescan() }
+                .padding(horizontal = dimens.spaceXl, vertical = dimens.spaceMd),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(dimens.spaceSm)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                tint = colors.textPrimary,
+                modifier = Modifier.size(dimens.iconSm)
+            )
+            Text(
+                stringResource(R.string.action_rescan),
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Bold
             )
         }
     }

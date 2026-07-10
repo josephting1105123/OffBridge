@@ -619,6 +619,14 @@
     <string name="receiving_label">Empfängt</string>
     <string name="lite_clip_sync_off">Auto-Sync aus</string>
     <string name="lite_clip_sync_on">Auto-Sync an, %d gekoppelt</string>
+    <string name="menu_section_settings">Einstellungen</string>
+    <string name="menu_section_power">Energieoptionen</string>
+    <string name="menu_section_theme">Design &amp; Darstellung</string>
+    <string name="lite_paired_nearby_devices">Gekoppelte &amp; nahe Geräte</string>
+    <string name="lite_hub_prompt">Was möchten Sie tun?</string>
+    <string name="lite_hub_send_subtitle">Dateien und Text sicher teilen</string>
+    <string name="lite_hub_receive_subtitle">Eingehende Übertragungen annehmen</string>
+    <string name="lite_hub_clipboard_subtitle">Übertragungsverlauf anzeigen</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Dateien senden</string>
     <string name="lite_receive_files">Dateien empfangen</string>

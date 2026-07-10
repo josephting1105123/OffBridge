@@ -55,7 +55,7 @@ fun BentoTile(
         }
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleMedium,
             color = valueColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

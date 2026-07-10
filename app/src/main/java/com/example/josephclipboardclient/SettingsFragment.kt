@@ -32,7 +32,6 @@ import kotlinx.coroutines.withContext
  */
 class SettingsFragment : Fragment() {
 
-    private val themeLabelState = mutableStateOf("")
     private val languageLabelState = mutableStateOf("")
     private val saveLocationLabelState = mutableStateOf("")
     private val saveMediaLabelState = mutableStateOf("")
@@ -74,14 +73,12 @@ class SettingsFragment : Fragment() {
             setContent {
                 AppTheme {
                     SettingsScreen(
-                        themeLabel = themeLabelState.value,
                         languageLabel = languageLabelState.value,
                         saveLocationLabel = saveLocationLabelState.value,
                         saveMediaLabel = saveMediaLabelState.value,
                         hotspotAutoConnect = hotspotAutoConnectState.value,
                         acceptClipboard = acceptClipboardState.value,
                         discoverable = discoverableState.value,
-                        onChangeTheme = { showThemeDialog() },
                         onChangeLanguage = { showLanguageDialog() },
                         onChangeSaveLocation = { openDirectoryLauncher.launch(null) },
                         onChangeSaveMedia = { showSaveMediaDialog() },
@@ -106,8 +103,7 @@ class SettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Theme / language pill labels.
-        updateThemeButtonText()
+        // Language pill label.
         updateLanguageButtonText()
 
         // Save-location label.
@@ -175,48 +171,6 @@ class SettingsFragment : Fragment() {
         acceptClipboardState.value = ClipboardService.isSyncEnabled
         discoverableState.value = SecurityVault.isDiscoverable(requireContext())
         syncHotspotState()
-    }
-
-    // ==================== Theme ====================
-
-    private fun updateThemeButtonText() {
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val theme = prefs.getString("theme_mode", "System Default")
-        val displayTheme = when (theme) {
-            "Light" -> getString(R.string.theme_light)
-            "Dark" -> getString(R.string.theme_dark)
-            else -> getString(R.string.theme_system)
-        }
-        themeLabelState.value = displayTheme
-    }
-
-    private fun showThemeDialog() {
-        val themeKeys = arrayOf("System Default", "Light", "Dark")
-        val themeNames = arrayOf(getString(R.string.theme_system), getString(R.string.theme_light), getString(R.string.theme_dark))
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val currentTheme = prefs.getString("theme_mode", "System Default")
-        var checkedItem = themeKeys.indexOf(currentTheme)
-        if (checkedItem == -1) checkedItem = 0
-
-        AlertDialog.Builder(requireContext())
-            .setTitle(getString(R.string.dialog_title_choose_theme))
-            .setSingleChoiceItems(themeNames, checkedItem) { dialog, which ->
-                val selectedThemeKey = themeKeys[which]
-                prefs.edit().putString("theme_mode", selectedThemeKey).apply()
-
-                val mode = when (selectedThemeKey) {
-                    "Light" -> AppCompatDelegate.MODE_NIGHT_NO
-                    "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
-                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                }
-                AppCompatDelegate.setDefaultNightMode(mode)
-                updateThemeButtonText()
-                dialog.dismiss()
-            }
-            .setNegativeButton(getString(R.string.action_cancel), null)
-            .create()
-            .also { it.applyModalPolish() }
-            .show()
     }
 
     // ==================== Language ====================

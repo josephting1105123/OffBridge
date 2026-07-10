@@ -606,6 +606,14 @@
     <string name="receiving_label">接收中</string>
     <string name="lite_clip_sync_off">自動同步關閉</string>
     <string name="lite_clip_sync_on">自動同步開啟，已配對 %d</string>
+    <string name="menu_section_settings">設定</string>
+    <string name="menu_section_power">電源選項</string>
+    <string name="menu_section_theme">主題與設計</string>
+    <string name="lite_paired_nearby_devices">已配對與附近的裝置</string>
+    <string name="lite_hub_prompt">您想做什麼？</string>
+    <string name="lite_hub_send_subtitle">安全地分享檔案與文字</string>
+    <string name="lite_hub_receive_subtitle">接受傳入的傳輸</string>
+    <string name="lite_hub_clipboard_subtitle">查看傳輸紀錄</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">傳送檔案</string>
     <string name="lite_receive_files">接收檔案</string>

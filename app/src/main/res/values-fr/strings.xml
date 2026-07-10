@@ -619,6 +619,14 @@
     <string name="receiving_label">Réception</string>
     <string name="lite_clip_sync_off">Sync auto désactivée</string>
     <string name="lite_clip_sync_on">Sync auto activée, %d appairés</string>
+    <string name="menu_section_settings">Paramètres</string>
+    <string name="menu_section_power">Options d\'alimentation</string>
+    <string name="menu_section_theme">Thème et apparence</string>
+    <string name="lite_paired_nearby_devices">Appareils appairés et à proximité</string>
+    <string name="lite_hub_prompt">Que souhaitez-vous faire ?</string>
+    <string name="lite_hub_send_subtitle">Partagez fichiers et texte en toute sécurité</string>
+    <string name="lite_hub_receive_subtitle">Accepter les transferts entrants</string>
+    <string name="lite_hub_clipboard_subtitle">Voir l\'historique des transferts</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Envoyer des fichiers</string>
     <string name="lite_receive_files">Recevoir des fichiers</string>

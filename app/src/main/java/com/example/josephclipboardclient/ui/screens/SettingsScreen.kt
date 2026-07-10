@@ -48,14 +48,12 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens
  */
 @Composable
 fun SettingsScreen(
-    themeLabel: String,
     languageLabel: String,
     saveLocationLabel: String,
     saveMediaLabel: String,
     hotspotAutoConnect: Boolean,
     acceptClipboard: Boolean,
     discoverable: Boolean,
-    onChangeTheme: () -> Unit,
     onChangeLanguage: () -> Unit,
     onChangeSaveLocation: () -> Unit,
     onChangeSaveMedia: () -> Unit,
@@ -98,13 +96,6 @@ fun SettingsScreen(
             // ===================== GENERAL =====================
             SectionLabel(stringResource(R.string.settings_section_general), colors, dimens)
 
-            SettingPillRow(
-                label = stringResource(R.string.theme_setting),
-                pillText = themeLabel,
-                colors = colors,
-                dimens = dimens,
-                onClick = onChangeTheme,
-            )
             SettingPillRow(
                 label = stringResource(R.string.language_setting),
                 pillText = languageLabel,

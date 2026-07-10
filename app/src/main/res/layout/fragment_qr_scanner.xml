@@ -320,7 +320,7 @@
             android:id="@+id/btnConfirmCancel"
             style="@style/Widget.App.Button"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="84dp"
             android:layout_marginTop="8dp"
             android:text="@string/action_cancel"
             android:backgroundTint="#333333"

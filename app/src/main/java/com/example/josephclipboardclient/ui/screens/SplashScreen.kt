@@ -88,5 +88,16 @@ fun SplashScreen(modifier: Modifier = Modifier) {
                 .padding(bottom = 48.dp)
                 .alpha(dotsAlpha),
         )
+
+        // Pre-warm the DesignModeToggle composable and its animations so that the first time 
+        // it appears in the MenuBottomSheet it doesn't cause a layout stutter.
+        Box(modifier = Modifier.alpha(0f).size(1.dp)) {
+            com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle(
+                options = listOf("off", "on"),
+                selectedIndex = 0,
+                onSelect = {},
+                selectedColors = listOf(androidx.compose.ui.graphics.Color.Red, androidx.compose.ui.graphics.Color.Green)
+            )
+        }
     }
 }

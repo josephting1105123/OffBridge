@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Included as a persistent bottom sheet in activity_main.xml; the include's layout params replace
+     this root's, so margins here would be inert (edge-to-edge is the intended look anyway). The
+     elevation is load-bearing: it keeps the sheet above the 10dp menu_scrim — without it the scrim
+     draws on top of the menu and its touch listener eats every tap. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginBottom="16dp"
+    android:elevation="11dp"
     android:orientation="vertical"
     android:background="@drawable/bottom_sheet_bg"
     android:padding="@dimen/space_lg">
@@ -18,120 +20,129 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="@dimen/space_md"/>
 
-    <!-- Rounded frame grouping the 5 menu buttons for a unified feel -->
+    <!-- Settings Section -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_section_settings"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_sm"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:background="@drawable/menu_group_frame"
-        android:padding="@dimen/space_md">
+        android:padding="@dimen/space_md"
+        android:layout_marginBottom="@dimen/space_lg">
 
-        <!-- Row 1: Settings | Windows Version -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="@dimen/space_md">
-
-            <LinearLayout
-                android:id="@+id/btn_menu_settings"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="100dp"
-                android:layout_marginEnd="@dimen/space_md"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/rect_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <ImageView
-                    android:layout_width="@dimen/icon_lg"
-                    android:layout_height="@dimen/icon_lg"
-                    android:src="@drawable/ic_hdr_settings"
-                    app:tint="?attr/appGreen"
-                    android:contentDescription="@null" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/menu_settings"
-                    android:textColor="?attr/appTextPrimaryColor"
-                    android:textSize="14sp"
-                    android:layout_marginTop="@dimen/space_sm" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btn_menu_windows"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="100dp"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/rect_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <ImageView
-                    android:layout_width="@dimen/icon_lg"
-                    android:layout_height="@dimen/icon_lg"
-                    android:src="@drawable/ic_computer"
-                    app:tint="?attr/appGreen"
-                    android:contentDescription="@null" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/menu_windows_version"
-                    android:textColor="?attr/appTextPrimaryColor"
-                    android:textSize="14sp"
-                    android:layout_marginTop="@dimen/space_sm" />
-            </LinearLayout>
+            android:id="@+id/btn_menu_settings"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp"
+            android:layout_marginEnd="@dimen/space_md"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/rect_button_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:src="@drawable/ic_hdr_settings"
+                app:tint="?attr/appGreen"
+                android:contentDescription="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_settings"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="14sp"
+                android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
 
-        <!-- Row 2: Diagnostics | Restart Services -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="@dimen/space_md">
+            android:id="@+id/btn_menu_windows"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/rect_button_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:src="@drawable/ic_computer"
+                app:tint="?attr/appGreen"
+                android:contentDescription="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_windows_version"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="14sp"
+                android:layout_marginTop="@dimen/space_sm" />
+        </LinearLayout>
+    </LinearLayout>
 
-            <androidx.compose.ui.platform.ComposeView
-                android:id="@+id/toggle_design_mode"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="100dp"
-                android:layout_marginEnd="@dimen/space_md" />
+    <!-- Power Options Section -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_section_power"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_sm"/>
 
-            <LinearLayout
-                android:id="@+id/btn_menu_restart"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="100dp"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="@drawable/rect_button_bg"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground">
-                <ImageView
-                    android:layout_width="@dimen/icon_lg"
-                    android:layout_height="@dimen/icon_lg"
-                    android:src="@drawable/ic_retry"
-                    app:tint="?attr/appGreen"
-                    android:contentDescription="@null" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/menu_restart_services"
-                    android:textColor="?attr/appTextPrimaryColor"
-                    android:textSize="14sp"
-                    android:layout_marginTop="@dimen/space_sm" />
-            </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/menu_group_frame"
+        android:padding="@dimen/space_md"
+        android:layout_marginBottom="@dimen/space_lg">
+
+        <LinearLayout
+            android:id="@+id/btn_menu_restart"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp"
+            android:layout_marginEnd="@dimen/space_md"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/rect_button_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:src="@drawable/ic_retry"
+                app:tint="?attr/appGreen"
+                android:contentDescription="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_restart_services"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="14sp"
+                android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
 
-        <!-- Row 3: Power Off (full width, destructive) -->
         <LinearLayout
             android:id="@+id/btn_menu_power_off"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="100dp"
             android:orientation="vertical"
             android:gravity="center"
@@ -154,7 +165,38 @@
                 android:textStyle="bold"
                 android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
+    </LinearLayout>
 
+    <!-- Theme & Design Section -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/menu_section_theme"
+        android:textColor="?attr/appTextPrimaryColor"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginStart="@dimen/space_sm"
+        android:layout_marginBottom="@dimen/space_sm"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/menu_group_frame"
+        android:padding="@dimen/space_md">
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/toggle_design_mode"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp"
+            android:layout_marginEnd="@dimen/space_md" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/toggle_theme_mode"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp" />
     </LinearLayout>
 
 </LinearLayout>

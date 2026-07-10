@@ -616,6 +616,14 @@
     <string name="receiving_label">受信中</string>
     <string name="lite_clip_sync_off">自動同期オフ</string>
     <string name="lite_clip_sync_on">自動同期オン、%d台</string>
+    <string name="menu_section_settings">設定</string>
+    <string name="menu_section_power">電源オプション</string>
+    <string name="menu_section_theme">テーマとデザイン</string>
+    <string name="lite_paired_nearby_devices">ペアリング済み・近くのデバイス</string>
+    <string name="lite_hub_prompt">何をしますか？</string>
+    <string name="lite_hub_send_subtitle">ファイルやテキストを安全に共有</string>
+    <string name="lite_hub_receive_subtitle">受信転送を受け入れる</string>
+    <string name="lite_hub_clipboard_subtitle">転送履歴を表示</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">ファイルを送信</string>
     <string name="lite_receive_files">ファイルを受信</string>

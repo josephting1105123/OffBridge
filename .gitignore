@@ -42,3 +42,7 @@ PORTFOLIO.md
 
 # Claude Code runtime lock
 .claude/scheduled_tasks.lock
+
+# Local design-reference media and scratch (never commit — large binaries / working notes)
+Context and References File/
+**/.impeccable/

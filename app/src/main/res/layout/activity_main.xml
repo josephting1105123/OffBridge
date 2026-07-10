@@ -1,73 +1,96 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="?attr/appBackgroundColor">
+    android:layout_height="match_parent">
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/nav_host_fragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_nav_view"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/appBackgroundColor">
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav_view"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?attr/appNavBarColor"
-        app:itemIconTint="?attr/appNavIconColor"
-        app:itemTextColor="?attr/appNavIconColor"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemBackground="@drawable/nav_pill_background"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="4dp"/>
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/bottom_nav_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Lite-mode bottom bar: a chrome strip shown only on the Lite hub (Pro uses bottom_nav_view).
-         Kept separate so Lite never mutates the Pro nav bar's menu/height (that reconfiguration was
-         the source of the stretched-bar bug). EXPLICIT fixed height (grown by the bottom inset at
-         runtime) so a plain View cannot be measured full-height. -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/appNavBarColor"
+            app:itemIconTint="?attr/appNavIconColor"
+            app:itemTextColor="?attr/appNavIconColor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:menu="@menu/bottom_nav_menu"
+            app:itemBackground="@drawable/nav_pill_background"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"/>
+
+        <!-- Lite-mode bottom bar -->
+        <View
+            android:id="@+id/lite_nav_bar"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:background="?attr/appNavBarColor"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/a11y_menu"
+            android:src="@drawable/ic_power"
+            app:backgroundTint="?attr/appGreen"
+            app:tint="@color/black"
+            app:layout_constraintTop_toTopOf="@+id/bottom_nav_view"
+            android:layout_marginTop="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.App.FAB"
+            app:maxImageSize="32dp" />
+
+        <View
+            android:id="@+id/rebootOverlay"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="#000000"
+            android:visibility="gone"
+            android:translationZ="100dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+            
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Scrim for Bottom Sheet -->
     <View
-        android:id="@+id/lite_nav_bar"
-        android:layout_width="0dp"
-        android:layout_height="64dp"
-        android:background="?attr/appNavBarColor"
+        android:id="@+id/menu_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:elevation="10dp" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_menu"
-        android:layout_width="wrap_content"
+    <!-- Bottom Sheet Menu. Only layout_* attributes survive on an <include> (behavior_* rides in via
+         the CoordinatorLayout LayoutParams) — android:elevation would be silently dropped here, so it
+         lives on the included layout's root instead; it must stay above the 10dp scrim. -->
+    <include
+        android:id="@+id/bottom_sheet_menu_layout"
+        layout="@layout/bottom_sheet_menu"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/a11y_menu"
-        android:src="@drawable/ic_power"
-        app:backgroundTint="?attr/appGreen"
-        app:tint="@color/black"
-        app:layout_constraintTop_toTopOf="@+id/bottom_nav_view"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.App.FAB"
-        app:maxImageSize="32dp" />
+        app:behavior_hideable="true"
+        app:behavior_skipCollapsed="true"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior" />
 
-    <View
-        android:id="@+id/rebootOverlay"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="#000000"
-        android:visibility="gone"
-        android:translationZ="100dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

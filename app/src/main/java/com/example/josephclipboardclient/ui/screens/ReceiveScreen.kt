@@ -120,13 +120,15 @@ fun ReceiveScreen(
                 }
             }
 
-            if (isReceiving) {
-                val dots = ".".repeat(dotCount)
-                Text(
-                    text = stringResource(R.string.receiving_in_progress).replace("...", dots),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.greenText,
-                    modifier = Modifier.padding(bottom = dimens.spaceLg)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .padding(bottom = dimens.spaceLg),
+                contentAlignment = Alignment.Center
+            ) {
+                com.EntropicSoftwareLab.ClipboardShare.ui.components.ReceivingLoader(
+                    text = stringResource(R.string.receiving_label)
                 )
             }
 

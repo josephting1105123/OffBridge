@@ -22,6 +22,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
  * receive → tap-position guide (PRESENTATION_NFC). NFC button is disabled when there's no NFC
  * hardware, and deep-links to settings when NFC is turned off.
  */
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
+
 class ReceiveFragment : Fragment() {
 
     private val deviceNameState = mutableStateOf("")
@@ -31,17 +33,28 @@ class ReceiveFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
         val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        
+        val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
+        val revealY = arguments?.getFloat("reveal_y", -1f) ?: -1f
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            // Lite adds this over the hub — consume touches so empty areas don't fall through to the
+            // hub tiles beneath.
+            isClickable = true
             setContent {
                 AppTheme {
                     if (isLite) {
-                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteReceiveScreen(
-                            deviceName = deviceNameState.value,
-                            onDeviceNameChange = ::onDeviceNameChange,
-                            onOpenCamera = ::launchScanner
-                        )
+                        androidx.compose.foundation.layout.Box(
+                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        ) {
+                            com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteReceiveScreen(
+                                deviceName = deviceNameState.value,
+                                onBack = { parentFragmentManager.popBackStack() },
+                                onDeviceNameChange = ::onDeviceNameChange,
+                                onOpenCamera = ::launchScanner
+                            )
+                        }
                     } else {
                         ReceiveScreen(
                         deviceName = deviceNameState.value,

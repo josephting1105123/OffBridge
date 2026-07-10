@@ -619,6 +619,14 @@
     <string name="receiving_label">Приём</string>
     <string name="lite_clip_sync_off">Автосинхронизация выкл</string>
     <string name="lite_clip_sync_on">Автосинхронизация вкл, сопряжено %d</string>
+    <string name="menu_section_settings">Настройки</string>
+    <string name="menu_section_power">Параметры питания</string>
+    <string name="menu_section_theme">Тема и оформление</string>
+    <string name="lite_paired_nearby_devices">Сопряжённые и ближайшие устройства</string>
+    <string name="lite_hub_prompt">Что вы хотите сделать?</string>
+    <string name="lite_hub_send_subtitle">Безопасно делитесь файлами и текстом</string>
+    <string name="lite_hub_receive_subtitle">Принимать входящие передачи</string>
+    <string name="lite_hub_clipboard_subtitle">Показать историю передач</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Отправить файлы</string>
     <string name="lite_receive_files">Получить файлы</string>

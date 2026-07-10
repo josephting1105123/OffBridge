@@ -4,6 +4,42 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.2 — Android (Lite design pass, part 2 + fixes)
+
+Continues the 3.6.1 redesign — reveal-animated Lite navigation, a serif type voice, a restyled power
+menu with an in-app theme switch, and a redesigned receiving animation — and repairs the structural
+issues found auditing that work. Android bumps to **3.6.2** (versionCode 24); Windows unchanged. Still
+a UI layer over the existing engine — no wire-protocol, crypto or pairing changes.
+
+### Added
+- **In-menu theme switch.** The power menu now carries a Light / System / Dark control alongside the
+  Lite/Pro toggle, so appearance no longer lives only in Settings — and "System" (follow the phone)
+  stays reachable.
+- **Reveal navigation.** Lite hub cards open Send / Receive / Clipboard with a circular-reveal
+  animation from the tapped card.
+
+### Changed
+- **Serif type voice** across the app, and a redesigned liquid "Receiving" animation on both receive
+  screens.
+- **Pro Clipboard** adopts the Lite card layout; **Push Current Clipboard** stays available beneath the
+  recent-copies tray.
+
+### Fixed
+- Power-menu sheet could render beneath its own scrim and swallow taps (elevation was dropped from an
+  `<include>`); it now sits above the scrim reliably.
+- Lite clipboard "Rescan" pills were inert — they now flush discovery and repopulate the device list.
+- Auto-sync device count no longer includes nearby-but-unpaired devices.
+- Rapid double-taps on a Lite hub card no longer stack duplicate screens, and taps on an open child
+  screen no longer fall through to the hub beneath.
+- The Lite device tray's bounce hint no longer loops forever or thrashes during drags.
+- Theme toggle no longer arms a phantom "rebooting" overlay when the resolved appearance doesn't change.
+- Restored the two-option slider's external-state sync (it could stick on the wrong side) and dropped
+  the input debounce that lagged real toggles.
+- New Lite strings (hub prompt/subtitles, "Paired &amp; Nearby Devices", menu section headers) are
+  localised across all 10 languages instead of hardcoded English.
+
+---
+
 ## 3.6.1 — Android (Lite mode design pass)
 
 A visual refinement pass over Lite mode. Switching Basic ⇄ Pro now animates in place instead of

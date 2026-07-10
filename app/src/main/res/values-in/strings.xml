@@ -623,6 +623,14 @@
     <string name="receiving_label">Menerima</string>
     <string name="lite_clip_sync_off">Sinkron otomatis nonaktif</string>
     <string name="lite_clip_sync_on">Sinkron otomatis aktif, %d terhubung</string>
+    <string name="menu_section_settings">Pengaturan</string>
+    <string name="menu_section_power">Opsi Daya</string>
+    <string name="menu_section_theme">Tema &amp; Desain</string>
+    <string name="lite_paired_nearby_devices">Perangkat Terhubung &amp; Terdekat</string>
+    <string name="lite_hub_prompt">Apa yang ingin Anda lakukan?</string>
+    <string name="lite_hub_send_subtitle">Bagikan file dan teks dengan aman</string>
+    <string name="lite_hub_receive_subtitle">Terima transfer masuk</string>
+    <string name="lite_hub_clipboard_subtitle">Lihat riwayat transfer</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Kirim File</string>
     <string name="lite_receive_files">Terima File</string>

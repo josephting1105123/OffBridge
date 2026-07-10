@@ -83,6 +83,9 @@
     <string name="clipboard_share_windows_title">Clipboard Share for Windows</string>
     <string name="desktop_app_in_development_desc">The companion desktop app is currently in development and will be available soon.</string>
     <string name="menu_title">Menu</string>
+    <string name="menu_section_settings">Settings</string>
+    <string name="menu_section_power">Power Options</string>
+    <string name="menu_section_theme">Theme &amp; Design</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_windows_version">Windows Version</string>
     <string name="menu_restart_services">Restart Services</string>
@@ -618,6 +621,11 @@
     <string name="receiving_label">Receiving</string>
     <string name="lite_clip_sync_off">Auto-sync off</string>
     <string name="lite_clip_sync_on">Auto-sync on, %d paired</string>
+    <string name="lite_paired_nearby_devices">Paired &amp; Nearby Devices</string>
+    <string name="lite_hub_prompt">What would you like to do?</string>
+    <string name="lite_hub_send_subtitle">Share files and text securely</string>
+    <string name="lite_hub_receive_subtitle">Accept incoming transfers</string>
+    <string name="lite_hub_clipboard_subtitle">View transfer history</string>
     <string name="design_mode_pro">Pro</string>
     <string name="lite_send_files">Send Files</string>
     <string name="lite_receive_files">Receive Files</string>

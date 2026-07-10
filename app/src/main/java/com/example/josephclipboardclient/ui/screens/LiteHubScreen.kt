@@ -8,34 +8,44 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import kotlin.math.hypot
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 
 @Composable
 fun LiteHubScreen(
-    onSendClick: () -> Unit,
-    onReceiveClick: () -> Unit,
-    onClipboardClick: () -> Unit
+    onSendClick: (Float, Float) -> Unit,
+    onReceiveClick: (Float, Float) -> Unit,
+    onClipboardClick: (Float, Float) -> Unit
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -51,99 +61,127 @@ fun LiteHubScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = dimens.spaceXl)
         ) {
+            Spacer(Modifier.height(96.dp))
+
+            // Conversational Greeting Header
             Text(
                 stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.displaySmall,
                 color = colors.textPrimary,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 72.dp, bottom = dimens.spaceXxl)
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(dimens.spaceXs))
+            Text(
+                stringResource(R.string.lite_hub_prompt),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.textSecondary
             )
 
-            // Space between the title and the bottom bar; the tile grid fills ~80% of it (centered),
-            // leaving breathing room above and below. The 3 tiles sit inside a tray — a hairline
-            // rounded frame, same grouping the power menu uses (menu_group_frame).
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.8f)
-                        .align(Alignment.Center)
-                        .clip(RoundedCornerShape(dimens.radiusXl))
-                        .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusXl))
-                        .padding(dimens.spaceMd),
-                    verticalArrangement = Arrangement.spacedBy(dimens.spaceLg)
-                ) {
-                    // Top row: Send (left) + Receive (right). Twice the height of the Clipboard tile
-                    // below, so Clipboard : Receive = 1 : 2.
-                    Row(
-                        modifier = Modifier.fillMaxWidth().weight(2f),
-                        horizontalArrangement = Arrangement.spacedBy(dimens.spaceLg)
-                    ) {
-                        HubTile(
-                            text = stringResource(R.string.lite_send_files),
-                            iconRes = R.drawable.ic_hdr_send,
-                            onClick = onSendClick,
-                            modifier = Modifier.weight(1f).fillMaxHeight()
-                        )
-                        HubTile(
-                            text = stringResource(R.string.lite_receive_files),
-                            iconRes = R.drawable.ic_hdr_receive,
-                            onClick = onReceiveClick,
-                            modifier = Modifier.weight(1f).fillMaxHeight()
-                        )
-                    }
-                    // Bottom row: Clipboard, full width, half the height of the top row (1:2).
-                    HubTile(
-                        text = stringResource(R.string.lite_clipboard),
-                        iconRes = R.drawable.ic_hdr_history,
-                        onClick = onClipboardClick,
-                        modifier = Modifier.fillMaxWidth().weight(1f)
-                    )
-                }
-            }
+            Spacer(Modifier.height(64.dp))
 
-            // Reserve for the lite_nav_bar + power FAB (excluded from the 80% grid area above).
-            Spacer(Modifier.height(96.dp))
+            // Send action card
+            LiteActionCard(
+                title = stringResource(R.string.lite_send_files),
+                subtitle = stringResource(R.string.lite_hub_send_subtitle),
+                iconRes = R.drawable.ic_hdr_send,
+                onClick = onSendClick
+            )
+
+            Spacer(Modifier.height(dimens.spaceLg))
+
+            // Receive action card
+            LiteActionCard(
+                title = stringResource(R.string.lite_receive_files),
+                subtitle = stringResource(R.string.lite_hub_receive_subtitle),
+                iconRes = R.drawable.ic_hdr_receive,
+                onClick = onReceiveClick
+            )
+
+            Spacer(Modifier.height(dimens.spaceLg))
+
+            // Clipboard action card
+            LiteActionCard(
+                title = stringResource(R.string.lite_clipboard),
+                subtitle = stringResource(R.string.lite_hub_clipboard_subtitle),
+                iconRes = R.drawable.ic_hdr_history,
+                onClick = onClipboardClick
+            )
+
+            Spacer(Modifier.weight(1f))
         }
     }
 }
 
-/** Hub tile in the power-menu button style: centered icon (green) above a label, on a bordered card. */
 @Composable
-private fun HubTile(
-    text: String,
+private fun LiteActionCard(
+    title: String,
+    subtitle: String,
     iconRes: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: (Float, Float) -> Unit
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
-    val shape = RoundedCornerShape(dimens.radiusLg)
-    Column(
-        modifier = modifier
+    val shape = RoundedCornerShape(dimens.radiusXl)
+
+    var arrowCenter by remember { mutableStateOf(Offset.Zero) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
             .clip(shape)
-            .background(colors.card)
+            .background(colors.background)
             .border(dimens.hairlineWidth, colors.divider, shape)
-            .clickable { onClick() },
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .clickable { onClick(arrowCenter.x, arrowCenter.y) }
+            .padding(dimens.spaceLg),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // Icon container
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape)
+                .background(colors.card)
+                .border(dimens.hairlineWidth, colors.divider, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = colors.green,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+
+        Spacer(Modifier.width(dimens.spaceLg))
+
+        // Text & Subtitle
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = colors.textPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.textSecondary
+            )
+        }
+
+        Spacer(Modifier.width(dimens.spaceMd))
+        
+        // Navigation chevron — its centre seeds the circular-reveal origin for the next screen.
         Icon(
-            painter = painterResource(iconRes),
+            imageVector = Icons.Filled.ArrowForward,
             contentDescription = null,
-            tint = colors.green,
-            modifier = Modifier.size(dimens.iconLg)
-        )
-        Spacer(Modifier.height(dimens.spaceSm))
-        Text(
-            text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.textPrimary,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            tint = colors.textSecondary,
+            modifier = Modifier
+                .size(24.dp)
+                .onGloballyPositioned { coordinates ->
+                    arrowCenter = coordinates.boundsInRoot().center
+                }
         )
     }
 }

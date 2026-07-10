@@ -15,14 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,75 +41,50 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
-import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.withInterNumerals
-import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
-import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialStep
-import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
-import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
-import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
-import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 
-/**
- * Compose Clipboard tab. Tapping a recent-copy card opens a full-text detail overlay (back arrow +
- * scrollable full text + a bottom Copy button); copying happens from there, not from the list tap.
- */
 @Composable
 fun ClipboardScreen(
     history: List<String>,
+    pairedDeviceCount: Int,
     acceptSync: Boolean,
     onAcceptSyncChange: (Boolean) -> Unit,
     onPushCurrent: () -> Unit,
     onCopy: (String) -> Unit,
-    onDelete: (String) -> Unit,
-    showTutorial: Boolean,
-    onShowTutorial: () -> Unit,
-    onTutorialDismiss: () -> Unit,
+    onDelete: (String) -> Unit
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
-    val anchors = rememberTutorialAnchors()
-    val backdrop = rememberBackdropState()
     var detailEntry by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(modifier = Modifier.fillMaxSize().backdropSource(backdrop).padding(dimens.spaceXl)) {
-            // Header: icon + title + How-to-use chip
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(dimens.spaceXl)
+        ) {
+            // Header: title + sync toggle.
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 72.dp, bottom = dimens.spaceXl),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 72.dp, bottom = dimens.spaceLg),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Icon(
                     painter = painterResource(R.drawable.ic_hdr_history),
                     contentDescription = null,
                     tint = colors.green,
-                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg),
+                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
                 )
                 Text(
-                    stringResource(R.string.history_and_push_title),
+                    stringResource(R.string.lite_clipboard),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colors.textPrimary,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 )
-                HowToUseChip(onClick = onShowTutorial)
-            }
-
-            // Accept incoming clipboard toggle
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = dimens.spaceLg)
-                    .tutorialAnchor(anchors, "accept"),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    stringResource(R.string.accept_incoming_clipboard),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textPrimary,
-                    modifier = Modifier.weight(1f),
-                )
-                // Glass On/Off slider (matches the app-wide slider language): off = red, on = green.
+                // Glass On/Off slider
                 DesignModeToggle(
                     options = listOf("off", "on"),
                     selectedIndex = if (acceptSync) 1 else 0,
@@ -117,93 +92,90 @@ fun ClipboardScreen(
                     selectedColors = listOf(colors.error, colors.greenText),
                     showLabels = false,
                     height = 32.dp,
-                    modifier = Modifier.width(56.dp),
+                    modifier = Modifier.width(56.dp)
                 )
             }
 
-            Text(
-                stringResource(R.string.history_share_sheet_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(bottom = dimens.spaceLg),
-            )
+            // Status strip
+            val syncActive = acceptSync
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(if (syncActive) colors.accentMuted else colors.card)
+                    .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusLg))
+                    .padding(horizontal = dimens.spaceLg, vertical = dimens.spaceMd),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(dimens.spaceMd)
+                        .clip(RoundedCornerShape(dimens.radiusPill))
+                        .background(if (syncActive) colors.green else colors.textSecondary)
+                )
+                Spacer(Modifier.size(dimens.spaceSm))
+                Text(
+                    text = if (syncActive)
+                        stringResource(R.string.lite_clip_sync_on, pairedDeviceCount)
+                    else stringResource(R.string.lite_clip_sync_off),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (syncActive) colors.greenText else colors.textSecondary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
+            Spacer(Modifier.height(dimens.spaceXl))
+
+            SectionLabel(stringResource(R.string.recent_copies_tap_hint), history.size)
+            Spacer(Modifier.height(dimens.spaceSm))
+
+            // Recent copies tray
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimens.hairlineWidth)
-                    .background(colors.divider),
-            )
-            Spacer(Modifier.height(dimens.spaceLg))
-
-            Text(
-                stringResource(R.string.recent_copies_hint),
-                style = MaterialTheme.typography.titleMedium,
-                color = colors.textPrimary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = dimens.spaceLg),
-            )
-
-            if (history.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                    Text(
-                        stringResource(R.string.history_empty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(top = dimens.spaceXxl),
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(dimens.spaceSm),
-                ) {
-                    items(history, key = { it }) { entry ->
-                        ClipboardCard(entry = entry, colors = colors, dimens = dimens, onOpen = { detailEntry = it }, onDelete = onDelete)
+                    .weight(1f)
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(colors.bottomSheet)
+                    .padding(dimens.spaceSm)
+            ) {
+                if (history.isEmpty()) {
+                    EmptyTray(stringResource(R.string.history_empty))
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(dimens.spaceSm)
+                    ) {
+                        itemsIndexed(history, key = { i, entry -> "$i:$entry" }) { _, entry ->
+                            LiteCopyCard(
+                                entry = entry,
+                                onOpen = { detailEntry = entry },
+                                onCopy = { onCopy(entry) },
+                                onDelete = { onDelete(entry) }
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(dimens.spaceLg))
 
-            // Push current clipboard
+            // Push current clipboard — Pro's manual foreground push to all paired devices.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = dimens.spaceLg)
                     .height(64.dp)
                     .clip(RoundedCornerShape(dimens.radiusLg))
                     .background(colors.green)
-                    .tutorialAnchor(anchors, "push")
                     .clickable { onPushCurrent() },
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     stringResource(R.string.action_push_current_clipboard),
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.Black,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Bold
                 )
             }
-        }
-
-        if (showTutorial) {
-            val steps = listOf(
-                TutorialStep(targetKey = "push", text = stringResource(R.string.history_tutorial_push)),
-                TutorialStep(
-                    targetKey = "accept",
-                    text = stringResource(R.string.history_tutorial_accept_switch),
-                    hideSkipButton = true,
-                ),
-            )
-            TutorialOverlay(
-                steps = steps,
-                totalSteps = steps.size,
-                boundsMap = anchors,
-                onDismiss = onTutorialDismiss,
-                onComplete = onTutorialDismiss,
-                backdrop = backdrop,
-            )
         }
 
         detailEntry?.let { entry ->
@@ -222,45 +194,112 @@ fun ClipboardScreen(
 }
 
 @Composable
-internal fun ClipboardCard(
-    entry: String,
-    colors: com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors,
-    dimens: com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens,
-    onOpen: (String) -> Unit,
-    onDelete: (String) -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(dimens.radiusLg))
-            .background(colors.card)
-            .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusLg))
-            .clickable { onOpen(entry) }
-            .padding(dimens.spaceLg),
-    ) {
+private fun SectionLabel(text: String, count: Int) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            entry.withInterNumerals(),
-            style = MaterialTheme.typography.bodyLarge,
+            text,
+            style = MaterialTheme.typography.titleMedium,
             color = colors.textPrimary,
-            maxLines = 4,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth().padding(end = 40.dp),
+            fontWeight = FontWeight.Bold
         )
-        // Wrapped in an IconButton so the tap target is >=48dp while the visible badge stays 32dp.
-        IconButton(
-            onClick = { onDelete(entry) },
-            modifier = Modifier.align(Alignment.TopEnd),
-        ) {
+        if (count > 0) {
+            Spacer(Modifier.size(dimens.spaceSm))
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(dimens.radiusMd))
-                    .background(Color(0x80000000)),
-                contentAlignment = Alignment.Center,
+                    .clip(RoundedCornerShape(dimens.radiusPill))
+                    .background(colors.accentMuted)
+                    .padding(horizontal = dimens.spaceSm, vertical = dimens.spaceXxs),
             ) {
-                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.action_delete), tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
+                Text(
+                    count.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.greenText,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun LiteCopyCard(
+    entry: String,
+    onOpen: () -> Unit,
+    onCopy: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(dimens.radiusMd))
+            .background(colors.card)
+            .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusMd))
+            .clickable { onOpen() }
+            .padding(dimens.spaceMd),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(dimens.iconLg + dimens.spaceMd)
+                .clip(RoundedCornerShape(dimens.radiusSm))
+                .background(colors.accentMuted),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_clipboard_light),
+                contentDescription = null,
+                tint = colors.greenText,
+                modifier = Modifier.size(dimens.iconMd)
+            )
+        }
+        Spacer(Modifier.size(dimens.spaceMd))
+        Text(
+            entry,
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(Modifier.size(dimens.spaceSm))
+        IconAction(Icons.Outlined.ContentCopy, colors.greenText, onCopy)
+        IconAction(Icons.Outlined.DeleteOutline, colors.error, onDelete)
+    }
+}
+
+@Composable
+private fun IconAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit
+) {
+    val dimens = AppThemeTokens.dimens
+    Box(
+        modifier = Modifier
+            .size(dimens.touchTarget)
+            .clip(RoundedCornerShape(dimens.radiusSm))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(dimens.iconMd))
+    }
+}
+
+@Composable
+private fun EmptyTray(text: String) {
+    val colors = AppThemeTokens.colors
+    val dimens = AppThemeTokens.dimens
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = colors.textSecondary,
+            modifier = Modifier.padding(dimens.spaceMd)
+        )
     }
 }
 

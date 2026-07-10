@@ -26,12 +26,15 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
  * Clipboard tab. The UI is now Compose ([ClipboardScreen], hosted via [ComposeView]); this fragment
  * keeps all clipboard/network logic and feeds the screen through observable state + callbacks.
  */
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
+
 class HistoryFragment : Fragment() {
 
     private val historyState = mutableStateOf<List<String>>(emptyList())
+    /** Paired (trusted) devices first, then nearby-but-unpaired ones — NOT paired-only; count with
+     *  `isPaired` when a number should mean "actually syncing". */
     private val pairedDevicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
     private val acceptSyncState = mutableStateOf(false)
-    private val showTutorialState = mutableStateOf(false)
 
     private var receiverRegistered = false
 
@@ -44,39 +47,50 @@ class HistoryFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
         val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        
+        val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
+        val revealY = arguments?.getFloat("reveal_y", -1f) ?: -1f
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            // Lite adds this over the hub — consume touches so empty areas don't fall through to the
+            // hub tiles beneath.
+            isClickable = true
             setContent {
                 AppTheme {
                     if (isLite) {
-                        LiteClipboardScreen(
+                        androidx.compose.foundation.layout.Box(
+                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        ) {
+                            LiteClipboardScreen(
+                                history = historyState.value,
+                                pairedDevices = pairedDevicesState.value,
+                                acceptSync = acceptSyncState.value,
+                                onAcceptSyncChange = { enabled ->
+                                    ClipboardService.isSyncEnabled = enabled
+                                    acceptSyncState.value = enabled
+                                },
+                                onCopy = { copyToClipboard(it) },
+                                onDelete = { deleteEntry(it) },
+                                onPair = { onPair(it) },
+                                onUnpair = { onUnpair(it) },
+                                onRescan = { rescanDevices() },
+                                onBack = { parentFragmentManager.popBackStack() }
+                            )
+                        }
+                    } else {
+                        ClipboardScreen(
                             history = historyState.value,
-                            pairedDevices = pairedDevicesState.value,
+                            // Only actually-paired devices sync — nearby unpaired ones don't count.
+                            pairedDeviceCount = pairedDevicesState.value.count { it.isPaired },
                             acceptSync = acceptSyncState.value,
                             onAcceptSyncChange = { enabled ->
                                 ClipboardService.isSyncEnabled = enabled
                                 acceptSyncState.value = enabled
                             },
+                            onPushCurrent = { executeForegroundPush() },
                             onCopy = { copyToClipboard(it) },
-                            onDelete = { deleteEntry(it) },
-                            onPair = { onPair(it) },
-                            onUnpair = { onUnpair(it) }
-                        )
-                    } else {
-                        ClipboardScreen(
-                        history = historyState.value,
-                        acceptSync = acceptSyncState.value,
-                        onAcceptSyncChange = { enabled ->
-                            ClipboardService.isSyncEnabled = enabled
-                            acceptSyncState.value = enabled
-                        },
-                        onPushCurrent = { executeForegroundPush() },
-                        onCopy = { copyToClipboard(it) },
-                        onDelete = { deleteEntry(it) },
-                        showTutorial = showTutorialState.value,
-                        onShowTutorial = { showTutorialState.value = true },
-                        onTutorialDismiss = { showTutorialState.value = false },
+                            onDelete = { deleteEntry(it) }
                         )
                     }
                 }
@@ -102,7 +116,7 @@ class HistoryFragment : Fragment() {
         val onlineNames = onlineNodes.associate { it.ip to it.name }
         val onlineOs = onlineNodes.associate { it.ip to it.os }
 
-        pairedDevicesState.value = SecurityVault.getTrustedNodes(ctx).map { ip ->
+        val pairedDevices = SecurityVault.getTrustedNodes(ctx).map { ip ->
             val liveName = onlineNames[ip]
             val liveOs = onlineOs[ip]
             if (liveName != null && SecurityVault.getPairedDeviceName(ctx, ip) != liveName) {
@@ -115,6 +129,18 @@ class HistoryFragment : Fragment() {
                 isPaired = true
             )
         }
+        
+        val pairedIps = pairedDevices.map { it.ip }.toSet()
+        val nearbyUnpaired = onlineNodes.filter { it.ip !in pairedIps }.map {
+            SendDeviceUi(
+                ip = it.ip,
+                name = it.name,
+                isWindows = it.os.equals("Windows", ignoreCase = true),
+                isPaired = false
+            )
+        }
+        
+        pairedDevicesState.value = pairedDevices + nearbyUnpaired
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -122,18 +148,14 @@ class HistoryFragment : Fragment() {
         if (!hidden) {
             refreshSyncedToggles()
             refreshHistory()
-            maybeAutoShowTutorial()
         }
     }
 
-    /** One-shot: the clipboard tutorial fires the first time this tab is opened after install. */
-    private fun maybeAutoShowTutorial() {
-        if (!isAdded || isHidden) return
-        if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        if (prefs.getBoolean("clipboard_tutorial_shown", false)) return
-        prefs.edit().putBoolean("clipboard_tutorial_shown", true).apply()
-        showTutorialState.value = true
+    /** Same cache-flush rescan as the System Status pill: drop stale discoveries, repopulate. */
+    private fun rescanDevices() {
+        Toast.makeText(requireContext(), getString(R.string.status_flushing_cache), Toast.LENGTH_SHORT).show()
+        TransferDaemon.clearDiscoveredNodes()
+        refreshHistory()
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -151,7 +173,6 @@ class HistoryFragment : Fragment() {
             receiverRegistered = true
         }
         refreshHistory()
-        if (!isHidden) maybeAutoShowTutorial()
     }
 
     override fun onPause() {

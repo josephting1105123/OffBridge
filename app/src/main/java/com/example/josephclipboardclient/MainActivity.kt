@@ -16,6 +16,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.EntropicSoftwareLab.ClipboardShare.offgrid.NfcAntennaLocator
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -81,7 +87,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val rebootOverlay = findViewById<android.view.View>(R.id.rebootOverlay)
-        if (intent.getBooleanExtra("is_rebooting", false)) {
+        if (intent.getBooleanExtra("is_rebooting", false) || prefs.getBoolean("is_theme_rebooting", false)) {
+            prefs.edit().remove("is_theme_rebooting").apply()
             rebootOverlay.visibility = android.view.View.VISIBLE
             rebootOverlay.animate()
                 .alpha(0f)
@@ -225,9 +232,182 @@ class MainActivity : AppCompatActivity() {
         }
         updateHubChrome()
 
+        setupMenuBottomSheet()
+    }
+
+    private fun setupMenuBottomSheet() {
+        val bottomSheetView = findViewById<android.view.View>(R.id.bottom_sheet_menu_layout)
+        val behavior = com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheetView)
+        val scrim = findViewById<android.view.View>(R.id.menu_scrim)
+        
+        // Hide initially
+        behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+
+        val menuBackGuard = object : androidx.activity.OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, menuBackGuard)
+        
+        behavior.addBottomSheetCallback(object : com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: android.view.View, newState: Int) {
+                if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN) {
+                    scrim.visibility = android.view.View.GONE
+                    menuBackGuard.isEnabled = false
+                } else if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED || newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HALF_EXPANDED) {
+                    menuBackGuard.isEnabled = true
+                }
+            }
+            override fun onSlide(bottomSheet: android.view.View, slideOffset: Float) {
+                if (slideOffset > 0) {
+                    scrim.visibility = android.view.View.VISIBLE
+                    scrim.alpha = slideOffset
+                } else {
+                    scrim.alpha = 0f
+                }
+            }
+        })
+        
+        scrim.setOnTouchListener { v, event ->
+            if (event.action == android.view.MotionEvent.ACTION_UP) {
+                v.performClick()
+            }
+            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
+                if (behavior.state != com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN) {
+                    behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+                }
+            }
+            true // Consume all touch events to prevent fall-through to background UI
+        }
+
+        val btnSettings = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_settings)
+        val btnWindows = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_windows)
+        val toggleDesignMode = bottomSheetView.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.toggle_design_mode)
+        val toggleThemeMode = bottomSheetView.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.toggle_theme_mode)
+        val btnRestart = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_restart)
+        val btnPowerOff = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_power_off)
+
+        btnSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+        }
+        btnWindows.setOnClickListener {
+            startActivity(Intent(this, WindowsVersionActivity::class.java))
+            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        toggleDesignMode.setContent {
+            com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme {
+                val prefsLocal = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+                var isLiteSelected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(prefsLocal.getString("design_mode", "Lite") == "Lite") }
+                val toggleColors = com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens.colors
+
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle(
+                        options = listOf(getString(R.string.design_mode_lite), getString(R.string.design_mode_pro)),
+                        selectedIndex = if (isLiteSelected) 0 else 1,
+                        // Lite = green, Pro = red. WCAG-safe token colours so the glass label stays readable.
+                        selectedColors = listOf(toggleColors.greenText, toggleColors.error),
+                        onSelect = { index ->
+                            val toLite = index == 0
+                            if (toLite != isLiteSelected) {
+                                isLiteSelected = toLite
+                                prefsLocal.edit().putString("design_mode", if (toLite) "Lite" else "Pro").apply()
+                                // Let the thumb slide before the shell crossfade kicks in.
+                                bottomSheetView.postDelayed({ requestDesignModeSwitch(toLite) }, 300)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
+        // Theme picker: Light / System / Dark. Tri-state (not a binary toggle) so "follow system"
+        // stays reachable — the keys match every existing theme_mode reader ("System Default" incl.
+        // ClipboardService + all activity onCreates).
+        toggleThemeMode.setContent {
+            com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme {
+                val prefsLocal = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+                val themeKeys = listOf("Light", "System Default", "Dark")
+                var selectedTheme by androidx.compose.runtime.remember {
+                    val saved = prefsLocal.getString("theme_mode", "System Default")
+                    androidx.compose.runtime.mutableStateOf(themeKeys.indexOf(saved).takeIf { it >= 0 } ?: 1)
+                }
+
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    com.EntropicSoftwareLab.ClipboardShare.ui.components.SegmentedControl(
+                        options = listOf(
+                            getString(R.string.theme_light),
+                            getString(R.string.theme_system),
+                            getString(R.string.theme_dark)
+                        ),
+                        selectedIndex = selectedTheme,
+                        onSelect = { index ->
+                            if (index != selectedTheme) {
+                                selectedTheme = index
+                                val key = themeKeys[index]
+                                // Only arm the reboot overlay when the resolved appearance will actually
+                                // change — setDefaultNightMode won't recreate otherwise, and a stale flag
+                                // paints a phantom black overlay on the next cold start.
+                                val nowDark = (resources.configuration.uiMode and
+                                    android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+                                val systemDark = (android.content.res.Resources.getSystem().configuration.uiMode and
+                                    android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
+                                    android.content.res.Configuration.UI_MODE_NIGHT_YES
+                                val targetDark = when (key) {
+                                    "Dark" -> true
+                                    "Light" -> false
+                                    else -> systemDark
+                                }
+                                val editor = prefsLocal.edit().putString("theme_mode", key)
+                                if (targetDark != nowDark) editor.putBoolean("is_theme_rebooting", true)
+                                editor.apply()
+
+                                val nightMode = when (key) {
+                                    "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+                                    "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                                    else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                                }
+                                // Small delay so the selection is visible before the activity recreate.
+                                bottomSheetView.postDelayed({
+                                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+                                }, 300)
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
+        btnRestart.setOnClickListener {
+            Toast.makeText(this, getString(R.string.menu_restart_toast), Toast.LENGTH_SHORT).show()
+            try {
+                val serviceIntent = Intent(this, ClipboardService::class.java)
+                stopService(serviceIntent)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { startForegroundService(serviceIntent) } else { startService(serviceIntent) }
+            } catch (e: Exception) { e.printStackTrace() }
+
+            val restartIntent = Intent(this, SplashActivity::class.java)
+            restartIntent.putExtra("is_rebooting", true)
+            restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(restartIntent)
+            overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
+        }
+
+        btnPowerOff.setOnClickListener {
+            Toast.makeText(this, getString(R.string.menu_power_off_toast), Toast.LENGTH_SHORT).show()
+            try {
+                TransferDaemon.stop()
+                PairingDaemon.stop()
+                stopService(Intent(this, ClipboardService::class.java))
+            } catch (e: Exception) { e.printStackTrace() }
+            finishAndRemoveTask()
+        }
+
         fabMenu.setOnClickListener {
-            val menuBottomSheet = MenuBottomSheetFragment()
-            menuBottomSheet.show(supportFragmentManager, menuBottomSheet.tag)
+            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
         }
     }
 

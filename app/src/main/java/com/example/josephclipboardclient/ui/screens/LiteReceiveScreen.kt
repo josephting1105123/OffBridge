@@ -8,6 +8,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -19,8 +20,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -51,6 +54,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 @Composable
 fun LiteReceiveScreen(
     deviceName: String,
+    onBack: () -> Unit,
     onDeviceNameChange: (String) -> Unit,
     onOpenCamera: () -> Unit
 ) {
@@ -76,12 +80,21 @@ fun LiteReceiveScreen(
                     .padding(top = 72.dp, bottom = dimens.spaceXl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_hdr_receive),
-                    contentDescription = null,
-                    tint = colors.green,
-                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(dimens.headerIcon)
+                        .padding(end = dimens.spaceLg)
+                        .clip(RoundedCornerShape(dimens.radiusMd))
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_back),
+                        contentDescription = stringResource(R.string.action_close),
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(dimens.iconMd)
+                    )
+                }
                 Text(
                     stringResource(R.string.lite_receive_files),
                     style = MaterialTheme.typography.headlineSmall,
@@ -90,15 +103,7 @@ fun LiteReceiveScreen(
                 )
             }
 
-            // Receive animation: an expanding radar pulse + the word "Receiving" with a shimmer sweep,
-            // signalling the device is in receive mode. Colours are chosen per theme (deep emerald on
-            // light, bright green on dark) so it reads on both. (Reference clip in Context and References
-            // File is a video I can't decode; this is an on-brand interpretation.)
-            val dark = isSystemInDarkTheme()
-            val receivingBase = if (dark) Color(0xFF4ADE88) else Color(0xFF047857)
-            val receivingHi = if (dark) Color.White else Color(0xFF34D399)
-            val infiniteTransition = rememberInfiniteTransition(label = "receive")
-
+            // Receive animation: custom ai-loader translated to Jetpack Compose
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,41 +111,8 @@ fun LiteReceiveScreen(
                     .padding(bottom = dimens.spaceLg),
                 contentAlignment = Alignment.Center
             ) {
-                val ringT by infiniteTransition.animateFloat(
-                    initialValue = 0f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(2200, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Restart
-                    ),
-                    label = "ring"
-                )
-                Box(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .scale(0.5f + ringT)
-                        .clip(CircleShape)
-                        .background(receivingBase.copy(alpha = (1f - ringT) * 0.22f))
-                )
-
-                val sweep by infiniteTransition.animateFloat(
-                    initialValue = -260f,
-                    targetValue = 520f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(1600, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart
-                    ),
-                    label = "sweep"
-                )
-                val shimmer = Brush.linearGradient(
-                    colors = listOf(receivingBase, receivingHi, receivingBase),
-                    start = Offset(sweep, 0f),
-                    end = Offset(sweep + 260f, 0f),
-                )
-                Text(
-                    text = stringResource(R.string.receiving_label),
-                    style = MaterialTheme.typography.displaySmall.copy(brush = shimmer),
-                    fontWeight = FontWeight.Bold
+                com.EntropicSoftwareLab.ClipboardShare.ui.components.ReceivingLoader(
+                    text = stringResource(R.string.receiving_label)
                 )
             }
 

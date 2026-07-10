@@ -43,6 +43,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
 
 data class TransferItem(val uri: Uri, val relativePath: String?, val isFolder: Boolean = false)
 
@@ -145,19 +146,29 @@ class FileTransferFragment : Fragment() {
         val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
         val isLite = prefs.getString("design_mode", "Lite") == "Lite"
         isLiteMode = isLite
+        
+        val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
+        val revealY = arguments?.getFloat("reveal_y", -1f) ?: -1f
 
         return ComposeView(requireContext()).apply{
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            // Lite adds this over the hub — consume touches so empty areas don't fall through to the
+            // hub tiles beneath.
+            isClickable = true
             setContent {
                 AppTheme {
                     if (isLite) {
-                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
-                            selectedFiles = selectedFilesState.value,
-                            totalSizeBytes = totalSizeBytesState.value,
-                            onSelectFile = ::onSelectFile,
-                            onSelectMedia = ::onSelectMedia,
-                            onSelectText = ::onSelectText,
-                            onRemoveFile = ::onRemoveFile,
+                        androidx.compose.foundation.layout.Box(
+                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        ) {
+                            com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
+                                selectedFiles = selectedFilesState.value,
+                                totalSizeBytes = totalSizeBytesState.value,
+                                onBack = { parentFragmentManager.popBackStack() },
+                                onSelectFile = ::onSelectFile,
+                                onSelectMedia = ::onSelectMedia,
+                                onSelectText = ::onSelectText,
+                                onRemoveFile = ::onRemoveFile,
                             onMoveFile = ::onMoveFile,
                             onPreviewFile = ::previewFile,
                             selectionMode = selectionModeState.value,
@@ -167,7 +178,8 @@ class FileTransferFragment : Fragment() {
                             onSelectAll = ::toggleSelectAll,
                             onDeleteSelected = ::deleteSelectedFiles,
                             onSendViaChoose = ::onSendViaChoose
-                        )
+                            )
+                        }
                     } else {
                     FileTransferScreen(
                         selectedFiles = selectedFilesState.value,
