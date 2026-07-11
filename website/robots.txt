@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-# Replace REPLACE_SITE_URL with the deployed origin before launch.
-Sitemap: https://REPLACE_SITE_URL/sitemap.xml
+# Deployed origin (Cloudflare Pages). Update if a custom domain is added later.
+Sitemap: https://clipboard-share-a8e.pages.dev/sitemap.xml

@@ -31,10 +31,14 @@ window.CS_CONFIG = {
     fileType: "Google Play",
     version: "3.6.1",
     size: "TBD", // store link — no size/sha shown
-    // Store listing, not a direct APK: the button opens Google Play.
-    url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
+    // "#" = designed "coming soon" state (button disabled). The Play listing is not
+    // live yet — the old direct Play URL 404'd for every visitor. Restore the URL
+    // (https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare)
+    // once the app is actually published, or point at a GitHub APK asset if the
+    // sideload lane ships first.
+    url: "#",
     sha256: "",
-    note: "Android 10+ (API 29). Free on Google Play.",
+    note: "Android 10+ (API 29). Free.",
   },
 
   windows: {

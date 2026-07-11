@@ -58,9 +58,12 @@
     var card = document.querySelector('[data-dl-card="' + key + '"]');
     if (!card || !data) return false;
 
-    // Resolve URL: explicit url wins; else try repo+stable filename.
+    // Resolve URL: explicit url wins, and an explicit "#" is the documented
+    // "coming soon" opt-in (config.js) — it must stay disabled, not be replaced
+    // by a repo-built link to an asset that may not exist. Only build the
+    // repo+stable-filename fallback when no url was given at all.
     var url = data.url;
-    if ((!url || url === "#") && window.CS_CONFIG.latestUrl) {
+    if (!url && window.CS_CONFIG.latestUrl) {
       var asset =
         key === "android"
           ? "ClipboardShare-android.apk"

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace REPLACE_SITE_URL with the deployed origin before launch. -->
+<!-- Deployed origin (Cloudflare Pages). Update if a custom domain is added later. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://REPLACE_SITE_URL/</loc>
+    <loc>https://clipboard-share-a8e.pages.dev/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://REPLACE_SITE_URL/privacy.html</loc>
+    <loc>https://clipboard-share-a8e.pages.dev/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
