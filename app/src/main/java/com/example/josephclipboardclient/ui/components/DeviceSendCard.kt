@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun DeviceSendCard(
@@ -58,7 +59,7 @@ fun DeviceSendCard(
             style = MaterialTheme.typography.bodyLarge,
             color = colors.textPrimary,
             maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .weight(1f)
                 .padding(end = dimens.spaceSm)

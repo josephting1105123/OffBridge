@@ -233,7 +233,6 @@
     <string name="theme_dark">Темная</string>
     <string name="dialog_title_choose_theme">Выбрать тему</string>
     <string name="dialog_title_choose_language">Выбрать язык</string>
-    <string name="toast_language_preference_saved">Настройки языка сохранены. Полная поддержка перевода скоро появится.</string>
     <string name="dialog_title_privacy_policy">Политика конфиденциальности</string>
     <string name="action_close">Закрыть</string>
     <string name="selected_folder_fallback">Выбранная папка</string>

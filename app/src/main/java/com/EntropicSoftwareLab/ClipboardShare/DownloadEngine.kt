@@ -7,12 +7,18 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
 import java.net.Socket
 import java.net.InetSocketAddress
+import android.net.Uri
+import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Semaphore
 
 
 
@@ -23,8 +29,7 @@ object DownloadEngine {
     }
 
     /**
-     * V4 §2: the carrier-neutral download path. Protocol bytes are identical
-     * over TCP and Bluetooth; only the duplex-stream carrier differs.
+     * V4 §2: the carrier-neutral download path — protocol bytes don't depend on the carrier.
      * A non-null [fileKey] (the shared pairing key) means the bulk stream is FileSeal-sealed and is
      * decrypted here; null keeps the legacy plaintext read (off-grid + legacy peers).
      */
@@ -32,19 +37,45 @@ object DownloadEngine {
         val manifest = session.manifest
 
         TransferDaemon.daemonScope.launch(Dispatchers.IO) {
-            val prefs = context.getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-            val saveLocationUriString = prefs.getString("save_location_uri", null)
+            // Destination snapshot: read the "Save file/media to" prefs once per session (first
+            // stream) and pin them on the session, so every later pass — append after a drop, the
+            // resume-offset probe — writes and probes the SAME destination even when the user flips
+            // a save setting mid-transfer. Re-reading live here split the .part across two folders
+            // and silently corrupted the resumed file (FOLLOWUPS-2026-07-06 #1).
+            if (!session.destResolved) {
+                synchronized(session) {
+                    if (!session.destResolved) {
+                        val prefs = context.getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+                        session.destSaveTreeUri = prefs.getString("save_location_uri", null)
+                        // "Save media to": GALLERY (default) publishes photos/videos into the
+                        // Pictures|Movies gallery collections; SAME_AS_FILES keeps them in the
+                        // file save folder like everything else.
+                        session.destSaveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY)
+                            ?: TransferUtils.SAVE_MEDIA_GALLERY
+                        session.destResolved = true
+                    }
+                }
+            }
+            val saveLocationUriString = session.destSaveTreeUri
             val saveDir = if (saveLocationUriString != null) {
-                androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(saveLocationUriString))
+                DocumentFile.fromTreeUri(context, Uri.parse(saveLocationUriString))
             } else {
                 null
             }
-            // "Save media to": GALLERY (default) publishes photos/videos into the Pictures|Movies
-            // gallery collections; SAME_AS_FILES keeps them in the file save folder like everything else.
-            val saveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY) ?: TransferUtils.SAVE_MEDIA_GALLERY
+            val saveMediaTo = session.destSaveMediaTo
+            val stagingDir = TransferUtils.receiveStagingDir(context)
+            // One listing of the custom SAF folder per stream pass — a provider children-query
+            // is expensive and findFile() is a full scan per call. It seeds the session-start
+            // name reservation AND backs every promote-time collision check below, gaining each
+            // promoted name as the batch progresses. A received file must never claim (or be
+            // renamed over) a name already in that folder: the old delete-then-rename promote
+            // was a confirmed unprompted data-loss path (FOLLOWUPS-2026-07-06 #4).
+            val safTreeNames: HashSet<String> = if (saveDir != null) {
+                try { saveDir.listFiles().mapNotNullTo(HashSet()) { it.name } } catch (_: Exception) { HashSet() }
+            } else HashSet()
 
             try {
-                connection.setReadTimeout(10000) // 10 second network timeout (no-op on BT)
+                connection.setReadTimeout(10000) // 10 second network timeout
                 val inputStream = connection.input
                 val buffer = ByteArray(TRANSFER_BUFFER_SIZE)
                 // v2 (session.fileV2Negotiated, set when we sent "fgcm2") uses the per-session key and
@@ -55,25 +86,49 @@ object DownloadEngine {
                 }
 
                 if (session.localFileNames.isEmpty()) {
-                    // Track leaf names already claimed in THIS batch so two manifest entries that
-                    // sanitize to the same leaf (e.g. a sent folder with "a.txt" under two different
-                    // subfolders, both flattened here) don't resolve to the same file and overwrite
-                    // each other on disk.
-                    val assigned = HashSet<String>()
+                    // Reserve leaf names against (a) THIS batch — two manifest entries flattening to
+                    // the same leaf must not overwrite each other — and (b) what is ALREADY at each
+                    // destination. The destinations (staging dir + both media publish collections) are
+                    // listed ONCE into sets: per-candidate File.exists() probes cost O(N) stats for a
+                    // folder batch, and — the real bug — a probe of the FINAL name can't see another
+                    // live session's in-flight "name.part" sidecar, so two concurrent same-name
+                    // receives streamed into ONE shared sidecar and corrupted both. A listing surfaces
+                    // the sidecars and dedupeName(reservePartSidecars) treats "name.part" as claiming
+                    // "name". SAF-bound entries additionally reserve against the custom folder's
+                    // listing (safTreeNames, which includes its .part names).
+                    val reservedNonSaf = HashSet<String>()
+                    try { stagingDir.list()?.let { reservedNonSaf.addAll(it) } } catch (_: Exception) {}
+                    for (cat in arrayOf(TransferUtils.MediaCategory.IMAGE, TransferUtils.MediaCategory.VIDEO)) {
+                        try { TransferUtils.publicMediaDir(cat)?.list()?.let { reservedNonSaf.addAll(it) } } catch (_: Exception) {}
+                    }
+                    // Also reserve the names other LIVE incoming sessions have already claimed: their
+                    // sidecar may not exist on disk yet (they name at stream start, write later), so
+                    // the listing alone can miss a same-instant race. The other session's plain
+                    // ArrayList may be mid-grow on another core, so a torn read CAN throw — best-effort
+                    // catch and fall back to the on-disk listing, like the sibling reads above.
+                    for (other in TransferDaemon.activeSessions.values) {
+                        if (other === session || !other.isIncoming) continue
+                        try {
+                            for (idx in 0 until other.localFileNames.size) {
+                                other.localFileNames.getOrNull(idx)?.let { reservedNonSaf.add(it) }
+                            }
+                        } catch (_: Exception) {}
+                    }
+                    val reservedSaf = HashSet(safTreeNames).apply { addAll(reservedNonSaf) }
                     for (m in manifest) {
                         // Sanitize the manifest-supplied name before it ever hits the filesystem
                         // (path-traversal / reserved chars), matching the Windows receiver (XP-DEF-03).
                         var finalName = TransferUtils.sanitizeIncomingFileName(m.first)
                         if (session.currentOffset == 0L) {
-                            val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                            // Media names must also be free in the publish destination
-                            // (Pictures|Movies/"Clipboard Share"): a name unique only in Download
-                            // could be shadowed by a same-named, earlier-published photo when
-                            // history's "open" probes the media folder first.
-                            val publishDir = TransferUtils.publicMediaDir(TransferUtils.mediaCategory(finalName))
-                            finalName = TransferUtils.dedupeName(listOfNotNull(downloadDir, publishDir), finalName, assigned)
+                            val landsInSafTree = saveDir != null && !TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
+                            finalName = TransferUtils.dedupeName(
+                                emptyList(), finalName,
+                                if (landsInSafTree) reservedSaf else reservedNonSaf,
+                                reservePartSidecars = true
+                            )
                         }
-                        assigned.add(finalName)
+                        reservedNonSaf.add(finalName)
+                        reservedSaf.add(finalName)
                         session.localFileNames.add(finalName)
                     }
                     TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
@@ -99,7 +154,7 @@ object DownloadEngine {
                     // files") goes to the file folder: the SAF tree if chosen, otherwise Download.
                     val routeToGallery = TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
                     val saveTree = if (routeToGallery) null else saveDir
-                    var partDoc: androidx.documentfile.provider.DocumentFile? = null
+                    var partDoc: DocumentFile? = null
                     var partFile: java.io.File? = null
                     val outputStream = if (saveTree != null && saveTree.canWrite()) {
                         val doc = saveTree.findFile(partName) ?: saveTree.createFile("*/*", partName)
@@ -108,8 +163,11 @@ object DownloadEngine {
                             context.contentResolver.openOutputStream(doc.uri, if (append) "wa" else "w")
                         } else null
                     } else {
-                        val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                        val pf = java.io.File(downloadDir, partName)
+                        // Public Download on API 30+; app-private staging on API 29, where a raw
+                        // write into a public collection throws EACCES (scoped storage, no legacy
+                        // flag) and used to stall the session unrecoverably (FOLLOWUPS-2026-07-06
+                        // #3). API-29 files are published out via MediaStore after promote.
+                        val pf = java.io.File(stagingDir, partName)
                         partFile = pf
                         java.io.FileOutputStream(pf, append)
                     }
@@ -148,44 +206,90 @@ object DownloadEngine {
                         }
                     }
 
-                    // Promote the completed .part to its final name (replacing any stale same-name file).
+                    // Promote the completed .part to its final name — NEVER by deleting a same-name
+                    // file that appeared since the session-start dedupe. That file is either the
+                    // user's own document (the old delete-then-rename was a confirmed unprompted
+                    // data-loss path, FOLLOWUPS-2026-07-06 #4) or our own already-promoted copy
+                    // after a lost completion-ack re-drove the resume. Promote under a fresh
+                    // "name (N)" instead; an empty re-drive sidecar is just dropped.
                     partDoc?.let { doc ->
-                        saveTree?.findFile(finalName)?.delete()
-                        doc.renameTo(finalName)
+                        if (finalName in safTreeNames && doc.length() == 0L && fsize > 0L) {
+                            // Re-driven resume after this file was already promoted: nothing was
+                            // appended and the finished file is in place — drop the empty sidecar.
+                            // fsize > 0 keeps a genuinely empty manifest file (also 0-length on
+                            // disk) from being mistaken for a re-drive and silently discarded.
+                            doc.delete()
+                        } else {
+                            var promoteName = if (finalName in safTreeNames)
+                                TransferUtils.dedupeName(emptyList(), finalName, safTreeNames) else finalName
+                            // renameTo can fail on a collision the stream-start listing can't see
+                            // (a file created in the folder since then) — advance to the next
+                            // "name (N)" rather than silently stranding fully received bytes in
+                            // the .part with the session still reported completed.
+                            var renamed = false
+                            for (attempt in 0 until 4) {
+                                if (doc.renameTo(promoteName)) { renamed = true; break }
+                                safTreeNames.add(promoteName)
+                                promoteName = TransferUtils.dedupeName(emptyList(), finalName, safTreeNames)
+                            }
+                            if (renamed) {
+                                safTreeNames.add(promoteName)
+                                if (promoteName != finalName) recordLocalName(context, session, i, promoteName)
+                            } else {
+                                // Exhausted the rename attempts: the bytes stay in the .part. Log so a
+                                // "received but missing" report is diagnosable rather than silent.
+                                TransportDiag.log("RX: promote failed for $finalName — left as .part")
+                            }
+                        }
                     }
                     partFile?.let { pf ->
-                        val finalFile = java.io.File(pf.parentFile, finalName)
-                        if (finalFile.exists()) finalFile.delete()
-                        if (pf.renameTo(finalFile)) {
-                            if (routeToGallery) {
-                                // Images/videos move on into Pictures|Movies/"Clipboard Share" so
-                                // gallery apps actually list them (scanning them inside Download never
-                                // surfaces them in a gallery's photo view). Runs on its own coroutine:
-                                // the MediaStore fallback re-copies the whole file, and done inline that
-                                // would stall the next file's bytes and could blow the sender's 30s
-                                // completion-ack window, flipping a fully delivered transfer to "paused"
-                                // on the sender. The internal catch also keeps any publish/history-write
-                                // failure from reaching this loop's outer catch (which would pause the
-                                // session). A cancel arriving after promotion still publishes — the file
-                                // is fully received.
-                                val fileIndex = i
-                                TransferDaemon.daemonScope.launch(Dispatchers.IO) {
-                                    try {
-                                        val publishedName = TransferUtils.publishReceivedMedia(context, finalFile)
-                                        if (publishedName != finalFile.name) {
-                                            // Destination dedupe (or MediaStore auto-rename) changed the
-                                            // leaf name — keep history pointing at the real file.
-                                            session.localFileNames[fileIndex] = publishedName
-                                            TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
-                                        }
-                                    } catch (_: Exception) { }
+                        val parentDir = pf.parentFile
+                        val existsAlready = java.io.File(parentDir, finalName).exists()
+                        if (existsAlready && pf.length() == 0L && fsize > 0L) {
+                            // Re-driven resume after this file was already promoted: nothing was
+                            // appended and the finished file is in place — drop the empty sidecar.
+                            // fsize > 0 keeps a genuinely empty manifest file (also 0-length on
+                            // disk) from being mistaken for a re-drive and silently discarded.
+                            pf.delete()
+                        } else {
+                            var promoteName = if (existsAlready)
+                                TransferUtils.dedupeName(listOfNotNull(parentDir), finalName) else finalName
+                            var finalFile = java.io.File(parentDir, promoteName)
+                            // renameTo can fail on a same-name file exists() can't see (on API 30+
+                            // public Download, other apps' files are invisible to java.io probes but
+                            // FUSE refuses to replace them) — advance to the next "name (N)" rather
+                            // than silently stranding the received bytes in the .part.
+                            var renamed = false
+                            val tried = HashSet<String>()
+                            for (attempt in 0 until 4) {
+                                if (pf.renameTo(finalFile)) { renamed = true; break }
+                                tried.add(promoteName)
+                                promoteName = TransferUtils.dedupeName(listOfNotNull(parentDir), finalName, tried)
+                                finalFile = java.io.File(parentDir, promoteName)
+                            }
+                            if (renamed) {
+                                if (promoteName != finalName) recordLocalName(context, session, i, promoteName)
+                                if (routeToGallery) {
+                                    // Images/videos move on into Pictures|Movies/"Clipboard Share" so
+                                    // gallery apps actually list them (scanning them inside Download
+                                    // never surfaces them in a gallery's photo view).
+                                    publishPromotedFileAsync(context, session, i, finalFile, TransferUtils::publishReceivedMedia)
+                                } else if (TransferUtils.isLegacyScopedStorage()) {
+                                    // API 29 staged this file app-privately (raw public-Download writes
+                                    // EACCES there) — copy it out to the public Downloads collection via
+                                    // MediaStore so the user can actually see it.
+                                    publishPromotedFileAsync(context, session, i, finalFile, TransferUtils::publishToPublicDownloads)
+                                } else {
+                                    // Stays in Download — a non-media file, or media the user routed to
+                                    // "Same as files" with no custom folder. Just index it in place so file
+                                    // browsers/galleries that read Download can find it; no move, so the leaf
+                                    // name is unchanged and history stays valid.
+                                    TransferUtils.indexForGallery(context, finalFile)
                                 }
                             } else {
-                                // Stays in Download — a non-media file, or media the user routed to
-                                // "Same as files" with no custom folder. Just index it in place so file
-                                // browsers/galleries that read Download can find it; no move, so the leaf
-                                // name is unchanged and history stays valid.
-                                TransferUtils.indexForGallery(context, finalFile)
+                                // Exhausted the rename attempts: the bytes stay in the .part. Log so a
+                                // "received but missing" report is diagnosable rather than silent.
+                                TransportDiag.log("RX: promote failed for $finalName — left as .part")
                             }
                         }
                     }
@@ -217,7 +321,7 @@ object DownloadEngine {
                 }
 
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 if (session.isCancelled) {
                     TransferHistoryManager.updateStatus(context, session.sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
@@ -240,11 +344,57 @@ object DownloadEngine {
         }
     }
 
+    /** Updates the session's local leaf-name list and the persisted history together, so the
+     *  history "open" action always points at the file that is actually on disk. */
+    private fun recordLocalName(context: Context, session: TransferSession, index: Int, name: String) {
+        session.localFileNames[index] = name
+        TransferHistoryManager.updateFileNames(context, session.sessionId, session.localFileNames)
+    }
+
+    /** Bounds concurrent MediaStore publish copies. On API 29 EVERY non-SAF receive publishes
+     *  (full-file copy through a pending row), so an unbounded launch-per-file would let a large
+     *  batch flood Dispatchers.IO with simultaneous copies contending with the still-live receive
+     *  stream — the exact completion-ack stall the async split exists to avoid. Two lanes keep the
+     *  pipeline moving without saturating flash/MediaProvider. */
+    private val publishGate = Semaphore(2)
+
+    /** Publishes a promoted file out of its staging spot on its own coroutine: the MediaStore
+     *  fallback re-copies the whole file, and done inline that would stall the next file's bytes
+     *  and could blow the sender's 30s completion-ack window, flipping a fully delivered transfer
+     *  to "paused" on the sender. The internal catch keeps any publish/history-write failure from
+     *  reaching the receive loop's outer catch (which would pause the session); a cancel arriving
+     *  after promotion still publishes — the file is fully received. [publish] returns the
+     *  destination leaf name (null on failure); when the destination renamed the leaf (dedupe or
+     *  MediaStore auto-rename), history is repointed at the real file. */
+    private fun publishPromotedFileAsync(
+        context: Context, session: TransferSession, fileIndex: Int, file: java.io.File,
+        publish: (Context, java.io.File) -> String?
+    ) {
+        TransferDaemon.daemonScope.launch(Dispatchers.IO) {
+            try {
+                publishGate.withPermit {
+                    val publishedName = publish(context, file)
+                    if (publishedName != null && publishedName != file.name) {
+                        recordLocalName(context, session, fileIndex, publishedName)
+                    }
+                }
+            } catch (e: Exception) {
+                // Best-effort: publishing must not fail an already-delivered transfer. Log so a
+                // "received but not visible in gallery/history" report is diagnosable.
+                TransportDiag.log("RX: publish of ${file.name} failed: ${e.message}")
+            }
+        }
+    }
+
     fun resumeIncomingTransfer(context: Context, sessionId: String) {
         val session = TransferDaemon.activeSessions[sessionId] ?: return
-        if (!session.isIncoming || !session.isPaused) return
-        
-        session.isPaused = false
+        // Atomic claim of the paused state (same latch pattern as acceptOffer): a manual Resume tap
+        // racing a scheduled auto-resume could both pass a plain check and spawn two download
+        // coroutines appending into the same .part.
+        synchronized(session) {
+            if (!session.isIncoming || !session.isPaused) return
+            session.isPaused = false
+        }
         TransferHistoryManager.updateStatus(context, sessionId, "transferring")
         
         TransferDaemon.daemonScope.launch(Dispatchers.IO) {
@@ -271,21 +421,40 @@ object DownloadEngine {
                     trueOffset = 0L
                 } else if (session.currentFileIndex < session.localFileNames.size) {
                     val finalName = session.localFileNames[session.currentFileIndex]
-                    val prefs = context.getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-                    val saveLocationUriString = prefs.getString("save_location_uri", null)
-                    val saveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY) ?: TransferUtils.SAVE_MEDIA_GALLERY
-                    // Match the write path's destination: gallery-bound media stages in Download even
-                    // when a custom file folder is set, so read its offset from Download, not the SAF tree.
+                    // Probe the SAME destination the write path used: the session's pinned snapshot,
+                    // not a live prefs read. Re-reading live here let a mid-transfer save-setting
+                    // flip point this probe — and the next write pass — at the NEW destination while
+                    // the .part sat in the OLD one, silently corrupting the resumed file
+                    // (FOLLOWUPS-2026-07-06 #1). The prefs fallback is defensive only: localFileNames
+                    // is non-empty (guard above), which means executeDownloadStream already ran and
+                    // pinned the snapshot, so destResolved is true on every reachable path.
+                    val saveLocationUriString: String?
+                    val saveMediaTo: String
+                    if (session.destResolved) {
+                        saveLocationUriString = session.destSaveTreeUri
+                        saveMediaTo = session.destSaveMediaTo
+                    } else {
+                        val prefs = context.getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+                        saveLocationUriString = prefs.getString("save_location_uri", null)
+                        saveMediaTo = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY) ?: TransferUtils.SAVE_MEDIA_GALLERY
+                    }
+                    // Match the write path's destination: gallery-bound media stages in the staging
+                    // dir even when a custom file folder is set, so read its offset there, not the
+                    // SAF tree. Probe the ".part" SIDECAR — that is where the write path streams the
+                    // partial bytes; the bare finalName doesn't exist until promote, and a same-named
+                    // foreign file at the destination would yield a bogus offset that corrupts the
+                    // resumed file.
+                    val partName = "$finalName.part"
                     val useSaf = saveLocationUriString != null && !TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
                     if (useSaf) {
-                        val saveDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, android.net.Uri.parse(saveLocationUriString!!))
-                        val targetFile = saveDir?.findFile(finalName)
+                        val saveDir = DocumentFile.fromTreeUri(context, Uri.parse(saveLocationUriString!!))
+                        val targetFile = saveDir?.findFile(partName)
                         if (targetFile != null) {
                             trueOffset = targetFile.length()
                         }
                     } else {
-                        val downloadDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                        val targetFile = java.io.File(downloadDir, finalName)
+                        val stagingDir = TransferUtils.receiveStagingDir(context)
+                        val targetFile = java.io.File(stagingDir, partName)
                         if (targetFile.exists()) {
                             trueOffset = targetFile.length()
                         }
@@ -293,10 +462,16 @@ object DownloadEngine {
                 }
                 session.currentOffset = trueOffset
 
+                // Carry the completion-ack request across a resume (off-grid sessions set this): without
+                // it the sender's ackExpected=false, so it declares "completed" on its TCP write and drops
+                // the session — the false-done + dead-resume bug, reopened on resume. Flags after the
+                // offset are order-independent on both receivers, and a legacy sender ignores the extra
+                // field. Mirrors the initial off-grid accept (QrScannerFragment ackSuffix).
+                val ackSuffix = if (session.completionAckRequired) "|ack" else ""
                 val resumeCmd = if (fileKey != null)
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}\n"
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}$ackSuffix\n"
                 else
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}\n"
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}$ackSuffix\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
@@ -312,7 +487,7 @@ object DownloadEngine {
                 TransferDaemon.removeActiveSession(sessionId)
                 TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
                 session.isPaused = true
@@ -321,7 +496,7 @@ object DownloadEngine {
                 // "couldn't reach the sender" toast once the budget is spent (or the user cancelled).
                 if (!TransferDaemon.scheduleAutoResume(context, session)) {
                     withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(context, context.getString(R.string.transfer_failed_connect_sender), android.widget.Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.transfer_failed_connect_sender), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -343,7 +518,7 @@ object DownloadEngine {
             sessionId = sessionId,
             deviceName = session.senderName,
             direction = "incoming",
-            fileNames = session.manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
+            fileNames = session.manifest.map { TransferUtils.manifestDisplayLeaf(it.first) },
             totalBytes = session.manifest.sumOf { it.second },
             timestamp = System.currentTimeMillis(),
             status = "transferring",
@@ -387,7 +562,7 @@ object DownloadEngine {
                 TransferDaemon.removeActiveSession(sessionId)
                 TransferHistoryManager.updateStatus(context, sessionId, "cancelled", session.currentFileIndex, session.currentOffset)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 e.printStackTrace()
                 try { socket?.close() } catch (_: Exception) {}
                 session.isPaused = true

@@ -5,19 +5,21 @@ import android.os.Bundle
 import androidx.compose.ui.platform.ComposeView
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.WindowsVersionScreen
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
+import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
 
 class WindowsVersionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("FileBridgePrefs", android.content.Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val savedTheme = prefs.getString("theme_mode", "System Default")
         val nightMode = when (savedTheme) {
-            "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-            else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
         // First XML→Compose screen, hosted via ComposeView (interop — no activity-compose needed).
         // AppTheme reads isSystemInDarkTheme(), which AppCompatDelegate above drives, so day/night

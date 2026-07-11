@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+import androidx.compose.animation.core.Animatable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.platform.LocalView
 
 /**
  * Two-option slider (e.g. Lite/Pro, On/Off): a track with one thumb that SLIDES between the two
@@ -67,13 +72,13 @@ fun DesignModeToggle(
 
     // Thumb position as a horizontal bias (-1 = left option, +1 = right); an Animatable so an
     // active drag can snap it per frame.
-    val biasAnimatable = remember { androidx.compose.animation.core.Animatable(if (selectedIndex == 1) 1f else -1f) }
+    val biasAnimatable = remember { Animatable(if (selectedIndex == 1) 1f else -1f) }
     var isDragging by remember { androidx.compose.runtime.mutableStateOf(false) }
 
     // The thumb always follows [selectedIndex] (the parent's state is the single source of truth)
     // unless a drag is in flight. Re-running on every external change — even mid-animation — is what
     // keeps the toggle from sticking on the wrong side when the state flips from elsewhere.
-    androidx.compose.runtime.LaunchedEffect(selectedIndex, isDragging) {
+    LaunchedEffect(selectedIndex, isDragging) {
         if (!isDragging) {
             biasAnimatable.animateTo(
                 targetValue = if (selectedIndex == 1) 1f else -1f,
@@ -95,7 +100,7 @@ fun DesignModeToggle(
     ) {
         val widthPx = constraints.maxWidth.toFloat()
         val bias = biasAnimatable.value
-        val view = androidx.compose.ui.platform.LocalView.current
+        val view = LocalView.current
         
         // Interpolate color dynamically based on current drag position (bias)
         val color0 = selectedColors?.getOrNull(0) ?: colors.green
@@ -112,7 +117,7 @@ fun DesignModeToggle(
                         .pointerInput(Unit) {
                             awaitPointerEventScope {
                                 while (true) {
-                                    val event = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
                                     if (event.changes.any { it.pressed }) {
                                         view.parent?.requestDisallowInterceptTouchEvent(true)
                                     }
@@ -144,7 +149,7 @@ fun DesignModeToggle(
             // The sliding glass thumb: faint accent tint + accent hairline outline (no fill, no stripes).
             Box(
                 modifier = Modifier
-                    .align(androidx.compose.ui.BiasAlignment(horizontalBias = bias, verticalBias = 0f))
+                    .align(BiasAlignment(horizontalBias = bias, verticalBias = 0f))
                     .fillMaxWidth(0.5f)
                     .fillMaxHeight()
                     .clip(thumbShape)

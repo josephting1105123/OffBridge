@@ -24,6 +24,10 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.os.Build
+import android.util.TypedValue
+import android.widget.ScrollView
+import androidx.core.os.LocaleListCompat
 
 /**
  * Settings tab. The UI is Compose ([SettingsScreen], hosted via [ComposeView]); this fragment keeps
@@ -45,7 +49,7 @@ class SettingsFragment : Fragment() {
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             contentResolver.takePersistableUriPermission(uri, takeFlags)
 
-            val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            val prefs = requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
             prefs.edit().putString("save_location_uri", uri.toString()).apply()
             updateSaveLocationText(uri)
 
@@ -107,7 +111,7 @@ class SettingsFragment : Fragment() {
         updateLanguageButtonText()
 
         // Save-location label.
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val savedUriString = prefs.getString("save_location_uri", null)
         if (savedUriString != null) {
             updateSaveLocationText(Uri.parse(savedUriString))
@@ -204,25 +208,25 @@ class SettingsFragment : Fragment() {
                 val selectedTag = localeTags[which]
                 val activity = requireActivity()
                 val appCtx = activity.applicationContext
-                val locales = if (selectedTag.isEmpty()) androidx.core.os.LocaleListCompat.getEmptyLocaleList() 
-                              else androidx.core.os.LocaleListCompat.forLanguageTags(selectedTag)
+                val locales = if (selectedTag.isEmpty()) LocaleListCompat.getEmptyLocaleList() 
+                              else LocaleListCompat.forLanguageTags(selectedTag)
                 AppCompatDelegate.setApplicationLocales(locales)
                 dialog.dismiss()
                 
-                android.widget.Toast.makeText(appCtx, appCtx.getString(R.string.settings_toast_rebooting_engine), android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(appCtx, appCtx.getString(R.string.settings_toast_rebooting_engine), Toast.LENGTH_SHORT).show()
                 try {
-                    val serviceIntent = android.content.Intent(appCtx, ClipboardService::class.java)
+                    val serviceIntent = Intent(appCtx, ClipboardService::class.java)
                     appCtx.stopService(serviceIntent)
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         appCtx.startForegroundService(serviceIntent)
                     } else {
                         appCtx.startService(serviceIntent)
                     }
                 } catch (e: Exception) { e.printStackTrace() }
 
-                val restartIntent = android.content.Intent(appCtx, SplashActivity::class.java)
+                val restartIntent = Intent(appCtx, SplashActivity::class.java)
                 restartIntent.putExtra("is_rebooting", true)
-                restartIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                restartIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 appCtx.startActivity(restartIntent)
                 activity.overridePendingTransition(android.R.anim.fade_in, R.anim.stay)
             }
@@ -237,12 +241,12 @@ class SettingsFragment : Fragment() {
     private fun showPrivacyPolicyDialog() {
         val policyText = getString(R.string.privacy_policy_text)
 
-        val scrollView = android.widget.ScrollView(requireContext())
+        val scrollView = ScrollView(requireContext())
         val textView = TextView(requireContext()).apply {
             text = HtmlCompat.fromHtml(policyText, HtmlCompat.FROM_HTML_MODE_COMPACT)
             textSize = 14f
             setPadding(48, 32, 48, 32)
-            val tv = android.util.TypedValue()
+            val tv = TypedValue()
             requireContext().theme.resolveAttribute(R.attr.appTextPrimaryColor, tv, true)
             setTextColor(tv.data)
         }
@@ -276,7 +280,7 @@ class SettingsFragment : Fragment() {
     // ==================== Save Media ====================
 
     private fun updateSaveMediaText() {
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val value = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY)
         saveMediaLabelState.value = if (value == TransferUtils.SAVE_MEDIA_SAME_AS_FILES) {
             getString(R.string.save_media_same_as_files)
@@ -290,7 +294,7 @@ class SettingsFragment : Fragment() {
     private fun showSaveMediaDialog() {
         val keys = arrayOf(TransferUtils.SAVE_MEDIA_GALLERY, TransferUtils.SAVE_MEDIA_SAME_AS_FILES)
         val names = arrayOf(getString(R.string.save_media_gallery), getString(R.string.save_media_same_as_files))
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val current = prefs.getString("save_media_to", TransferUtils.SAVE_MEDIA_GALLERY)
         var checkedItem = keys.indexOf(current)
         if (checkedItem == -1) checkedItem = 0

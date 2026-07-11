@@ -105,7 +105,7 @@ class SystemStatusFragment : Fragment() {
         deviceNameState.value = newName
         val trimmed = newName.trim()
         if (trimmed.isNotEmpty()) {
-            requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
                 .edit().putString("device_name", trimmed).apply()
             TransferDaemon.customDeviceName = trimmed
         }
@@ -113,7 +113,7 @@ class SystemStatusFragment : Fragment() {
 
     private fun syncDeviceName() {
         if (!isAdded) return
-        val prefs = requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val current = prefs.getString("device_name", getDefaultDeviceName()) ?: getDefaultDeviceName()
         if (deviceNameState.value != current) deviceNameState.value = current
     }
@@ -121,7 +121,7 @@ class SystemStatusFragment : Fragment() {
     private fun maybeAutoShowTutorial() {
         if (!isAdded || isHidden) return
         if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         if (prefs.getBoolean("system_tutorial_shown", false)) return
         prefs.edit().putBoolean("system_tutorial_shown", true).apply()
         showTutorialState.value = true

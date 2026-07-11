@@ -5,6 +5,7 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.FileSeal
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import java.io.OutputStream
 import java.net.Socket
+import android.net.Uri
 
 object UploadEngine {
     internal fun streamSessionFiles(context: Context, session: TransferSession, outStream: OutputStream, fileKey: ByteArray? = null, sendGen: Int? = null, useFileV2: Boolean = false) {
@@ -24,7 +25,7 @@ object UploadEngine {
         fun isCurrent() = sendGen == null || session.sendGeneration.get() == sendGen
         for (i in startIndex until session.fileUris.size) {
             if (!isCurrent()) throw Exception("Send superseded by a newer resume")
-            val uri = android.net.Uri.parse(session.fileUris[i])
+            val uri = Uri.parse(session.fileUris[i])
             // A null stream (revoked SAF grant, deleted file) must abort — the old `?.use{}` sent
             // zero bytes but still advanced currentFileIndex/currentOffset, so the receiver kept
             // reading this file's promised bytes out of the NEXT file, corrupting the whole batch.

@@ -46,6 +46,7 @@ import com.EntropicSoftwareLab.ClipboardShare.TransferItem
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaChoice
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DeviceSendCard
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun LiteSendScreen(
@@ -72,7 +73,7 @@ fun LiteSendScreen(
     var currentScreen by remember { mutableStateOf(1) }
     // System/gesture back on the network-choice step returns to file selection, matching the header
     // back arrow (otherwise back would dismiss the whole send flow from step 2).
-    androidx.activity.compose.BackHandler(enabled = currentScreen == 2) { currentScreen = 1 }
+    BackHandler(enabled = currentScreen == 2) { currentScreen = 1 }
 
     Box(
         modifier = Modifier

@@ -14,6 +14,8 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.TransportAttemptLog
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDescriptor
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
+import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
+import com.EntropicSoftwareLab.ClipboardShare.TransferUtils
 
 /**
  * Phase 3 data layer (§6): a single-writer facade over [AppDatabase].
@@ -29,7 +31,7 @@ import java.util.concurrent.Executors
 object OffGridRepository {
 
     private const val TAG = "OffGridRepo"
-    private const val IMPORT_FLAG_PREFS = "FileBridgePrefs"
+    private const val IMPORT_FLAG_PREFS = FILE_BRIDGE_PREFS
     private const val IMPORT_FLAG_KEY = "room_history_imported_v1"
 
     /** The ladder id of the in-progress / most-recent off-grid session — scopes the diagnostics screen. */
@@ -337,7 +339,7 @@ object OffGridRepository {
             TransferFileEntity(
                 sessionId = record.sessionId,
                 ordinal = i,
-                fileName = name.replace('\\', '/').substringAfterLast('/'),
+                fileName = TransferUtils.manifestDisplayLeaf(name),
                 sizeBytes = (record.fileSizes.getOrNull(i) ?: 0L).coerceAtLeast(0L),
                 bytesDone = when {
                     i < record.filesCompleted -> (record.fileSizes.getOrNull(i) ?: 0L).coerceAtLeast(0L)

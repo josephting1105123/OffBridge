@@ -76,6 +76,12 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.modal.backdropSource
 import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.provider.OpenableColumns
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.ui.geometry.Rect
+import androidx.documentfile.provider.DocumentFile
 
 /**
  * Compose Send-Files tab. Pure presentation: it renders the pinned header (send icon + title +
@@ -109,7 +115,7 @@ fun FileTransferScreen(
     onSend: () -> Unit,
     onHowToUse: () -> Unit,
     /** Window bounds of the "How to use" chip — the forced first-launch tour spotlights it. */
-    onHowToUseChipBounds: (androidx.compose.ui.geometry.Rect) -> Unit = {},
+    onHowToUseChipBounds: (Rect) -> Unit = {},
     onTransferHistory: () -> Unit,
     showTutorial: Boolean,
     onTutorialDismiss: () -> Unit,
@@ -526,7 +532,7 @@ internal fun FilePreviewCard(
         if (!isImage) null
         else runCatching {
             context.contentResolver.openInputStream(item.uri)?.use { stream ->
-                android.graphics.BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                BitmapFactory.decodeStream(stream)?.asImageBitmap()
             }
         }.getOrNull()
     }
@@ -660,7 +666,7 @@ private class GridDragState {
  * dragged item into that slot — preserving the relative order of the items it passes over.
  */
 private fun Modifier.dragReorder(
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
+    gridState: LazyGridState,
     dragState: GridDragState,
     onMove: (Int, Int) -> Unit,
 ): Modifier = this.then(
@@ -668,7 +674,7 @@ private fun Modifier.dragReorder(
 )
 
 private fun Modifier.androidxDragReorder(
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
+    gridState: LazyGridState,
     dragState: GridDragState,
     onMove: (Int, Int) -> Unit,
 ): Modifier = this.pointerInput(Unit) {
@@ -703,7 +709,7 @@ private fun Modifier.androidxDragReorder(
 
 /** Resolves which grid item index sits under [offset] (in the grid's local coordinates). */
 private fun itemIndexAt(
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
+    gridState: LazyGridState,
     offset: Offset,
 ): Int? {
     val item = gridState.layoutInfo.visibleItemsInfo.firstOrNull { info ->
@@ -715,7 +721,7 @@ private fun itemIndexAt(
     return item?.index
 }
 
-private fun queryDisplayName(context: android.content.Context, uri: Uri): String {
+private fun queryDisplayName(context: Context, uri: Uri): String {
     var result: String? = null
     if (uri.scheme == "content") {
         val cursor = runCatching {
@@ -723,7 +729,7 @@ private fun queryDisplayName(context: android.content.Context, uri: Uri): String
         }.getOrNull()
         try {
             if (cursor != null && cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 if (index != -1) result = cursor.getString(index)
             }
         } finally {
@@ -738,9 +744,9 @@ private fun queryDisplayName(context: android.content.Context, uri: Uri): String
     return result ?: "Unknown File"
 }
 
-private fun folderName(context: android.content.Context, uri: Uri): String {
+private fun folderName(context: Context, uri: Uri): String {
     val docFile = runCatching {
-        androidx.documentfile.provider.DocumentFile.fromTreeUri(context, uri)
+        DocumentFile.fromTreeUri(context, uri)
     }.getOrNull()
     return docFile?.name ?: "Folder"
 }

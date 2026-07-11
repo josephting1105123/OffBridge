@@ -3,6 +3,7 @@ package com.EntropicSoftwareLab.ClipboardShare.offgrid
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.EntropicSoftwareLab.ClipboardShare.R
+import androidx.activity.OnBackPressedCallback
 
 /**
  * Host activity for the off-grid flow — a dedicated activity, matching the
@@ -45,7 +46,7 @@ class OffGridSendActivity : AppCompatActivity() {
 
         // During the forced tour's scanner step the user must not back out of it.
         if (intent.getBooleanExtra(EXTRA_FORCED_TOUR, false)) {
-            onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() { /* swallow: finish only via the tour's Done */ }
             })
         }

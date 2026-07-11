@@ -39,6 +39,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens
+import androidx.compose.ui.unit.Dp
 
 /**
  * Compose Settings tab. Pure presentation: all state (theme/language labels, save-location text,
@@ -227,7 +228,7 @@ private fun SettingPillRow(
     colors: AppColors,
     dimens: Dimens,
     onClick: () -> Unit,
-    bottomPadding: androidx.compose.ui.unit.Dp = dimens.spaceMd,
+    bottomPadding: Dp = dimens.spaceMd,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),
@@ -271,7 +272,7 @@ private fun SettingButtonRow(
     colors: AppColors,
     dimens: Dimens,
     onClick: () -> Unit,
-    bottomPadding: androidx.compose.ui.unit.Dp = dimens.spaceMd,
+    bottomPadding: Dp = dimens.spaceMd,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(bottom = bottomPadding),

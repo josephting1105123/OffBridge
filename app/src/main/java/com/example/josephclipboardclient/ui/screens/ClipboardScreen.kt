@@ -43,6 +43,7 @@ import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.withInterNumerals
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun ClipboardScreen(
@@ -273,8 +274,8 @@ private fun LiteCopyCard(
 
 @Composable
 private fun IconAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    tint: androidx.compose.ui.graphics.Color,
+    icon: ImageVector,
+    tint: Color,
     onClick: () -> Unit
 ) {
     val dimens = AppThemeTokens.dimens

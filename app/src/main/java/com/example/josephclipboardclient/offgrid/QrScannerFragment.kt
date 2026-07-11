@@ -32,6 +32,8 @@ import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.EcdhSession
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.applyModalPolish
+import com.EntropicSoftwareLab.ClipboardShare.copyPlainText
+import com.EntropicSoftwareLab.ClipboardShare.showSelectableTextDialog
 import com.EntropicSoftwareLab.ClipboardShare.SkeletonHelper
 import com.EntropicSoftwareLab.ClipboardShare.Net
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
@@ -67,6 +69,11 @@ import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import android.widget.ScrollView
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageProxy
+import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
+import com.EntropicSoftwareLab.ClipboardShare.TransferUtils
 
 /**
  * Receiver screen: CameraX + ML Kit QR scanning and NFC reader mode run
@@ -133,7 +140,7 @@ class QrScannerFragment : Fragment() {
     /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) — suppresses scanning. */
     @Volatile private var receiveBlocked = false
     private var tvDiag: TextView? = null
-    private var diagScroll: android.widget.ScrollView? = null
+    private var diagScroll: ScrollView? = null
 
     private val payloadConsumed = AtomicBoolean(false)
     private var acceptedPayload: OffGridPayload? = null
@@ -550,7 +557,7 @@ class QrScannerFragment : Fragment() {
         if (nfcMode) return
         val tutorialMode = arguments?.getBoolean(ARG_TUTORIAL) == true
         val forcedTour = arguments?.getBoolean(ARG_FORCED_TOUR) == true
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
 
         if (!tutorialMode) {
             // The confirm card is already up for a preset payload — no scan tip needed.
@@ -648,8 +655,8 @@ class QrScannerFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
-    private fun analyzeFrame(imageProxy: androidx.camera.core.ImageProxy) {
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
+    private fun analyzeFrame(imageProxy: ImageProxy) {
         if (payloadConsumed.get()) {
             imageProxy.close()
             return
@@ -681,33 +688,21 @@ class QrScannerFragment : Fragment() {
     }
 
     private fun copyDiag() {
-        val snap = TransportDiag.snapshot()
-        val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
-        cm?.setPrimaryClip(android.content.ClipData.newPlainText("transport-diag", snap))
-        Toast.makeText(requireContext(), R.string.offgrid_diag_copied, Toast.LENGTH_SHORT).show()
+        requireContext().copyPlainText("transport-diag", TransportDiag.snapshot(), R.string.offgrid_diag_copied)
     }
 
     /** Pop the full diagnostic trace in a copyable dialog (used on connection failure). */
     private fun showDiagDialog() {
         if (!isAdded) return
-        val snap = TransportDiag.snapshot()
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        val tv = TextView(requireContext()).apply {
-            text = snap
-            typeface = android.graphics.Typeface.MONOSPACE
-            textSize = 11f
-            setTextIsSelectable(true)
-            setPadding(pad, pad, pad, pad)
-        }
-        val scroll = android.widget.ScrollView(requireContext()).apply { addView(tv) }
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle(R.string.offgrid_diag_title)
-            .setView(scroll)
-            .setPositiveButton(android.R.string.ok, null)
-            .setNeutralButton(R.string.offgrid_diag_copy) { _, _ -> copyDiag() }
-            .create()
-            .also { it.applyModalPolish() }
-            .show()
+        showSelectableTextDialog(
+            requireContext(),
+            title = getString(R.string.offgrid_diag_title),
+            text = TransportDiag.snapshot(),
+            copyButtonLabel = R.string.offgrid_diag_copy,
+            copiedToast = R.string.offgrid_diag_copied,
+            monospace = true,
+            clipLabel = "transport-diag",
+        )
     }
 
     /**
@@ -1169,7 +1164,7 @@ class QrScannerFragment : Fragment() {
                                 sessionId = sessionId,
                                 deviceName = session.senderName,
                                 direction = "incoming",
-                                fileNames = session.manifest.map { it.first.replace('\\', '/').substringAfterLast('/') },
+                                fileNames = session.manifest.map { TransferUtils.manifestDisplayLeaf(it.first) },
                                 totalBytes = session.manifest.sumOf { it.second },
                                 timestamp = System.currentTimeMillis(),
                                 status = "transferring",
@@ -1449,7 +1444,7 @@ class QrScannerFragment : Fragment() {
         /** Shared prefs file (app-wide) + key tracking whether the ladder-permission
          *  bundle has been requested at least once — disambiguates "never asked"
          *  from "permanently denied" for [isPermanentlyDenied]. */
-        private const val PERM_PREFS = "FileBridgePrefs"
+        private const val PERM_PREFS = FILE_BRIDGE_PREFS
         private const val KEY_LADDER_PERM_REQUESTED = "ladder_perm_requested_v1"
         /** Tracks the one-time Bluetooth-permission ask on the PC-QR (SoftAP + BLE cap) path. */
         private const val KEY_BT_CONTROL_PERM_REQUESTED = "bt_control_perm_requested_v1"

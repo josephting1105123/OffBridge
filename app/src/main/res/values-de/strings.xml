@@ -233,7 +233,6 @@
     <string name="theme_dark">Dunkel</string>
     <string name="dialog_title_choose_theme">Design auswählen</string>
     <string name="dialog_title_choose_language">Sprache auswählen</string>
-    <string name="toast_language_preference_saved">Spracheinstellung gespeichert. Vollständige Übersetzung folgt bald.</string>
     <string name="dialog_title_privacy_policy">Datenschutzerklärung</string>
     <string name="action_close">Schließen</string>
     <string name="selected_folder_fallback">Ausgewählter Ordner</string>

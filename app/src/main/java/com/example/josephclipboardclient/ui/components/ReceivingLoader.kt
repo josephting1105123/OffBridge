@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontFamily
 
 @Composable
 fun ReceivingLoader(
@@ -196,9 +198,9 @@ fun ReceivingLoader(
                     text = char.toString(),
                     color = AppThemeTokens.colors.textPrimary,
                     fontWeight = FontWeight.SemiBold, // Reduced thickness
-                    fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                    fontFamily = FontFamily.Serif,
                     letterSpacing = (-2.5).sp, // Gap heavily reduced
-                    style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier
                         .alpha(opacity)
                         .graphicsLayer {

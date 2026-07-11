@@ -3,6 +3,7 @@ package com.EntropicSoftwareLab.ClipboardShare.offgrid
 import android.content.Context
 import android.nfc.NfcAdapter
 import android.os.Build
+import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
 
 /** A coarse vertical zone on the back of a phone where the NFC antenna sits. */
 enum class NfcZone { TOP, CENTER, BOTTOM }
@@ -31,7 +32,7 @@ enum class TapStyle { FLAT, ANGLED, VERTICAL }
  */
 object NfcAntennaLocator {
 
-    private const val PREFS = "FileBridgePrefs"
+    private const val PREFS = FILE_BRIDGE_PREFS
     private const val KEY_ZONE = "nfc_antenna_zone"
     private const val KEY_STYLE = "nfc_tap_style"
 

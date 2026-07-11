@@ -233,7 +233,6 @@
     <string name="theme_dark">Oscuro</string>
     <string name="dialog_title_choose_theme">Elegir Tema</string>
     <string name="dialog_title_choose_language">Elegir Idioma</string>
-    <string name="toast_language_preference_saved">Preferencia de idioma guardada. Soporte completo próximamente.</string>
     <string name="dialog_title_privacy_policy">Política de Privacidad</string>
     <string name="action_close">Cerrar</string>
     <string name="selected_folder_fallback">Carpeta Seleccionada</string>

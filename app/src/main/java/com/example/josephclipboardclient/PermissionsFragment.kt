@@ -195,11 +195,11 @@ class PermissionsFragment : Fragment() {
     // ---- Shared permanently-denied machinery (one copy for every gated permission) ----
 
     private fun permRequested(flagKey: String): Boolean =
-        requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
             .getBoolean(flagKey, false)
 
     private fun markPermRequested(flagKey: String) {
-        requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean(flagKey, true).apply()
     }
 

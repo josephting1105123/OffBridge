@@ -25,12 +25,26 @@ import androidx.compose.ui.Modifier
 import com.EntropicSoftwareLab.ClipboardShare.offgrid.NfcAntennaLocator
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import android.content.res.Configuration
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.FragmentManager
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNavView: BottomNavigationView
     private lateinit var fabMenu: FloatingActionButton
-    private lateinit var liteNavBar: android.view.View
+    private lateinit var liteNavBar: View
     private val fragmentMap = mutableMapOf<Int, Fragment>()
     private var activeFragment: Fragment? = null
     /** Tracks the live shell mode so the FAB/back-stack logic stays correct across an in-place switch. */
@@ -40,14 +54,14 @@ class MainActivity : AppCompatActivity() {
 
     // Back on a non-Send tab must not silently pop the hidden Send-to-Devices
     // screen off the back stack — background the app instead, like an empty stack.
-    private val tabBackGuard = object : androidx.activity.OnBackPressedCallback(false) {
+    private val tabBackGuard = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
             moveTaskToBack(false)
         }
     }
 
     // While the forced first-launch tour runs, back is swallowed — it can only end via Done.
-    private val tourBackGuard = object : androidx.activity.OnBackPressedCallback(false) {
+    private val tourBackGuard = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() { /* swallow */ }
     }
 
@@ -73,35 +87,35 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
 
         // Restore the user's chosen theme before inflating any layouts
         val savedTheme = prefs.getString("theme_mode", "System Default")
         val nightMode = when (savedTheme) {
-            "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-            else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
         setContentView(R.layout.activity_main)
 
-        val rebootOverlay = findViewById<android.view.View>(R.id.rebootOverlay)
+        val rebootOverlay = findViewById<View>(R.id.rebootOverlay)
         if (intent.getBooleanExtra("is_rebooting", false) || prefs.getBoolean("is_theme_rebooting", false)) {
             prefs.edit().remove("is_theme_rebooting").apply()
-            rebootOverlay.visibility = android.view.View.VISIBLE
+            rebootOverlay.visibility = View.VISIBLE
             rebootOverlay.animate()
                 .alpha(0f)
                 .setStartDelay(500)
                 .setDuration(400)
-                .withEndAction { rebootOverlay.visibility = android.view.View.GONE }
+                .withEndAction { rebootOverlay.visibility = View.GONE }
                 .start()
         }
 
         // Pre-warm the LayoutInflater cache for the tutorial tooltip so "How to use" is instant
         window.decorView.post {
             try {
-                val inflater = android.view.LayoutInflater.from(this)
+                val inflater = LayoutInflater.from(this)
                 inflater.inflate(R.layout.layout_tutorial_tooltip, null)
             } catch (e: Exception) {} // best-effort layout pre-warm; ignore inflation failures
         }
@@ -120,8 +134,8 @@ class MainActivity : AppCompatActivity() {
         // sits at exactly Pro's height once the user has seen Pro, and a safe fallback before then — this
         // is what stops it reading "too low". (Guarded so setting layoutParams doesn't loop the inset pass.)
         val liteBarBasePx = (72f * resources.displayMetrics.density).toInt()
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(liteNavBar) { v, insets ->
-            val bottom = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.navigationBars()).bottom
+        ViewCompat.setOnApplyWindowInsetsListener(liteNavBar) { v, insets ->
+            val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val cachedPro = prefs.getInt("pro_nav_bar_height", 0)
             val target = maxOf(cachedPro, liteBarBasePx + bottom)
             if (v.layoutParams.height != target) {
@@ -130,16 +144,16 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        val isLite = isLiteMode(this)
         currentIsLite = isLite
 
         if (isLite) {
             // Lite never touches the Pro nav bar (mutating its menu/height at runtime was the source of
             // the "too low" / stretched-bar bugs). Hide it and use the dedicated lite_nav_bar; the power
             // FAB anchors to that bar and both are shown hub-only (see updateHubChrome).
-            bottomNavView.visibility = android.view.View.GONE
+            bottomNavView.visibility = View.GONE
             anchorFabTo(R.id.lite_nav_bar)
-            androidx.core.view.ViewCompat.requestApplyInsets(liteNavBar)
+            ViewCompat.requestApplyInsets(liteNavBar)
 
             if (savedInstanceState == null) {
                 supportFragmentManager.beginTransaction()
@@ -147,8 +161,8 @@ class MainActivity : AppCompatActivity() {
                     .commitNowAllowingStateLoss()
             }
         } else {
-            bottomNavView.visibility = android.view.View.VISIBLE
-            liteNavBar.visibility = android.view.View.GONE
+            bottomNavView.visibility = View.VISIBLE
+            liteNavBar.visibility = View.GONE
             anchorFabTo(R.id.bottom_nav_view)
             cacheProNavBarHeight()
             fragmentMap[R.id.nav_send_files] = FileTransferFragment()
@@ -236,32 +250,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMenuBottomSheet() {
-        val bottomSheetView = findViewById<android.view.View>(R.id.bottom_sheet_menu_layout)
-        val behavior = com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheetView)
-        val scrim = findViewById<android.view.View>(R.id.menu_scrim)
+        val bottomSheetView = findViewById<View>(R.id.bottom_sheet_menu_layout)
+        val behavior = BottomSheetBehavior.from(bottomSheetView)
+        val scrim = findViewById<View>(R.id.menu_scrim)
         
         // Hide initially
-        behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+        behavior.state = BottomSheetBehavior.STATE_HIDDEN
 
-        val menuBackGuard = object : androidx.activity.OnBackPressedCallback(false) {
+        val menuBackGuard = object : OnBackPressedCallback(false) {
             override fun handleOnBackPressed() {
-                behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+                behavior.state = BottomSheetBehavior.STATE_HIDDEN
             }
         }
         onBackPressedDispatcher.addCallback(this, menuBackGuard)
         
-        behavior.addBottomSheetCallback(object : com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: android.view.View, newState: Int) {
-                if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN) {
-                    scrim.visibility = android.view.View.GONE
+        behavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    scrim.visibility = View.GONE
                     menuBackGuard.isEnabled = false
-                } else if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED || newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HALF_EXPANDED) {
+                } else {
+                    // Cover the screen the moment the sheet leaves HIDDEN (settling/dragging/expanded),
+                    // not only once onSlide first fires. A VISIBLE scrim intercepts every outside tap even
+                    // while still transparent, so a tap can't slip through to the nav bar / FAB beneath
+                    // before the fade begins — it's caught by the scrim, which closes the menu and consumes
+                    // the event (misclick guard).
+                    scrim.visibility = View.VISIBLE
                     menuBackGuard.isEnabled = true
                 }
             }
-            override fun onSlide(bottomSheet: android.view.View, slideOffset: Float) {
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
                 if (slideOffset > 0) {
-                    scrim.visibility = android.view.View.VISIBLE
+                    scrim.visibility = View.VISIBLE
                     scrim.alpha = slideOffset
                 } else {
                     scrim.alpha = 0f
@@ -270,37 +290,37 @@ class MainActivity : AppCompatActivity() {
         })
         
         scrim.setOnTouchListener { v, event ->
-            if (event.action == android.view.MotionEvent.ACTION_UP) {
+            if (event.action == MotionEvent.ACTION_UP) {
                 v.performClick()
             }
-            if (event.action == android.view.MotionEvent.ACTION_DOWN) {
-                if (behavior.state != com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN) {
-                    behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
+                    behavior.state = BottomSheetBehavior.STATE_HIDDEN
                 }
             }
             true // Consume all touch events to prevent fall-through to background UI
         }
 
-        val btnSettings = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_settings)
-        val btnWindows = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_windows)
-        val toggleDesignMode = bottomSheetView.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.toggle_design_mode)
-        val toggleThemeMode = bottomSheetView.findViewById<androidx.compose.ui.platform.ComposeView>(R.id.toggle_theme_mode)
-        val btnRestart = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_restart)
-        val btnPowerOff = bottomSheetView.findViewById<android.view.View>(R.id.btn_menu_power_off)
+        val btnSettings = bottomSheetView.findViewById<View>(R.id.btn_menu_settings)
+        val btnWindows = bottomSheetView.findViewById<View>(R.id.btn_menu_windows)
+        val toggleDesignMode = bottomSheetView.findViewById<ComposeView>(R.id.toggle_design_mode)
+        val toggleThemeMode = bottomSheetView.findViewById<ComposeView>(R.id.toggle_theme_mode)
+        val btnRestart = bottomSheetView.findViewById<View>(R.id.btn_menu_restart)
+        val btnPowerOff = bottomSheetView.findViewById<View>(R.id.btn_menu_power_off)
 
         btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
-            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+            behavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
         btnWindows.setOnClickListener {
             startActivity(Intent(this, WindowsVersionActivity::class.java))
-            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+            behavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
 
         toggleDesignMode.setContent {
             com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme {
-                val prefsLocal = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-                var isLiteSelected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(prefsLocal.getString("design_mode", "Lite") == "Lite") }
+                val prefsLocal = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+                var isLiteSelected by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(isLiteMode(this@MainActivity)) }
                 val toggleColors = com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens.colors
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -323,56 +343,74 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Theme picker: Light / System / Dark. Tri-state (not a binary toggle) so "follow system"
-        // stays reachable — the keys match every existing theme_mode reader ("System Default" incl.
-        // ClipboardService + all activity onCreates).
+        // Theme toggle: Light / Dark two-state slider in the Lite/Pro glass language — no "System"
+        // option in the UI. A fresh install still defaults to follow-system: theme_mode is unset, which
+        // reads as "System Default" -> MODE_NIGHT_FOLLOW_SYSTEM in onCreate + ClipboardService. The
+        // slider shows whichever side matches the current appearance; the instant the user picks a side
+        // we persist "Light"/"Dark", which ends follow-system from then on. Keys stay "Light"/"Dark" so
+        // every existing theme_mode reader keeps working.
         toggleThemeMode.setContent {
             com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme {
-                val prefsLocal = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-                val themeKeys = listOf("Light", "System Default", "Dark")
+                val prefsLocal = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+                val nowDark = (resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
+                val toggleColors = com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens.colors
+                // Dark/Moon side = purple. Like the amber/info tokens it shifts per app mode for
+                // readability: violet-700 (#6D28D9) on a light UI, violet-400 (#A78BFA) on a dark UI.
+                val moonPurple = if (nowDark) Color(0xFFA78BFA)
+                                 else Color(0xFF6D28D9)
                 var selectedTheme by androidx.compose.runtime.remember {
                     val saved = prefsLocal.getString("theme_mode", "System Default")
-                    androidx.compose.runtime.mutableStateOf(themeKeys.indexOf(saved).takeIf { it >= 0 } ?: 1)
+                    androidx.compose.runtime.mutableStateOf(
+                        when (saved) {
+                            "Light" -> 0
+                            "Dark" -> 1
+                            // Unset / "System Default": reflect the current system appearance WITHOUT
+                            // persisting, so the app keeps following the system until the user picks.
+                            else -> if (nowDark) 1 else 0
+                        }
+                    )
                 }
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    com.EntropicSoftwareLab.ClipboardShare.ui.components.SegmentedControl(
+                    com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle(
                         options = listOf(
                             getString(R.string.theme_light),
-                            getString(R.string.theme_system),
                             getString(R.string.theme_dark)
                         ),
                         selectedIndex = selectedTheme,
+                        // Light = amber (sun), Dark = purple (moon) — not green on both. The thumb
+                        // crossfades amber<->purple as it slides; both stay readable on the glass.
+                        selectedColors = listOf(toggleColors.warning, moonPurple),
                         onSelect = { index ->
-                            if (index != selectedTheme) {
+                            // A follow-system user tapping the side that is ALREADY showing must
+                            // still pin it: theme_mode is unset then, so index == selectedTheme,
+                            // yet the tap is an explicit choice that ends follow-system. Without
+                            // this the tap is a silent no-op and the app later flips with the OS
+                            // against the user's pick. A same-side pin falls through harmlessly:
+                            // targetDark == nowDark (no reboot overlay) and setDefaultNightMode
+                            // with the current mode doesn't recreate.
+                            val alreadyPinned = prefsLocal.getString("theme_mode", null)
+                                .let { it == "Light" || it == "Dark" }
+                            if (index != selectedTheme || !alreadyPinned) {
                                 selectedTheme = index
-                                val key = themeKeys[index]
+                                val key = if (index == 0) "Light" else "Dark"
+                                val targetDark = index == 1
                                 // Only arm the reboot overlay when the resolved appearance will actually
                                 // change — setDefaultNightMode won't recreate otherwise, and a stale flag
                                 // paints a phantom black overlay on the next cold start.
-                                val nowDark = (resources.configuration.uiMode and
-                                    android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-                                    android.content.res.Configuration.UI_MODE_NIGHT_YES
-                                val systemDark = (android.content.res.Resources.getSystem().configuration.uiMode and
-                                    android.content.res.Configuration.UI_MODE_NIGHT_MASK) ==
-                                    android.content.res.Configuration.UI_MODE_NIGHT_YES
-                                val targetDark = when (key) {
-                                    "Dark" -> true
-                                    "Light" -> false
-                                    else -> systemDark
-                                }
                                 val editor = prefsLocal.edit().putString("theme_mode", key)
                                 if (targetDark != nowDark) editor.putBoolean("is_theme_rebooting", true)
                                 editor.apply()
 
-                                val nightMode = when (key) {
-                                    "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-                                    "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-                                    else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                                }
-                                // Small delay so the selection is visible before the activity recreate.
+                                val nightMode = if (index == 0)
+                                    AppCompatDelegate.MODE_NIGHT_NO
+                                else
+                                    AppCompatDelegate.MODE_NIGHT_YES
+                                // Small delay so the thumb slide is visible before the activity recreate.
                                 bottomSheetView.postDelayed({
-                                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+                                    AppCompatDelegate.setDefaultNightMode(nightMode)
                                 }, 300)
                             }
                         }
@@ -407,7 +445,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fabMenu.setOnClickListener {
-            behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
     }
 
@@ -508,7 +546,7 @@ class MainActivity : AppCompatActivity() {
                     action = ClipboardService.ACTION_EXECUTE_NETWORK_PUSH
                     putExtra("PAYLOAD", sharedText)
                 })
-                android.widget.Toast.makeText(this, getString(R.string.share_text_sending), android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.share_text_sending), Toast.LENGTH_SHORT).show()
                 switchFragment(R.id.nav_history)
                 bottomNavView.selectedItemId = R.id.nav_history
             }
@@ -565,21 +603,21 @@ class MainActivity : AppCompatActivity() {
         if (!::fabMenu.isInitialized || !::liteNavBar.isInitialized) return
         if (currentIsLite) {
             val onHub = supportFragmentManager.backStackEntryCount == 0
-            val vis = if (onHub) android.view.View.VISIBLE else android.view.View.GONE
+            val vis = if (onHub) View.VISIBLE else View.GONE
             fabMenu.visibility = vis
             liteNavBar.visibility = vis
         } else {
-            fabMenu.visibility = android.view.View.VISIBLE
-            liteNavBar.visibility = android.view.View.GONE
+            fabMenu.visibility = View.VISIBLE
+            liteNavBar.visibility = View.GONE
         }
     }
 
     /** Re-anchors the power FAB's top to [barId]'s top (+16dp), so it rides just above whichever bar
      *  the current mode shows (bottom_nav_view in Pro, lite_nav_bar in Lite). */
     private fun anchorFabTo(barId: Int) {
-        val lp = fabMenu.layoutParams as androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
+        val lp = fabMenu.layoutParams as ConstraintLayout.LayoutParams
         lp.topToTop = barId
-        lp.bottomToBottom = androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.UNSET
+        lp.bottomToBottom = ConstraintLayout.LayoutParams.UNSET
         lp.topMargin = (16f * resources.displayMetrics.density).toInt()
         fabMenu.layoutParams = lp
     }
@@ -601,7 +639,7 @@ class MainActivity : AppCompatActivity() {
         bottomNavView.post {
             val h = bottomNavView.height
             if (h > 0) {
-                getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+                getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
                     .edit().putInt("pro_nav_bar_height", h).apply()
             }
         }
@@ -615,7 +653,7 @@ class MainActivity : AppCompatActivity() {
     fun requestDesignModeSwitch(toLite: Boolean) {
         if (switchingMode || toLite == currentIsLite) return
         switchingMode = true
-        val fadeViews = listOf(findViewById<android.view.View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
+        val fadeViews = listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
         fadeViews.forEach { it.animate().alpha(0f).setDuration(180L).start() }
         bottomNavView.postDelayed({
             // Bail if we were backgrounded / destroyed during the fade — the fragment transactions
@@ -628,15 +666,14 @@ class MainActivity : AppCompatActivity() {
                 return@postDelayed
             }
             rebuildShellFor(toLite)
-            listOf(findViewById<android.view.View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu).forEach {
+            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu).forEach {
                 it.alpha = 0f
                 it.animate().alpha(1f).setDuration(200L).start()
             }
             switchingMode = false
             // Reconcile if the toggle was re-tapped during the switch (the pref moved again but that
             // second requestDesignModeSwitch was dropped by the switchingMode guard).
-            val desiredLite = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-                .getString("design_mode", "Lite") == "Lite"
+            val desiredLite = isLiteMode(this)
             if (desiredLite != currentIsLite) requestDesignModeSwitch(desiredLite)
         }, 200L)
     }
@@ -645,7 +682,7 @@ class MainActivity : AppCompatActivity() {
      *  Only fragments in [R.id.nav_host_fragment] are removed — the power-menu dialog is left intact. */
     private fun rebuildShellFor(toLite: Boolean) {
         supportFragmentManager.popBackStackImmediate(
-            null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
         val clear = supportFragmentManager.beginTransaction()
         supportFragmentManager.fragments
             .filter { it.id == R.id.nav_host_fragment }
@@ -657,15 +694,15 @@ class MainActivity : AppCompatActivity() {
 
         if (toLite) {
             // Hide the Pro nav bar (never mutate its menu) and switch the FAB to the Lite bar.
-            bottomNavView.visibility = android.view.View.GONE
+            bottomNavView.visibility = View.GONE
             anchorFabTo(R.id.lite_nav_bar)
-            androidx.core.view.ViewCompat.requestApplyInsets(liteNavBar)
+            ViewCompat.requestApplyInsets(liteNavBar)
             supportFragmentManager.beginTransaction()
                 .replace(R.id.nav_host_fragment, LiteHubFragment(), "main_tab_hub")
                 .commitNowAllowingStateLoss()
         } else {
-            liteNavBar.visibility = android.view.View.GONE
-            bottomNavView.visibility = android.view.View.VISIBLE
+            liteNavBar.visibility = View.GONE
+            bottomNavView.visibility = View.VISIBLE
             anchorFabTo(R.id.bottom_nav_view)
             cacheProNavBarHeight()
             installProNav()
@@ -692,7 +729,7 @@ class MainActivity : AppCompatActivity() {
         // Safety net: if a design-mode crossfade was interrupted by backgrounding (its rebuild bailed,
         // or a fade-in froze), the shell could be left dimmed/invisible. Restore full opacity on return.
         if (!switchingMode && ::liteNavBar.isInitialized) {
-            listOf(findViewById<android.view.View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
+            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
                 .forEach { it.alpha = 1f }
         }
         // The scanner's final step durably marks completion (survives process death).
@@ -706,8 +743,8 @@ class MainActivity : AppCompatActivity() {
     // ----------------------------------------------------- forced first-launch tour
 
     private fun forcedTourPending(): Boolean {
-        val p = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        if (p.getString("design_mode", "Lite") == "Lite") return false
+        val p = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+        if (isLiteMode(this)) return false
         // Grandfather users who finished the legacy v1 tour — don't re-force the new v2 tour on them.
         val done = p.getBoolean(TutorialTour.KEY_COMPLETED_V2, false) ||
                 p.getBoolean(TutorialTour.KEY_COMPLETED, false)
@@ -715,7 +752,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startForcedTour() {
-        getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE).edit()
+        getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE).edit()
             .putBoolean(TutorialTour.KEY_IN_PROGRESS, true).apply()
         TutorialTour.begin()               // before switchFragment, so per-tab auto-show stays suppressed
         tourBackGuard.isEnabled = true
@@ -770,15 +807,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun showTourStepOverlay(index: Int, spec: TourSpec) {
         if (!TutorialTour.isForced()) return
-        val itemView = bottomNavView.findViewById<android.view.View>(spec.navId)
+        val itemView = bottomNavView.findViewById<View>(spec.navId)
         if (itemView == null) { runTourStep(index + 1); return }
-        val root = window.decorView.findViewById<android.view.ViewGroup>(android.R.id.content)
+        val root = window.decorView.findViewById<ViewGroup>(android.R.id.content)
         val overlay = TutorialOverlayView(this)
         root.addView(
             overlay,
-            android.view.ViewGroup.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
         val isLast = index == tourSteps.size - 1

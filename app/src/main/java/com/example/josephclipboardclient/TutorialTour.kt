@@ -28,7 +28,7 @@ object TutorialTour {
     /** New conceptual first-launch tour: one step per main interface + a how-to-use closer. */
     const val TOUR_STEPS = 6
 
-    const val PREFS = "FileBridgePrefs"
+    const val PREFS = FILE_BRIDGE_PREFS
     const val KEY_COMPLETED = "forced_tour_completed_v1"        // legacy 22-step tour; grandfathered
     const val KEY_COMPLETED_V2 = "forced_tour_completed_v2"     // new 6-step conceptual tour
     const val KEY_IN_PROGRESS = "forced_tour_in_progress"

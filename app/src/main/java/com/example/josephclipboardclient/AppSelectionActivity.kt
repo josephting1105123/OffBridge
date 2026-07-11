@@ -167,9 +167,7 @@ class AppSelectionActivity : AppCompatActivity() {
 
         selectedApps.forEach {
             val apkFile = File(it.sourceDir)
-            val uri = androidx.core.content.FileProvider.getUriForFile(
-                this, "${packageName}.provider", apkFile
-            )
+            val uri = appFileProviderUri(this, apkFile)
             uris.add(uri)
             names.add("${it.name}.apk")
         }

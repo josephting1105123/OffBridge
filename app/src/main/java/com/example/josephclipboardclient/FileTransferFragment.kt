@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -44,6 +43,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
+import android.graphics.Rect
+import android.widget.EditText
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 
 data class TransferItem(val uri: Uri, val relativePath: String?, val isFolder: Boolean = false)
 
@@ -72,7 +76,7 @@ class FileTransferFragment : Fragment() {
     private val showSendTutorialState = mutableStateOf(false)
 
     /** Window bounds of the header "How to use" chip — the forced tour's closer step spotlights it. */
-    var howToUseChipBounds: android.graphics.Rect? = null
+    var howToUseChipBounds: Rect? = null
         private set
 
     /** Drives the in-screen Send-Via chooser overlay (slides up from behind the bottom nav bar). */
@@ -143,8 +147,8 @@ class FileTransferFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         // A present-but-disabled adapter stays enabled; the downstream NFC flow guides turning it on.
         val nfcUnavailable = NfcAdapter.getDefaultAdapter(requireContext()) == null
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+        val isLite = isLiteMode(requireContext())
         isLiteMode = isLite
         
         val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
@@ -158,8 +162,8 @@ class FileTransferFragment : Fragment() {
             setContent {
                 AppTheme {
                     if (isLite) {
-                        androidx.compose.foundation.layout.Box(
-                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        Box(
+                            modifier = Modifier.circularReveal(revealX, revealY)
                         ) {
                             com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
                                 selectedFiles = selectedFilesState.value,
@@ -202,7 +206,7 @@ class FileTransferFragment : Fragment() {
                         onSend = ::showSendViaChooser,
                         onHowToUse = { showSendTutorialState.value = true },
                         onHowToUseChipBounds = { r ->
-                            howToUseChipBounds = android.graphics.Rect(
+                            howToUseChipBounds = Rect(
                                 r.left.toInt(), r.top.toInt(), r.right.toInt(), r.bottom.toInt(),
                             )
                         },
@@ -255,7 +259,7 @@ class FileTransferFragment : Fragment() {
     private fun onSelectMedia() {
         try {
             selectMultipleMediaLauncher.launch(
-                androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
             )
         } catch (_: Exception) { }
     }
@@ -269,7 +273,7 @@ class FileTransferFragment : Fragment() {
     }
 
     private fun onSelectText() {
-        val input = android.widget.EditText(requireContext())
+        val input = EditText(requireContext())
         input.hint = getString(R.string.transfer_add_text_hint)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
 
@@ -294,11 +298,7 @@ class FileTransferFragment : Fragment() {
                     val displayName = getString(R.string.transfer_text_item_name, textCounter++)
                     val tempFile = File(requireContext().cacheDir, "${displayName.replace(" ", "_")}_${System.currentTimeMillis()}.txt")
                     tempFile.writeText(text)
-                    val uri = FileProvider.getUriForFile(
-                        requireContext(),
-                        "${requireContext().packageName}.provider",
-                        tempFile
-                    )
+                    val uri = appFileProviderUri(requireContext(), tempFile)
                     selectedFiles.add(TransferItem(uri, displayName))
                     syncSelectionState()
                 }
@@ -485,7 +485,7 @@ class FileTransferFragment : Fragment() {
         if (!isAdded || isHidden) return
         // The forced first-launch tour drives this segment itself; never auto-fire underneath it.
         if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         if (prefs.getBoolean("send_tutorial_shown", false)) return
         prefs.edit().putBoolean("send_tutorial_shown", true).apply()
         showSendTutorialState.value = true

@@ -76,7 +76,18 @@ data class TransferSession(
      * writing the same .part (AND-19). Lives on the session — not a global registry — so a
      * sender re-offering the same sessionId (fresh session object) can be accepted again.
      */
-    @Volatile var acceptStarted: Boolean = false
+    @Volatile var acceptStarted: Boolean = false,
+    /**
+     * Receive-side destination snapshot, resolved from the "save_location_uri"/"save_media_to"
+     * prefs ONCE when the session's first download stream opens and pinned here for every later
+     * write pass and resume-offset probe. Each pass used to re-read the prefs live, so flipping
+     * a save setting mid-transfer made the resume path append mid-file bytes into a fresh empty
+     * .part at the NEW destination while the partial data sat at the OLD one — the promoted file
+     * was silently missing its head (FOLLOWUPS-2026-07-06 #1).
+     */
+    @Volatile var destResolved: Boolean = false,
+    @Volatile var destSaveTreeUri: String? = null,
+    @Volatile var destSaveMediaTo: String = TransferUtils.SAVE_MEDIA_GALLERY
 ) {
     /**
      * Bumped when a new outgoing send attempt starts. A stale send coroutine — still blocked on a dead

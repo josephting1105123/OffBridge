@@ -13,6 +13,8 @@ import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.applyModalPolish
 import com.EntropicSoftwareLab.ClipboardShare.spaceButtons
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
+import android.text.method.PasswordTransformationMethod
+import android.util.TypedValue
 
 /**
  * One-time entry of the user's MANUAL Wi-Fi hotspot SSID + password. Android gives apps no way to
@@ -38,7 +40,7 @@ object HotspotCredentialsDialog {
         val explain = TextView(context).apply {
             setText(R.string.settings_hotspot_dialog_msg)
             textSize = 13f
-            val tv = android.util.TypedValue()
+            val tv = TypedValue()
             context.theme.resolveAttribute(R.attr.appTextSecondaryColor, tv, true)
             setTextColor(tv.data)
             setPadding(0, 0, 0, gap)
@@ -58,7 +60,7 @@ object HotspotCredentialsDialog {
             setSingleLine()
             // Force masked regardless of inputType/setSingleLine ordering quirks on some keyboards —
             // the password must be HIDDEN by default, toggled only via the (unchecked) Show checkbox.
-            transformationMethod = android.text.method.PasswordTransformationMethod.getInstance()
+            transformationMethod = PasswordTransformationMethod.getInstance()
             setText(current?.second ?: "")
         }
         val cbShow = CheckBox(context).apply {
@@ -66,7 +68,7 @@ object HotspotCredentialsDialog {
             isChecked = false
             setOnCheckedChangeListener { _, checked ->
                 etPsk.transformationMethod =
-                    if (checked) null else android.text.method.PasswordTransformationMethod.getInstance()
+                    if (checked) null else PasswordTransformationMethod.getInstance()
                 etPsk.setSelection(etPsk.text.length)
             }
         }
@@ -76,7 +78,7 @@ object HotspotCredentialsDialog {
         val dataNotice = TextView(context).apply {
             text = context.getText(R.string.settings_hotspot_data_notice)
             textSize = 13f
-            val tv = android.util.TypedValue()
+            val tv = TypedValue()
             context.theme.resolveAttribute(R.attr.appTextSecondaryColor, tv, true)
             setTextColor(tv.data)
             setPadding(0, gap, 0, 0)

@@ -196,7 +196,7 @@ object TransferDaemon {
                     val title = if (totalResumableCount == 1) context.getString(R.string.transfer_resumable_one) else context.getString(R.string.transfer_resumable_many, totalResumableCount)
                     val text = context.getString(R.string.transfer_connection_restored)
                     
-                    val notification = NotificationCompat.Builder(context, "FILE_TRANSFER_REQUEST_CHANNEL_V2")
+                    val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentTitle(title)
                         .setContentText(text)

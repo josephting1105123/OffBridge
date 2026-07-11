@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 
 /**
  * Backdrop capture for native-feel modal scrims: dim + blur the page behind a modal the way a
@@ -74,7 +75,7 @@ fun Modifier.backdropSource(state: BackdropState): Modifier {
 fun rememberFrostLayer(enableBlur: Boolean): GraphicsLayer? {
     if (!enableBlur) return null
     val frost = rememberGraphicsLayer()
-    val radiusPx = with(androidx.compose.ui.platform.LocalDensity.current) { BackdropBlurRadius.toPx() }
+    val radiusPx = with(LocalDensity.current) { BackdropBlurRadius.toPx() }
     SideEffect { frost.renderEffect = BlurEffect(radiusPx, radiusPx, TileMode.Clamp) }
     return frost
 }

@@ -17,7 +17,7 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val savedTheme = prefs.getString("theme_mode", "System Default")
         val nightMode = when (savedTheme) {
             "Light" -> AppCompatDelegate.MODE_NIGHT_NO

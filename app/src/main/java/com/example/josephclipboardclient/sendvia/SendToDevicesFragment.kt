@@ -29,6 +29,7 @@ import com.EntropicSoftwareLab.ClipboardShare.TransferHistoryManager
 import com.EntropicSoftwareLab.ClipboardShare.TransferItem
 import com.EntropicSoftwareLab.ClipboardShare.TransferRecord
 import com.EntropicSoftwareLab.ClipboardShare.TransferSession
+import com.EntropicSoftwareLab.ClipboardShare.TransferUtils
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FilePreviewKind
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FilePreviewUi
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SendDeviceUi
@@ -42,6 +43,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.Socket
+import android.provider.MediaStore
+import android.util.Base64
+import android.util.Log
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.fragment.app.FragmentManager
+import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
+import com.EntropicSoftwareLab.ClipboardShare.isLiteMode
 
 /**
  * Packs the user's file selection into a Parcelable-free Bundle
@@ -95,15 +103,24 @@ object TransferItemExpander {
     }
 
     fun getFileSize(context: Context, uri: Uri): Long {
-        var size = 0L
+        // -1 = "provider didn't say", distinct from a genuinely 0-byte file. Some cloud/SAF
+        // providers return a NULL SIZE column, which getLong reads as 0 — the sender then streamed
+        // 0 bytes and both sides marked the transfer completed: a silently empty received file.
+        var size = -1L
         val cursor = context.contentResolver.query(uri, null, null, null, null)
         try {
             if (cursor != null && cursor.moveToFirst()) {
                 val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-                if (sizeIndex != -1) size = cursor.getLong(sizeIndex)
+                if (sizeIndex != -1 && !cursor.isNull(sizeIndex)) size = cursor.getLong(sizeIndex)
             }
         } finally { cursor?.close() }
-        return size
+        if (size < 0) {
+            // Fallback for providers that omit SIZE: the open file's actual length.
+            size = try {
+                context.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: -1L
+            } catch (_: Exception) { -1L }
+        }
+        return if (size >= 0) size else 0L
     }
 
     private fun traverseFolder(doc: DocumentFile, currentPath: String, output: MutableList<TransferItem>) {
@@ -135,8 +152,7 @@ object TransferItemExpander {
     fun buildManifest(context: Context, expandedItems: List<TransferItem>): List<Pair<String, Long>> {
         return expandedItems.map { item ->
             val rawName = item.relativePath ?: getFileName(context, item.uri)
-            val safeName = rawName.replace("|", "_").replace(":", "_")
-            Pair(safeName, getFileSize(context, item.uri))
+            Pair(TransferUtils.sanitizeOutgoingManifestName(rawName), getFileSize(context, item.uri))
         }
     }
 }
@@ -199,7 +215,7 @@ class SendToDevicesFragment : Fragment() {
     private fun endSendFlow() {
         if (isLite) {
             parentFragmentManager.popBackStack(
-                null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+                null, FragmentManager.POP_BACK_STACK_INCLUSIVE
             )
         } else {
             parentFragmentManager.popBackStack()
@@ -210,8 +226,8 @@ class SendToDevicesFragment : Fragment() {
         items = arguments?.let { TransferItemArgs.fromBundle(it) } ?: emptyList()
         val isMultiple = arguments?.getBoolean("is_multiple", true) ?: true
 
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+        isLite = isLiteMode(requireContext())
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -330,7 +346,7 @@ class SendToDevicesFragment : Fragment() {
         return if (parts.size > 1) "${parts[0]}/.../${parts.last()}" else parts.last()
     }
 
-    private fun decodeThumbnail(context: Context, uri: Uri): androidx.compose.ui.graphics.ImageBitmap? {
+    private fun decodeThumbnail(context: Context, uri: Uri): ImageBitmap? {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(context.contentResolver, uri)
@@ -347,7 +363,7 @@ class SendToDevicesFragment : Fragment() {
                 }.asImageBitmap()
             } else {
                 @Suppress("DEPRECATION")
-                android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)?.asImageBitmap()
+                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)?.asImageBitmap()
             }
         } catch (_: Exception) {
             null
@@ -453,7 +469,7 @@ class SendToDevicesFragment : Fragment() {
                     sessionId = sessionId,
                     deviceName = targetName,
                     direction = "outgoing",
-                    fileNames = manifestList.map { it.first.substringAfterLast('/') },
+                    fileNames = manifestList.map { TransferUtils.manifestDisplayLeaf(it.first) },
                     totalBytes = manifestList.sumOf { it.second },
                     timestamp = System.currentTimeMillis(),
                     status = "pending",
@@ -513,7 +529,7 @@ class SendToDevicesFragment : Fragment() {
                         // directly and we fall straight through — so we tolerate BOTH sequences without
                         // depending on the peer's advertised caps.
                         if (response.startsWith("OFFER_CHALLENGE|")) {
-                            val nonce = android.util.Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), android.util.Base64.NO_WRAP)
+                            val nonce = Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), Base64.NO_WRAP)
                             val pairingKey = SecurityVault.getKeyForNode(appContext, targetIp)
                                 ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
                             val proof = com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto.hmacSha256(pairingKey, nonce)
@@ -539,7 +555,7 @@ class SendToDevicesFragment : Fragment() {
                     // failed. Key case for the phone->laptop "no popup" bug: "No pairing key to answer
                     // OFFER_CHALLENGE for <ip>" means the phone can't answer the receiver's AUTH2
                     // challenge (missing key for the targeted IP) vs a plain connect timeout.
-                    android.util.Log.w("ClipboardShareXfer", "OFFER to $targetName ($targetIp) failed: ${e.message}", e)
+                    Log.w("ClipboardShareXfer", "OFFER to $targetName ($targetIp) failed: ${e.message}", e)
                     hasFailures = true
                     // Keep the session alive and mark as paused so receiver can reconnect
                     session.isPaused = true
@@ -548,7 +564,7 @@ class SendToDevicesFragment : Fragment() {
                         sessionId = sessionId,
                         deviceName = targetName,
                         direction = "outgoing",
-                        fileNames = manifestList.map { it.first.substringAfterLast('/') },
+                        fileNames = manifestList.map { TransferUtils.manifestDisplayLeaf(it.first) },
                         totalBytes = manifestList.sumOf { it.second },
                         timestamp = System.currentTimeMillis(),
                         status = "paused",

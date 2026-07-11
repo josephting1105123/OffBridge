@@ -6,20 +6,24 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.EntropicSoftwareLab.ClipboardShare.R
+import android.app.NotificationManager
+import android.content.Context
+import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 
 class TransferRequestActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        val prefs = getSharedPreferences("FileBridgePrefs", android.content.Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val savedTheme = prefs.getString("theme_mode", "System Default")
         val nightMode = when (savedTheme) {
-            "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-            else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+        AppCompatDelegate.setDefaultNightMode(nightMode)
         
         setContentView(R.layout.activity_file_receive)
 
@@ -33,8 +37,8 @@ class TransferRequestActivity : AppCompatActivity() {
         }
 
         // Hide progress layer, show request layer
-        findViewById<android.view.View>(R.id.receivingProgressLayer).visibility = android.view.View.GONE
-        findViewById<android.view.View>(R.id.incomingRequestLayer).visibility = android.view.View.VISIBLE
+        findViewById<View>(R.id.receivingProgressLayer).visibility = View.GONE
+        findViewById<View>(R.id.incomingRequestLayer).visibility = View.VISIBLE
 
         val tvIncomingDeviceName = findViewById<TextView>(R.id.tvIncomingDeviceName)
         val btnAccept = findViewById<Button>(R.id.btnAcceptTransfer)
@@ -42,7 +46,7 @@ class TransferRequestActivity : AppCompatActivity() {
 
         tvIncomingDeviceName.text = getString(R.string.transfer_incoming_from, senderName, totalFiles)
 
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(sessionId.hashCode())
 
         btnAccept.setOnClickListener {

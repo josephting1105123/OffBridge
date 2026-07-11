@@ -18,6 +18,8 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.UUID
+import android.util.Base64
+import android.widget.Toast
 
 /**
  * The LAN TCP file-transfer server: binds 0.0.0.0:[Ports.FILE_TRANSFER], accepts connections, and
@@ -170,7 +172,7 @@ object FileTransferServer {
                                 }
                                 val pendingSenderIntent = PendingIntent.getActivity(ctx, 2, senderIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                                 val notifMgr = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                                val senderNotif = NotificationCompat.Builder(ctx, "FILE_TRANSFER_REQUEST_CHANNEL_V2")
+                                val senderNotif = NotificationCompat.Builder(ctx, NotificationChannels.TRANSFER_REQUEST)
                                     .setSmallIcon(R.mipmap.ic_launcher)
                                     .setContentTitle(ctx.getString(R.string.transfer_sending_resumed_title))
                                     .setContentText(ctx.getString(R.string.transfer_sending_resumed_text))
@@ -194,7 +196,7 @@ object FileTransferServer {
                                     TransferHistoryManager.updateStatus(context, sessionId, "paused", session.currentFileIndex, session.currentOffset)
                                 } else {
                                     withContext(Dispatchers.Main) {
-                                        android.widget.Toast.makeText(ctx, ctx.getString(R.string.transfer_resumed_complete), android.widget.Toast.LENGTH_LONG).show()
+                                        Toast.makeText(ctx, ctx.getString(R.string.transfer_resumed_complete), Toast.LENGTH_LONG).show()
                                     }
                                     TransferHistoryManager.updateStatus(context, sessionId, "completed", session.fileUris.size)
                                     // Clean up sender session on success
@@ -379,7 +381,7 @@ object FileTransferServer {
                     outStream.flush()
                     val proofLine = TransferUtils.readUntilNewline(inputStream)
                     val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
-                        try { android.util.Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), android.util.Base64.NO_WRAP) } catch (_: Exception) { null }
+                        try { Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), Base64.NO_WRAP) } catch (_: Exception) { null }
                     } else null
                     val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
                     if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
@@ -424,7 +426,7 @@ object FileTransferServer {
                 val pendingRequest = PendingIntent.getActivity(context, sessionId.hashCode(), requestIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val notification = NotificationCompat.Builder(context, "FILE_TRANSFER_REQUEST_CHANNEL_V2")
+                val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(context.getString(R.string.transfer_incoming_title))
                     .setContentText(context.getString(R.string.transfer_incoming_text, senderName, totalFiles))
@@ -443,7 +445,7 @@ object FileTransferServer {
                 sessionId = sessionId,
                 deviceName = senderName,
                 direction = "incoming",
-                fileNames = fileList.map { it.first.replace('\\', '/').substringAfterLast('/') },
+                fileNames = fileList.map { TransferUtils.manifestDisplayLeaf(it.first) },
                 totalBytes = fileList.sumOf { it.second },
                 timestamp = System.currentTimeMillis(),
                 status = "transferring",
@@ -461,7 +463,7 @@ object FileTransferServer {
 
             val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val notification = NotificationCompat.Builder(context, "FILE_TRANSFER_REQUEST_CHANNEL_V2")
+            val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(context.getString(R.string.transfer_receiving_title))
                 .setContentText(context.getString(R.string.transfer_receiving_text, senderName, totalFiles))

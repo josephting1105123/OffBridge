@@ -34,7 +34,7 @@ import org.json.JSONObject
 object HistoryBackupManager {
 
     private const val BACKUP_FILE_NAME = "ClipboardShare_history_backup.json"
-    private const val SAVE_PREFS = "FileBridgePrefs"
+    private const val SAVE_PREFS = FILE_BRIDGE_PREFS
     private const val KEY_SAVE_LOCATION = "save_location_uri"
     private const val SCHEMA_VERSION = 1
 

@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.EntropicSoftwareLab.ClipboardShare.data.db.OffGridRepository
@@ -178,7 +177,7 @@ class DiagnosticsFragment : Fragment() {
             if (src.exists() && src.length() > 0) {
                 val cacheCopy = File(ctx.cacheDir, TransportAttemptLog.FILE_NAME)
                 src.copyTo(cacheCopy, overwrite = true)
-                val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.provider", cacheCopy)
+                val uri = appFileProviderUri(ctx, cacheCopy)
                 send.putExtra(Intent.EXTRA_STREAM, uri)
                 send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }

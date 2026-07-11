@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.EntropicSoftwareLab.ClipboardShare.R
+import androidx.appcompat.app.AppCompatDelegate
 
 class OnboardingActivity : FragmentActivity(), UserAgreementFragment.OnAgreementListener, PermissionsFragment.OnPermissionsListener {
 
@@ -19,16 +20,16 @@ class OnboardingActivity : FragmentActivity(), UserAgreementFragment.OnAgreement
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
 
         // Restore the user's chosen theme before inflating any layouts
         val savedTheme = prefs.getString("theme_mode", "System Default")
         val nightMode = when (savedTheme) {
-            "Light" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-            "Dark" -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
-            else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            "Light" -> AppCompatDelegate.MODE_NIGHT_NO
+            "Dark" -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
         }
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nightMode)
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
         val hasCompletedOnboarding = prefs.getBoolean("has_completed_onboarding_v2", false)
 
@@ -69,7 +70,7 @@ class OnboardingActivity : FragmentActivity(), UserAgreementFragment.OnAgreement
 
     override fun onOnboardingFinished() {
         // This callback from the fragment tells us the setup is complete
-        val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         prefs.edit().putBoolean("has_completed_onboarding_v2", true).apply()
         launchMainActivity()
     }

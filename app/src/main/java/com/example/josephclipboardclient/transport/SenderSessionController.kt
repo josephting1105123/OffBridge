@@ -21,6 +21,8 @@ import org.json.JSONObject
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.security.MessageDigest
+import android.net.ConnectivityManager
+import android.net.Network
 
 /**
  * Why the ladder gave up — drives the actionable guidance the sender screen shows when a hotspot is
@@ -582,8 +584,8 @@ class SenderSessionController(
     }
 
     /** Our IPv4 on a joined [android.net.Network] (the hotspot we joined via WifiNetworkSpecifier). */
-    private fun localIpv4OnNetwork(network: android.net.Network): String? = try {
-        val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+    private fun localIpv4OnNetwork(network: Network): String? = try {
+        val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         cm.getLinkProperties(network)?.linkAddresses
             ?.map { it.address }
             ?.filterIsInstance<Inet4Address>()
@@ -657,7 +659,7 @@ class SenderSessionController(
                     }
                     joiner.connect(ssid, psk, TransportDescriptor.SENDER_JOINS_AP.budgetMs.toInt(),
                         object : SpecifierJoiner.Listener {
-                            override fun onNetworkAvailable(network: android.net.Network) {
+                            override fun onNetworkAvailable(network: Network) {
                                 if (torndown) return
                                 TransferDaemon.start(appContext) // server on 0.0.0.0 accepts on the joined iface
                                 val ip = localIpv4OnNetwork(network)

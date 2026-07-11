@@ -1,6 +1,7 @@
 package com.EntropicSoftwareLab.ClipboardShare.offgrid
 
 import android.util.Base64
+import com.EntropicSoftwareLab.ClipboardShare.Ports
 import org.json.JSONObject
 import java.security.KeyFactory
 import java.security.SecureRandom
@@ -133,7 +134,7 @@ data class OffGridPayload(
 
         /** Legacy Wi-Fi Direct group-owner address — fallback only; newer Android builds can randomize the GO IP. */
         const val GROUP_OWNER_IP = "192.168.49.1"
-        const val TRANSFER_PORT = 65433
+        const val TRANSFER_PORT = Ports.FILE_TRANSFER  // the off-grid data port is the LAN file-transfer port
         const val TOKEN_SIZE_BYTES = 16
 
         const val NDEF_MIME_TYPE = "application/vnd.clipboardshare.p2p"

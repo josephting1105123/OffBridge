@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import android.content.SharedPreferences
 
 object SecurityVault {
     // Encrypted keystore — holds the per-node AES keys ONLY. Never write plaintext here:
@@ -17,9 +18,9 @@ object SecurityVault {
     // Built once per process: MasterKey + EncryptedSharedPreferences.create is full Keystore
     // work, and hot paths (the 2s notification loop, per-peer key lookups during broadcast)
     // used to redo it on every call — on the Main thread (AND-06).
-    @Volatile private var cachedEncryptedPrefs: android.content.SharedPreferences? = null
+    @Volatile private var cachedEncryptedPrefs: SharedPreferences? = null
 
-    private fun getEncryptedPrefs(context: Context): android.content.SharedPreferences {
+    private fun getEncryptedPrefs(context: Context): SharedPreferences {
         cachedEncryptedPrefs?.let { return it }
         synchronized(this) {
             cachedEncryptedPrefs?.let { return it }
@@ -38,7 +39,7 @@ object SecurityVault {
         }
     }
 
-    private fun buildEncryptedPrefs(context: Context): android.content.SharedPreferences {
+    private fun buildEncryptedPrefs(context: Context): SharedPreferences {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -52,7 +53,7 @@ object SecurityVault {
         )
     }
 
-    private fun getPlainPrefs(context: Context): android.content.SharedPreferences {
+    private fun getPlainPrefs(context: Context): SharedPreferences {
         val prefs = context.getSharedPreferences(PLAIN_PREFS_NAME, Context.MODE_PRIVATE)
         if (!prefs.getBoolean(MIGRATED_FLAG, false)) {
             // One-time best-effort migration of the non-secret flag that used to live

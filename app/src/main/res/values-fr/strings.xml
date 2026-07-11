@@ -233,7 +233,6 @@
     <string name="theme_dark">Sombre</string>
     <string name="dialog_title_choose_theme">Choisir le thème</string>
     <string name="dialog_title_choose_language">Choisir la langue</string>
-    <string name="toast_language_preference_saved">Préférence de langue enregistrée. Traduction complète à venir.</string>
     <string name="dialog_title_privacy_policy">Politique de confidentialité</string>
     <string name="action_close">Fermer</string>
     <string name="selected_folder_fallback">Dossier sélectionné</string>

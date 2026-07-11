@@ -220,7 +220,6 @@
     <string name="theme_dark">深色</string>
     <string name="dialog_title_choose_theme">選擇主題</string>
     <string name="dialog_title_choose_language">選擇語言</string>
-    <string name="toast_language_preference_saved">已儲存語言首選項。即將提供完整翻譯支援。</string>
     <string name="dialog_title_privacy_policy">隱私權政策</string>
     <string name="action_close">關閉</string>
     <string name="selected_folder_fallback">選定資料夾</string>

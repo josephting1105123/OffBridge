@@ -12,6 +12,7 @@ import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicBoolean
+import android.net.ConnectivityManager
 
 /**
  * Transport abstraction so the handshake does not depend on a [Network]
@@ -59,7 +60,7 @@ class SpecifierRoute(
     override fun senderCandidates(payload: OffGridPayload): List<String> {
         val candidates = linkedSetOf<String>()
         try {
-            val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val lp = cm.getLinkProperties(network)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 lp?.dhcpServerAddress?.hostAddress?.let { candidates.add(it) }

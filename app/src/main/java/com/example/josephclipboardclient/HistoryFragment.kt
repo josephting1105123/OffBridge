@@ -27,6 +27,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
  * keeps all clipboard/network logic and feeds the screen through observable state + callbacks.
  */
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 
 class HistoryFragment : Fragment() {
 
@@ -45,8 +47,7 @@ class HistoryFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        val isLite = isLiteMode(requireContext())
         
         val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
         val revealY = arguments?.getFloat("reveal_y", -1f) ?: -1f
@@ -59,8 +60,8 @@ class HistoryFragment : Fragment() {
             setContent {
                 AppTheme {
                     if (isLite) {
-                        androidx.compose.foundation.layout.Box(
-                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        Box(
+                            modifier = Modifier.circularReveal(revealX, revealY)
                         ) {
                             LiteClipboardScreen(
                                 history = historyState.value,

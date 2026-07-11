@@ -11,6 +11,10 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.os.Build
+import android.provider.Settings
 
 object Ports {
     const val DISCOVERY = 50001      // UDP device discovery
@@ -161,7 +165,7 @@ object Net {
             // (the device that advertised its 100.x mobile-data IP instead of 192.168.x.1).
             val defaultIsCellular = try {
                 val cm = context.applicationContext
-                    .getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+                    .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
                 val caps = cm?.activeNetwork?.let { cm.getNetworkCapabilities(it) }
                 caps?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true &&
                     caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) != true
@@ -205,7 +209,7 @@ object Net {
     /** IPv4 of the active default network when it is Wi-Fi (i.e. the STA's connected address), else null. */
     private fun activeWifiIpv4(context: Context): String? = try {
         val cm = context.applicationContext
-            .getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+            .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         val active = cm?.activeNetwork
         val caps = active?.let { cm.getNetworkCapabilities(it) }
         if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) != true) {
@@ -231,7 +235,7 @@ object Net {
      */
     fun isConnectedToOtherWifi(context: Context): Boolean = try {
         val app = context.applicationContext
-        val cm = app.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+        val cm = app.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         val active = cm?.activeNetwork
         val caps = active?.let { cm.getNetworkCapabilities(it) }
         // Active default network is Wi-Fi AND we have a real STA IPv4 (not the p2p/49.x GO subnet).
@@ -242,7 +246,7 @@ object Net {
 
     /** True if this device can run Wi-Fi STA (client) and AP (hotspot) at the same time. */
     fun staApConcurrencySupported(context: Context): Boolean = try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             (context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager)
                 .isStaApConcurrencySupported
         } else false
@@ -259,9 +263,9 @@ object Net {
      */
     fun openHotspotSettings(context: Context) {
         val intents = listOf(
-            android.content.Intent().setClassName("com.android.settings", "com.android.settings.TetherSettings"),
-            android.content.Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS),
-            android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI)
+            Intent().setClassName("com.android.settings", "com.android.settings.TetherSettings"),
+            Intent(Settings.ACTION_WIRELESS_SETTINGS),
+            Intent(Settings.Panel.ACTION_WIFI)
         )
         for (intent in intents) {
             if (intent.resolveActivity(context.packageManager) != null) {
@@ -277,8 +281,8 @@ object Net {
      */
     fun openWifiSettings(context: Context) {
         val intents = listOf(
-            android.content.Intent(android.provider.Settings.Panel.ACTION_WIFI),
-            android.content.Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)
+            Intent(Settings.Panel.ACTION_WIFI),
+            Intent(Settings.ACTION_WIRELESS_SETTINGS)
         )
         for (intent in intents) {
             if (intent.resolveActivity(context.packageManager) != null) {

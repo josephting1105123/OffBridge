@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import android.util.Base64
 
 object P2pHelloHandler {
     internal fun handleP2pHello(context: Context, connection: TransportConnection, header: String) {
@@ -62,9 +63,9 @@ object P2pHelloHandler {
         val receiverPubKey: ByteArray
         val helloHmac: ByteArray
         try {
-            tokenBytes = android.util.Base64.decode(parts[1], android.util.Base64.NO_WRAP)
-            receiverPubKey = android.util.Base64.decode(parts[2], android.util.Base64.NO_WRAP)
-            helloHmac = android.util.Base64.decode(parts[4], android.util.Base64.NO_WRAP)
+            tokenBytes = Base64.decode(parts[1], Base64.NO_WRAP)
+            receiverPubKey = Base64.decode(parts[2], Base64.NO_WRAP)
+            helloHmac = Base64.decode(parts[4], Base64.NO_WRAP)
         } catch (_: Exception) {
             TransportDiag.log("TX: P2P_HELLO dropped — base64 decode failed")
             try { connection.close() } catch (_: Exception) {}
@@ -138,7 +139,7 @@ object P2pHelloHandler {
                     sessionId = sessionId,
                     deviceName = receiverName,
                     direction = "outgoing",
-                    fileNames = ctx.manifest.map { it.first.substringAfterLast('/') },
+                    fileNames = ctx.manifest.map { TransferUtils.manifestDisplayLeaf(it.first) },
                     totalBytes = ctx.manifest.sumOf { it.second },
                     timestamp = System.currentTimeMillis(),
                     status = "pending",

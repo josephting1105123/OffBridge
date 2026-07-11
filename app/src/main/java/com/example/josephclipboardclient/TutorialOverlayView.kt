@@ -30,6 +30,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.view.doOnLayout
 import kotlin.math.PI
 import kotlin.math.sin
+import android.view.LayoutInflater
 
 /**
  * A single tutorial step definition.
@@ -64,7 +65,7 @@ data class TutorialStep(
      * the target view's frame — for targets that have no View of their own (e.g. a Compose child
      * inside a ComposeView). [targetView] is still required and acts as the fallback.
      */
-    val targetBoundsProvider: (() -> android.graphics.Rect?)? = null,
+    val targetBoundsProvider: (() -> Rect?)? = null,
     /** Hide the Skip button for this step. */
     val hideSkipButton: Boolean = false,
     /** Dp trimmed from each horizontal side of the spotlight (total width shrinks by 2x this). */
@@ -219,7 +220,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         placeholderContainer = FrameLayout(context)
         addView(placeholderContainer)
 
-        tooltipView = android.view.LayoutInflater.from(context)
+        tooltipView = LayoutInflater.from(context)
             .inflate(R.layout.layout_tutorial_tooltip, this, false)
         tvText    = tooltipView.findViewById(R.id.tvTutorialText)
         tvCounter = tooltipView.findViewById(R.id.tvTutorialStepCounter)
@@ -482,7 +483,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         if (inflatePlaceholder) {
             placeholderContainer.removeAllViews()
             if (step.placeholderLayoutId != null) {
-                android.view.LayoutInflater.from(context).inflate(step.placeholderLayoutId, placeholderContainer, true)
+                LayoutInflater.from(context).inflate(step.placeholderLayoutId, placeholderContainer, true)
             }
         }
 
@@ -844,7 +845,7 @@ class TutorialOverlayView @JvmOverloads constructor(
     private fun swapPlaceholder(layoutId: Int) {
         clearPointer()
         placeholderContainer.removeAllViews()
-        android.view.LayoutInflater.from(context).inflate(layoutId, placeholderContainer, true)
+        LayoutInflater.from(context).inflate(layoutId, placeholderContainer, true)
         placeholderContainer.getChildAt(0)?.let { currentStep?.onPlaceholderSwapped?.invoke(it) }
         // A step can keep a tight, pointer-focused spotlight on the tapped control first, then expand
         // it here to fit the destination interface the crossfade reveals. Re-spotlight, keep content.

@@ -3,6 +3,8 @@ package com.EntropicSoftwareLab.ClipboardShare
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import android.os.Handler
+import android.os.Looper
 
 /**
  * Transfer history record, schema v2 (§3.2 of the V3.0 plan).
@@ -237,7 +239,7 @@ object TransferHistoryManager {
         // Mirror to the off-device backup so history survives reinstall/clear-data.
         HistoryBackupManager.requestBackup(context)
 
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
+        Handler(Looper.getMainLooper()).post {
             for (listener in listeners) {
                 listener.onHistoryChanged()
             }

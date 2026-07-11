@@ -230,7 +230,6 @@
     <string name="theme_dark">ダーク</string>
     <string name="dialog_title_choose_theme">テーマの選択</string>
     <string name="dialog_title_choose_language">言語の選択</string>
-    <string name="toast_language_preference_saved">言語設定が保存されました。完全な翻訳サポートは間もなく追加されます。</string>
     <string name="dialog_title_privacy_policy">プライバシーポリシー</string>
     <string name="action_close">閉じる</string>
     <string name="selected_folder_fallback">選択したフォルダ</string>

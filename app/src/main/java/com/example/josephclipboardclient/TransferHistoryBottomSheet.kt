@@ -29,6 +29,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.lifecycleScope
+import android.app.DownloadManager
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.util.Log
+import android.webkit.MimeTypeMap
+import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 
 /**
  * Transfer history sheet. The UI is now Compose ([TransferHistoryScreen], hosted via [ComposeView]);
@@ -612,7 +621,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                         Net.sendBytes(targetIp, Ports.FILE_TRANSFER, cmd.toByteArray(Charsets.UTF_8), 5000)
                     }
                 } catch (e: Exception) {
-                    android.util.Log.w("TransferHistory", "cancel notify to peer failed: ${e.message}")
+                    Log.w("TransferHistory", "cancel notify to peer failed: ${e.message}")
                 }
             }
         } else {
@@ -627,7 +636,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             if (session != null && session.isPaused) {
                 com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.resumeIncomingTransfer(requireContext(), record.sessionId)
             } else {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.history_session_unavailable), android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.history_session_unavailable), Toast.LENGTH_SHORT).show()
             }
         } else {
             // Outgoing resume: tell the receiver to resume
@@ -646,14 +655,14 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                     withContext(Dispatchers.Main) {
                         if (!isAdded) return@withContext
                         if (sent) {
-                            android.widget.Toast.makeText(appCtx, getString(R.string.history_resume_request_sent, record.deviceName), android.widget.Toast.LENGTH_SHORT).show()
+                            Toast.makeText(appCtx, getString(R.string.history_resume_request_sent, record.deviceName), Toast.LENGTH_SHORT).show()
                         } else {
-                            android.widget.Toast.makeText(appCtx, getString(R.string.history_resume_request_failed), android.widget.Toast.LENGTH_SHORT).show()
+                            Toast.makeText(appCtx, getString(R.string.history_resume_request_failed), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
             } else {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.history_resume_no_device_ip), android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.history_resume_no_device_ip), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -661,16 +670,16 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     /** Open a received file (mirrors the old DetailFilesAdapter open-button click). */
     private fun openFile(name: String) {
         try {
-            val prefs = requireContext().getSharedPreferences("FileBridgePrefs", android.content.Context.MODE_PRIVATE)
+            val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
             val saveLocationUriString = prefs.getString("save_location_uri", null)
 
-            var fileUri: android.net.Uri? = null
-            var folderUri: android.net.Uri? = null
+            var fileUri: Uri? = null
+            var folderUri: Uri? = null
             var fileExists = false
             val category = TransferUtils.mediaCategory(name)
 
             if (saveLocationUriString != null) {
-                val saveDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(requireContext(), android.net.Uri.parse(saveLocationUriString))
+                val saveDir = DocumentFile.fromTreeUri(requireContext(), Uri.parse(saveLocationUriString))
                 val targetFile = saveDir?.findFile(name)
                 if (targetFile != null && targetFile.exists()) {
                     fileUri = targetFile.uri
@@ -685,12 +694,43 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             // custom-folder user would get "file not found" for every received photo. Older receives
             // and any publish fallback that stayed put are still in Download.
             if (!fileExists) {
-                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val mediaFile = TransferUtils.publicMediaDir(category)?.let { java.io.File(it, name) }?.takeIf { it.exists() }
                 val file = mediaFile ?: java.io.File(downloadsDir, name)
                 if (file.exists()) {
-                    fileUri = androidx.core.content.FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.provider", file)
-                    folderUri = android.net.Uri.fromFile(file.parentFile ?: downloadsDir)
+                    fileUri = appFileProviderUri(requireContext(), file)
+                    folderUri = Uri.fromFile(file.parentFile ?: downloadsDir)
+                    fileExists = true
+                }
+            }
+            // Published-row fallback, needed on API 29: non-SAF receives land there through pending
+            // MediaStore rows, and scoped storage denies the raw probes above even for our own files
+            // (the owner FUSE passthrough that makes java.io reads work is Android 11+) — so every
+            // received file looked missing and history "open" always toasted "File not found".
+            // Resolve the row's content URI by the history name instead. History holds the
+            // POST-dedupe leaf (the receive path repoints it on promote/publish renames), so a
+            // receive stored as "name (1).ext" beside an existing file is looked up under the name
+            // actually on disk, never the original.
+            if (!fileExists) {
+                val publishedUri = TransferUtils.findPublishedFileUri(requireContext(), name)
+                if (publishedUri != null) {
+                    fileUri = publishedUri
+                    // Physical collection folder, used only by the reveal-folder fallback chain.
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    folderUri = Uri.fromFile(TransferUtils.publicMediaDir(category) ?: downloadsDir)
+                    fileExists = true
+                }
+            }
+            // API-29 receives whose MediaStore publish failed stay in the app-private staging dir
+            // (see TransferUtils.receiveStagingDir) — still openable from there via FileProvider
+            // (provider_paths root-path covers it). On API 30+ the staging dir IS public Download,
+            // already probed above.
+            if (!fileExists && TransferUtils.isLegacyScopedStorage()) {
+                val stagingDir = TransferUtils.receiveStagingDir(requireContext())
+                val staged = java.io.File(stagingDir, name)
+                if (staged.exists()) {
+                    fileUri = appFileProviderUri(requireContext(), staged)
+                    folderUri = Uri.fromFile(stagingDir)
                     fileExists = true
                 }
             }
@@ -710,7 +750,7 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                     }
                     try {
                         startActivity(if (isApk) intent else Intent.createChooser(intent, getString(R.string.history_chooser_open_media)))
-                    } catch (e: android.content.ActivityNotFoundException) {
+                    } catch (e: ActivityNotFoundException) {
                         if (isApk) {
                             try {
                                 val folderIntent = Intent(Intent.ACTION_VIEW)
@@ -739,47 +779,103 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                     // extension; unknown types fall back to */*. A direct ACTION_VIEW throws
                     // ActivityNotFoundException when nothing on the device can handle it, so we only
                     // drop to the old open-the-folder chain when the file genuinely can't be viewed.
-                    val fileMime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
+                    val fileMime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
                     val fileIntent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(fileUri, fileMime)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     try {
                         startActivity(fileIntent)
-                    } catch (eFile: android.content.ActivityNotFoundException) {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW)
-                            intent.setDataAndType(folderUri, "resource/folder")
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
-                        } catch (e1: android.content.ActivityNotFoundException) {
+                    } catch (eFile: ActivityNotFoundException) {
+                        // No app declared an ACTION_VIEW handler for the resolved type — common for
+                        // text/plain, since many phones ship no text viewer. Before falling back to
+                        // merely revealing the containing folder (which never shows the text), let the
+                        // user pick ANY app to open the file itself: a */* chooser surfaces editors and
+                        // file apps that register for */* rather than text/plain. For text files, if even
+                        // that finds nothing, guarantee readability with an in-app preview. Only a
+                        // genuinely un-viewable binary drops through to the old folder chain.
+                        // Direct start (NOT createChooser): the system chooser always resolves, so it
+                        // would never throw even with zero targets and we'd dead-end on an empty "no apps"
+                        // screen. A plain ACTION_VIEW throws ActivityNotFoundException when nothing matches,
+                        // letting us fall through to the in-app preview / folder chain. If several apps
+                        // match, Android shows its own "Open with" disambiguation.
+                        val anyAppShown = try {
+                            val anyApp = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(fileUri, "*/*")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(anyApp)
+                            true
+                        } catch (eAny: Exception) {
+                            false
+                        }
+                        if (!anyAppShown && !(fileMime.startsWith("text/") && showTextPreview(fileUri, name))) {
                             try {
-                                val fallback = Intent(Intent.ACTION_VIEW)
-                                fallback.setDataAndType(folderUri, "vnd.android.document/directory")
-                                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
-                            } catch (e2: android.content.ActivityNotFoundException) {
+                                val intent = Intent(Intent.ACTION_VIEW)
+                                intent.setDataAndType(folderUri, "resource/folder")
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
+                            } catch (e1: ActivityNotFoundException) {
                                 try {
-                                    val dlFallback = Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS)
-                                    dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    startActivity(dlFallback)
-                                } catch (e3: android.content.ActivityNotFoundException) {
-                                    val ultimate = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(fileUri, "*/*")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    val fallback = Intent(Intent.ACTION_VIEW)
+                                    fallback.setDataAndType(folderUri, "vnd.android.document/directory")
+                                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
+                                } catch (e2: ActivityNotFoundException) {
+                                    try {
+                                        val dlFallback = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+                                        dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        startActivity(dlFallback)
+                                    } catch (e3: ActivityNotFoundException) {
+                                        Toast.makeText(requireContext(), getString(R.string.history_cannot_open_file), Toast.LENGTH_SHORT).show()
                                     }
-                                    startActivity(Intent.createChooser(ultimate, getString(R.string.history_chooser_open_file)))
                                 }
                             }
                         }
                     }
                 }
             } else {
-                android.widget.Toast.makeText(requireContext(), getString(R.string.history_file_not_found), android.widget.Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.history_file_not_found), Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            android.widget.Toast.makeText(requireContext(), getString(R.string.history_cannot_open_file), android.widget.Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), getString(R.string.history_cannot_open_file), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /**
+     * Last-resort in-app viewer for a received text file: when nothing on the device can open it, read
+     * the bytes and show them in a scrollable, selectable dialog with a Copy action, so received text is
+     * always readable. Returns true if the preview was shown; returns false (letting the caller fall
+     * back to the folder chain) for files over ~1 MB or on any read error.
+     */
+    private fun showTextPreview(uri: Uri, name: String): Boolean {
+        if (!isAdded) return false
+        val content = try {
+            val cap = 1024 * 1024  // 1 MB — inline preview is for short snippets, not large files
+            // Chunked read into a growable buffer: allocation stays proportional to the actual file
+            // (a fixed cap-sized array charged 1 MB to preview a 10-byte note).
+            val out = java.io.ByteArrayOutputStream()
+            val chunk = ByteArray(32 * 1024)
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                while (out.size() <= cap) {
+                    val r = input.read(chunk)
+                    if (r == -1) break
+                    out.write(chunk, 0, r)
+                }
+            } ?: return false
+            if (out.size() > cap) return false  // too large to show inline; use the folder fallback instead
+            out.toString("UTF-8")
+        } catch (e: Exception) {
+            return false
+        }
+        showSelectableTextDialog(
+            requireContext(),
+            title = name,
+            text = content,
+            copyButtonLabel = android.R.string.copy,
+            copiedToast = R.string.history_toast_copied,
+        )
+        return true
     }
 }

@@ -26,6 +26,7 @@ import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.EcdhSession
 import com.EntropicSoftwareLab.ClipboardShare.P2pAdvertisingContext
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.copyPlainText
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
 import com.EntropicSoftwareLab.ClipboardShare.SkeletonHelper
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
@@ -49,6 +50,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.content.ComponentName
+import android.content.Context
+import android.net.wifi.WifiManager
 
 /**
  * Sender screen: creates the Wi-Fi Direct group, renders the credential QR,
@@ -220,7 +224,7 @@ class QrDisplayFragment : Fragment() {
 
         // Detect a disabled Wi-Fi radio before showing the QR screen (edge case 4).
         val wifiManager = requireContext().applicationContext
-            .getSystemService(android.content.Context.WIFI_SERVICE) as android.net.wifi.WifiManager
+            .getSystemService(Context.WIFI_SERVICE) as WifiManager
         if (!wifiManager.isWifiEnabled) {
             showError(getString(R.string.offgrid_error_wifi_off), retryable = true)
             try {
@@ -902,11 +906,7 @@ class QrDisplayFragment : Fragment() {
     }
 
     private fun copyDiag() {
-        val snap = TransportDiag.snapshot()
-        val cm = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE)
-                as? android.content.ClipboardManager
-        cm?.setPrimaryClip(android.content.ClipData.newPlainText("transport-diag", snap))
-        android.widget.Toast.makeText(requireContext(), R.string.offgrid_diag_copied, android.widget.Toast.LENGTH_SHORT).show()
+        requireContext().copyPlainText("transport-diag", TransportDiag.snapshot(), R.string.offgrid_diag_copied)
     }
 
     override fun onResume() {
@@ -935,7 +935,7 @@ class QrDisplayFragment : Fragment() {
         try {
             CardEmulation.getInstance(adapter).setPreferredService(
                 requireActivity(),
-                android.content.ComponentName(requireContext(), NdefHceService::class.java)
+                ComponentName(requireContext(), NdefHceService::class.java)
             )
             TransportDiag.log("NFC: preferred HCE service set")
         } catch (_: Exception) {}

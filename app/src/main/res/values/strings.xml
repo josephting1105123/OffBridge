@@ -232,7 +232,6 @@
     <string name="theme_dark">Dark</string>
     <string name="dialog_title_choose_theme">Choose Theme</string>
     <string name="dialog_title_choose_language">Choose Language</string>
-    <string name="toast_language_preference_saved">Language preference saved. Full translation support coming soon.</string>
     <string name="dialog_title_privacy_policy">Privacy Policy</string>
     <string name="action_close">Close</string>
     <string name="selected_folder_fallback">Selected Folder</string>

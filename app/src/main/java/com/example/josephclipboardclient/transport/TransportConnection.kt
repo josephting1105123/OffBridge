@@ -1,29 +1,27 @@
 package com.EntropicSoftwareLab.ClipboardShare.transport
 
-import android.bluetooth.BluetoothSocket
 import java.io.Closeable
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
 
 /**
- * Carrier-neutral duplex byte stream (§2 of the V4 plan). The transfer
- * protocol bytes are identical over TCP and Bluetooth; only the carrier
- * differs. `BluetoothSocket` does not extend `java.net.Socket`, so the
- * engine speaks this interface instead.
+ * Carrier-neutral duplex byte stream (§2 of the V4 plan): the download/upload
+ * engine speaks this instead of a concrete socket so a future non-TCP carrier
+ * can be dropped in without touching the protocol code.
  */
 interface TransportConnection : Closeable {
     val input: InputStream
     val output: OutputStream
 
-    /** Remote endpoint for logging/session bookkeeping: an IPv4 string or a BT MAC. */
+    /** Remote endpoint for logging/session bookkeeping (an IPv4 string). */
     val remoteIdentifier: String
 
-    /** Best-effort read timeout; carriers without timeout support no-op (BT). */
+    /** Best-effort read timeout; a carrier without timeout support may no-op. */
     fun setReadTimeout(ms: Int)
 }
 
-/** TCP carrier. */
+/** TCP carrier — the only carrier in use. */
 class SocketConnection(private val socket: Socket) : TransportConnection {
     override val input: InputStream get() = socket.getInputStream()
     override val output: OutputStream get() = socket.getOutputStream()
@@ -32,20 +30,6 @@ class SocketConnection(private val socket: Socket) : TransportConnection {
     override fun setReadTimeout(ms: Int) {
         try { socket.soTimeout = ms } catch (_: Exception) {}
     }
-
-    override fun close() {
-        try { socket.close() } catch (_: Exception) {}
-    }
-}
-
-/** Bluetooth carrier (L2CAP CoC or RFCOMM — both surface as BluetoothSocket). */
-class BluetoothSocketConnection(private val socket: BluetoothSocket) : TransportConnection {
-    override val input: InputStream get() = socket.inputStream
-    override val output: OutputStream get() = socket.outputStream
-    override val remoteIdentifier: String get() = socket.remoteDevice?.address ?: "bt"
-
-    /** BluetoothSocket exposes no read timeout; the engine's own watchdogs apply. */
-    override fun setReadTimeout(ms: Int) {}
 
     override fun close() {
         try { socket.close() } catch (_: Exception) {}

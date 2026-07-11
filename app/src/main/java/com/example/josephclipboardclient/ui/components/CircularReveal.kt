@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import kotlin.math.hypot
+import androidx.compose.ui.geometry.Rect
 
 fun Modifier.circularReveal(
     revealX: Float,
@@ -36,7 +37,7 @@ fun Modifier.circularReveal(
 
         val clipPath = Path().apply {
             addOval(
-                androidx.compose.ui.geometry.Rect(
+                Rect(
                     center = Offset(revealX, revealY),
                     radius = radius
                 )

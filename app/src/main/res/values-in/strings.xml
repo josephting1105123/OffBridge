@@ -233,7 +233,6 @@
     <string name="theme_dark">Gelap</string>
     <string name="dialog_title_choose_theme">Pilih Tema</string>
     <string name="dialog_title_choose_language">Pilih Bahasa</string>
-    <string name="toast_language_preference_saved">Preferensi bahasa disimpan. Dukungan terjemahan penuh akan segera hadir.</string>
     <string name="dialog_title_privacy_policy">Kebijakan Privasi</string>
     <string name="action_close">Tutup</string>
     <string name="selected_folder_fallback">Folder Terpilih</string>

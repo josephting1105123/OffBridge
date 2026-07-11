@@ -23,6 +23,8 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
  * hardware, and deep-links to settings when NFC is turned off.
  */
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.circularReveal
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Modifier
 
 class ReceiveFragment : Fragment() {
 
@@ -31,8 +33,8 @@ class ReceiveFragment : Fragment() {
     private val showTutorialState = mutableStateOf(false)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
-        val isLite = prefs.getString("design_mode", "Lite") == "Lite"
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+        val isLite = isLiteMode(requireContext())
         
         val revealX = arguments?.getFloat("reveal_x", -1f) ?: -1f
         val revealY = arguments?.getFloat("reveal_y", -1f) ?: -1f
@@ -45,8 +47,8 @@ class ReceiveFragment : Fragment() {
             setContent {
                 AppTheme {
                     if (isLite) {
-                        androidx.compose.foundation.layout.Box(
-                            modifier = androidx.compose.ui.Modifier.circularReveal(revealX, revealY)
+                        Box(
+                            modifier = Modifier.circularReveal(revealX, revealY)
                         ) {
                             com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteReceiveScreen(
                                 deviceName = deviceNameState.value,
@@ -82,7 +84,7 @@ class ReceiveFragment : Fragment() {
         deviceNameState.value = newName
         val trimmed = newName.trim()
         if (trimmed.isNotEmpty()) {
-            requireActivity().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+            requireActivity().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
                 .edit().putString("device_name", trimmed).apply()
             TransferDaemon.customDeviceName = trimmed
         }
@@ -90,7 +92,7 @@ class ReceiveFragment : Fragment() {
 
     private fun syncDeviceNameField() {
         if (!isAdded) return
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         val current = prefs.getString("device_name", getDefaultDeviceName()) ?: getDefaultDeviceName()
         if (deviceNameState.value != current) deviceNameState.value = current
     }
@@ -154,7 +156,7 @@ class ReceiveFragment : Fragment() {
     private fun maybeAutoShowTutorial() {
         if (!isAdded || isHidden) return
         if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         if (prefs.getBoolean("receive_tutorial_shown", false)) return
         prefs.edit().putBoolean("receive_tutorial_shown", true).apply()
         showTutorialState.value = true

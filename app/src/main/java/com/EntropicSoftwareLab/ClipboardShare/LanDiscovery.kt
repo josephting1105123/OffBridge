@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -112,7 +113,9 @@ object LanDiscovery {
                                                     val replyPacket = DatagramPacket(replyMsg, replyMsg.size, InetSocketAddress(senderIp, Ports.DISCOVERY))
                                                     replySocket.send(replyPacket)
                                                 }
-                                            } catch (e: Exception) {} 
+                                            } catch (e: Exception) {
+                                                Log.w("LanDiscovery", "Discovery reply to $senderIp failed: ${e.message}")
+                                            }
                                         }
                                     }
                                 }
@@ -128,7 +131,7 @@ object LanDiscovery {
                                 }
                                 val pendingIntent = PendingIntent.getActivity(context, targetSessionId.hashCode(), resumeIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
                                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                                val notification = NotificationCompat.Builder(context, "FILE_TRANSFER_REQUEST_CHANNEL_V2")
+                                val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
                                     .setSmallIcon(R.mipmap.ic_launcher)
                                     .setContentTitle(context.getString(R.string.transfer_resume_request_title))
                                     .setContentText(context.getString(R.string.transfer_resume_request_text))

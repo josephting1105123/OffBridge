@@ -50,6 +50,7 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.components.SkeletonBox
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppColors
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.Dimens
+import androidx.compose.ui.graphics.ImageBitmap
 
 /** Kind of file-preview tile to render (extension-based branches, Coil-free). */
 enum class FilePreviewKind { IMAGE, FOLDER, TEXT, OTHER }
@@ -61,7 +62,7 @@ enum class FilePreviewKind { IMAGE, FOLDER, TEXT, OTHER }
 data class FilePreviewUi(
     val name: String,
     val kind: FilePreviewKind,
-    val bitmap: androidx.compose.ui.graphics.ImageBitmap? = null,
+    val bitmap: ImageBitmap? = null,
 )
 
 /** A paired, discoverable target device row. */

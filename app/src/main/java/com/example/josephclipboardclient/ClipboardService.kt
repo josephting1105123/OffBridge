@@ -31,6 +31,7 @@ import java.io.InputStream
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
+import android.content.pm.ServiceInfo
 
 class ClipboardService : Service() {
 
@@ -49,8 +50,8 @@ class ClipboardService : Service() {
     private var notificationStartTime = 0L
     private var chronometerBase = 0L
 
-    private val CHANNEL_ID = "CLIPBOARD_SERVICE_CHANNEL_V2"
-    private val PAIRING_CHANNEL_ID = "PAIRING_REQUESTS_CHANNEL_V2"
+    private val CHANNEL_ID = NotificationChannels.SERVICE
+    private val PAIRING_CHANNEL_ID = NotificationChannels.PAIRING
 
     private val pairingNotificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -78,6 +79,9 @@ class ClipboardService : Service() {
         // Toggled on the main thread (UI), read on IO coroutines (receive loop, notification loop);
         // @Volatile gives the cross-thread visibility a plain var lacks.
         @Volatile var isSyncEnabled = true
+
+        private const val ALERT_NOTIFICATION_AUTO_DISMISS_MS = 3000L  // sent/received clipboard toast lifetime
+        private const val FOREGROUND_NOTIFICATION_REFRESH_MS = 2000L  // status-notification redraw interval
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
@@ -206,13 +210,16 @@ class ClipboardService : Service() {
                     val textBytes = encryptedPayload.toByteArray(Charsets.UTF_8)
 
                     Net.sendBytes(node.ip, Ports.CLIPBOARD, textBytes)
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    // Skip this peer, keep pushing to the rest — but log so a total failure isn't silent.
+                    Log.w("ClipboardService", "Clipboard push to ${node.ip} failed: ${e.message}")
+                }
             }
         }
     }
 
     private fun isDarkMode(): Boolean {
-        val prefs = getSharedPreferences("FileBridgePrefs", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
         return when (prefs.getString("theme_mode", "System Default")) {
             "Dark" -> true
             "Light" -> false
@@ -227,7 +234,7 @@ class ClipboardService : Service() {
     private fun showSuccessNotification(text: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val preview = if (text.length > 50) text.substring(0, 50) + "..." else text
-        val notification = NotificationCompat.Builder(this, "CLIPBOARD_ALERT_CHANNEL_V2")
+        val notification = NotificationCompat.Builder(this, NotificationChannels.CLIPBOARD_ALERTS)
             .setContentTitle(applicationContext.getString(R.string.status_push_success_title))
             .setContentText("\"$preview\"")
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -237,13 +244,13 @@ class ClipboardService : Service() {
             .build()
 
         notificationManager.notify(2, notification)
-        serviceScope.launch(Dispatchers.Main) { delay(3000); notificationManager.cancel(2) }
+        serviceScope.launch(Dispatchers.Main) { delay(ALERT_NOTIFICATION_AUTO_DISMISS_MS); notificationManager.cancel(2) }
     }
 
     private fun showReceivedNotification(text: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val preview = if (text.length > 50) text.substring(0, 50) + "..." else text
-        val notification = NotificationCompat.Builder(this, "CLIPBOARD_ALERT_CHANNEL_V2")
+        val notification = NotificationCompat.Builder(this, NotificationChannels.CLIPBOARD_ALERTS)
             .setContentTitle(applicationContext.getString(R.string.status_clipboard_received_title))
             .setContentText("\"$preview\"")
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -253,7 +260,7 @@ class ClipboardService : Service() {
             .build()
 
         notificationManager.notify(3, notification)
-        serviceScope.launch(Dispatchers.Main) { delay(3000); notificationManager.cancel(3) }
+        serviceScope.launch(Dispatchers.Main) { delay(ALERT_NOTIFICATION_AUTO_DISMISS_MS); notificationManager.cancel(3) }
     }
 
     private fun getCustomRemoteViews(statusText: String): RemoteViews {
@@ -294,12 +301,12 @@ class ClipboardService : Service() {
         val serviceChannel = NotificationChannel(CHANNEL_ID, applicationContext.getString(R.string.status_channel_service), NotificationManager.IMPORTANCE_LOW)
         serviceChannel.setShowBadge(false)
         manager.createNotificationChannel(serviceChannel)
-        manager.createNotificationChannel(NotificationChannel("CLIPBOARD_ALERT_CHANNEL_V2", applicationContext.getString(R.string.status_channel_alerts), NotificationManager.IMPORTANCE_HIGH))
+        manager.createNotificationChannel(NotificationChannel(NotificationChannels.CLIPBOARD_ALERTS, applicationContext.getString(R.string.status_channel_alerts), NotificationManager.IMPORTANCE_HIGH))
         val pairingChannel = NotificationChannel(PAIRING_CHANNEL_ID, applicationContext.getString(R.string.status_channel_pairing), NotificationManager.IMPORTANCE_HIGH)
         manager.createNotificationChannel(pairingChannel)
         val transferProgressChannel = NotificationChannel("FILE_TRANSFER_CHANNEL_V2", applicationContext.getString(R.string.status_channel_transfer_progress), NotificationManager.IMPORTANCE_LOW)
         manager.createNotificationChannel(transferProgressChannel)
-        val transferRequestChannel = NotificationChannel("FILE_TRANSFER_REQUEST_CHANNEL_V2", applicationContext.getString(R.string.status_channel_incoming_transfers), NotificationManager.IMPORTANCE_HIGH)
+        val transferRequestChannel = NotificationChannel(NotificationChannels.TRANSFER_REQUEST, applicationContext.getString(R.string.status_channel_incoming_transfers), NotificationManager.IMPORTANCE_HIGH)
         manager.createNotificationChannel(transferRequestChannel)
 
         val remoteViews = getCustomRemoteViews(applicationContext.getString(R.string.status_mesh_active))
@@ -320,7 +327,7 @@ class ClipboardService : Service() {
         // crashes the service, so guard it and stop cleanly instead of crashing.
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(1, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+                startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
             } else {
                 startForeground(1, notification)
             }
@@ -382,7 +389,7 @@ class ClipboardService : Service() {
                 } catch (e: Exception) {
                     Log.w("ClipboardService", "Notification update failed, retrying: ${e.message}")
                 }
-                delay(2000)
+                delay(FOREGROUND_NOTIFICATION_REFRESH_MS)
             }
         }
     }

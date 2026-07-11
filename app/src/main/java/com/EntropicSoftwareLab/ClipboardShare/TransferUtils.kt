@@ -4,6 +4,14 @@ import android.content.Context
 import java.io.InputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import android.content.ContentUris
+import android.content.ContentValues
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 
 object TransferUtils {
     enum class MediaCategory { IMAGE, VIDEO, OTHER }
@@ -56,7 +64,7 @@ object TransferUtils {
     fun mimeForMediaExt(ext: String): String? {
         val e = ext.lowercase()
         val platform = try {
-            android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(e)
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(e)
         } catch (_: Throwable) { null }
         return platform ?: MEDIA_MIME[e]
     }
@@ -65,8 +73,8 @@ object TransferUtils {
      *  place that names the collections — the publish fast path, the MediaStore RELATIVE_PATH and
      *  the history lookup must all agree or published files become unfindable. */
     private fun collectionFor(category: MediaCategory): String? = when (category) {
-        MediaCategory.IMAGE -> android.os.Environment.DIRECTORY_PICTURES
-        MediaCategory.VIDEO -> android.os.Environment.DIRECTORY_MOVIES
+        MediaCategory.IMAGE -> Environment.DIRECTORY_PICTURES
+        MediaCategory.VIDEO -> Environment.DIRECTORY_MOVIES
         MediaCategory.OTHER -> null
     }
 
@@ -74,7 +82,7 @@ object TransferUtils {
      *  null for OTHER (those stay in Download). */
     fun publicMediaDir(category: MediaCategory): java.io.File? {
         val collection = collectionFor(category) ?: return null
-        return java.io.File(android.os.Environment.getExternalStoragePublicDirectory(collection), MEDIA_SUBDIR)
+        return java.io.File(Environment.getExternalStoragePublicDirectory(collection), MEDIA_SUBDIR)
     }
 
     /** First name derived from [name] that doesn't exist in [dir] yet, using the same
@@ -85,20 +93,87 @@ object TransferUtils {
      *  claimed in [taken]. The receive path dedupes against Download AND the media publish
      *  destination — a name that is only unique in Download could be shadowed by a same-named,
      *  earlier-published photo when the history "open" action later probes the media folder first.
-     *  [taken] additionally guards against duplicate leaf names WITHIN one batch (e.g. a sent folder
-     *  containing "a.txt" in two different subfolders, both flattened to the same leaf) — without it
-     *  the second file would overwrite the first on disk. */
-    fun dedupeName(dirs: List<java.io.File>, name: String, taken: Set<String> = emptySet()): String {
+     *  [taken] guards against names that can't be probed as java.io.File paths: duplicate leaf
+     *  names WITHIN one batch (e.g. a sent folder containing "a.txt" in two different subfolders,
+     *  both flattened to the same leaf — without it the second file would overwrite the first on
+     *  disk), and the receive path also passes the user's custom SAF folder listing through it so
+     *  a received file never claims a name already in that folder.
+     *  [reservePartSidecars]: treat "name.part" in [taken] as claiming "name" — session-start
+     *  reservation uses this so a CONCURRENT session's in-flight sidecar blocks the name (two
+     *  same-name receives used to stream into ONE shared .part and corrupt each other). Promote-time
+     *  callers must leave it false: their own just-written sidecar always exists at that moment. */
+    fun dedupeName(dirs: List<java.io.File>, name: String, taken: Set<String> = emptySet(), reservePartSidecars: Boolean = false): String {
         var candidate = name
         var counter = 1
         val nameWithoutExt = name.substringBeforeLast('.')
         val ext = if (name.contains('.')) "." + name.substringAfterLast('.') else ""
-        while (candidate in taken || dirs.any { java.io.File(it, candidate).exists() }) {
+        while (candidate in taken ||
+            (reservePartSidecars && "$candidate.part" in taken) ||
+            dirs.any { java.io.File(it, candidate).exists() }
+        ) {
             candidate = "$nameWithoutExt ($counter)$ext"
             counter++
         }
         return candidate
     }
+
+    /** API 29 (Android 10): raw java.io writes/reads into the public collections EACCES because the
+     *  owner-passthrough FUSE bridge is Android 11+ and this app never opts into legacy storage — so
+     *  receives stage app-privately and publish through MediaStore. Single predicate for the three
+     *  receive/open sites that branch on it. */
+    fun isLegacyScopedStorage(): Boolean = Build.VERSION.SDK_INT <= 29
+
+    /** Directory where the no-SAF receive path stages ".part" files (and where non-media receives
+     *  live once promoted, on API 30+). Public Download normally; on API 29, the app-private external
+     *  files dir (see [isLegacyScopedStorage]), published out via MediaStore after promote
+     *  ([publishReceivedMedia] / [publishToPublicDownloads]). */
+    fun receiveStagingDir(context: Context): java.io.File =
+        if (isLegacyScopedStorage())
+            context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+        else
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+
+    /** MediaStore content URI of a published receive by its history leaf name — needed for history
+     *  "open" on API 29, where raw File(...).exists() can't see even our own published rows (owner
+     *  FUSE passthrough is Android 11+). Media is scoped to our RELATIVE_PATH (Pictures|Movies/"Clipboard
+     *  Share") so a same-named camera photo elsewhere can't shadow it; non-media matches the Downloads
+     *  collection by name. Newest row wins; null on miss/error. */
+    fun findPublishedFileUri(context: Context, name: String): Uri? {
+        val category = mediaCategory(name)
+        val nameCol = MediaStore.MediaColumns.DISPLAY_NAME
+        val pathCol = MediaStore.MediaColumns.RELATIVE_PATH
+        val collection = collectionFor(category)
+        if (collection != null) {
+            val mediaUri = if (category == MediaCategory.IMAGE)
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            else
+                MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            queryNewestId(context, mediaUri, "$nameCol = ? AND $pathCol LIKE ?", arrayOf(name, "$collection/$MEDIA_SUBDIR%"))
+                ?.let { return it }
+        }
+        // Non-media receives — and media the user routed "Same as files" with no custom folder,
+        // which [publishToPublicDownloads] lands in the Downloads collection on API 29, NOT
+        // Pictures|Movies — live in Download/. Media falls through here when the scoped query
+        // above missed, so both routings stay findable.
+        return queryNewestId(
+            context,
+            MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            "$nameCol = ?", arrayOf(name)
+        )
+    }
+
+    /** First (newest) row id of [contentUri] matching [selection], as a content URI; null on miss/error. */
+    private fun queryNewestId(context: Context, contentUri: Uri, selection: String, selectionArgs: Array<String>): Uri? =
+        try {
+            context.contentResolver.query(
+                contentUri,
+                arrayOf(MediaStore.MediaColumns._ID),
+                selection, selectionArgs,
+                "${android.provider.MediaStore.MediaColumns.DATE_ADDED} DESC"
+            )?.use { c ->
+                if (c.moveToFirst()) ContentUris.withAppendedId(contentUri, c.getLong(0)) else null
+            }
+        } catch (_: Exception) { null }
 
     /**
      * Makes a fully received file visible where users expect it. Images/videos move out of
@@ -145,26 +220,48 @@ object TransferUtils {
      *  half-written ghost survives. */
     private fun copyIntoMediaStore(context: Context, file: java.io.File, category: MediaCategory): String? {
         val mime = mimeForMediaExt(file.name.substringAfterLast('.', "")) ?: return null
-        val resolver = context.contentResolver
         val isImage = category == MediaCategory.IMAGE
         val contentUri = if (isImage)
-            android.provider.MediaStore.Images.Media.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         else
-            android.provider.MediaStore.Video.Media.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         val relativePath = (collectionFor(category) ?: return null) + "/" + MEDIA_SUBDIR
-        val values = android.content.ContentValues().apply {
-            put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, file.name)
-            put(android.provider.MediaStore.MediaColumns.MIME_TYPE, mime)
-            put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-            put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+        return copyIntoCollection(context, file, contentUri, relativePath, mime)
+    }
+
+    /** API-29 companion to [publishReceivedMedia] for non-media receives. The file was staged in
+     *  the app-private dir (see [receiveStagingDir]) because raw public-Download writes EACCES
+     *  under API 29 scoped storage, so stream it into a pending MediaStore Downloads row (which
+     *  lands physically in Download/) and delete the private original. Returns the row's actual
+     *  display name (MediaProvider silently dedupes collisions), or null on failure — the file
+     *  then just stays in the app dir; publishing must never fail an already-delivered transfer. */
+    fun publishToPublicDownloads(context: Context, file: java.io.File): String? {
+        val mime = mimeForMediaExt(file.name.substringAfterLast('.', "")) ?: "application/octet-stream"
+        val contentUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val copiedName = try {
+            copyIntoCollection(context, file, contentUri, Environment.DIRECTORY_DOWNLOADS, mime)
+        } catch (_: Exception) { null }
+        if (copiedName != null) file.delete()
+        return copiedName
+    }
+
+    /** Shared pending-row copy for [copyIntoMediaStore] and [publishToPublicDownloads]:
+     *  insert IS_PENDING=1 → stream bytes → clear IS_PENDING → read back the display name. */
+    private fun copyIntoCollection(context: Context, file: java.io.File, contentUri: Uri, relativePath: String, mime: String): String? {
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, file.name)
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
         }
         val itemUri = resolver.insert(contentUri, values) ?: return null
         return try {
             resolver.openOutputStream(itemUri)?.use { out ->
                 file.inputStream().use { it.copyTo(out, 256 * 1024) }
             } ?: throw java.io.IOException("openOutputStream returned null for $itemUri")
-            val publish = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+            val publish = ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
             }
             // An un-updated row stays IS_PENDING=1 — invisible to every gallery — while the caller
             // would delete the Download original, leaving the media visible nowhere. Fail instead.
@@ -172,7 +269,7 @@ object TransferUtils {
                 throw java.io.IOException("Failed to clear IS_PENDING for $itemUri")
             }
             var actualName = file.name
-            resolver.query(itemUri, arrayOf(android.provider.MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            resolver.query(itemUri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
                 if (c.moveToFirst()) c.getString(0)?.let { actualName = it }
             }
             actualName
@@ -184,7 +281,7 @@ object TransferUtils {
 
     fun indexForGallery(context: Context, file: java.io.File) {
         try {
-            android.media.MediaScannerConnection.scanFile(
+            MediaScannerConnection.scanFile(
                 context.applicationContext,
                 arrayOf(file.absolutePath),
                 null,
@@ -246,4 +343,20 @@ object TransferUtils {
         val reserved = Regex("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOption.IGNORE_CASE)
         return if (reserved.matches(stem)) "_$cleaned" else cleaned
     }
+
+    /**
+     * Sanitizes an OUTGOING manifest name so it survives the pipe-delimited, last-colon-split MANIFEST
+     * wire format: '|' (the entry delimiter) and ':' (the name:size separator) would corrupt framing,
+     * so both map to '_'. Receive-side twin: [sanitizeIncomingFileName].
+     */
+    fun sanitizeOutgoingManifestName(rawName: String): String =
+        rawName.replace("|", "_").replace(":", "_")
+
+    /**
+     * Display leaf for a manifest path (history rows, records): normalizes back-slashes first so a
+     * Windows-style path flattens the same on every code path — some sites previously skipped the
+     * normalize and stored the raw "dir\file" verbatim, so the SAME transfer displayed different
+     * names depending on which path recorded it.
+     */
+    fun manifestDisplayLeaf(rawName: String): String = rawName.replace('\\', '/').substringAfterLast('/')
 }

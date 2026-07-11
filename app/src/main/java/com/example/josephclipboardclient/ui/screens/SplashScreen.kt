@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.Color
 
 /**
  * Splash visual: centered logo + name, with the pulsing "loading dots" near the bottom.
@@ -96,7 +97,7 @@ fun SplashScreen(modifier: Modifier = Modifier) {
                 options = listOf("off", "on"),
                 selectedIndex = 0,
                 onSelect = {},
-                selectedColors = listOf(androidx.compose.ui.graphics.Color.Red, androidx.compose.ui.graphics.Color.Green)
+                selectedColors = listOf(Color.Red, Color.Green)
             )
         }
     }
