@@ -21,6 +21,19 @@ Agent prompt to use (adapt the focus to the task):
 >
 > For each, give file:line, a one-line status (implemented / partial / gated / retired), and the key constants. Do NOT modify files. Return a structured map grouped by plane (control / data) and tier.
 
+**Every claim must carry an exact file path + line range as a dedicated field, not buried in prose.** Line-anchored findings turn any later verification (automated or by-hand) into a targeted read instead of a re-search — this is what makes fallback verification viable when a verify stage dies.
+
 ## Then
 
 Read the agent's map, confirm what's reusable, and only plan NEW code for genuine gaps. Reference existing helpers by path in the plan (reuse over rebuild). See also the `## Architecture & Planning` rule in CLAUDE.md.
+
+**Spike gate for unproven native calls.** An audit de-risks *reuse*, not *novelty*. When the plan depends on a native/OS integration the codebase does NOT already exercise (a WinRT API family it never drove, a new radio path), gate the plan on a throwaway spike that proves the exact risky calls end-to-end BEFORE writing the production abstraction. The most expensive defects hide in the one platform call the repo has never made; only running it reveals them (e.g. PowerShell 5.1 cannot subscribe to WinRT events at all; GATT advertising reports a transient `Aborted` before `Started`).
+
+## When the audit fans out (multi-agent)
+
+- **Never drop findings when a verify phase fails** (session limit, terminal API error). Tag them `unverified` and carry them forward; then the orchestrator hand-verifies the highest-severity few directly against the code and labels each finding's verification status in the deliverable. A verify stage that fails silently is worse than none.
+- **Adjudicate from evidence, not verdict enums.** A verifier's verdict is a summary of its evidence and can contradict it. Treat non-CONFIRMED verdicts as "orchestrator reads the evidence text and decides."
+
+## Refactor wire-preservation audits
+
+To prove a refactor kept wire bytes/timeouts identical, don't prose-read both versions: diff the *sorted sets of string literals* (`grep -o '"[^"]*"' | sort -u`) and a timeout/port/constant regex between the pre-refactor git blob (`git show <commit>:<path>`) and the union of the successor files, then read only the residue. Prefer git blobs over `*_temp.kt` scratch copies as baselines — scratch files are mid-refactor snapshots.

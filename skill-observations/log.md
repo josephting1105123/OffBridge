@@ -11,6 +11,7 @@ DECLINED = user decided not to pursue
 ## 2026-07-02
 
 ### Observation 1: Multi-phase audit workflow lost its entire verify phase to a session limit; orchestrator self-verification saved it
+**Status:** ACTIONED — Applied to audit-transport (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Read-only improvement audit of the Android app, Windows module, and website via a 3-phase Workflow (find → completeness-critic → adversarial-verify). All 4 critic agents and all 21 verify agents failed with "You've hit your session limit"; only the 9 first-round finder agents completed, leaving 102 findings marked "verifier unavailable — unreviewed."
@@ -25,6 +26,7 @@ DECLINED = user decided not to pursue
 **Principle:** A verification stage that can fail silently is worse than none — findings vanish and the report looks complete. Fail-open on data (keep + flag) and fail-over on verification (orchestrator checks the critical few). Verification status belongs in the deliverable, not just the pipeline.
 
 ### Observation 2: Auditor findings should carry exact file:line anchors so a follow-up verifier can confirm cheaply
+**Status:** ACTIONED — Applied to audit-transport (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Same audit. Hand-verifying 7 findings took only a handful of targeted reads because every finding cited exact paths and line ranges (e.g. "build.gradle.kts:56-60", "FileTransferDaemon.kt:57-124").
@@ -39,6 +41,7 @@ DECLINED = user decided not to pursue
 **Principle:** A finding's verifiability is a function of how precisely it points at the evidence. Structured, line-anchored findings turn verification from re-exploration into a lookup, which is what makes an orchestrator fallback viable under resource limits.
 
 ### Observation 3: Dead-code deletion coupled across two files needs whole-cluster reachability check
+**Status:** ACTIONED — New skill dead-code-removal created (user-level) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Bug-fix subagent removing unused Compose components (StatusChips.kt, TransferProgress.kt) and trimming a layout pre-warm block in MainActivity.kt.
@@ -53,6 +56,7 @@ DECLINED = user decided not to pursue
 **Principle:** Reachability, not raw reference count, determines dead code. Two mutually-referencing dead symbols keep each other "alive" under a naive grep; scope the search to references outside the deletion set.
 
 ### Observation 4: Assigned-file boundary vs. cross-referenced sibling bugs
+**Status:** ACTIONED — New skill scoped-bugfix-subagent created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Subagent bug-fix pass; assigned exactly four Android files, but the bug brief named twin bugs living in two sibling files (P2pFallbackJoiner.kt, BleControlClient.kt) that were NOT in the assigned set.
@@ -67,6 +71,7 @@ DECLINED = user decided not to pursue
 **Principle:** In a multi-agent fan-out, staying in-lane is only safe if out-of-lane duplicates are surfaced precisely; a flagged twin with file:line is actionable, a vague "similar issue elsewhere" is not.
 
 ### Observation 5: Verify-first pays off on crypto replay caches — check the singleton test interaction
+**Status:** ACTIONED — New skill scoped-bugfix-subagent created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Added a receiver-local nonce replay cache to a Kotlin `object` (singleton) AEAD helper; existing unit tests share that singleton's state across test methods in one JVM.
@@ -81,6 +86,7 @@ DECLINED = user decided not to pursue
 **Principle:** Singleton state added for security silently couples otherwise-independent tests; the safe insertion point for "mark as seen" is after every existing rejection path, and that must be verified against the actual tests, not assumed.
 
 ### Observation 6: Cross-platform parity fixes should read the reference platform's exact impl, not reimplement from the bug description
+**Status:** ACTIONED — New skill cross-platform-parity-fix created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Fixing 3 security bugs in the Windows client's storage layer (ClipboardSeal replay cache, FileSeal AAD, SecurityVault plaintext keys) where fixes must make Windows conform to Android without changing wire bytes.
@@ -95,6 +101,7 @@ DECLINED = user decided not to pursue
 **Principle:** For cross-platform conformance fixes, the reference implementation is the spec. Copy its exact constants and control flow; the only allowed deltas are local plumbing. Receiver-local state has no wire test to catch divergence, so fidelity to the reference must be enforced by reading it, not by paraphrasing the bug report.
 
 ### Observation 7: Gate risky fixes on actual dependency inventory, not on the fix being "correct in principle"
+**Status:** ACTIONED — New skill cross-platform-parity-fix created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Same session. SecurityVault stores per-peer keys as Base64 plaintext; DPAPI (ProtectedData.Protect) is the right fix but only if a clean binding already exists.
@@ -109,6 +116,7 @@ DECLINED = user decided not to pursue
 **Principle:** A fix that is correct in isolation can still be the wrong action: wire-pinned constants require coordinated multi-platform changes, and security fixes requiring new native capabilities must not smuggle in risky dependencies. Verify the platform actually supports the clean fix (check the manifest/build file) before writing code; otherwise flag with exact current definitions and stop.
 
 ### Observation 8: Cross-platform receiver fixes constrained by "edit only these files" scope
+**Status:** ACTIONED — New skill cross-platform-parity-fix created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Fixing four cited bugs in the Windows client (ClipboardDaemon.kt, CryptoEngine.kt) of the cross-platform clipboard app, with a hard rule to edit only those two files.
@@ -123,6 +131,7 @@ DECLINED = user decided not to pursue
 **Principle:** A "conform to the other platform" fix often needs a callback the current interface doesn't expose. Honor the file-scope boundary by delivering the safe, in-scope subset and precisely naming the missing seam, rather than overreaching or under-delivering.
 
 ### Observation 9: Cross-platform conformance fixes need the counterpart file read for exact field order
+**Status:** ACTIONED — Applied to cross-platform-parity-fix (rule 2) (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Fixing four discovery-daemon bugs in the Windows client (TransferDaemon.kt) to conform to Android behavior without a wire change: node-timeout window, FILEBRIDGE_REPLY accept+emit, packet-source-over-declared-IP trust, and the discoverable gate.
@@ -137,6 +146,7 @@ DECLINED = user decided not to pursue
 **Principle:** "Conform to the other platform" is only safe when the exact bytes and the exact helper API are read from source, not reconstructed from memory. The counterpart file is the contract; the referenced helper is the interface. Read both before emitting conforming code.
 
 ### Observation 10: Comment-audit sweeps need a "grounding pass" before editing
+**Status:** ACTIONED — New skill comment-hygiene-sweep created (user-level) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** User asked to "search for each comment in the windows version and change it to a more appropriate one, and latest description" — a full comment-accuracy sweep of the Windows module ahead of the 3.5.0 release.
@@ -150,9 +160,9 @@ DECLINED = user decided not to pursue
 
 **Principle:** Comment accuracy is relative to the current tree state, not the last release — audit the code first, the comments second, or the sweep itself introduces errors.
 
-**Status:** OPEN
 
 ### Observation 11: Adversarial verifier verdicts can contradict their own evidence — orchestrator must read the evidence
+**Status:** ACTIONED — New skill plan-claim-verification created (user-level) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Plan-mode design of an in-screen Send-Via overlay; a 5-agent workflow adversarially verified 27 file/line claims from a Plan agent. One verifier marked the plan's back-press mitigation "PARTIAL/insufficient" while its own numbered evidence (BackHandler unregisters on enabled=false; onHiddenChanged flips state to false) actually proved the mitigation sufficient.
@@ -167,6 +177,7 @@ DECLINED = user decided not to pursue
 **Principle:** A verifier's verdict is a summary of its evidence, and summaries can be wrong while the evidence is right. The orchestrator's adjudication step — read evidence, not labels — is what converts a noisy verify fan-out into a reliable one.
 
 ### Observation 12: Workflow return values get truncated in task notifications — keep them compact, parse tasks/*.output for the rest
+**Status:** ACTIONED — New skill workflow-orchestration-hygiene created (user-level) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Same session. A verification workflow returned {groups, nonConfirmed} with full evidence strings for 27 claims; the task-notification result truncated at ~2k chars mid-JSON. Full result was recovered from the tasks/<id>.output file — a JSON wrapper whose `result` key holds the workflow's return value (parse via ConvertFrom-Json, then read `.result`).
@@ -181,8 +192,8 @@ DECLINED = user decided not to pursue
 **Principle:** A workflow's return value is a message to the orchestrator, not an archive; size it to the decision it must enable. Full detail belongs in retrievable artifacts (output file, transcript), not the notification channel.
 
 ### Observation 13: Impeccable skill setup assumes a web project
+**Status:** ACTIONED — Applied to impeccable (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-02
 **Session context:** Adding dim+blur backdrop and scale/fade entrance to spotlight overlays and dialogs in a Compose Android + Compose Desktop app
 **Skill:** impeccable
@@ -196,6 +207,7 @@ DECLINED = user decided not to pursue
 **Principle:** Skill descriptions that match on task intent ("polish UI") can still carry tech-stack assumptions in their setup steps. Auto-selection rules should distinguish "the guidance applies" from "the tooling applies", and skills with hard setup gates should state their stack scope in the description.
 
 ### Observation 14: Cross-platform string addition is a scripted, anchor-based pattern
+**Status:** ACTIONED — New skill add-i18n-strings created (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Adding a total-file-size display (Send-Files chip + Send-Via label) to Android and Windows, which required one new localized string in 10 Android strings.xml files and 10 Windows translation.json.txt language blocks.
@@ -209,11 +221,10 @@ DECLINED = user decided not to pursue
 
 **Principle:** For repos with fan-out localization (same key duplicated across N files/blocks), mechanical scripted insertion with per-locale anchors plus a count-verification grep is faster and safer than hand-editing each file.
 
-**Status:** OPEN
 
 ### Observation 15: Empirical micro-repro before fixing runtime-dependent windowing bugs
+**Status:** ACTIONED — New skill runtime-behavior-probe created (user-level) (user-requested skill build 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-02
 **Session context:** Windows client maximize button oversized the window ~2.25x on a 150% HiDPI display
 **Skill:** New skill candidate: runtime-behavior-probe (or fold into a debugging methodology skill)
@@ -227,6 +238,7 @@ DECLINED = user decided not to pursue
 **Principle:** For bugs that depend on platform/runtime interpretation of an API (DPI scaling, font metrics, window management), a minimal empirical probe on the shipping runtime beats reasoning from documentation or remembered bug reports — it converts a guess into a measurement and leaves a verifiable trail.
 
 ### Observation 16: impeccable skill is web-centric; Compose (Android/Desktop) projects need adapted verification
+**Status:** ACTIONED — Applied to impeccable (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Replacing "AI-ish" fonts (Geist) with IBM Plex Sans for non-button text across the Android + Compose Desktop clipboard clients
@@ -240,11 +252,10 @@ DECLINED = user decided not to pursue
 
 **Principle:** A design skill's rules usually generalize across rendering stacks, but its *enforcement tooling* rarely does; naming the fallback verification path per stack keeps the skill usable outside its home ecosystem instead of being silently skipped.
 
-**Status:** OPEN
 
 ### Observation 17: Compile failure raced with an IDE auto-save — re-run before debugging
+**Status:** ACTIONED — Applied to verify (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-02
 **Session context:** Cross-platform transfer-cancel fix; :window-ver compile failed with "Missing return statement" at a line the session never touched
 **Skill:** verify
@@ -258,6 +269,7 @@ DECLINED = user decided not to pursue
 **Principle:** In a live-edited workspace, a build is a snapshot of a moving target; a failure that implicates untouched code should be reproduced before it is diagnosed.
 
 ### Observation 18: Search-tool output artifacts can mimic file corruption
+**Status:** ACTIONED — Seeded cross-cutting-principles.md (principle 1) (weekly review 2026-07-11)
 
 **Date:** 2026-07-02
 **Session context:** Adding flowing progress numbers + Send→history-detail navigation on both clients
@@ -272,6 +284,7 @@ DECLINED = user decided not to pursue
 **Principle:** Verify suspected file corruption against the primary source (a direct file read), never against a secondary rendering (search results, diffs in logs, terminal echoes). Cheap to check, expensive to get wrong.
 
 ### Observation 19: "Source of truth" token doc had drifted from code and briefly misled the diagnosis
+**Status:** ACTIONED — Applied to impeccable (weekly review 2026-07-11)
 
 **Date:** 2026-07-03
 **Session context:** Redesign of the Android Send-via slide-up sheet (dark-mode seam against the bottom nav bar). Read `ui/theme/TOKENS.md` early because it declares itself the single human-readable source of truth for design tokens.
@@ -286,6 +299,7 @@ DECLINED = user decided not to pursue
 **Principle:** Docs rot faster than code, and a doc that says "source of truth" is a claim to verify, not a fact. Design work that touches a token system should end with the doc matching the code, otherwise the next session inherits the same trap.
 
 ### Observation 20: A spike validated the riskiest native assumption before the abstraction was built on top of it
+**Status:** ACTIONED — Applied to audit-transport (weekly review 2026-07-11)
 
 **Date:** 2026-07-03
 **Session context:** Adding a BLE control channel to the off-grid PC↔phone transfer path (Windows Kotlin/JVM driving WinRT GATT). The audit-transport skill's Explore pass mapped the existing stack; T0 of the plan was a throwaway PowerShell/WinRT spike run BEFORE any production Kotlin was written.
@@ -300,8 +314,8 @@ DECLINED = user decided not to pursue
 **Principle:** An audit de-risks reuse, not novelty. The most expensive defects hide in the one platform call your codebase has never made before, and no amount of reading existing code reveals them — only running the specific call does. Order the work so the riskiest unproven assumption is tested first and cheapest, before any abstraction hardens around it.
 
 ### Observation 21: Literal-diff technique verifies refactors preserved wire bytes cheaply
+**Status:** ACTIONED — Applied to audit-transport (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-03
 **Session context:** Read-only cross-platform protocol/crypto audit after the TransferDaemon god-class split (commits d200032/b645508/50d141f)
 **Skill:** New skill candidate: refactor-wire-audit (or fold into audit-transport)
@@ -315,8 +329,8 @@ DECLINED = user decided not to pursue
 **Principle:** For behavior-preservation audits, diff extracted invariants (literals, constants) across revisions instead of prose-reading both versions; the residue is the complete work list.
 
 ### Observation 22: Usage-report suggestions must be deduped against existing config before implementing
+**Status:** ACTIONED — Seeded cross-cutting-principles.md (principle 3) (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-03
 **Session context:** Implementing the /insights usage report's suggested improvements (CLAUDE.md rules, a /ship skill, build hooks) for this project.
 **Skill:** New skill created outside weekly review: ship (internal); also relevant to any future "apply tool-generated recommendations" task
@@ -330,8 +344,8 @@ DECLINED = user decided not to pursue
 **Principle:** Generated recommendations describe observed behavior, not current configuration — they lag whatever was recently fixed. Triage against the live config first; the deliverable is the delta, and new automation should reference existing automation, not restate it.
 
 ### Observation 23: Session-recovery from transcript JSONL is a repeatable workflow
+**Status:** ACTIONED — New skill session-recovery created (user-level) (user-requested skill build 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-03
 **Session context:** A chat window was force-killed (claude-mem issue) mid-task; user asked a new window to check whether the tasks finished.
 **Skill:** New skill candidate: session-recovery
@@ -345,8 +359,8 @@ DECLINED = user decided not to pursue
 **Principle:** Transcript JSONL files plus the per-session scratchpad are a complete crash log; a killed session's progress can be reconstructed mechanically instead of re-doing the task from scratch.
 
 ### Observation 24: Review findings should be classified introduced-by-diff vs pre-existing to drive commit scope
+**Status:** ACTIONED — Applied to ship (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-04
 **Session context:** "commit changes" on a large uncommitted diff. The ship skill's code-review pass (8 finders + 6 verifiers) surfaced ~10 confirmed findings across both platforms — several were missing Windows mirrors of Android changes, one was a regression the diff introduced, several were pre-existing bugs the diff merely widened.
 
@@ -361,6 +375,7 @@ DECLINED = user decided not to pursue
 **Principle:** A finding's severity doesn't determine whether it belongs in the current commit — its origin does. Separating "this diff broke it" from "this was already broken" is what lets a review stay scoped to the change under review instead of turning every commit into an open-ended cleanup.
 
 ### Observation 25: Recurring 10-language string-addition ritual could be a project skill
+**Status:** ACTIONED — New skill add-i18n-strings created (weekly review 2026-07-11)
 
 **Date:** 2026-07-04
 **Session context:** Adding a System-Status-style empty state (+ Go to Pairing button) to the Send-to-Connected-Devices flow on Android and Windows, including 3 new string keys and a tutorial-text change in 10 languages on both platforms.
@@ -373,11 +388,10 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Create a small internal skill (or CLAUDE.md section) codifying the ritual: (1) anchor batch edits on per-locale unique neighbour lines; (2) escape apostrophes in Android XML; (3) insert into every language block of translation.json.txt and verify with `grep -c` = keys x 10; (4) remember the repo-root translation.json.txt is a stale copy (classpath loads Window Ver/src/main/resources); (5) Windows tutorials are English-only — do not add tutorial keys there.
 
 **Principle:** When a codebase has a fan-out invariant (one logical change = N mechanical copies), capture the copy discipline and its verification command as a checklist; correctness by grep-count beats correctness by memory.
-**Status:** OPEN
 
 ### Observation 26: verify skill — combine both platform builds into one Gradle invocation
+**Status:** ACTIONED — Applied to verify (weekly review 2026-07-11)
 
-**Status:** OPEN
 **Date:** 2026-07-04
 **Session context:** Send-flow UI polish (device-card tray + Go to Pairing restyle, Android + Windows)
 **Skill:** verify
@@ -391,6 +405,7 @@ DECLINED = user decided not to pursue
 **Principle:** When a verification ritual always runs multiple tasks of the same build tool, batching them into one invocation amortizes the tool's startup/configuration overhead.
 
 ### Observation 27: Ship skill not invoked when its ritual was performed manually
+**Status:** ACTIONED — Applied to ship (weekly review 2026-07-11)
 
 **Date:** 2026-07-05
 **Session context:** Gallery-visibility fix for received photos/videos (publish to Pictures/Movies), user asked to "perform git commit after finishing"
@@ -405,6 +420,7 @@ DECLINED = user decided not to pursue
 **Principle:** When a user request matches a skill's ritual semantically but not lexically, description trigger phrases should cover the common paraphrases — otherwise the agent re-derives the ritual by hand and silently forks from the skill's maintained version.
 
 ### Observation 28: Release-notes generation is a recurring, localizable deliverable
+**Status:** ACTIONED — New skill release-notes created (project) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-05
 **Session context:** User asked for English release notes covering 2.1 -> 3.5.1 during release prep (keystore creation, GitHub lane).
@@ -418,9 +434,9 @@ DECLINED = user decided not to pursue
 
 **Principle:** Deliverables that recur every release cycle and fan out across locales (notes, store listings) are skill candidates the first time they appear, because the second occurrence lands under release-deadline pressure.
 
-**Status:** OPEN
 
 ### Observation 29: Runtime-quirk workarounds need runtime verification, not hard-coded compensation
+**Status:** ACTIONED — Seeded cross-cutting-principles.md (principle 2) (weekly review 2026-07-11)
 
 **Date:** 2026-07-05
 **Session context:** Fixing the Windows maximize button sizing the window to ~2/3 of the screen at 150% display scale
@@ -436,6 +452,7 @@ DECLINED = user decided not to pursue
 
 
 ### Observation 30: Model-fallback discipline belongs in always-loaded config, not in skills
+**Status:** ACTIONED — Already implemented in global + project CLAUDE.md on 2026-07-06 (weekly review 2026-07-11)
 
 **Date:** 2026-07-06
 **Session context:** User asked to edit global and project CLAUDE.md so that when Fable 5 leaves the subscription tier, Opus/Sonnet sessions inherit the established working discipline ("logic base") and land between stock-Opus and Fable quality.
@@ -449,9 +466,9 @@ DECLINED = user decided not to pursue
 
 **Principle:** Rules that must hold when the agent is weakest cannot depend on the agent choosing to load them. Discipline meant as a floor goes in unconditional context; skills are for depth, not for enforcement.
 
-**Status:** OPEN
 
 ### Observation 31: Manual Claude Code plugin install workflow on CLI-less machines
+**Status:** ACTIONED — New skill plugin-ops created (user-level) (user-requested skill build 2026-07-11)
 
 **Date:** 2026-07-06
 **Session context:** Installing the claude-plugins-official marketplace plus kotlin-lsp, skill-creator, and context7 plugins on a machine where the `claude` CLI is not on PATH (VSCode-extension-only sessions).
@@ -466,6 +483,7 @@ DECLINED = user decided not to pursue
 **Principle:** For any tool that speaks a protocol over stdio, verify the launcher emits nothing extra on stdout before wiring it in — a version-check with streams separated (`2>/dev/null`) is a 5-second test that prevents silent protocol corruption.
 
 ### Observation 32: Ship skill has no untracked-file/secrets sweep before commit
+**Status:** ACTIONED — Applied to ship (weekly review 2026-07-11)
 
 **Date:** 2026-07-06
 **Session context:** User asked to "commit if the last committed version is not the latest". Repo root contained an untracked "JDK Passkey/" folder holding the ADB private key, debug.keystore, and the new release keystore (clipboardshare_key.jks), plus a 19 MB app-release.aab in "Installation package (Latest only)/" — none of it gitignored (adbkey has no extension, so the *.jks/*.keystore patterns missed it).
@@ -478,4 +496,152 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Add a step to ship before committing: run `git status --porcelain`, inspect untracked paths for key material (keystores, *key*, *.pem, extensionless private keys), build artifacts (.aab/.apk/.msi/large binaries), and personal files; extend .gitignore for anything that must never land; stage explicitly by path rather than `git add -A`.
 
 **Principle:** A commit ritual that only validates the diff-to-be-committed is blind to the adjacent failure mode — accidentally committing what should never be tracked. Pre-commit hygiene needs one glance at the untracked set, not just the staged one.
+
+### Observation 33: compile-only verify misses AAPT2 resource errors
+**Status:** ACTIONED — Applied to verify (weekly review 2026-07-11)
+
+**Date:** 2026-07-10
+**Session context:** Auditing + fixing Gemini's Android 3.6.2 Lite design pass; added 8 localized string keys across 10 strings.xml files, then build-verified.
+**Skill:** verify
+**Type:** internal
+**Phase/Area:** Android build gate — which Gradle task to run
+
+**Issue:** The change touched string resources (added keys to 10 locale files) and layouts. `:app:compileDebugKotlin` passed clean (it runs parseDebugLocalResources / generateDebugRFile, which only need resource NAMES for R.java). The real defect — an unescaped apostrophe in a French value (`Options d'alimentation`) — only surfaced in `:app:assembleDebug` at the `mergeDebugResources` (AAPT2 flatten) step, as "Invalid unicode escape sequence in string". Had I trusted the compile-only check, I'd have committed a build-breaking resource file.
+
+**Suggested improvement:** In the `verify` skill / CLAUDE.md build-gate guidance, make the task selection conditional on what changed: if the diff touches `res/**` (strings, layouts, drawables, values), the verification MUST run `:app:assembleDebug` (or at least `:app:mergeDebugResources`), NOT `:app:compileDebugKotlin`. Compile-only is only sufficient for pure-Kotlin changes. Note the specific trap: unescaped `'` / `&` / stray `%` / `\` in translated values pass compile but fail AAPT2 flatten.
+
+**Principle:** "It compiles" and "it builds" are different guarantees. A compile-only fast path validates one toolchain (Kotlin) and silently skips others (resource compilation, manifest merge, dexing). Pick the verification task by the class of files changed, not by whichever runs fastest — a green check on the wrong task is worse than no check.
+
+### Observation 34: "BUILD SUCCESSFUL" with UP-TO-DATE tasks is a cached green, not fresh proof
+**Status:** ACTIONED — Applied to verify (weekly review 2026-07-11)
+
+**Date:** 2026-07-11
+**Session context:** Final functionality + security audit producing a stakeholder/CTO report and a security/market report. The report needed real build/test proof, per CLAUDE.md "proof over assumption."
+**Skill:** verify (also relevant to ship)
+**Type:** internal
+**Phase/Area:** Build-verification / reporting the result
+
+**Issue:** Running `:app:testDebugUnitTest :app:assembleDebug` returned BUILD SUCCESSFUL, but the Windows `:window-ver:test` task came back `UP-TO-DATE` — Gradle skipped it because inputs were unchanged since a prior run. Reporting that as "tests pass, verified this run" would have overstated it: a cached green is Gradle asserting the last run passed, not evidence that tests executed now. Forcing `:window-ver:cleanTest :window-ver:test` produced a genuine execution (2 tasks executed, 75 tests, 0 failures), and parsing the JUnit XML under `build2/test-results/test/` gave exact counts for the report.
+
+**Suggested improvement:** In the `verify` skill, add a rule: when a test task reports `UP-TO-DATE` (or `NO-SOURCE`) and the deliverable needs genuine proof, force a real run with `cleanTest`/`--rerun-tasks` before claiming tests passed this session. For precise numbers, aggregate `tests=/failures=/errors=` from the JUnit XML result files rather than trusting the console summary. Distinguish "compiles + packages" (assembleDebug genuinely ran) from "tests executed" (may be cached).
+
+**Principle:** "Verified" means a step ran this session and its output was observed. A build tool's incremental cache can make a stale pass look like a fresh one; when proof is the deliverable, defeat the cache deliberately and read the machine-readable result, not the summary line.
+
+### Observation 35: Environment-state claims in reports go stale faster than code claims
+**Status:** ACTIONED — New skill report-verify created (user-level) (user-requested skill build 2026-07-11)
+
+**Date:** 2026-07-11
+**Session context:** Verifying/fixing REPORT-SECURITY-MARKET-2026-07-11.md against the codebase (parallel session fixing the overview report)
+**Skill:** New skill candidate: report-verify (or a rule for any future report/audit skill)
+**Type:** internal
+**Phase/Area:** Claim verification pass
+
+**Issue:** Every code-referenced claim in the security report (line numbers, constants, cross-platform comparisons — ~25 checks) survived verification, but the one defect found was an environment-state claim: "no Android signing key" was false — clipboardshare_key.jks exists outside the repo; the real gap is keystore.properties missing at the repo root. Code claims were verified when the report was written; environment/status claims (files outside the repo, signing state, deployment state) were asserted from stale context and never re-checked.
+
+**Suggested improvement:** When verifying or writing any report/audit that mixes code findings with project-status statements, run a separate pass over the status claims (signing, distribution, deployed versions, external files) checking filesystem + project memory + release docs — not just the source tree. Project memory (MEMORY.md) flagged this one before the filesystem check confirmed it.
+
+**Principle:** Source-tree claims are anchored by line references and get verified naturally; environment-state claims have no anchor and rot silently. Any verification checklist should treat them as a distinct, higher-risk claim class.
+
+### Observation 36: JS multiline regex ^ anchors inside CRLF pairs — line-removal scripts must split-and-filter instead
+**Status:** ACTIONED — Seeded cross-cutting-principles.md (principle 4) + add-i18n-strings (rule 4) (weekly review 2026-07-11)
+
+**Date:** 2026-07-11
+**Session context:** Punch-list fix session (report REPORT-APP-OVERVIEW-2026-07-11); removing an orphaned i18n key from 12 resource files with a Node one-liner.
+**Skill:** New skill candidate: safe-batch-text-edit (or fold into a general scripting-discipline note)
+**Type:** open-source
+**Phase/Area:** Mechanical multi-file text edits via Node
+
+**Issue:** A Node regex `/^\s*"key":.*\r?\n/gm` used to delete one line per file silently corrupted two CRLF files: in JavaScript multiline mode `^` also matches BETWEEN the `\r` and `\n` of a CRLF pair, so the match consumed the previous line's `\n` plus the target line, joining the preceding and following lines with a stray `\r`. The damage only surfaced because `git diff --numstat` was checked after the edit (net -20 lines instead of -10, whole-file EOL noise). The same regex worked fine on the ten LF files.
+
+**Suggested improvement:** For scripted line removal, never use multiline-anchored regex replacement. Split keeping line terminators (`content.split(/(?<=\n)/)`), filter by `line.includes(needle)`, rejoin, and assert the expected removal count before writing (abort on mismatch). Always verify with `git diff --numstat` (expected N deletions, 0 insertions) immediately after any scripted batch edit.
+
+**Principle:** Scripted batch edits need a post-write verification gate exactly like builds do: assert the expected delta (count, numstat) rather than trusting the transform. JS `^`/`$` in multiline mode treat `\r` as a line terminator — any repo with mixed EOLs will corrupt silently under anchored-regex line deletion.
+
+### Observation 37: Delta assertions must verify placement, not just count — stale indexes after splice corrupted a batch edit that "passed"
+
 **Status:** OPEN
+**Date:** 2026-07-11
+**Session context:** Weekly review + user-requested skill build; a Node script marking observation statuses inserted lines via splice() while iterating over pre-computed heading indexes, shifting every later index. The count assertion (entries updated == expected) passed while several status lines landed in the wrong entries; only the cross-total reconciliation (33 ACTIONED + 6 OPEN = 39 lines for 36 entries) exposed it. Repair = strip-all + re-insert in reverse index order + per-entry pairing verification.
+**Skill:** All skills (cross-cutting-principles.md, principle 4)
+**Type:** open-source
+**Phase/Area:** Scripted batch edits — the assertion itself
+
+**Issue:** Principle 4 (post-write delta assertion) as first written is satisfiable by a wrong edit: counting attempted mutations validates the loop ran, not that each mutation landed where intended. Positional edits over a mutating array need either reverse-order processing (later-index-first, so splices never shift pending targets) or index recomputation per mutation — and the assertion must check *pairing* (each target adjacent to its intended content), not aggregate counts, plus a cross-total reconciliation (lines added == entries touched).
+
+**Suggested improvement:** Strengthen cross-cutting principle 4: the post-write assertion must verify placement/pairing per target (e.g. "status line directly follows its own heading and matches expected text"), and reconcile cross-totals; process positional array mutations in reverse index order.
+
+**Principle:** An assertion that can pass while the edit is wrong is a false gate. Assert the postcondition you actually need (each item paired with its target), not a proxy for it (how many edits ran).
+
+### Observation 38: Receive-path fixes need an open-path parity check
+
+**Date:** 2026-07-11
+**Session context:** Auditing two agents' receive-path fixes (same-name data-loss, API-29 staging) and closing the history-open gap they left
+**Skill:** scoped-bugfix-subagent
+**Type:** internal
+**Phase/Area:** Post-fix verification
+
+**Issue:** The agents' API-29 fix rerouted where received files physically land (app-private staging + MediaStore publish) but did not touch the history "open" lookup, which still probed raw java.io paths — so every received file became unopenable from history on API 29. A second agent flagged it as a caveat rather than fixing it. The same class of drift was then found INSIDE the fix for that caveat: the first MediaStore lookup only covered the gallery routing, missing "Same as files" media.
+
+**Suggested improvement:** Add a rule to scoped-bugfix-subagent: when a fix changes where/how data is stored (path, collection, naming), enumerate every READ path of that data (open/resume/probe/lookup) and update or explicitly clear each one in the same change. A storage-side fix is not complete until the lookup side is proven to find the relocated data under every routing branch.
+
+**Principle:** Write-path and read-path form one contract; fixing one side of a storage contract creates a latent bug on the other side that passes builds and unit tests, because the drift only shows at runtime on the affected platform.
+
+### Observation 39: task-observer's monolithic body cost ~18k tokens per session; restructured to hot-path + on-demand references
+
+**Status:** ACTIONED — task-observer SKILL.md restructured 2026-07-11 (73.3 KB → 8.7 KB; rare paths moved to references/, verbatim backup kept)
+**Date:** 2026-07-11
+**Session context:** User noticed task-observer "taking some portion of the usage." Measured: SKILL.md was 75 KB / 1,524 lines, fully loaded into context at the start of every tool-using session per the CLAUDE.md activation rule.
+**Skill:** task-observer
+**Type:** open-source
+**Phase/Area:** Skill structure / per-session token cost
+
+**Issue:** A skill invoked unconditionally every session paid its FULL body cost every session, but most of that body covers rare paths: the weekly-review procedure (runs ~weekly), skill taxonomy/licensing/attribution (only when authoring open-source skills), Cowork mount/staging and handoff-doc mode (environment-specific). The per-session hot path — observation logging protocol, session-start checks, surfacing, the acting gate — is a small fraction of the text.
+
+**Suggested improvement:** Progressive disclosure for always-on skills: SKILL.md carries only what every session needs, with explicit "read references/X.md first" pointers at each rare-path trigger (review due → weekly-review.md; creating a skill → authoring.md). Keep the load-bearing templates and enforcement rules (logging format, numbering discipline) in the hot path. Preserve the original as a verbatim backup and keep attribution/licence intact (CC BY 4.0). Worth suggesting upstream via the skill's GitHub feedback channel.
+
+**Principle:** For a skill that loads every session, per-session token cost is part of its design. Size the always-loaded body to the always-needed path; everything conditional should cost tokens only when its condition fires. The same lean-content test the skill applies to changelogs applies to its own rare-path procedures.
+
+### Observation 40: Context-cost audit of always-on machinery — fan-out model tiering and full-dump bans are the levers
+
+**Status:** ACTIONED — CLAUDE.md Review economy + read_graph ban added; ship effort tiers aligned; 4 longest skill descriptions trimmed (2026-07-11)
+**Date:** 2026-07-11
+**Session context:** User asked to optimize the memory MCP and code-review after noticing usage pressure (a session limit was hit earlier the same day during a high-effort review fan-out).
+**Skill:** All skills (cost-awareness); ship; CLAUDE.md
+**Type:** open-source
+**Phase/Area:** Per-session and per-invocation token cost
+
+**Issue:** Three distinct cost classes were conflated as "the skill is expensive": (1) always-loaded context (skill descriptions, CLAUDE.md — paid every session), (2) on-invocation bodies (paid when a skill runs; fixed by progressive disclosure), and (3) fan-out execution (code-review's 8 finders + verifiers all inheriting the session's top-tier model — the actual budget killer). The memory MCP turned out to already be cheap (deferred schemas, 37 KB graph); its only exposure was the full-dump call and observation verbosity.
+
+**Suggested improvement:** When optimizing agent-tooling cost, audit by class: measure always-loaded bytes first, then invocation bodies, then fan-out policy. Standard levers per class: trim/tier descriptions; hot-path + references split; model-tier the fan-out (finder/verifier subagents on a smaller model, adjudication in the main loop) and gate effort levels on actual risk classes, not directory names. Ban whole-store dump calls (read_graph) in always-loaded config.
+
+**Principle:** Subagents inherit the session model by default, so a fan-out multiplies the most expensive model by the agent count unless explicitly tiered — candidate generation rarely needs the top model; adjudication does. Match model tier to the stage's judgment density, and spend measurement before cutting: the component the user suspects (memory) may be cheap while the one that "works fine" (review fan-out) is the drain.
+
+### Observation 41: Per-language audit fan-outs need a cross-locale sweep on every flagged key
+
+**Status:** OPEN
+**Date:** 2026-07-12
+**Session context:** 9-language translation accuracy audit (one sonnet agent per locale, Android strings.xml + Windows translation.json.txt)
+**Skill:** New skill candidate: translation-audit (or fold into add-i18n-strings)
+**Type:** open-source
+**Phase/Area:** Adjudication after fan-out
+
+**Issue:** Agents' coverage varied: the German agent missed a "paired"-dropped string that the Spanish/Japanese agents caught on the identical key in their locales. A single cheap grep of the flagged key across ALL locale files completed the affected-language list and exposed one fully systemic finding (a key where all 9 locales translate an outdated English revision).
+
+**Suggested improvement:** In any per-language audit workflow, add a mandatory adjudication step: for every key flagged by ANY agent, grep that key across all locales before reporting, and treat "same defect in N locales" as one systemic finding with an exact affected list.
+
+**Principle:** In symmetric fan-outs (same check, different shard), any finding from one shard is a hypothesis about every other shard — verify it across all shards mechanically instead of trusting each shard's independent recall.
+
+### Observation 42: Duplicate-key translation disputes are settled by code usage, not language judgment
+
+**Status:** OPEN
+**Date:** 2026-07-12
+**Session context:** Same translation audit — zh-CN and zh-TW agents returned opposite verdicts on which "Transaction Details" translation was wrong
+**Skill:** New skill candidate: translation-audit (or fold into add-i18n-strings)
+**Type:** open-source
+**Phase/Area:** Adjudication after fan-out
+
+**Issue:** Two sibling keys share the English text "Transaction Details". The zh-CN agent called the financial rendering wrong; the zh-TW agent called the transfer rendering wrong. Grepping code usage settled it: the visible key is a file-transfer detail header (transfer reading correct), and the other key is referenced nowhere — dead, downgrading the finding entirely.
+
+**Suggested improvement:** When agents dispute a translation of an ambiguous source string, or when two keys share source text, check where the key is used in code (and whether it is used at all) before adjudicating severity or direction.
+
+**Principle:** The referent of an ambiguous UI string lives in the code that displays it; translation correctness disputes are resolved by usage lookup, and unused keys cap severity at informational.

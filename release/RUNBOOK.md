@@ -1,8 +1,9 @@
 # Release runbook — the Claude-free operations manual
 
 This is the manual to run releases and a beta **without AI help**. Everything here is mechanical:
-follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.5.1,
-versionCode 18.
+follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.6.3,
+versionCode 25. (Android and Windows are on separate version tracks since 3.5.1; the Windows
+module is at 3.6.0.)
 
 ---
 
@@ -61,6 +62,22 @@ testers to click *More info → Run anyway* (canned reply in `TESTER_REPLIES.md`
 ```bash
 certutil -hashfile "ClipboardShare-windows-setup.exe" SHA256
 ```
+
+### Installer error: "IPersistFile::Save failed; code 0x80070005. Access is denied."
+Seen at the **"Creating shortcuts…"** step. The elevated installer already copied the app into
+`Program Files`, then was denied the write to the Start Menu `.lnk`. Root cause is almost always
+**Controlled Folder Access** (Windows Security → *Virus & threat protection* → *Ransomware protection*)
+or third-party **antivirus** blocking writes to the Start Menu Programs folder — it blocks even an
+elevated installer, per-hash, and is not a malware verdict.
+
+Since **3.5.7** the installer creates its shortcuts in `[Code]` with `try/except`, so this **no longer
+aborts the install** — the app and its firewall rules install normally, and Setup shows an info dialog
+if the shortcut was blocked. To also restore the Start Menu shortcut, tell the user to allow it and
+reinstall:
+- Windows Security → *Virus & threat protection* → *Ransomware protection* → *Manage ransomware
+  protection* → *Allow an app through Controlled folder access* → add the installer (or temporarily turn
+  Controlled folder access **Off**), then run Setup again.
+- If a third-party AV is the blocker, add the installer to its exclusions and rerun.
 
 ## 5. Publish a GitHub Release (Lane A)
 1. Create the release, tag `v3.4.0`.

@@ -23,6 +23,15 @@ short. The point of the "known behavior" ones is so expected quirks don't get lo
 > If you want to verify the download first, the SHA-256 checksum is on the download page — it should
 > match `certutil -hashfile "Clipboard Share Setup.exe" SHA256`.
 
+## Windows install stops at "Creating shortcuts" (Access is denied / 0x80070005)
+> That error is your security software — Windows "Ransomware protection" (Controlled Folder Access) or
+> your antivirus — blocking the app from adding a Start Menu shortcut. It's not a virus warning about
+> the app. The latest installer (3.5.7+) works around it so the app still installs; if you're on it,
+> just click OK and the app is ready (launch it from its folder in Program Files). To get the Start Menu
+> shortcut too: Windows Security → *Virus & threat protection* → *Ransomware protection* → *Allow an app
+> through Controlled folder access* → add the installer (or turn Controlled folder access off briefly),
+> then run the installer again.
+
 ## Known behavior — "app won't install / install failed" (signature mismatch)
 > This usually happens when both versions are installed from different sources. The Play Store version
 > and the direct-download (GitHub/website) version are signed differently, so a device can't update
