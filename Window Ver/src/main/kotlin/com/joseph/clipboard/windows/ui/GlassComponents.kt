@@ -1,5 +1,8 @@
 package com.joseph.clipboard.windows.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,26 +14,30 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -202,7 +209,57 @@ fun CapsuleButton(
 
 // ---- Rows & states ----------------------------------------------------------------------------
 
-/** A label + Switch row, themed with the green track. Drop inside a [SectionCard]. */
+/**
+ * Glass slider switch — desktop port of the Android DesignModeToggle compact (no-labels) form: one
+ * glass thumb slides across the track, red on the left = off, green on the right = on, so meaning
+ * is carried by position + colour and no translated On/Off word is needed. Click-to-toggle only —
+ * the Android drag gesture leans on requestDisallowInterceptTouchEvent, which has no desktop
+ * counterpart.
+ */
+@Composable
+fun GlassSwitch(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val extra = LocalExtraColors.current
+    val shape = RoundedCornerShape(Dimens.radiusSm)
+    val bias by animateFloatAsState(
+        targetValue = if (checked) 1f else -1f,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+    )
+    // Accent crossfades red→green as the thumb slides, matching the Android form.
+    val accent = lerp(extra.error, extra.greenText, ((bias + 1f) / 2f).coerceIn(0f, 1f))
+    Box(
+        modifier = modifier
+            .size(width = 64.dp, height = 30.dp)
+            .clip(shape)
+            .background(MaterialTheme.colors.surface)
+            .border(Dimens.hairlineWidth, extra.divider, shape)
+            // toggleable (not clickable) so the stock Switch's accessibility contract survives the
+            // swap: Role.Switch + on/off state stay announced to screen readers.
+            .toggleable(
+                value = checked,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Switch,
+                onValueChange = onCheckedChange,
+            )
+            .padding(3.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .align(BiasAlignment(horizontalBias = bias, verticalBias = 0f))
+                .fillMaxWidth(0.5f)
+                .fillMaxHeight()
+                .clip(shape)
+                .background(accent.copy(alpha = 0.12f))
+                .border(1.5.dp, accent, shape),
+        )
+    }
+}
+
+/** A label + [GlassSwitch] row. Drop inside a [SectionCard]. */
 @Composable
 fun GlassToggleRow(
     label: String,
@@ -215,14 +272,7 @@ fun GlassToggleRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface, modifier = Modifier.weight(1f))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = LocalExtraColors.current.green,
-            ),
-        )
+        GlassSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -276,20 +326,28 @@ fun GlassDivider(modifier: Modifier = Modifier) {
     )
 }
 
-/** Pill segmented control (track + segments); selected segment is solid green. */
+/**
+ * Pill segmented control (track + segments); selected segment is solid green. Colors default to
+ * the active theme's tokens; call sites on a fixed-dark surface (the power menu) pass dark tokens
+ * explicitly, because the theme may resolve light there.
+ */
 @Composable
 fun SegmentedControl(
     options: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    fill: Color = MaterialTheme.colors.surface,
+    borderColor: Color = LocalExtraColors.current.divider,
+    selectedFill: Color = LocalExtraColors.current.green,
+    selectedLabelColor: Color = MaterialTheme.colors.onPrimary,
+    labelColor: Color = LocalExtraColors.current.textSecondary,
 ) {
-    val extra = LocalExtraColors.current
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(Dimens.radiusPill))
-            .background(MaterialTheme.colors.surface)
-            .border(Dimens.hairlineWidth, extra.divider, RoundedCornerShape(Dimens.radiusPill))
+            .background(fill)
+            .border(Dimens.hairlineWidth, borderColor, RoundedCornerShape(Dimens.radiusPill))
             .padding(Dimens.spaceXxs),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spaceXxs),
     ) {
@@ -298,7 +356,7 @@ fun SegmentedControl(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(Dimens.radiusPill))
-                    .background(if (selected) extra.green else Color.Transparent)
+                    .background(if (selected) selectedFill else Color.Transparent)
                     .clickable { onSelect(i) }
                     .padding(horizontal = Dimens.spaceMd, vertical = Dimens.spaceSm),
                 contentAlignment = Alignment.Center,
@@ -306,7 +364,7 @@ fun SegmentedControl(
                 Text(
                     option,
                     style = MaterialTheme.typography.button,
-                    color = if (selected) MaterialTheme.colors.onPrimary else extra.textSecondary,
+                    color = if (selected) selectedLabelColor else labelColor,
                 )
             }
         }

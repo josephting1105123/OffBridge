@@ -19,6 +19,9 @@ object SecurityVault {
     private var deviceName: String = "Windows PC"
     private var isDiscoverable: Boolean = true
     private var language: String = "System Default"
+    // Appearance persisted as the ThemeMode enum name ("LIGHT"/"DARK"/"SYSTEM") so the vault stays
+    // UI-agnostic; the UI layer parses it and falls back to SYSTEM on anything unreadable.
+    private var theme: String = "SYSTEM"
     private var saveLocation: String = System.getProperty("user.home") + "\\Downloads"
     private val trustedNodes = ConcurrentHashMap<String, String>()
     // Human-readable name per trusted IP, so the Paired list shows names even when a device is offline.
@@ -81,7 +84,8 @@ object SecurityVault {
         val fileGcmPinned: List<String>? = null,
         val clipboardGcmPinned: List<String>? = null,
         val auth2Pinned: List<String>? = null,
-        val fileGcmV2Pinned: List<String>? = null
+        val fileGcmV2Pinned: List<String>? = null,
+        val theme: String? = null
     )
 
     init {
@@ -102,6 +106,7 @@ object SecurityVault {
             dto.deviceName?.let { deviceName = it }
             dto.isDiscoverable?.let { isDiscoverable = it }
             dto.language?.let { language = it }
+            dto.theme?.let { theme = it }
             dto.saveLocation?.let { saveLocation = it }
             var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
@@ -141,7 +146,7 @@ object SecurityVault {
     private fun save() {
         try {
             val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
-            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList())
+            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList(), theme)
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
@@ -186,6 +191,13 @@ object SecurityVault {
 
     fun setLanguage(lang: String) {
         language = lang
+        save()
+    }
+
+    fun getTheme(): String = theme
+
+    fun setTheme(mode: String) {
+        theme = mode
         save()
     }
 

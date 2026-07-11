@@ -8,23 +8,16 @@ import androidx.compose.ui.text.platform.Font
 import androidx.compose.ui.unit.sp
 
 /*
- * Two-voice type system, matching the Android client (ui/theme/Type.kt):
- *  - Content voice: IBM Plex Sans (headings, titles, body, captions) — humanist letterforms with
- *    Latin + Cyrillic coverage.
- *  - Control voice: Geist on the button slot, so controls keep their tighter, tracked look.
- * Both are bundled as variable fonts (src/main/resources/font, packed into the MSI automatically).
- * Compose Desktop 1.6.x has no `variationSettings` on Font(), so weights are requested by FontWeight
- * and Skia selects/synthesises the wght axis. Inter is also bundled (font/inter_variable.ttf) as a
- * one-line swap if ever preferred. Numeric/data text opts into tabular figures (tnum) via
- * [TabularFigures] / String.withInterNumerals (MixedTypeText.kt) so live values don't reflow as
- * digits change width.
+ * Serif type voice, matching the Android client's 3.6.2 ramp (ui/theme/Type.kt): the whole scale
+ * rides FontFamily.Serif at Medium weight for headings/titles/buttons and Normal for body/captions.
+ * On the desktop JVM the generic serif alias resolves through DirectWrite (Times New Roman on stock
+ * Windows 10/11); Android resolves the same alias to its device serif — the shared decision is the
+ * serif voice, not identical glyphs. CJK text falls back to system fonts via Skia's paragraph
+ * fallback, as it always has. Numeric/data text stays on IBM Plex Sans tabular figures (tnum) via
+ * [TabularFigures] / String.withInterNumerals (MixedTypeText.kt) — same split as Android — so live
+ * values don't reflow as digits change width.
  */
-private fun geist(weight: FontWeight) = Font("font/geist_variable.ttf", weight)
 private fun plex(weight: FontWeight) = Font("font/ibm_plex_sans_variable.ttf", weight)
-
-val Geist = FontFamily(
-    geist(FontWeight.Normal), geist(FontWeight.Medium), geist(FontWeight.SemiBold), geist(FontWeight.Bold),
-)
 
 val PlexSans = FontFamily(
     plex(FontWeight.Normal), plex(FontWeight.Medium), plex(FontWeight.SemiBold), plex(FontWeight.Bold),
@@ -34,19 +27,18 @@ val PlexSans = FontFamily(
  * A consistent type scale so headings, titles, body and labels share one rhythm across
  * every screen. Wired into [ClipboardTheme]; screens read MaterialTheme.typography.*
  * (h5 = screen header, subtitle1 = section/title, body1 = body, button = button label,
- * caption = secondary/meta). [defaultFontFamily] makes Plex the content font; the button slot pins
- * Geist so controls keep the previous look.
+ * caption = secondary/meta).
  */
 val AppTypography = Typography(
-    defaultFontFamily = PlexSans,
-    h4 = TextStyle(fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 34.sp),
-    h5 = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 30.sp),
-    h6 = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp),
-    subtitle1 = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 22.sp),
+    defaultFontFamily = FontFamily.Serif,
+    h4 = TextStyle(fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 34.sp),
+    h5 = TextStyle(fontWeight = FontWeight.Medium, fontSize = 24.sp, lineHeight = 30.sp),
+    h6 = TextStyle(fontWeight = FontWeight.Medium, fontSize = 20.sp, lineHeight = 26.sp),
+    subtitle1 = TextStyle(fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 22.sp),
     subtitle2 = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
     body1 = TextStyle(fontWeight = FontWeight.Normal, fontSize = 15.sp, lineHeight = 22.sp),
     body2 = TextStyle(fontWeight = FontWeight.Normal, fontSize = 13.sp, lineHeight = 18.sp),
-    button = TextStyle(fontFamily = Geist, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, letterSpacing = 0.4.sp),
+    button = TextStyle(fontWeight = FontWeight.Medium, fontSize = 14.sp),
     caption = TextStyle(fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
 )
 

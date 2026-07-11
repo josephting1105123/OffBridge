@@ -4,6 +4,28 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.0 — Windows (serif voice, glass toggles, in-menu theme switch, receiving pill)
+
+Ports the Android 3.6.1/3.6.2 UI language to the desktop client and hardens the installer. Android
+unchanged. A UI layer over the existing engine — no wire-protocol, crypto or pairing changes.
+
+### Added
+- **In-menu theme switch.** The power menu now carries a Light / System / Dark segmented control,
+  and the choice persists in `config.json` — previously the theme reset to System on every launch.
+- **Receiving pill.** While files are incoming and the transfer dialog is closed, a small animated
+  "Receiving" chip (liquid ring + staggered letters, ported from the Android receiving loader)
+  floats at the top of every screen; clicking it jumps to the running transfer. Grounded in the
+  live receive socket, so a stale history row can never pin it on.
+
+### Changed
+- **Serif type voice.** The whole type ramp moves to the platform serif at the Android 3.6.2
+  weights; numeric/data text stays IBM Plex Sans with tabular figures so live values don't reflow.
+- **Glass sliders.** Every toggle (Settings, System Status, Clipboard accept) is now the sliding
+  glass switch from Android — red left = off, green right = on — replacing the stock Material switch.
+- **Installer hardening.** `PrivilegesRequired=admin` is explicit (the firewall rules need the
+  elevated token); shortcut creation moved to `[Code]` so a Controlled Folder Access / AV block on
+  the Start Menu folder no longer aborts the whole install, with matching uninstall cleanup.
+
 ## 3.6.2 — Android (Lite design pass, part 2 + fixes)
 
 Continues the 3.6.1 redesign — reveal-animated Lite navigation, a serif type voice, a restyled power

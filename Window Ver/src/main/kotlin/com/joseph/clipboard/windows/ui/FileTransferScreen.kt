@@ -56,7 +56,8 @@ fun FileTransferScreen(
     appController: ClipboardAppController,
     onTutorialChainNext: (Screen) -> Unit = {},
     tutorialTrigger: Int = 0,
-    onNavigateToPairing: () -> Unit = {}
+    onNavigateToPairing: () -> Unit = {},
+    onTransferHistoryVisibility: (Boolean) -> Unit = {}
 ) {
     var selectAllFiles by remember { mutableStateOf(false) }
     var showSendVia by remember { mutableStateOf(false) }
@@ -77,6 +78,14 @@ fun FileTransferScreen(
         if (tutorialTrigger > 0) showTutorial = true
     }
     
+    // The global receiving pill hides while the transfer-history dialog is on screen. The flag
+    // lives here and this screen is disposed on nav-away, so report every change AND reset on
+    // dispose — otherwise a stale "visible" would keep the pill hidden from another screen.
+    DisposableEffect(showTransferHistory) {
+        onTransferHistoryVisibility(showTransferHistory)
+        onDispose { onTransferHistoryVisibility(false) }
+    }
+
     // Issue 4: Observe navigation event from controller (auto-open transfer history on accept)
     val navigateToSession by appController.navigateToTransferSession.collectAsState()
     LaunchedEffect(navigateToSession) {

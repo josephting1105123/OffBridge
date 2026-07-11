@@ -133,6 +133,14 @@ class ClipboardAppController {
     
     private val _transferHistory = MutableStateFlow<List<TransferRecord>>(emptyList())
     val transferHistory: StateFlow<List<TransferRecord>> = _transferHistory
+
+    // Sessions whose incoming byte-pump is live right now (drives the global "Receiving…" pill).
+    // Deliberately NOT derived from transferHistory statuses: records persist verbatim, so a crash
+    // mid-receive leaves status=="transferring" forever and would pin the pill on after restart.
+    // Membership tracks the receiveFilesFromSocket try/finally instead — accept and resume both
+    // funnel through that one pump — so an entry exists iff bytes can still arrive.
+    private val _activeIncomingSessions = MutableStateFlow<Set<String>>(emptySet())
+    val activeIncomingSessions: StateFlow<Set<String>> = _activeIncomingSessions.asStateFlow()
     
     // For UI popups regarding incoming files
     private val _incomingFileOffer = MutableStateFlow<IncomingFileSession?>(null)
@@ -144,6 +152,11 @@ class ClipboardAppController {
     
     fun clearNavigateToTransferSession() {
         _navigateToTransferSession.value = null
+    }
+
+    /** Receiving-pill click: rides the same navigate-to-session flow the accept path drives. */
+    fun openTransferSession(sessionId: String) {
+        _navigateToTransferSession.value = sessionId
     }
     
     private val pairingDaemon = PairingDaemon(
@@ -905,6 +918,7 @@ class ClipboardAppController {
 
     private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long, fileKey: ByteArray? = null, useV2: Boolean = false) {
         try {
+            _activeIncomingSessions.update { it + sessionId }
             activeFileTransferSockets[sessionId] = socket
 
             updateRecord(sessionId) { it.copy(status = "transferring") }
@@ -937,6 +951,7 @@ class ClipboardAppController {
                 updateRecord(sessionId) { it.copy(status = "failed") }
             }
         } finally {
+            _activeIncomingSessions.update { it - sessionId }
             activeFileTransferSockets.remove(sessionId)
             // Drop the retained incoming session so it doesn't leak forever — EXCEPT when the record
             // ended "failed", which offers a resume that needs the session (senderIp/manifest) to

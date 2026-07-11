@@ -1,5 +1,5 @@
 #define MyAppName "Clipboard Share"
-#define MyAppVersion "3.5.6"
+#define MyAppVersion "3.6.0"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "Clipboard Share.exe"
 
@@ -10,6 +10,10 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
+; Elevate to admin. This is also Inno's default when PrivilegesRequired is unset, but make it explicit:
+; the all-users install location ({autopf}) AND the [Run] netsh firewall rules both require the elevated
+; token, so a per-user/lowest install would silently drop the firewall rules the phone->PC path needs.
+PrivilegesRequired=admin
 DisableProgramGroupPage=yes
 ; Warn (Inno default) when the user browses to an existing non-empty folder, so an accidental
 ; install target isn't wiped silently by the file overwrite below. Do NOT set DirExistsWarning=no.
@@ -91,11 +95,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; Retry/Skip/Cancel "code 5" box. No-op per file unless that file is actually locked.
 Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 
-[Icons]
-; Start Menu Shortcut (Always created unless DisableProgramGroupPage=no and user unchecks, but here we force it to keep it simple or we can add a task)
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-; Desktop Shortcut (Optional via Task)
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+; [Icons] intentionally omitted. Shortcuts are created in [Code] (CreateAppShortcuts, called on
+; ssPostInstall) wrapped in try/except so a Controlled Folder Access / AV block on the Start Menu
+; folder ("IPersistFile::Save failed; code 0x80070005. Access is denied.") can't abort the whole
+; install: an [Icons] failure is fatal to Setup, whereas a [Code] failure we can catch and continue —
+; the app files and firewall rules are already in place by then. The [Code] handler honors the
+; desktopicon task, and CurUninstallStepChanged deletes both .lnk files on uninstall (Inno does not
+; track shortcuts created via CreateShellLink the way it auto-removes [Icons] entries).
 
 [Run]
 ; Allow inbound LAN traffic to ALL of Clipboard Share's listening ports through Windows Defender
@@ -437,6 +443,73 @@ end;
 procedure CurPageChanged(CurPageID: Integer);
 begin
   ApplyDarkTheme();
+end;
+
+// Create the Start Menu (and optional desktop) shortcut AFTER files are installed, but tolerate a
+// failure instead of aborting Setup. Controlled Folder Access ("Ransomware protection") and some AV
+// products deny writes to the Start Menu Programs folder even for an elevated installer, surfacing as
+// "IPersistFile::Save failed; code 0x80070005. Access is denied." As an [Icons] entry that error is
+// fatal; here we catch it and continue, because the app files and firewall rules are already installed.
+procedure CreateAppShortcuts();
+var
+  LinkPath: String;
+begin
+  try
+    LinkPath := CreateShellLink(
+      ExpandConstant('{autoprograms}\{#MyAppName}.lnk'),
+      '{#MyAppName}',
+      ExpandConstant('{app}\{#MyAppExeName}'),
+      '',
+      ExpandConstant('{app}'),
+      '',
+      0,
+      SW_SHOWNORMAL);
+  except
+    Log('Start Menu shortcut could not be created (likely Controlled Folder Access / AV): ' + GetExceptionMessage);
+    // Don't pop a modal during a /SILENT or /VERYSILENT run — it would hang an unattended install.
+    if not WizardSilent then
+      MsgBox('Clipboard Share was installed successfully, but its Start Menu shortcut could not be created.' + NL + NL +
+        'This is usually security software (Controlled Folder Access / "Ransomware protection", or antivirus) '
+        + 'blocking writes to the Start Menu folder.' + NL + NL +
+        'You can still launch the app from its install folder, or allow this installer through Controlled '
+        + 'Folder Access and run it again to add the shortcut.', mbInformation, MB_OK);
+  end;
+
+  if WizardIsTaskSelected('desktopicon') then
+  begin
+    try
+      LinkPath := CreateShellLink(
+        ExpandConstant('{autodesktop}\{#MyAppName}.lnk'),
+        '{#MyAppName}',
+        ExpandConstant('{app}\{#MyAppExeName}'),
+        '',
+        ExpandConstant('{app}'),
+        '',
+        0,
+        SW_SHOWNORMAL);
+    except
+      // Desktop icon is optional — never interrupt the install for it.
+      Log('Desktop shortcut could not be created: ' + GetExceptionMessage);
+    end;
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    CreateAppShortcuts();
+end;
+
+// Remove the [Code]-created shortcuts on uninstall. Inno auto-removes [Icons] entries, but shortcuts
+// made via CreateShellLink are not tracked, so delete them explicitly (mirrors the firewall-rule
+// cleanup in [UninstallRun]). Missing files are a no-op.
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    DeleteFile(ExpandConstant('{autoprograms}\{#MyAppName}.lnk'));
+    DeleteFile(ExpandConstant('{autodesktop}\{#MyAppName}.lnk'));
+  end;
 end;
 
 // Stop the re-theme timer before Setup terminates so it can't fire against a torn-down wizard.

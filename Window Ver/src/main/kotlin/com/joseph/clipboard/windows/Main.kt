@@ -51,6 +51,8 @@ import com.joseph.clipboard.windows.ui.BackdropScrim
 import com.joseph.clipboard.windows.ui.FileTransferScreen
 import com.joseph.clipboard.windows.ui.HistoryScreen
 import com.joseph.clipboard.windows.ui.LocalBackdrop
+import com.joseph.clipboard.windows.ui.ReceivingPill
+import com.joseph.clipboard.windows.ui.SegmentedControl
 import com.joseph.clipboard.windows.ui.SettingsScreen
 import com.joseph.clipboard.windows.ui.SystemStatusScreen
 import com.joseph.clipboard.windows.ui.backdropBlur
@@ -61,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
 
 enum class Screen {
@@ -70,10 +73,41 @@ enum class Screen {
 // Global Theme State
 val LocalThemeMode = compositionLocalOf<MutableState<ThemeMode>> { error("No ThemeMode provided") }
 
+/**
+ * The global "Receiving…" pill, isolated in its own composable so its flow reads stay out of
+ * AppContent's recompose scope: transferHistory re-emits on every progress tick during a receive,
+ * so it is only read at click time, never during composition.
+ */
+@Composable
+private fun ReceivingPillOverlay(
+    appController: ClipboardAppController,
+    hiddenByDialog: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val activeIncoming by appController.activeIncomingSessions.collectAsState()
+    if (activeIncoming.isEmpty() || hiddenByDialog) return
+    val history = appController.transferHistory.collectAsState()
+    ReceivingPill(
+        text = com.joseph.clipboard.windows.storage.TranslationManager.getString("receiving_label").takeIf { it != "receiving_label" } ?: "Receiving",
+        onClick = {
+            // Resolved at click time: newest history record still pumping wins (history is
+            // newest-first), falling back to any live id. Both collections can shift between
+            // frames, so guard the just-emptied race instead of first()-throwing.
+            val id = history.value.firstOrNull { it.sessionId in activeIncoming }?.sessionId
+                ?: activeIncoming.firstOrNull()
+            if (id != null) appController.openTransferSession(id)
+        },
+        modifier = modifier,
+    )
+}
+
 @Composable
 fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
     var currentScreen by remember { mutableStateOf(Screen.SEND_FILES) }
     var showPowerMenu by remember { mutableStateOf(false) }
+    // Whether FileTransferScreen's transfer-history dialog is on screen, reported via callback —
+    // the flag lives inside that screen, which is disposed on nav-away. Gates the receiving pill.
+    var transferHistoryDialogVisible by remember { mutableStateOf(false) }
     val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
     var tutorialChainTarget by remember { mutableStateOf<Screen?>(null) }
     var tutorialChainCounter by remember { mutableStateOf(0) }
@@ -169,7 +203,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                             appController = appController,
                             onTutorialChainNext = onTutorialChainNext,
                             tutorialTrigger = if (tutorialChainTarget == Screen.SEND_FILES) tutorialChainCounter else 0,
-                            onNavigateToPairing = { currentScreen = Screen.SYSTEM_STATUS }
+                            onNavigateToPairing = { currentScreen = Screen.SYSTEM_STATUS },
+                            onTransferHistoryVisibility = { transferHistoryDialogVisible = it }
                         )
                         Screen.SYSTEM_STATUS -> SystemStatusScreen(
                             appController = appController,
@@ -180,6 +215,20 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                         Screen.ANDROID_VERSION -> AndroidVersionScreen()
                     }
                 }
+
+                // Global "Receiving…" pill — floats above every screen (under the modal scrims
+                // below) while an incoming byte-pump is live, unless the transfer-history dialog
+                // is already showing the transfer. Click jumps to the session via the same
+                // navigate-to-session flow the accept path drives.
+                ReceivingPillOverlay(
+                    appController = appController,
+                    hiddenByDialog = transferHistoryDialogVisible,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 20.dp)
+                        .backdropBlur(backdropController),
+                )
+
                 if (showPowerMenu) {
                     BackdropEffect()
                     Box(
@@ -224,6 +273,34 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                         Icon(Icons.Filled.Close, contentDescription = "Close", tint = com.joseph.clipboard.windows.theme.TextSecondaryDark, modifier = Modifier.size(18.dp))
                                     }
                                 }
+
+                                // Appearance — Light / System / Dark. Retheming is live behind the scrim,
+                                // so the menu stays open on select. Persistence rides the LaunchedEffect
+                                // watcher in main(). Dark tokens are passed explicitly: this menu is
+                                // hardcoded dark while the theme may resolve light.
+                                val themeModeState = LocalThemeMode.current
+                                val themeModes = listOf(ThemeMode.LIGHT, ThemeMode.SYSTEM, ThemeMode.DARK)
+                                Text(
+                                    com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_setting"),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = com.joseph.clipboard.windows.theme.TextSecondaryDark,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                SegmentedControl(
+                                    options = listOf(
+                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_light"),
+                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_system"),
+                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_dark"),
+                                    ),
+                                    selectedIndex = themeModes.indexOf(themeModeState.value),
+                                    onSelect = { themeModeState.value = themeModes[it] },
+                                    fill = com.joseph.clipboard.windows.theme.DarkBackground,
+                                    borderColor = com.joseph.clipboard.windows.theme.HairlineDark,
+                                    selectedFill = GreenPrimary,
+                                    selectedLabelColor = com.joseph.clipboard.windows.theme.DarkBackground,
+                                    labelColor = com.joseph.clipboard.windows.theme.TextSecondaryDark,
+                                )
 
                                 // Restart Services — emerald tonal (the safe action), on-brand instead of
                                 // the old flat near-black fill. Flat (0 elevation) + hairline = modern tonal.
@@ -641,8 +718,27 @@ fun main() = application {
                 window.requestFocus()
             }
         }
-        val themeModeState = remember { mutableStateOf(ThemeMode.SYSTEM) }
-        
+        // Seed from config.json; anything unreadable (missing field, hand-edited garbage) falls back
+        // to SYSTEM rather than crashing.
+        val themeModeState = remember {
+            mutableStateOf(
+                runCatching { ThemeMode.valueOf(com.joseph.clipboard.windows.storage.SecurityVault.getTheme()) }
+                    .getOrDefault(ThemeMode.SYSTEM)
+            )
+        }
+        // Single persistence point for every theme writer (Settings dialog, power menu, future ones):
+        // whoever flips the state, the choice lands in config.json. The guard skips the redundant
+        // save on first composition.
+        LaunchedEffect(themeModeState.value) {
+            val name = themeModeState.value.name
+            if (com.joseph.clipboard.windows.storage.SecurityVault.getTheme() != name) {
+                // setTheme → save() rewrites config.json synchronously — keep it off the UI thread.
+                withContext(Dispatchers.IO) {
+                    com.joseph.clipboard.windows.storage.SecurityVault.setTheme(name)
+                }
+            }
+        }
+
         CompositionLocalProvider(LocalThemeMode provides themeModeState) {
             ClipboardTheme(themeMode = themeModeState.value) {
                 Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
