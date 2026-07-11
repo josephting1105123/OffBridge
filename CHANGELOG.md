@@ -4,6 +4,43 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.3 — Android (receive-path data safety, Android 10 storage, cleanup)
+
+Fixes the confirmed file-handling bugs from the pre-tester audit. No wire-protocol, crypto or
+pairing changes.
+
+### Fixed
+- **Same-name files are never overwritten or deleted.** A received file whose name already exists
+  at the destination is saved as "name (1).ext" (the old promote deleted the existing file
+  unprompted); history points at the name actually on disk, and "Open" finds it.
+- **Android 10 (API 29) receives work.** Files stage app-privately and publish through MediaStore
+  (raw public-folder writes fail under scoped storage); history "Open" resolves published files
+  via MediaStore instead of raw paths that Android 10 can't read.
+- **Resume corruption closed.** The save destination is pinned per transfer (changing the save
+  folder mid-transfer corrupted resumed files), the resume offset is read from the real partial
+  file, and resuming an off-grid transfer keeps the delivery-confirmation guarantee.
+- **Concurrent receives can't collide.** Two simultaneous transfers carrying the same filename no
+  longer stream into one shared temp file; a double resume (manual + automatic) can't run twice.
+- **Empty-file edge cases.** Providers that don't report a file size no longer cause silent
+  0-byte sends; genuinely empty files aren't discarded on name collisions.
+
+### Changed
+- Theme toggle is a two-state Light/Dark slider; tapping the side already showing (while following
+  the system) now pins it. Internal cleanup: dead code removed, duplicated scaffolds unified into
+  shared helpers, imports normalized.
+
+## 3.6.1 — Windows (send-dialog race fix, discovery tuning)
+
+### Fixed
+- **Send dialog no longer drops picked files.** A momentary empty blink of the device list while
+  clicking Send could land the click on "Go to Pairing" and discard the selection; the button now
+  waits out a 2-second grace period before converting.
+
+### Changed
+- Discovery no longer recomputes the local IP for every received packet (cached briefly);
+  clipboard fallback polling relaxed from 300 ms to 1 s (event-driven detection remains instant);
+  QR encode failures are logged to `diagnostics.log`.
+
 ## 3.6.0 — Windows (serif voice, glass toggles, in-menu theme switch, receiving pill)
 
 Ports the Android 3.6.1/3.6.2 UI language to the desktop client and hardens the installer. Android
