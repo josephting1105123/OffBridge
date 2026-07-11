@@ -3,6 +3,7 @@ package com.joseph.clipboard.windows.network.control
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.storage.EcdhSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -301,7 +302,7 @@ class PcQrSenderController(
         /** Android `TransportCaps.BLE_ADVERTISE or COMPLETION_ACK` (1 | 32). */
         const val CAP_BITS = 33
 
-        const val TRANSFER_PORT = 65433
+        const val TRANSFER_PORT = Ports.FILE_TRANSFER
 
         /** Android `FailureCode.CONNECT_TIMEOUT` / `FailureCode.HANDSHAKE_FAILED`. */
         const val FAILURE_CONNECT_TIMEOUT = 7

@@ -41,26 +41,35 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.DialogWindow
+import com.joseph.clipboard.windows.LocalThemeMode
+import com.joseph.clipboard.windows.storage.SecurityVault
+import com.joseph.clipboard.windows.storage.TranslationManager
+import com.joseph.clipboard.windows.theme.LocalExtraColors
 
 @Composable
 fun SettingsScreen(appController: ClipboardAppController) {
-    val themeModeState = com.joseph.clipboard.windows.LocalThemeMode.current
-    var saveLocation by remember { mutableStateOf(com.joseph.clipboard.windows.storage.SecurityVault.getSaveLocation()) }
+    val themeModeState = LocalThemeMode.current
+    var saveLocation by remember { mutableStateOf(SecurityVault.getSaveLocation()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
-    val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
-    val extra = com.joseph.clipboard.windows.theme.LocalExtraColors.current
+    val currentLanguage by TranslationManager.currentLanguageState
+    val extra = LocalExtraColors.current
     val scope = rememberCoroutineScope()
 
     // Uniform width for every settings value button: the "System Default" value text + ~2 chars of
     // breathing room + the button's horizontal padding, so all rows line up at one length.
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-    val density = androidx.compose.ui.platform.LocalDensity.current
+    val density = LocalDensity.current
     val buttonStyle = MaterialTheme.typography.button
     val uniformButtonWidth = remember(buttonStyle) {
-        val base = measurer.measure(androidx.compose.ui.text.AnnotatedString("System Default"), buttonStyle).size.width
-        val two = measurer.measure(androidx.compose.ui.text.AnnotatedString("MM"), buttonStyle).size.width
+        val base = measurer.measure(AnnotatedString("System Default"), buttonStyle).size.width
+        val two = measurer.measure(AnnotatedString("MM"), buttonStyle).size.width
         with(density) { (base + two).toDp() } + Dimens.spaceLg * 2
     }
 
@@ -68,25 +77,25 @@ fun SettingsScreen(appController: ClipboardAppController) {
     val isDiscoverable by appController.isDiscoverable.collectAsState()
     val acceptClipboard by appController.acceptIncomingClipboard.collectAsState()
 
-    val generalText = com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_section_general")
-    val deviceText = com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_section_device").takeIf { it != "settings_section_device" } ?: "DEVICE"
-    val discoverableLabel = com.joseph.clipboard.windows.storage.TranslationManager.getString("discoverable_to_other_devices").takeIf { it != "discoverable_to_other_devices" } ?: "Discoverable to other devices"
-    val acceptClipboardLabel = com.joseph.clipboard.windows.storage.TranslationManager.getString("accept_incoming_clipboard").takeIf { it != "accept_incoming_clipboard" } ?: "Accept Incoming Clipboard"
-    val historyBackupNote = com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_history_backup_note").takeIf { it != "settings_history_backup_note" } ?: "Clipboard and transfer history is backed up to your save-location folder."
-    val themeText = com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_setting")
-    val languageText = com.joseph.clipboard.windows.storage.TranslationManager.getString("language_setting")
-    val saveToText = com.joseph.clipboard.windows.storage.TranslationManager.getString("save_to_setting")
-    val othersText = com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_section_others").takeIf { it != "settings_section_others" } ?: "Others"
-    val supportText = com.joseph.clipboard.windows.storage.TranslationManager.getString("support_setting").takeIf { it != "support_setting" } ?: "Support"
-    val privacyText = com.joseph.clipboard.windows.storage.TranslationManager.getString("privacy_policy_setting").takeIf { it != "privacy_policy_setting" } ?: "Privacy Policy"
-    val donateText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_donate").takeIf { it != "action_donate" } ?: "☕ Donate"
-    val readPolicyText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_read_privacy_policy").takeIf { it != "action_read_privacy_policy" } ?: "📄 Read"
+    val generalText = TranslationManager.getString("settings_section_general")
+    val deviceText = TranslationManager.getString("settings_section_device").takeIf { it != "settings_section_device" } ?: "DEVICE"
+    val discoverableLabel = TranslationManager.getString("discoverable_to_other_devices").takeIf { it != "discoverable_to_other_devices" } ?: "Discoverable to other devices"
+    val acceptClipboardLabel = TranslationManager.getString("accept_incoming_clipboard").takeIf { it != "accept_incoming_clipboard" } ?: "Accept Incoming Clipboard"
+    val historyBackupNote = TranslationManager.getString("settings_history_backup_note").takeIf { it != "settings_history_backup_note" } ?: "Clipboard and transfer history is backed up to your save-location folder."
+    val themeText = TranslationManager.getString("theme_setting")
+    val languageText = TranslationManager.getString("language_setting")
+    val saveToText = TranslationManager.getString("save_to_setting")
+    val othersText = TranslationManager.getString("settings_section_others").takeIf { it != "settings_section_others" } ?: "Others"
+    val supportText = TranslationManager.getString("support_setting").takeIf { it != "support_setting" } ?: "Support"
+    val privacyText = TranslationManager.getString("privacy_policy_setting").takeIf { it != "privacy_policy_setting" } ?: "Privacy Policy"
+    val donateText = TranslationManager.getString("action_donate").takeIf { it != "action_donate" } ?: "☕ Donate"
+    val readPolicyText = TranslationManager.getString("action_read_privacy_policy").takeIf { it != "action_read_privacy_policy" } ?: "📄 Read"
 
-    val chooseThemeText = com.joseph.clipboard.windows.storage.TranslationManager.getString("dialog_title_choose_theme")
-    val chooseLanguageText = com.joseph.clipboard.windows.storage.TranslationManager.getString("dialog_title_choose_language")
-    val privacyPolicyTitleText = com.joseph.clipboard.windows.storage.TranslationManager.getString("dialog_title_privacy_policy")
-    val closeText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_close_with_check").replace("o ", "").replace("Close", "Close") 
-    val cancelText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_cancel")
+    val chooseThemeText = TranslationManager.getString("dialog_title_choose_theme")
+    val chooseLanguageText = TranslationManager.getString("dialog_title_choose_language")
+    val privacyPolicyTitleText = TranslationManager.getString("dialog_title_privacy_policy")
+    val closeText = TranslationManager.getString("action_close_with_check").replace("o ", "").replace("Close", "Close") 
+    val cancelText = TranslationManager.getString("action_cancel")
     
     Box(modifier = Modifier
         .fillMaxSize()
@@ -112,7 +121,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
                     modifier = Modifier.padding(end = Dimens.spaceLg).size(Dimens.iconLg)
                 )
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_title").takeIf { it != "settings_title" } ?: "Settings",
+                    TranslationManager.getString("settings_title").takeIf { it != "settings_title" } ?: "Settings",
                     style = MaterialTheme.typography.h5,
                     color = MaterialTheme.colors.onBackground
                 )
@@ -122,9 +131,9 @@ fun SettingsScreen(appController: ClipboardAppController) {
             SectionHeader(generalText)
             GlassCard {
                 val currentModeName = when (themeModeState.value) {
-                    ThemeMode.SYSTEM -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_system_default").takeIf { it != "theme_system_default" } ?: "System Default"
-                    ThemeMode.LIGHT -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_light").takeIf { it != "theme_light" } ?: "Light"
-                    ThemeMode.DARK -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_dark").takeIf { it != "theme_dark" } ?: "Dark"
+                    ThemeMode.SYSTEM -> TranslationManager.getString("theme_system_default").takeIf { it != "theme_system_default" } ?: "System Default"
+                    ThemeMode.LIGHT -> TranslationManager.getString("theme_light").takeIf { it != "theme_light" } ?: "Light"
+                    ThemeMode.DARK -> TranslationManager.getString("theme_dark").takeIf { it != "theme_dark" } ?: "Dark"
                 }
                 SettingsRow(themeText, currentModeName, uniformButtonWidth) { showThemeDialog = true }
                 SettingsRow(languageText, currentLanguage, uniformButtonWidth) { showLanguageDialog = true }
@@ -139,7 +148,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
                             val dir = FileDialogHelper.openDirectoryPicker()
                             if (dir != null) {
                                 saveLocation = dir.absolutePath
-                                com.joseph.clipboard.windows.storage.SecurityVault.setSaveLocation(dir.absolutePath)
+                                SecurityVault.setSaveLocation(dir.absolutePath)
                             }
                         }
                     }
@@ -187,7 +196,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         
         if (showThemeDialog) {
             BackdropEffect() // blur the main window's content while this OS dialog is up
-            androidx.compose.ui.window.DialogWindow(
+            DialogWindow(
                 onCloseRequest = { showThemeDialog = false },
                 title = chooseThemeText,
                 resizable = false,
@@ -216,15 +225,15 @@ fun SettingsScreen(appController: ClipboardAppController) {
                                         )
                                         Spacer(modifier = Modifier.width(Dimens.spaceLg))
                                         val translatedModeName = when (mode) {
-                                            ThemeMode.SYSTEM -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_system_default").takeIf { it != "theme_system_default" } ?: "System Default"
-                                            ThemeMode.LIGHT -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_light").takeIf { it != "theme_light" } ?: "Light"
-                                            ThemeMode.DARK -> com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_dark").takeIf { it != "theme_dark" } ?: "Dark"
+                                            ThemeMode.SYSTEM -> TranslationManager.getString("theme_system_default").takeIf { it != "theme_system_default" } ?: "System Default"
+                                            ThemeMode.LIGHT -> TranslationManager.getString("theme_light").takeIf { it != "theme_light" } ?: "Light"
+                                            ThemeMode.DARK -> TranslationManager.getString("theme_dark").takeIf { it != "theme_dark" } ?: "Dark"
                                         }
                                         Text(translatedModeName, style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface)
                                     }
                                 }
                             }
-                            androidx.compose.foundation.VerticalScrollbar(
+                            VerticalScrollbar(
                                 adapter = androidx.compose.foundation.rememberScrollbarAdapter(state),
                                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
                             )
@@ -236,7 +245,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         
         if (showLanguageDialog) {
             BackdropEffect()
-            androidx.compose.ui.window.DialogWindow(
+            DialogWindow(
                 onCloseRequest = { showLanguageDialog = false },
                 title = chooseLanguageText,
                 resizable = false,
@@ -253,7 +262,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
                                 languages.forEach { lang ->
                                     Row(
                                         modifier = Modifier.fillMaxWidth().clickable {
-                                            com.joseph.clipboard.windows.storage.TranslationManager.setLanguage(lang)
+                                            TranslationManager.setLanguage(lang)
                                             showLanguageDialog = false
                                         }.padding(Dimens.spaceMd),
                                         verticalAlignment = Alignment.CenterVertically
@@ -268,7 +277,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
                                     }
                                 }
                             }
-                            androidx.compose.foundation.VerticalScrollbar(
+                            VerticalScrollbar(
                                 adapter = androidx.compose.foundation.rememberScrollbarAdapter(state),
                                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
                             )
@@ -280,7 +289,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
         
         if (showPrivacyDialog) {
             BackdropEffect()
-            androidx.compose.ui.window.DialogWindow(
+            DialogWindow(
                 onCloseRequest = { showPrivacyDialog = false },
                 title = privacyPolicyTitleText,
                 resizable = false,
@@ -290,7 +299,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
             ) {
                 MaterialTheme(colors = if (themeModeState.value == ThemeMode.LIGHT) lightColors() else darkColors()) {
                     Surface(color = MaterialTheme.colors.background) {
-                        val policyText = com.joseph.clipboard.windows.storage.TranslationManager.getPrivacyPolicy()
+                        val policyText = TranslationManager.getPrivacyPolicy()
                         val paragraphs = policyText.split("\n")
                         val state = rememberScrollState()
                         Box(modifier = Modifier.fillMaxSize().padding(Dimens.spaceLg)) {
@@ -302,7 +311,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
                                 }
                                 Spacer(modifier = Modifier.height(Dimens.spaceLg))
                             }
-                            androidx.compose.foundation.VerticalScrollbar(
+                            VerticalScrollbar(
                                 adapter = androidx.compose.foundation.rememberScrollbarAdapter(state),
                                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
                             )
@@ -325,7 +334,7 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun SettingsRow(label: String, value: String, width: androidx.compose.ui.unit.Dp, onClick: () -> Unit = {}) {
+fun SettingsRow(label: String, value: String, width: Dp, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.spaceXs),
         verticalAlignment = Alignment.CenterVertically
@@ -339,11 +348,11 @@ fun SettingsRow(label: String, value: String, width: androidx.compose.ui.unit.Dp
 @Composable
 private fun SettingValueButton(
     text: String,
-    width: androidx.compose.ui.unit.Dp,
+    width: Dp,
     onClick: () -> Unit,
     textColor: Color? = null,
 ) {
-    val extra = com.joseph.clipboard.windows.theme.LocalExtraColors.current
+    val extra = LocalExtraColors.current
     Box(
         modifier = Modifier
             .width(width)

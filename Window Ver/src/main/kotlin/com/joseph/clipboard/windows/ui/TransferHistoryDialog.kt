@@ -40,6 +40,7 @@ import com.joseph.clipboard.windows.TransferRecord
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.joseph.clipboard.windows.storage.TranslationManager
 
 @Composable
 fun TransferHistoryDialog(
@@ -48,7 +49,7 @@ fun TransferHistoryDialog(
     tutorialMode: Boolean = false,
     onDelete: (Set<String>) -> Unit,
     onCancelTransfer: (String) -> Unit,
-    onResumeTransfer: (com.joseph.clipboard.windows.TransferRecord) -> Unit,
+    onResumeTransfer: (TransferRecord) -> Unit,
     isDeviceConnected: (String) -> Boolean,
     onDismiss: () -> Unit
 ) {
@@ -138,7 +139,7 @@ fun TransferHistoryDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            com.joseph.clipboard.windows.storage.TranslationManager.getString("title_transfer_history").takeIf { it != "title_transfer_history" } ?: "Transfer History",
+                            TranslationManager.getString("title_transfer_history").takeIf { it != "title_transfer_history" } ?: "Transfer History",
                             style = MaterialTheme.typography.h6,
                             color = MaterialTheme.colors.onBackground,
                             modifier = Modifier.weight(1f)
@@ -160,7 +161,7 @@ fun TransferHistoryDialog(
                                 },
                                 colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
                             )
-                            Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_select").takeIf { it != "action_select" } ?: "Select", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f))
+                            Text(TranslationManager.getString("action_select").takeIf { it != "action_select" } ?: "Select", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f))
                         }
                         IconButton(
                             onClick = onDismiss,
@@ -240,7 +241,7 @@ fun TransferHistoryDialog(
                 ) {
                     if (displayList.isEmpty()) {
                         item {
-                            Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("no_transfer_history_yet").takeIf { it != "no_transfer_history_yet" } ?: "No transfer history yet.", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f), modifier = Modifier.padding(Dimens.spaceLg))
+                            Text(TranslationManager.getString("no_transfer_history_yet").takeIf { it != "no_transfer_history_yet" } ?: "No transfer history yet.", style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onBackground.copy(alpha = 0.7f), modifier = Modifier.padding(Dimens.spaceLg))
                         }
                     } else {
                         items(displayList.size) { index ->
@@ -257,7 +258,7 @@ fun TransferHistoryDialog(
                             // Icon glyph stays in code; the word comes from the translation file
                             // (mirrors the Android per-locale status_* strings).
                             fun tr(key: String, fallback: String): String =
-                                com.joseph.clipboard.windows.storage.TranslationManager.getString(key)
+                                TranslationManager.getString(key)
                                     .takeIf { it != key } ?: fallback
                             val statusLabel = when (record.status) {
                                 "completed" -> "✓ " + tr("status_done_with_icon", "Done")
@@ -383,7 +384,7 @@ fun TransferHistoryDialog(
                             shape = RoundedCornerShape(Dimens.radiusLg),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Text("Delete", style = MaterialTheme.typography.button, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                            Text("Delete", style = MaterialTheme.typography.button, color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -440,7 +441,7 @@ fun TransferHistoryDialog(
                                         LinearProgressIndicator(
                                             progress = progress,
                                             modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
-                                            color = com.joseph.clipboard.windows.theme.GreenPrimary,
+                                            color = GreenPrimary,
                                             backgroundColor = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
                                         )
                                         Spacer(modifier = Modifier.height(Dimens.spaceXs))
@@ -467,15 +468,15 @@ fun TransferHistoryDialog(
                                         enabled = isCompleted,
                                         colors = ButtonDefaults.buttonColors(
                                             backgroundColor = InfoColor,
-                                            disabledBackgroundColor = androidx.compose.ui.graphics.Color.Gray,
-                                            disabledContentColor = androidx.compose.ui.graphics.Color.White
+                                            disabledBackgroundColor = Color.Gray,
+                                            disabledContentColor = Color.White
                                         ),
                                         shape = RoundedCornerShape(Dimens.radiusMd),
                                         modifier = Modifier.height(36.dp).onGloballyPositioned { coords ->
                                             if (i == 0) tutorialBounds["btnOpen"] = coords.boundsInWindow()
                                         }
                                     ) {
-                                        Text("Open", style = MaterialTheme.typography.button, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                                        Text("Open", style = MaterialTheme.typography.button, color = Color.White, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -489,7 +490,7 @@ fun TransferHistoryDialog(
                                 shape = RoundedCornerShape(Dimens.radiusMd),
                                 modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg)
                             ) {
-                                Text("Cancel", style = MaterialTheme.typography.subtitle1, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                                Text("Cancel", style = MaterialTheme.typography.subtitle1, color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         } else if (record.status == "completed") {
                             Button(
@@ -505,11 +506,11 @@ fun TransferHistoryDialog(
                                         e.printStackTrace()
                                     }
                                 },
-                                colors = ButtonDefaults.buttonColors(backgroundColor = androidx.compose.ui.graphics.Color(0xFF333333)),
+                                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF333333)),
                                 shape = RoundedCornerShape(Dimens.radiusMd),
                                 modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg)
                             ) {
-                                Text("Open Folder", style = MaterialTheme.typography.subtitle1, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                                Text("Open Folder", style = MaterialTheme.typography.subtitle1, color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         } else if (record.status == "cancelled" || record.status == "declined") {
                             Button(
@@ -518,7 +519,7 @@ fun TransferHistoryDialog(
                                 shape = RoundedCornerShape(Dimens.radiusMd),
                                 modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg)
                             ) {
-                                Text("Close", style = MaterialTheme.typography.subtitle1, color = androidx.compose.ui.graphics.Color.White, fontWeight = FontWeight.Bold)
+                                Text("Close", style = MaterialTheme.typography.subtitle1, color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         } else if (record.status == "failed") {
                             val connected = isDeviceConnected(record.deviceName)
@@ -527,7 +528,7 @@ fun TransferHistoryDialog(
                                 enabled = connected,
                                 colors = ButtonDefaults.buttonColors(
                                     backgroundColor = MaterialTheme.colors.primary,
-                                    disabledBackgroundColor = androidx.compose.ui.graphics.Color.Gray
+                                    disabledBackgroundColor = Color.Gray
                                 ),
                                 shape = RoundedCornerShape(Dimens.radiusMd),
                                 modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg)
@@ -535,7 +536,7 @@ fun TransferHistoryDialog(
                                 Text(
                                     if (connected) "Resume" else "Resume when connected",
                                     style = MaterialTheme.typography.subtitle1,
-                                    color = if (connected) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White,
+                                    color = if (connected) Color.Black else Color.White,
                                     fontWeight = FontWeight.Bold
                                 )
                             }

@@ -39,6 +39,7 @@ import java.util.UUID
 import com.joseph.clipboard.windows.network.FileStreamer
 import java.io.File
 import java.net.Socket
+import com.joseph.clipboard.windows.storage.CryptoEngine
 
 /**
  * Thrown when a peer that previously negotiated an authenticated (AES-GCM) channel now offers only
@@ -193,7 +194,7 @@ class ClipboardAppController {
             deleteFromHistory(text)
         }
     )
-    private val fileTransferDaemon = com.joseph.clipboard.windows.network.FileTransferDaemon(
+    private val fileTransferDaemon = FileTransferDaemon(
         onOfferReceived = { ip, sessionId, deviceName, manifest ->
             // Filenames arrive off the wire and are written into the save folder, so a hostile
             // sender could embed path separators or ".." to escape it (path traversal). Reduce
@@ -321,7 +322,7 @@ class ClipboardAppController {
     }
 
     fun pushCurrentClipboard() {
-        val text = com.joseph.clipboard.windows.os.ClipboardManager.readText()
+        val text = ClipboardManager.readText()
         if (!text.isNullOrBlank()) {
             if (_clipboardHistory.value.firstOrNull() != text) {
                 addToHistory(text)
@@ -365,11 +366,11 @@ class ClipboardAppController {
         return when (DowngradePolicy.decide(supportsAuth, SecurityVault.isClipboardGcmPinned(ip))) {
             DowngradePolicy.Decision.SEAL -> {
                 SecurityVault.pinClipboardGcm(ip)
-                com.joseph.clipboard.windows.storage.CryptoEngine.encryptStringAuthenticated(plain, aesKey)
+                CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             }
             // CBC retired in 3.5.0: a peer not (yet) advertising GCM1 still gets an authenticated GCM
             // seal (it must update to open it) instead of the malleable unauthenticated CBC path.
-            DowngradePolicy.Decision.PLAINTEXT -> com.joseph.clipboard.windows.storage.CryptoEngine.encryptStringAuthenticated(plain, aesKey)
+            DowngradePolicy.Decision.PLAINTEXT -> CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             DowngradePolicy.Decision.BLOCK -> {
                 System.err.println("Clipboard GCM downgrade blocked for $ip — skipping peer")
                 null
@@ -429,7 +430,7 @@ class ClipboardAppController {
         ClipboardManager.startPolling()
         
         // Fetch the current Windows clipboard exactly once at startup
-        val initialText = com.joseph.clipboard.windows.os.ClipboardManager.readText()
+        val initialText = ClipboardManager.readText()
         if (!initialText.isNullOrBlank()) {
             addToHistory(initialText)
         }

@@ -10,6 +10,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
 import kotlin.concurrent.thread
+import com.joseph.clipboard.windows.network.control.SessionCrypto
 
 class FileTransferDaemon(
     private val onOfferReceived: (ip: String, sessionId: String, deviceName: String, manifest: List<Pair<String, Long>>) -> Unit,
@@ -188,7 +189,7 @@ class FileTransferDaemon(
                             val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
                                 try { java.util.Base64.getDecoder().decode(proofLine.removePrefix("OFFER_PROOF|")) } catch (_: Exception) { null }
                             } else null
-                            val expected = com.joseph.clipboard.windows.network.control.SessionCrypto.hmacSha256(pairingKey, nonce)
+                            val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
                             if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
                                 // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key.
                                 // Drop the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer

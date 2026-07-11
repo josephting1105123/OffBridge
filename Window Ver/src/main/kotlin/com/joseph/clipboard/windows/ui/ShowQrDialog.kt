@@ -42,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 import java.io.File
+import com.joseph.clipboard.windows.storage.DiagLog
 
 /** UI state for the QR host session lifecycle (host setup runs off the UI thread). */
 private sealed interface QrUiState {
@@ -211,7 +212,9 @@ private fun ReadyBlock(
         val c = liveCreds ?: return@LaunchedEffect
         if (c.first == state.ssid && c.second == state.passphrase) return@LaunchedEffect
         val json = withContext(Dispatchers.IO) { appController.rebuildQrJson(c.first, c.second) } ?: return@LaunchedEffect
-        try { bitmap = encodeQr(json, 660) } catch (_: Exception) {}
+        try { bitmap = encodeQr(json, 660) } catch (e: Exception) {
+            DiagLog.w("QR re-encode after cred regen failed: ${e.message}")
+        }
     }
 
     Box(

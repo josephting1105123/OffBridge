@@ -65,6 +65,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
+import androidx.compose.foundation.BorderStroke
+import com.joseph.clipboard.windows.os.SingleInstance
+import com.joseph.clipboard.windows.storage.SecurityVault
+import com.joseph.clipboard.windows.storage.TranslationManager
+import com.joseph.clipboard.windows.theme.AccentMutedDark
+import com.joseph.clipboard.windows.theme.DarkBackground
+import com.joseph.clipboard.windows.theme.GreenText
+import com.joseph.clipboard.windows.theme.HairlineDark
+import com.joseph.clipboard.windows.theme.TextPrimaryDark
+import com.joseph.clipboard.windows.theme.TextSecondaryDark
 
 enum class Screen {
     SEND_FILES, SYSTEM_STATUS, HISTORY, SETTINGS, ANDROID_VERSION
@@ -88,7 +98,7 @@ private fun ReceivingPillOverlay(
     if (activeIncoming.isEmpty() || hiddenByDialog) return
     val history = appController.transferHistory.collectAsState()
     ReceivingPill(
-        text = com.joseph.clipboard.windows.storage.TranslationManager.getString("receiving_label").takeIf { it != "receiving_label" } ?: "Receiving",
+        text = TranslationManager.getString("receiving_label").takeIf { it != "receiving_label" } ?: "Receiving",
         onClick = {
             // Resolved at click time: newest history record still pumping wins (history is
             // newest-first), falling back to any live id. Both collections can shift between
@@ -108,7 +118,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
     // Whether FileTransferScreen's transfer-history dialog is on screen, reported via callback —
     // the flag lives inside that screen, which is disposed on nav-away. Gates the receiving pill.
     var transferHistoryDialogVisible by remember { mutableStateOf(false) }
-    val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
+    val currentLanguage by TranslationManager.currentLanguageState
     var tutorialChainTarget by remember { mutableStateOf<Screen?>(null) }
     var tutorialChainCounter by remember { mutableStateOf(0) }
 
@@ -134,11 +144,11 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
     CompositionLocalProvider(LocalBackdrop provides backdropController) {
     Box(modifier = Modifier.fillMaxSize()) {
         Surface(modifier = Modifier.fillMaxSize()) {
-            val transferText = com.joseph.clipboard.windows.storage.TranslationManager.getString("nav_send").takeIf { it != "nav_send" } ?: "Send"
-            val statusText = com.joseph.clipboard.windows.storage.TranslationManager.getString("nav_pairing").takeIf { it != "nav_pairing" } ?: "Pairing"
-            val historyText = com.joseph.clipboard.windows.storage.TranslationManager.getString("nav_clipboard").takeIf { it != "nav_clipboard" } ?: "Clipboard"
-            val settingsText = com.joseph.clipboard.windows.storage.TranslationManager.getString("settings_title").takeIf { it != "settings_title" } ?: "Settings"
-            val androidText = com.joseph.clipboard.windows.storage.TranslationManager.getString("nav_android").takeIf { it != "nav_android" } ?: "Android"
+            val transferText = TranslationManager.getString("nav_send").takeIf { it != "nav_send" } ?: "Send"
+            val statusText = TranslationManager.getString("nav_pairing").takeIf { it != "nav_pairing" } ?: "Pairing"
+            val historyText = TranslationManager.getString("nav_clipboard").takeIf { it != "nav_clipboard" } ?: "Clipboard"
+            val settingsText = TranslationManager.getString("settings_title").takeIf { it != "settings_title" } ?: "Settings"
+            val androidText = TranslationManager.getString("nav_android").takeIf { it != "nav_android" } ?: "Android"
 
             Row(modifier = Modifier.fillMaxSize()) {
             NavigationRail(modifier = Modifier.width(80.dp)) {
@@ -245,7 +255,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = DarkSurface,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+                            border = BorderStroke(1.dp, HairlineDark),
                             elevation = 24.dp,
                             modifier = Modifier.modalPopIn().clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -260,17 +270,17 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                             ) {
                                 Box(modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
                                     Text(
-                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_title").takeIf { it != "menu_title" } ?: "Menu",
+                                        TranslationManager.getString("menu_title").takeIf { it != "menu_title" } ?: "Menu",
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = com.joseph.clipboard.windows.theme.TextPrimaryDark,
+                                        color = TextPrimaryDark,
                                         modifier = Modifier.align(Alignment.Center)
                                     )
                                     IconButton(
                                         onClick = { showPowerMenu = false },
                                         modifier = Modifier.align(Alignment.CenterEnd).size(28.dp)
                                     ) {
-                                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = com.joseph.clipboard.windows.theme.TextSecondaryDark, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextSecondaryDark, modifier = Modifier.size(18.dp))
                                     }
                                 }
 
@@ -281,25 +291,25 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                 val themeModeState = LocalThemeMode.current
                                 val themeModes = listOf(ThemeMode.LIGHT, ThemeMode.SYSTEM, ThemeMode.DARK)
                                 Text(
-                                    com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_setting"),
+                                    TranslationManager.getString("theme_setting"),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = com.joseph.clipboard.windows.theme.TextSecondaryDark,
+                                    color = TextSecondaryDark,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 SegmentedControl(
                                     options = listOf(
-                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_light"),
-                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_system"),
-                                        com.joseph.clipboard.windows.storage.TranslationManager.getString("theme_dark"),
+                                        TranslationManager.getString("theme_light"),
+                                        TranslationManager.getString("theme_system"),
+                                        TranslationManager.getString("theme_dark"),
                                     ),
                                     selectedIndex = themeModes.indexOf(themeModeState.value),
                                     onSelect = { themeModeState.value = themeModes[it] },
-                                    fill = com.joseph.clipboard.windows.theme.DarkBackground,
-                                    borderColor = com.joseph.clipboard.windows.theme.HairlineDark,
+                                    fill = DarkBackground,
+                                    borderColor = HairlineDark,
                                     selectedFill = GreenPrimary,
-                                    selectedLabelColor = com.joseph.clipboard.windows.theme.DarkBackground,
-                                    labelColor = com.joseph.clipboard.windows.theme.TextSecondaryDark,
+                                    selectedLabelColor = DarkBackground,
+                                    labelColor = TextSecondaryDark,
                                 )
 
                                 // Restart Services — emerald tonal (the safe action), on-brand instead of
@@ -314,16 +324,16 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                     },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = com.joseph.clipboard.windows.theme.AccentMutedDark,
-                                        contentColor = com.joseph.clipboard.windows.theme.GreenText
+                                        backgroundColor = AccentMutedDark,
+                                        contentColor = GreenText
                                     ),
                                     elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+                                    border = BorderStroke(1.dp, HairlineDark),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
-                                    Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp), tint = com.joseph.clipboard.windows.theme.GreenText)
+                                    Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp), tint = GreenText)
                                     Spacer(Modifier.width(8.dp))
-                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_restart_services"), color = com.joseph.clipboard.windows.theme.GreenText, fontWeight = FontWeight.Medium)
+                                    Text(TranslationManager.getString("menu_restart_services"), color = GreenText, fontWeight = FontWeight.Medium)
                                 }
 
                                 // Power Off — destructive tonal, same muted-red language as the Decline button.
@@ -336,12 +346,12 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                         contentColor = ErrorText
                                     ),
                                     elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, ErrorText.copy(alpha = 0.22f)),
+                                    border = BorderStroke(1.dp, ErrorText.copy(alpha = 0.22f)),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
                                     Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = ErrorText)
                                     Spacer(Modifier.width(8.dp))
-                                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("menu_power_off"), color = ErrorText, fontWeight = FontWeight.Medium)
+                                    Text(TranslationManager.getString("menu_power_off"), color = ErrorText, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -395,7 +405,7 @@ private fun PinCodeBoxes(pin: String) {
 @Composable
 private fun PairingVerifyLabel() {
     Text(
-        com.joseph.clipboard.windows.storage.TranslationManager.getString("pairing_verify_label")
+        TranslationManager.getString("pairing_verify_label")
             .takeIf { it != "pairing_verify_label" } ?: "Make sure this code matches on both devices",
         color = Color.Gray,
         fontSize = 13.sp,
@@ -419,7 +429,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = DarkSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+            border = BorderStroke(1.dp, HairlineDark),
             elevation = 24.dp,
             modifier = Modifier.modalPopIn()
         ) {
@@ -435,11 +445,11 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("pairing_request_title").takeIf { it != "pairing_request_title" } ?: "Pairing Request", 
+                    TranslationManager.getString("pairing_request_title").takeIf { it != "pairing_request_title" } ?: "Pairing Request", 
                     style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold, color = Color.White)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                val fromText = com.joseph.clipboard.windows.storage.TranslationManager.getString("label_from").takeIf { it != "label_from" } ?: "From: "
+                val fromText = TranslationManager.getString("label_from").takeIf { it != "label_from" } ?: "From: "
                 Text("$fromText${data.name}", color = GreenPrimary, fontSize = 16.sp)
 
                 data.pin.takeIf { it.isNotEmpty() }?.let { pin ->
@@ -457,7 +467,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
+                    Text(TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -468,7 +478,7 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
+                    Text(TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
                 }
             }
         }
@@ -491,7 +501,7 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = DarkSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+            border = BorderStroke(1.dp, HairlineDark),
             elevation = 24.dp,
             modifier = Modifier.modalPopIn()
         ) {
@@ -506,7 +516,7 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
                     tint = Color.White
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                val reqText = com.joseph.clipboard.windows.storage.TranslationManager.getString("requesting_pair_title").takeIf { it != "requesting_pair_title" } ?: "Requesting Pair"
+                val reqText = TranslationManager.getString("requesting_pair_title").takeIf { it != "requesting_pair_title" } ?: "Requesting Pair"
                 Text(reqText, style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold, color = Color.White))
                 Spacer(modifier = Modifier.height(8.dp))
                 
@@ -534,7 +544,7 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
 }
 
 @Composable
-fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileSession, appController: ClipboardAppController) {
+fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: ClipboardAppController) {
     BackdropEffect()
     Box(
         modifier = Modifier
@@ -549,7 +559,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = DarkSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, com.joseph.clipboard.windows.theme.HairlineDark),
+            border = BorderStroke(1.dp, HairlineDark),
             elevation = 24.dp,
             modifier = Modifier.modalPopIn()
         ) {
@@ -564,10 +574,10 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                     tint = Color.White
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                val incomingFilesText = com.joseph.clipboard.windows.storage.TranslationManager.getString("incoming_files_title").takeIf { it != "incoming_files_title" } ?: "Incoming File(s)"
+                val incomingFilesText = TranslationManager.getString("incoming_files_title").takeIf { it != "incoming_files_title" } ?: "Incoming File(s)"
                 Text(incomingFilesText, style = MaterialTheme.typography.h5.copy(fontWeight = FontWeight.Bold, color = Color.White))
                 Spacer(modifier = Modifier.height(8.dp))
-                val fromText = com.joseph.clipboard.windows.storage.TranslationManager.getString("label_from").takeIf { it != "label_from" } ?: "From: "
+                val fromText = TranslationManager.getString("label_from").takeIf { it != "label_from" } ?: "From: "
                 Text("$fromText${session.senderName}", color = GreenPrimary, fontSize = 16.sp)
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -577,7 +587,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                 } else {
                     String.format("%.2f KB", totalBytes / 1024f)
                 }
-                val filesText = com.joseph.clipboard.windows.storage.TranslationManager.getString("label_files").takeIf { it != "label_files" } ?: "file(s)"
+                val filesText = TranslationManager.getString("label_files").takeIf { it != "label_files" } ?: "file(s)"
                 Text("${session.manifest.size} $filesText - $sizeStr", color = Color.Gray, fontSize = 14.sp)
                 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -588,7 +598,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
+                    Text(TranslationManager.getString("action_accept").takeIf { it != "action_accept" } ?: "Accept", color = Color.Black)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -599,7 +609,7 @@ fun ReceiverFileOfferOverlay(session: com.joseph.clipboard.windows.IncomingFileS
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
+                    Text(TranslationManager.getString("action_decline").takeIf { it != "action_decline" } ?: "Decline", color = ErrorText)
                 }
             }
         }
@@ -612,7 +622,7 @@ fun main() = application {
     // can detect a running instance — even one only minimized to the system tray — and prompt the user
     // to close it before an in-place upgrade replaces an in-use runtime file
     // (runtime\bin\ucrtbase.dll -> "MoveFile failed; code 5"). Best-effort; see os/SingleInstance.kt.
-    remember { com.joseph.clipboard.windows.os.SingleInstance.acquire() }
+    remember { SingleInstance.acquire() }
     val appController = remember {
         ClipboardAppController().apply {
             start()
@@ -722,7 +732,7 @@ fun main() = application {
         // to SYSTEM rather than crashing.
         val themeModeState = remember {
             mutableStateOf(
-                runCatching { ThemeMode.valueOf(com.joseph.clipboard.windows.storage.SecurityVault.getTheme()) }
+                runCatching { ThemeMode.valueOf(SecurityVault.getTheme()) }
                     .getOrDefault(ThemeMode.SYSTEM)
             )
         }
@@ -731,10 +741,10 @@ fun main() = application {
         // save on first composition.
         LaunchedEffect(themeModeState.value) {
             val name = themeModeState.value.name
-            if (com.joseph.clipboard.windows.storage.SecurityVault.getTheme() != name) {
+            if (SecurityVault.getTheme() != name) {
                 // setTheme → save() rewrites config.json synchronously — keep it off the UI thread.
                 withContext(Dispatchers.IO) {
-                    com.joseph.clipboard.windows.storage.SecurityVault.setTheme(name)
+                    SecurityVault.setTheme(name)
                 }
             }
         }

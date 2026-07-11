@@ -50,6 +50,10 @@ import com.joseph.clipboard.windows.os.FileDialogHelper
 import com.joseph.clipboard.windows.theme.GreenPrimary
 import com.joseph.clipboard.windows.theme.Dimens
 import java.io.File
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.window.Dialog
+import com.joseph.clipboard.windows.storage.TranslationManager
 
 @Composable
 fun FileTransferScreen(
@@ -72,7 +76,7 @@ fun FileTransferScreen(
     var showTutorial by remember { mutableStateOf(false) }
     var tutorialForceSend by remember { mutableStateOf(false) }
     val tutorialBounds = remember { mutableStateMapOf<String, Rect>() }
-    val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
+    val currentLanguage by TranslationManager.currentLanguageState
 
     LaunchedEffect(tutorialTrigger) {
         if (tutorialTrigger > 0) showTutorial = true
@@ -118,13 +122,13 @@ fun FileTransferScreen(
         selectAllFiles = chosenFiles.isNotEmpty() && selectedFiles.containsAll(chosenFiles)
     }
 
-    val sendFilesTitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_files_title")
-    val fileText = com.joseph.clipboard.windows.storage.TranslationManager.getString("type_file")
-    val folderText = com.joseph.clipboard.windows.storage.TranslationManager.getString("type_folder")
-    val selectedFilesTitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("selected_files_title")
-    val selectAllText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_select_all")
-    val sendText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_send")
-    val cancelText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_cancel")
+    val sendFilesTitle = TranslationManager.getString("send_files_title")
+    val fileText = TranslationManager.getString("type_file")
+    val folderText = TranslationManager.getString("type_folder")
+    val selectedFilesTitle = TranslationManager.getString("selected_files_title")
+    val selectAllText = TranslationManager.getString("action_select_all")
+    val sendText = TranslationManager.getString("action_send")
+    val cancelText = TranslationManager.getString("action_cancel")
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
         Column(
@@ -270,7 +274,7 @@ fun FileTransferScreen(
             ) {
                 if (chosenFiles.isEmpty()) {
                     item {
-                        Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("no_files_selected_hint").takeIf { it != "no_files_selected_hint" } ?: "No files selected. Browse to add files.", style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f))
+                        Text(TranslationManager.getString("no_files_selected_hint").takeIf { it != "no_files_selected_hint" } ?: "No files selected. Browse to add files.", style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f))
                     }
                 } else {
                     items(chosenFiles.size) { index ->
@@ -514,7 +518,7 @@ fun FileTransferScreen(
 
     if (showTextDialog) {
         BackdropEffect()
-        androidx.compose.ui.window.Dialog(onDismissRequest = { showTextDialog = false }) {
+        Dialog(onDismissRequest = { showTextDialog = false }) {
             Surface(
                 shape = RoundedCornerShape(Dimens.radiusLg),
                 color = MaterialTheme.colors.background,
@@ -580,7 +584,7 @@ fun FileTransferScreen(
 }
 
 @Composable
-fun SelectionButton(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit = {}) {
+fun SelectionButton(title: String, icon: ImageVector, onClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .size(120.dp, 80.dp)
@@ -609,7 +613,7 @@ fun DeviceListItem(device: DiscoveredDevice, isSelected: Boolean, onToggle: (Boo
             .glassSurface(RoundedCornerShape(Dimens.radiusSm))
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) MaterialTheme.colors.primary else androidx.compose.ui.graphics.Color.Transparent,
+                color = if (isSelected) MaterialTheme.colors.primary else Color.Transparent,
                 shape = RoundedCornerShape(Dimens.radiusSm)
             )
             .clickable { onToggle(!isSelected) }

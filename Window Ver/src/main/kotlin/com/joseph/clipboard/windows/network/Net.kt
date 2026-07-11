@@ -44,6 +44,22 @@ object Net {
      * adapter), so the off-grid path must resolve the station IP explicitly.
      */
     fun localLanIpv4(): String? {
+        // TTL cache, same rationale as ownAddresses(): this runs on the discovery hot path — a reply
+        // to EVERY inbound discovery packet plus each ~3s broadcast — and uncached it opened a fresh
+        // DatagramSocket (routeLocalIpv4) or walked every interface per call, for a value that
+        // changes on network transitions, not packets.
+        val now = System.currentTimeMillis()
+        localIpCache?.let { if (now - localIpCacheAtMs < OWN_IP_TTL_MS) return it }
+        return resolveLocalLanIpv4()?.also {
+            localIpCache = it
+            localIpCacheAtMs = now
+        }
+    }
+
+    @Volatile private var localIpCache: String? = null
+    @Volatile private var localIpCacheAtMs: Long = 0L
+
+    private fun resolveLocalLanIpv4(): String? {
         // Prefer the adapter backing the default route — the network the scanning phone
         // most likely shares. A UDP "connect" makes the OS pick the outbound source IP
         // without sending any packets, sidestepping VPN/virtual adapters that the

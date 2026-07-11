@@ -23,6 +23,8 @@ import com.joseph.clipboard.windows.theme.Dimens
 import com.joseph.clipboard.windows.theme.GreenPrimary
 import kotlinx.coroutines.delay
 import java.io.File
+import androidx.compose.ui.graphics.Color
+import com.joseph.clipboard.windows.storage.TranslationManager
 
 /**
  * Second step of the "Connected Devices" send flow: read-only preview of the
@@ -68,6 +70,26 @@ fun SendToDevicesDialog(
         selectedRecipients.retainAll(devices.toSet())
     }
 
+    // Debounced pairing mode. Flipping the bottom button to the always-enabled "Go to
+    // Pairing" the instant the device list drains raced the user's click: one expired
+    // discovery entry while the pointer was already over "Send" landed the click on
+    // onGoToPairing(), which navigates away and disposes the picked files. A drained
+    // list must stay empty for 2 s (peers broadcast every ~3 s) before the button
+    // converts; during the gap it is a disabled "Send", so a stray click is a no-op.
+    // A list that was never populated (dialog opened with nothing online) converts as
+    // soon as the skeletons clear, as before — there is no click to race.
+    var sawDevices by remember { mutableStateOf(false) }
+    var pairingMode by remember { mutableStateOf(false) }
+    LaunchedEffect(devices.isEmpty(), showSkeleton) {
+        if (devices.isNotEmpty()) {
+            sawDevices = true
+            pairingMode = false
+        } else if (!showSkeleton) {
+            if (sawDevices) delay(2000)
+            pairingMode = true
+        }
+    }
+
     BackdropEffect()
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -95,7 +117,7 @@ fun SendToDevicesDialog(
 
                 // Read-only file previews
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("selected_files_title").takeIf { it != "selected_files_title" } ?: "Selected Files",
+                    TranslationManager.getString("selected_files_title").takeIf { it != "selected_files_title" } ?: "Selected Files",
                     style = MaterialTheme.typography.subtitle1,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.padding(bottom = Dimens.spaceSm)
@@ -116,7 +138,7 @@ fun SendToDevicesDialog(
                     modifier = Modifier.padding(bottom = Dimens.spaceSm)
                 ) {
                     Text(
-                        com.joseph.clipboard.windows.storage.TranslationManager.getString("select_trusted_recipients_title").takeIf { it != "select_trusted_recipients_title" } ?: "Connected Devices",
+                        TranslationManager.getString("select_trusted_recipients_title").takeIf { it != "select_trusted_recipients_title" } ?: "Connected Devices",
                         style = MaterialTheme.typography.subtitle1,
                         color = MaterialTheme.colors.onBackground
                     )
@@ -161,8 +183,8 @@ fun SendToDevicesDialog(
                         ) {
                             EmptyState(
                                 icon = Icons.Filled.Smartphone,
-                                title = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_title").takeIf { it != "send_no_devices_title" } ?: "No connected devices",
-                                subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("send_no_devices_hint").takeIf { it != "send_no_devices_hint" } ?: "Pair with a nearby device to send files to it."
+                                title = TranslationManager.getString("send_no_devices_title").takeIf { it != "send_no_devices_title" } ?: "No connected devices",
+                                subtitle = TranslationManager.getString("send_no_devices_hint").takeIf { it != "send_no_devices_hint" } ?: "Pair with a nearby device to send files to it."
                             )
                         }
                         else -> LazyColumn(
@@ -184,9 +206,9 @@ fun SendToDevicesDialog(
                     }
                 }
 
-                // Bottom button. With no device connected (empty state) it becomes "Go to Pairing";
-                // otherwise it's the send action, enabled iff ≥ 1 recipient is checked.
-                val isPairingMode = devices.isEmpty() && !showSkeleton
+                // Bottom button. With no device connected (empty state, debounced above) it becomes
+                // "Go to Pairing"; otherwise it's the send action, enabled iff ≥ 1 recipient is checked.
+                val isPairingMode = pairingMode && devices.isEmpty()
                 val canSend = selectedRecipients.isNotEmpty()
                 val buttonEnabled = if (isPairingMode) true else canSend
                 Button(
@@ -201,19 +223,19 @@ fun SendToDevicesDialog(
                     modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg),
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = MaterialTheme.colors.primary,
-                        disabledBackgroundColor = androidx.compose.ui.graphics.Color.Gray
+                        disabledBackgroundColor = Color.Gray
                     ),
                     shape = RoundedCornerShape(Dimens.radiusSm)
                 ) {
                     val label = if (isPairingMode) {
-                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_go_to_pairing").takeIf { it != "action_go_to_pairing" } ?: "Go to Pairing"
+                        TranslationManager.getString("action_go_to_pairing").takeIf { it != "action_go_to_pairing" } ?: "Go to Pairing"
                     } else {
-                        com.joseph.clipboard.windows.storage.TranslationManager.getString("action_send").takeIf { it != "action_send" } ?: "Send"
+                        TranslationManager.getString("action_send").takeIf { it != "action_send" } ?: "Send"
                     }
                     Text(
                         label,
                         style = MaterialTheme.typography.button,
-                        color = if (buttonEnabled) MaterialTheme.colors.onPrimary else androidx.compose.ui.graphics.Color.LightGray
+                        color = if (buttonEnabled) MaterialTheme.colors.onPrimary else Color.LightGray
                     )
                 }
             }

@@ -11,6 +11,17 @@ import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
 object ClipboardManager {
+    // Clipboard watcher timings (ms). Named so the settle/poll/backoff/retry cadence is legible.
+    private const val SETTLE_DELAY_MS = 80L        // let content settle after Ctrl+C before reading
+    // Fallback poll cadence. The FlavorListener already delivers real changes instantly; this loop
+    // only catches missed events, yet each tick copies the ENTIRE clipboard text out of the OS
+    // (multi-MB for a large copied block) — so it runs at 1s, not the old 300ms, cutting the
+    // steady-state copy churn ~3x while keeping the safety net.
+    private const val POLL_INTERVAL_MS = 1000L
+    private const val POLL_ERROR_BACKOFF_MS = 500L // pause after an unexpected poll error
+    private const val READ_RETRY_ATTEMPTS = 10     // getData retries while another app holds the clipboard
+    private const val READ_RETRY_DELAY_MS = 100L   // pause between read retries
+
     private val clipboard = Toolkit.getDefaultToolkit().systemClipboard
     @Volatile
     private var lastClipboardText: String = ""
@@ -44,7 +55,7 @@ object ClipboardManager {
                         // settle-delay + clipboard read off to a background worker so the UI never stalls.
                         flavorWorker.execute {
                             // Small delay to let the clipboard content settle after Ctrl+C
-                            try { Thread.sleep(80) } catch (_: InterruptedException) {}
+                            try { Thread.sleep(SETTLE_DELAY_MS) } catch (_: InterruptedException) {}
                             handleClipboardChange()
                         }
                     }
@@ -63,14 +74,14 @@ object ClipboardManager {
         pollingThread = thread(isDaemon = true, name = "Clipboard-Poller") {
             while (isPolling) {
                 try {
-                    Thread.sleep(300)
+                    Thread.sleep(POLL_INTERVAL_MS)
                     handleClipboardChange()
                 } catch (e: InterruptedException) {
                     break
                 } catch (e: Exception) {
                     // Keep polling alive even if something unexpected happens
                     System.err.println("ClipboardManager: Polling error: ${e.message}")
-                    try { Thread.sleep(500) } catch (_: InterruptedException) { break }
+                    try { Thread.sleep(POLL_ERROR_BACKOFF_MS) } catch (_: InterruptedException) { break }
                 }
             }
 
@@ -119,14 +130,14 @@ object ClipboardManager {
     }
 
     fun readText(): String? {
-        for (i in 1..10) {
+        for (i in 1..READ_RETRY_ATTEMPTS) {
             try {
                 if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
                     return clipboard.getData(DataFlavor.stringFlavor) as? String
                 }
                 return null
             } catch (e: Exception) {
-                try { Thread.sleep(100) } catch (ie: InterruptedException) { break }
+                try { Thread.sleep(READ_RETRY_DELAY_MS) } catch (ie: InterruptedException) { break }
             }
         }
         return null

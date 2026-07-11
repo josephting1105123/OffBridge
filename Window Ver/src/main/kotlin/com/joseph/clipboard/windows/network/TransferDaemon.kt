@@ -34,7 +34,7 @@ data class DiscoveredDevice(
 class TransferDaemon(
     private val deviceNameProvider: () -> String
 ) {
-    private val DISCOVERY_PORT = 50001
+    private val DISCOVERY_PORT = Ports.DISCOVERY
     // Match Android's DISCOVERY_NODE_TIMEOUT_MS (20s). Android backs its broadcaster off toward 12s
     // on a stable network, so an 8s window flickered a quiet Android peer out of the list every cycle
     // (spurious drop + downgrade-BLOCK churn). 20s keeps ~8s of margin over that max interval.

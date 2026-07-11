@@ -43,6 +43,10 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import com.joseph.clipboard.windows.storage.TranslationManager
 
 @Composable
 fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNext: (Screen) -> Unit = {}) {
@@ -50,7 +54,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
     val isDiscoverable by appController.isDiscoverable.collectAsState()
     val discoveredDevices by appController.discoveredDevices.collectAsState()
     val trustedNodes by appController.trustedNodes.collectAsState()
-    val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
+    val currentLanguage by TranslationManager.currentLanguageState
     
     // Display-only IP. getLocalHost() can return a loopback/virtual-adapter address on
     // Windows; the network paths use Net.localLanIpv4() as the accurate resolver.
@@ -123,7 +127,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                     modifier = Modifier.padding(end = Dimens.spaceLg).size(Dimens.iconLg)
                 )
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("system_status_title").takeIf { it != "system_status_title" } ?: "System Status",
+                    TranslationManager.getString("system_status_title").takeIf { it != "system_status_title" } ?: "System Status",
                     style = MaterialTheme.typography.h5,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.weight(1f)
@@ -168,11 +172,11 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                     value = localDeviceName,
                     onValueChange = { localDeviceName = it },
                     label = {
-                        Text(com.joseph.clipboard.windows.storage.TranslationManager.getString("device_name_label").takeIf { it != "device_name_label" } ?: "Device Name")
+                        Text(TranslationManager.getString("device_name_label").takeIf { it != "device_name_label" } ?: "Device Name")
                     },
                     singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
-                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = {
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
                         appController.updateDeviceName(localDeviceName)
                         focusManager.clearFocus()
                     }),
@@ -209,7 +213,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                     tutorialBounds["discoverableSwitch"] = coords.boundsInWindow()
                 }) {
                 GlassToggleRow(
-                    label = com.joseph.clipboard.windows.storage.TranslationManager.getString("discoverable_to_other_devices").takeIf { it != "discoverable_to_other_devices" } ?: "Discoverable to other devices",
+                    label = TranslationManager.getString("discoverable_to_other_devices").takeIf { it != "discoverable_to_other_devices" } ?: "Discoverable to other devices",
                     checked = isDiscoverable,
                     onCheckedChange = { appController.updateDiscoverable(it) }
                 )
@@ -223,7 +227,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("select_trusted_recipients_title"),
+                    TranslationManager.getString("select_trusted_recipients_title"),
                     style = MaterialTheme.typography.h6,
                     color = MaterialTheme.colors.onBackground
                 )
@@ -254,8 +258,8 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                     ) {
                         EmptyState(
                             icon = Icons.Filled.Wifi,
-                            title = com.joseph.clipboard.windows.storage.TranslationManager.getString("no_devices_found").takeIf { it != "no_devices_found" } ?: "No devices found yet",
-                            subtitle = com.joseph.clipboard.windows.storage.TranslationManager.getString("no_devices_found_hint").takeIf { it != "no_devices_found_hint" } ?: "Make sure the other device is on the same Wi-Fi or hotspot and is discoverable.",
+                            title = TranslationManager.getString("no_devices_found").takeIf { it != "no_devices_found" } ?: "No devices found yet",
+                            subtitle = TranslationManager.getString("no_devices_found_hint").takeIf { it != "no_devices_found_hint" } ?: "Make sure the other device is on the same Wi-Fi or hotspot and is discoverable.",
                         )
                         Spacer(modifier = Modifier.height(Dimens.spaceLg))
                         RescanPill(onClick = { appController.clearNetworkCache(); scanTick++ })
@@ -363,7 +367,7 @@ private fun RescanPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
             modifier = Modifier.size(Dimens.iconSm)
         )
         Text(
-            com.joseph.clipboard.windows.storage.TranslationManager.getString("action_rescan").takeIf { it != "action_rescan" } ?: "Rescan",
+            TranslationManager.getString("action_rescan").takeIf { it != "action_rescan" } ?: "Rescan",
             style = MaterialTheme.typography.button,
             color = MaterialTheme.colors.onSurface
         )
@@ -393,15 +397,15 @@ fun DiscoveredDeviceItem(device: DiscoveredDevice, isPaired: Boolean, appControl
         }
 
         // Transparent, hairline-outlined pill — green "Pair" / red "Unpair" label (Android parity).
-        val pairText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_pair")
-        val unpairText = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_unpair")
+        val pairText = TranslationManager.getString("action_pair")
+        val unpairText = TranslationManager.getString("action_unpair")
         CapsuleButton(
             text = if (isPaired) unpairText else pairText,
             onClick = {
                 if (!isPaired) appController.initiatePairing(device.ip) else appController.unpairDevice(device.ip)
             },
             contentColor = if (isPaired) extra.errorText else extra.greenText,
-            fill = androidx.compose.ui.graphics.Color.Transparent,
+            fill = Color.Transparent,
             modifier = Modifier.widthIn(min = 96.dp)
         )
     }

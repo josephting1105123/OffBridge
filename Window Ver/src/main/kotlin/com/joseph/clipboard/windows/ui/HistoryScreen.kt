@@ -39,6 +39,8 @@ import com.joseph.clipboard.windows.theme.GreenPrimary
 import com.joseph.clipboard.windows.theme.Dimens
 
 import com.joseph.clipboard.windows.os.ClipboardManager
+import androidx.compose.runtime.LaunchedEffect
+import com.joseph.clipboard.windows.storage.TranslationManager
 
 @Composable
 fun HistoryScreen(
@@ -48,14 +50,14 @@ fun HistoryScreen(
 ) {
     val acceptClipboard by appController.acceptIncomingClipboard.collectAsState()
     val clipboardHistory by appController.clipboardHistory.collectAsState()
-    val currentLanguage by com.joseph.clipboard.windows.storage.TranslationManager.currentLanguageState
+    val currentLanguage by TranslationManager.currentLanguageState
 
     var showTutorial by remember { mutableStateOf(false) }
     val tutorialBounds = remember { mutableStateMapOf<String, Rect>() }
     // Tapping a recent-copy card opens a full-text detail overlay (Android parity).
     var detailEntry by remember { mutableStateOf<String?>(null) }
 
-    androidx.compose.runtime.LaunchedEffect(tutorialTrigger) {
+    LaunchedEffect(tutorialTrigger) {
         if (tutorialTrigger > 0) showTutorial = true
     }
 
@@ -79,7 +81,7 @@ fun HistoryScreen(
                     modifier = Modifier.padding(end = Dimens.spaceLg).size(Dimens.iconLg)
                 )
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("history_and_push_title").takeIf { it != "history_and_push_title" } ?: "Clipboard & Push",
+                    TranslationManager.getString("history_and_push_title").takeIf { it != "history_and_push_title" } ?: "Clipboard & Push",
                     style = MaterialTheme.typography.h5,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.weight(1f)
@@ -96,7 +98,7 @@ fun HistoryScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    com.joseph.clipboard.windows.storage.TranslationManager.getString("accept_incoming_clipboard").takeIf { it != "accept_incoming_clipboard" } ?: "Accept Incoming Clipboard",
+                    TranslationManager.getString("accept_incoming_clipboard").takeIf { it != "accept_incoming_clipboard" } ?: "Accept Incoming Clipboard",
                     style = MaterialTheme.typography.subtitle1,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.weight(1f)
@@ -111,7 +113,7 @@ fun HistoryScreen(
 
             // Hint Text
             Text(
-                com.joseph.clipboard.windows.storage.TranslationManager.getString("recent_copies_hint").takeIf { it != "recent_copies_hint" } ?: "Tap any previous text to copy it again",
+                TranslationManager.getString("recent_copies_hint").takeIf { it != "recent_copies_hint" } ?: "Tap any previous text to copy it again",
                 style = MaterialTheme.typography.body1,
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = Dimens.spaceLg)
@@ -125,7 +127,7 @@ fun HistoryScreen(
                 if (clipboardHistory.isEmpty()) {
                     item {
                         Text(
-                            com.joseph.clipboard.windows.storage.TranslationManager.getString("no_clipboard_history_yet").takeIf { it != "no_clipboard_history_yet" } ?: "No clipboard history yet.",
+                            TranslationManager.getString("no_clipboard_history_yet").takeIf { it != "no_clipboard_history_yet" } ?: "No clipboard history yet.",
                             style = MaterialTheme.typography.body1,
                             color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
                         )
@@ -155,7 +157,7 @@ fun HistoryScreen(
                 tutorialBounds["pushButton"] = coords.boundsInWindow()
             }) {
                 AppButton(
-                    text = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
+                    text = TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
                     onClick = { appController.pushCurrentClipboard() },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -250,13 +252,13 @@ private fun ClipboardDetailOverlay(text: String, onBack: () -> Unit, onCopy: () 
             IconButton(onClick = onBack) {
                 Icon(
                     Icons.Filled.ArrowBack,
-                    contentDescription = com.joseph.clipboard.windows.storage.TranslationManager.getString("action_close").takeIf { it != "action_close" } ?: "Back",
+                    contentDescription = TranslationManager.getString("action_close").takeIf { it != "action_close" } ?: "Back",
                     tint = MaterialTheme.colors.onBackground
                 )
             }
             Spacer(Modifier.width(Dimens.spaceSm))
             Text(
-                com.joseph.clipboard.windows.storage.TranslationManager.getString("copy_detail_title").takeIf { it != "copy_detail_title" } ?: "Copy Detail",
+                TranslationManager.getString("copy_detail_title").takeIf { it != "copy_detail_title" } ?: "Copy Detail",
                 style = MaterialTheme.typography.h5,
                 color = MaterialTheme.colors.onBackground
             )
@@ -282,7 +284,7 @@ private fun ClipboardDetailOverlay(text: String, onBack: () -> Unit, onCopy: () 
 
         // Copy button
         AppButton(
-            text = com.joseph.clipboard.windows.storage.TranslationManager.getString("copy_detail_button").takeIf { it != "copy_detail_button" } ?: "Copy",
+            text = TranslationManager.getString("copy_detail_button").takeIf { it != "copy_detail_button" } ?: "Copy",
             onClick = onCopy,
             modifier = Modifier.fillMaxWidth()
         )

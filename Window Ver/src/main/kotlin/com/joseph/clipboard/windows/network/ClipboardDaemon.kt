@@ -8,6 +8,9 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
 import kotlin.concurrent.thread
+import com.joseph.clipboard.windows.os.ClipboardManager
+import com.joseph.clipboard.windows.storage.CryptoEngine
+import com.joseph.clipboard.windows.storage.SecurityVault
 
 class ClipboardDaemon(
     private val acceptIncomingProvider: () -> Boolean,
@@ -95,12 +98,12 @@ class ClipboardDaemon(
 
                 if (base64Payload.isNotEmpty()) {
                     val senderIp = clientSocket.inetAddress.hostAddress
-                    val aesKey = com.joseph.clipboard.windows.storage.SecurityVault.getAesKey(senderIp)
+                    val aesKey = SecurityVault.getAesKey(senderIp)
                     if (aesKey != null) {
                         try {
                             // decryptString accepts only sealed (AES-GCM) payloads since the 3.5.0
                             // CBC retirement; senderIp just names the peer in the rejection error.
-                            val decryptedText = com.joseph.clipboard.windows.storage.CryptoEngine.decryptString(base64Payload, aesKey, senderIp)
+                            val decryptedText = CryptoEngine.decryptString(base64Payload, aesKey, senderIp)
                             if (decryptedText.startsWith("CMD_DELETE|")) {
                                 // Remote deleted a history entry. Android sends this as an encrypted
                                 // "CMD_DELETE|<text>" control frame; the suffix must NOT be pasted or
@@ -109,12 +112,12 @@ class ClipboardDaemon(
                                 // OS clipboard if it still matches.
                                 val toDelete = decryptedText.substring("CMD_DELETE|".length)
                                 onClipboardDeleted(toDelete)
-                                val current = com.joseph.clipboard.windows.os.ClipboardManager.readText()
+                                val current = ClipboardManager.readText()
                                 if (current == toDelete) {
-                                    com.joseph.clipboard.windows.os.ClipboardManager.writeText("")
+                                    ClipboardManager.writeText("")
                                 }
                             } else {
-                                com.joseph.clipboard.windows.os.ClipboardManager.writeText(decryptedText)
+                                ClipboardManager.writeText(decryptedText)
                                 onClipboardReceived(decryptedText)
                             }
                         } catch (e: Exception) {
