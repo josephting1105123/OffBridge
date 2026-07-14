@@ -33,7 +33,11 @@
   }
 
   .mcar-deck > * {
-    position: absolute !important;
+    /* Stacks the cards on top of each other. Intentionally NOT !important: source
+       order already beats .glass{position:relative}, and staying non-!important
+       lets popout.js's inline position:fixed lift a card out of the deck for both
+       the expanded state and the collapse animation. */
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
@@ -44,6 +48,17 @@
     backface-visibility: hidden;
     will-change: transform, opacity;
     /* transform / opacity / z-index / min-height set inline by carousel.js */
+  }
+
+  /* An expanded card must leave the deck's absolute/overflow-clipped context and
+     rise above the scrim. Its geometry is viewport-relative (set inline by
+     popout.js). The higher-specificity selector restores position:fixed on expand;
+     z-index !important beats poseAt's inline z-index (100) so the panel sits over
+     the scrim. Collapse removes .is-expanded and re-fixes the card via inline
+     styles, which win now that the rule above is no longer !important. */
+  .mcar-deck > .is-expanded {
+    position: fixed;
+    z-index: var(--z-popout) !important;
   }
 
   /* Cards are tap-to-expand in the deck; show the corner hint statically (there's
