@@ -587,6 +587,7 @@
     <string name="tour_send_qr">Beda jaringan? Bagikan dengan kode QR atau sentuhan NFC — tanpa perlu Wi-Fi bersama.</string>
     <string name="tour_receive">Menerima dengan QR atau NFC? Buka opsi yang sesuai di tab Terima — pindai QR dengan kamera, atau sentuhkan kedua ponsel untuk NFC.</string>
     <string name="tour_how_to_use">Ingin detailnya? Setiap layar memiliki tombol \"Cara pakai\" (kanan atas) dengan panduan lengkap langkah demi langkah.</string>
+    <string name="tour_design_mode">Beralih antara Lite dan Pro kapan saja di sini. Lite membuat semuanya tetap sederhana; Pro membuka antarmuka lengkap — pemasangan perangkat, sinkronisasi papan klip, riwayat transfer, dan semua opsi.</string>
     <string name="receive_tut_nfc">Terima NFC — ketuk untuk melihat di mana memegang ponsel, lalu sentuhkan keduanya saling membelakangi untuk menerima file melalui NFC.</string>
     <string name="receive_tut_nfc_unavailable">Terima NFC — sentuhkan kedua ponsel saling membelakangi untuk menerima. NFC tidak tersedia di perangkat ini, jadi opsi ini tetap nonaktif.</string>
     <string name="receive_tut_qr">Pindai QR — ketuk Buka Kamera untuk memindai kode QR pengirim dan menarik file melalui jaringan apa pun.</string>

@@ -113,7 +113,6 @@ class ReceiveFragment : Fragment() {
         super.onResume()
         syncDeviceNameField()
         refreshNfc()
-        if (!isHidden) maybeAutoShowTutorial()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -121,7 +120,6 @@ class ReceiveFragment : Fragment() {
         if (!hidden) {
             syncDeviceNameField()
             refreshNfc()
-            maybeAutoShowTutorial()
         }
     }
 
@@ -153,12 +151,4 @@ class ReceiveFragment : Fragment() {
         nfcUnavailableState.value = NfcAdapter.getDefaultAdapter(requireContext()) == null
     }
 
-    private fun maybeAutoShowTutorial() {
-        if (!isAdded || isHidden) return
-        if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-        if (prefs.getBoolean("receive_tutorial_shown", false)) return
-        prefs.edit().putBoolean("receive_tutorial_shown", true).apply()
-        showTutorialState.value = true
-    }
 }

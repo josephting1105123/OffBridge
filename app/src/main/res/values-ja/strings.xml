@@ -581,6 +581,7 @@
     <string name="tour_send_qr">ネットワークが異なる場合は、QR コードや NFC タップで共有できます。共通の Wi-Fi は不要です。</string>
     <string name="tour_receive">QR や NFC で受信しますか？「受信」タブで該当するオプションを開いてください。カメラで QR をスキャンするか、NFC ならスマホどうしを合わせてください。</string>
     <string name="tour_how_to_use">詳しく知りたいですか？各画面の右上に「使い方」ボタンがあり、手順を一通り確認できます。</string>
+    <string name="tour_design_mode">ここでいつでも Lite と Pro を切り替えられます。Lite はシンプルさを重視し、Pro はペアリング、クリップボード同期、転送履歴などすべての機能を含む完全なインターフェースを解放します。</string>
     <string name="receive_tut_nfc">NFC 受信 — タップするとスマホを合わせる位置がわかります。その後、スマホの背面どうしを合わせて NFC でファイルを受信してください。</string>
     <string name="receive_tut_nfc_unavailable">NFC 受信 — スマホの背面どうしを合わせて受信します。このデバイスでは NFC を利用できないため、これは無効のままです。</string>
     <string name="receive_tut_qr">QR スキャン — 「カメラを開く」をタップして送信側の QR コードをスキャンすると、どのネットワークでもファイルを取得できます。</string>

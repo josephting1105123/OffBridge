@@ -571,6 +571,7 @@
     <string name="tour_send_qr">在不同網路上嗎？透過 QR code 或 NFC 貼近分享——無需共用 Wi-Fi。</string>
     <string name="tour_receive">透過 QR 或 NFC 接收嗎？請在「接收」分頁開啟對應的選項——用相機掃描 QR，或將兩支手機貼合以使用 NFC。</string>
     <string name="tour_how_to_use">想了解細節嗎？每個畫面都有「使用說明」按鈕（右上角），內含完整的逐步指南。</string>
+    <string name="tour_design_mode">隨時都能在這裡切換 Lite 與 Pro。Lite 讓一切保持簡單；Pro 解鎖完整介面——配對、剪貼簿同步、傳輸紀錄，以及所有功能。</string>
     <string name="receive_tut_nfc">NFC 接收——點擊以查看手機的握持位置，然後將兩支手機背對背貼合，即可透過 NFC 接收檔案。</string>
     <string name="receive_tut_nfc_unavailable">NFC 接收——將兩支手機背對背貼合即可接收。此裝置不支援 NFC，因此此項保持停用。</string>
     <string name="receive_tut_qr">QR 掃描——點擊「開啟相機」以掃描傳送方的 QR code，並跨任何網路接收檔案。</string>

@@ -547,9 +547,9 @@ class QrScannerFragment : Fragment() {
     }
 
     /**
-     * Scanner tip. Standalone (no chain) it is a one-shot single step gated by
-     * the SharedPreferences flag. When reached via the Receive-screen chain
-     * ([ARG_TUTORIAL]) it renders as "3 / 3 — Done" with the offset applied.
+     * Scanner tip. Shows only as part of an explicit guide — the Receive-screen "How to use" chain
+     * ([ARG_TUTORIAL], rendered "3 / 3 — Done") or a forced-tour step ([ARG_FORCED_TOUR]). A plain
+     * scanner open shows nothing (no unsolicited first-open popup).
      */
     private fun maybeShowFirstLaunchTip() {
         // No camera scan-tip in NFC receive mode — the guide replaces the camera + reticle (which the
@@ -557,15 +557,8 @@ class QrScannerFragment : Fragment() {
         if (nfcMode) return
         val tutorialMode = arguments?.getBoolean(ARG_TUTORIAL) == true
         val forcedTour = arguments?.getBoolean(ARG_FORCED_TOUR) == true
-        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-
-        if (!tutorialMode) {
-            // The confirm card is already up for a preset payload — no scan tip needed.
-            if (arguments?.getString(ARG_PRESET_PAYLOAD) != null) return
-            if (prefs.getBoolean("scanner_tutorial_shown", false)) return
-        }
-        // The chained step 3 also sets this so a later direct scanner visit shows no duplicate tip.
-        prefs.edit().putBoolean("scanner_tutorial_shown", true).apply()
+        // Direct scanner opens stay clean: the tip is part of a guided walkthrough or nothing at all.
+        if (!tutorialMode && !forcedTour) return
 
         val rootView = requireActivity().window.decorView.findViewById<ViewGroup>(android.R.id.content)
         val overlay = TutorialOverlayView(requireContext())

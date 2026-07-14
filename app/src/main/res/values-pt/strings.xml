@@ -587,6 +587,7 @@
     <string name="tour_send_qr">Em redes diferentes? Compartilhe por código QR ou toque NFC — sem precisar de Wi-Fi compartilhado.</string>
     <string name="tour_receive">Recebendo por QR ou NFC? Abra a opção correspondente na aba Receber — leia um QR com a câmera ou encoste os telefones para o NFC.</string>
     <string name="tour_how_to_use">Quer os detalhes? Cada tela tem um botão \"Como usar\" (no canto superior direito) com um guia completo passo a passo.</string>
+    <string name="tour_design_mode">Alterne entre Lite e Pro aqui a qualquer momento. O Lite mantém tudo simples; o Pro libera a interface completa — pareamento, sincronização da área de transferência, histórico de transferências e todas as opções.</string>
     <string name="receive_tut_nfc">Receber por NFC — toque para ver onde segurar os telefones e depois encoste-os pelas costas para receber um arquivo via NFC.</string>
     <string name="receive_tut_nfc_unavailable">Receber por NFC — encoste os telefones pelas costas para receber. O NFC não está disponível neste dispositivo, então isto permanece desativado.</string>
     <string name="receive_tut_qr">Leitura de QR — toque em Abrir Câmera para ler o código QR do remetente e puxar o arquivo por qualquer rede.</string>

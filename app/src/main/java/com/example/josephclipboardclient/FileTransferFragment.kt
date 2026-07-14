@@ -466,7 +466,6 @@ class FileTransferFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (!isHidden) maybeAutoShowTutorial()
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
@@ -475,20 +474,7 @@ class FileTransferFragment : Fragment() {
             // Tabs are hide()/show()n, so the hidden composition stays alive: close the Send-Via
             // overlay or its still-enabled BackHandler would eat back presses on other tabs.
             showSendViaState.value = false
-        } else {
-            maybeAutoShowTutorial()
         }
-    }
-
-    /** One-shot: the full send tutorial fires the first time this tab is opened after install. */
-    private fun maybeAutoShowTutorial() {
-        if (!isAdded || isHidden) return
-        // The forced first-launch tour drives this segment itself; never auto-fire underneath it.
-        if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-        if (prefs.getBoolean("send_tutorial_shown", false)) return
-        prefs.edit().putBoolean("send_tutorial_shown", true).apply()
-        showSendTutorialState.value = true
     }
 
     /**

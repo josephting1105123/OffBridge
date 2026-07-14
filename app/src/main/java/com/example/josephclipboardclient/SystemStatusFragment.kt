@@ -118,18 +118,8 @@ class SystemStatusFragment : Fragment() {
         if (deviceNameState.value != current) deviceNameState.value = current
     }
 
-    private fun maybeAutoShowTutorial() {
-        if (!isAdded || isHidden) return
-        if (TutorialTour.isForced()) return
-        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-        if (prefs.getBoolean("system_tutorial_shown", false)) return
-        prefs.edit().putBoolean("system_tutorial_shown", true).apply()
-        showTutorialState.value = true
-    }
-
     override fun onResume() {
         super.onResume()
-        if (!isHidden) maybeAutoShowTutorial()
         PairingDaemon.start(requireContext().applicationContext)
 
         val ctx = context
@@ -156,7 +146,6 @@ class SystemStatusFragment : Fragment() {
         if (!hidden) {
             syncDeviceName()
             discoverableState.value = SecurityVault.isDiscoverable(requireContext())
-            maybeAutoShowTutorial()
         }
     }
 

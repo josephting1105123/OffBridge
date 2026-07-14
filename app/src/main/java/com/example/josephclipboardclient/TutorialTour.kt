@@ -25,12 +25,13 @@ object TutorialTour {
     const val OFFSET_RECEIVE = 19   // steps 20-21 (ReceiveFragment)
     const val OFFSET_SCANNER = 21   // step 22 (QrScannerFragment)
 
-    /** New conceptual first-launch tour: one step per main interface + a how-to-use closer. */
-    const val TOUR_STEPS = 6
+    /** New conceptual first-launch tour: 7 steps: one per main interface, a how-to-use closer, and a
+     *  Lite/Pro mode-toggle step. */
+    const val TOUR_STEPS = 7
 
     const val PREFS = FILE_BRIDGE_PREFS
     const val KEY_COMPLETED = "forced_tour_completed_v1"        // legacy 22-step tour; grandfathered
-    const val KEY_COMPLETED_V2 = "forced_tour_completed_v2"     // new 6-step conceptual tour
+    const val KEY_COMPLETED_V2 = "forced_tour_completed_v2"     // new 7-step conceptual tour
     const val KEY_IN_PROGRESS = "forced_tour_in_progress"
 
     /** Result key the forced history-sheet segment posts when it finishes step 13. */

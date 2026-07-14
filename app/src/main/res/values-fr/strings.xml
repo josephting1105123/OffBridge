@@ -584,6 +584,7 @@
     <string name="tour_send_qr">Sur des réseaux différents ? Partagez par code QR ou touche NFC — aucun Wi-Fi partagé requis.</string>
     <string name="tour_receive">Vous recevez par QR ou NFC ? Ouvrez l\'option correspondante dans l\'onglet Recevoir — scannez un QR avec l\'appareil photo, ou rapprochez les téléphones pour le NFC.</string>
     <string name="tour_how_to_use">Vous voulez les détails ? Chaque écran dispose d\'un bouton « Comment utiliser » (en haut à droite) avec un guide complet étape par étape.</string>
+    <string name="tour_design_mode">Basculez ici entre Lite et Pro à tout moment. Lite garde les choses simples ; Pro déverrouille l\'interface complète — appairage, synchronisation du presse-papiers, historique des transferts et toutes les options.</string>
     <string name="receive_tut_nfc">Réception NFC — appuyez pour voir où tenir les téléphones, puis rapprochez-les dos à dos pour recevoir un fichier via NFC.</string>
     <string name="receive_tut_nfc_unavailable">Réception NFC — rapprochez les téléphones dos à dos pour recevoir. Le NFC n\'est pas disponible sur cet appareil, cette option reste donc désactivée.</string>
     <string name="receive_tut_qr">Scan QR — appuyez sur Ouvrir la caméra pour scanner le code QR de l\'expéditeur et récupérer le fichier sur n\'importe quel réseau.</string>

@@ -498,13 +498,14 @@
     <string name="history_tutorial_push">Tap here to instantly push your current clipboard text to all paired devices.</string>
     <string name="history_tutorial_accept_switch">Turn this off if you don\'t want to receive clipboard content from other devices.</string>
     <string name="history_tutorial_next">Next</string>
-    <!-- First-launch conceptual tour (6 steps, one per main interface + a how-to-use closer). -->
+    <!-- First-launch conceptual tour (7 steps, one per main interface + a how-to-use closer + a Lite/Pro mode-toggle closer). -->
     <string name="tour_pairing">Start by pairing your devices. Pairing unlocks a seamless workflow — clipboard sync and direct file transfer between them.</string>
     <string name="tour_clipboard">Once your devices are paired, your clipboard syncs automatically — copy on one device, paste on another.</string>
     <string name="tour_send_lan">Send files with no data charges and no quality loss. On the same Wi-Fi or hotspot, pick a Connected Device — fastest, no internet needed.</string>
     <string name="tour_send_qr">On different networks? Share by QR code or NFC tap — no shared Wi-Fi required.</string>
     <string name="tour_receive">Receiving by QR or NFC? Open the matching option on the Receive tab — scan a QR with the camera, or tap phones together for NFC.</string>
     <string name="tour_how_to_use">Want the details? Every screen has a \"How to use\" button (top-right) with a full step-by-step guide.</string>
+    <string name="tour_design_mode">Switch between Lite and Pro here anytime. Lite keeps things simple; Pro unlocks the full interface — pairing, clipboard sync, transfer history and every option.</string>
     <!-- Receive tab "How to use" steps (NFC-receive + QR-scan as distinct methods). -->
     <string name="receive_tut_nfc">NFC receive — tap to see where to hold the phones, then tap them back-to-back to receive a file over NFC.</string>
     <string name="receive_tut_nfc_unavailable">NFC receive — tap phones back-to-back to receive. NFC isn\'t available on this device, so this stays disabled.</string>

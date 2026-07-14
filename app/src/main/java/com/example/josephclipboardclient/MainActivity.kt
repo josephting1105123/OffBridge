@@ -45,6 +45,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavView: BottomNavigationView
     private lateinit var fabMenu: FloatingActionButton
     private lateinit var liteNavBar: View
+    /** Power-menu bottom sheet + its Lite/Pro toggle, promoted from setupMenuBottomSheet() locals so
+     *  the forced tour's 7th step can drive the sheet (expand it, spotlight the toggle). */
+    private lateinit var menuSheetView: View
+    private lateinit var menuBehavior: BottomSheetBehavior<View>
+    private lateinit var designToggleView: ComposeView
     private val fragmentMap = mutableMapOf<Int, Fragment>()
     private var activeFragment: Fragment? = null
     /** Tracks the live shell mode so the FAB/back-stack logic stays correct across an in-place switch. */
@@ -213,7 +218,7 @@ class MainActivity : AppCompatActivity() {
             } else if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE) {
                 handleShareIntent(intent)
             } else if (forcedTourPending()) {
-                // First launch after onboarding: force the full 22-step guided tour.
+                // First launch after onboarding: force the 7-step conceptual guided tour.
                 startForcedTour()
             } else {
                 if (!isLite) {
@@ -250,8 +255,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMenuBottomSheet() {
-        val bottomSheetView = findViewById<View>(R.id.bottom_sheet_menu_layout)
-        val behavior = BottomSheetBehavior.from(bottomSheetView)
+        menuSheetView = findViewById(R.id.bottom_sheet_menu_layout)
+        val bottomSheetView = menuSheetView
+        menuBehavior = BottomSheetBehavior.from(menuSheetView)
+        val behavior = menuBehavior
         val scrim = findViewById<View>(R.id.menu_scrim)
         
         // Hide initially
@@ -276,7 +283,10 @@ class MainActivity : AppCompatActivity() {
                     // before the fade begins — it's caught by the scrim, which closes the menu and consumes
                     // the event (misclick guard).
                     scrim.visibility = View.VISIBLE
-                    menuBackGuard.isEnabled = true
+                    // While the forced tour is running, leave the guard off so back is owned solely by
+                    // tourBackGuard (the tour's own step 7 expands this sheet and must not let back
+                    // collapse it out from under the spotlight).
+                    menuBackGuard.isEnabled = !TutorialTour.isForced()
                 }
             }
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -303,7 +313,8 @@ class MainActivity : AppCompatActivity() {
 
         val btnSettings = bottomSheetView.findViewById<View>(R.id.btn_menu_settings)
         val btnWindows = bottomSheetView.findViewById<View>(R.id.btn_menu_windows)
-        val toggleDesignMode = bottomSheetView.findViewById<ComposeView>(R.id.toggle_design_mode)
+        designToggleView = bottomSheetView.findViewById(R.id.toggle_design_mode)
+        val toggleDesignMode = designToggleView
         val toggleThemeMode = bottomSheetView.findViewById<ComposeView>(R.id.toggle_theme_mode)
         val btnRestart = bottomSheetView.findViewById<View>(R.id.btn_menu_restart)
         val btnPowerOff = bottomSheetView.findViewById<View>(R.id.btn_menu_power_off)
@@ -674,7 +685,14 @@ class MainActivity : AppCompatActivity() {
             // Reconcile if the toggle was re-tapped during the switch (the pref moved again but that
             // second requestDesignModeSwitch was dropped by the switchingMode guard).
             val desiredLite = isLiteMode(this)
-            if (desiredLite != currentIsLite) requestDesignModeSwitch(desiredLite)
+            if (desiredLite != currentIsLite) {
+                requestDesignModeSwitch(desiredLite)
+            } else if (!currentIsLite && !TutorialTour.isForced() && forcedTourPending()) {
+                // First-ever switch into Pro: run the guided tour. forcedTourPending() already gates on
+                // Pro + not-yet-completed (KEY_COMPLETED_V2 / KEY_COMPLETED), so no new flag is needed.
+                menuBehavior.state = BottomSheetBehavior.STATE_HIDDEN  // hide the sheet so steps 1-6 are visible
+                startForcedTour()
+            }
         }, 200L)
     }
 
@@ -782,16 +800,19 @@ class MainActivity : AppCompatActivity() {
         tourBackGuard.isEnabled = false
     }
 
-    /** One conceptual step per main interface in narrative order, then a how-to-use closer. */
-    private data class TourSpec(val navId: Int, val textRes: Int)
+    /** One conceptual step per main interface in narrative order, then a how-to-use closer and a
+     *  Lite/Pro mode-toggle closer. */
+    private enum class StepKind { NAV_ITEM, HOW_TO_USE_CHIP, DESIGN_TOGGLE }
+    private data class TourSpec(val navId: Int, val textRes: Int, val kind: StepKind = StepKind.NAV_ITEM)
     private val tourSteps: List<TourSpec> by lazy {
         listOf(
             TourSpec(R.id.nav_system_status, R.string.tour_pairing),
-            TourSpec(R.id.nav_history, R.string.tour_clipboard),
-            TourSpec(R.id.nav_send_files, R.string.tour_send_lan),
-            TourSpec(R.id.nav_send_files, R.string.tour_send_qr),
-            TourSpec(R.id.nav_receive, R.string.tour_receive),
-            TourSpec(R.id.nav_send_files, R.string.tour_how_to_use),
+            TourSpec(R.id.nav_history,        R.string.tour_clipboard),
+            TourSpec(R.id.nav_send_files,     R.string.tour_send_lan),
+            TourSpec(R.id.nav_send_files,     R.string.tour_send_qr),
+            TourSpec(R.id.nav_receive,        R.string.tour_receive),
+            TourSpec(R.id.nav_send_files,     R.string.tour_how_to_use, StepKind.HOW_TO_USE_CHIP),
+            TourSpec(0,                       R.string.tour_design_mode, StepKind.DESIGN_TOGGLE),
         )
     }
 
@@ -800,6 +821,7 @@ class MainActivity : AppCompatActivity() {
         if (!TutorialTour.isForced()) return
         if (index >= tourSteps.size) { finishForcedTour(); return }
         val spec = tourSteps[index]
+        if (spec.kind == StepKind.DESIGN_TOGGLE) { showDesignToggleTourStep(index); return }
         switchFragment(spec.navId)
         bottomNavView.selectedItemId = spec.navId
         startSegmentWhenLaidOut(spec.navId) { showTourStepOverlay(index, spec) }
@@ -818,20 +840,22 @@ class MainActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
             ),
         )
+        // The design-toggle step never reaches here (handled by showDesignToggleTourStep), so "last"
+        // among the nav/chip steps rendered by this function is really the how-to-use chip step.
         val isLast = index == tourSteps.size - 1
         val step = TutorialStep(
             targetView = itemView,
             text = getString(spec.textRes),
             hideSkipButton = true,
-            // The closer spotlights the top-right chip, so let the tooltip auto-place (below it);
-            // the nav-item steps keep the tooltip above the bottom bar.
-            tooltipAboveSpotlight = !isLast,
+            // The chip closer spotlights the top-right chip, so let the tooltip auto-place (below
+            // it); the nav-item steps keep the tooltip above the bottom bar.
+            tooltipAboveSpotlight = spec.kind != StepKind.HOW_TO_USE_CHIP,
             buttonLabel = if (isLast) null else getString(R.string.history_tutorial_next),
-            // Steps 1-5: keep the hole inside the nav bar and off the neighbouring items.
-            spotlightScale = if (index < 5) 0.95f else 1f,
-            // Step 6: spotlight the Send screen's "How to use" chip (Compose — no View of its own),
-            // falling back to the nav item if its bounds aren't available yet.
-            targetBoundsProvider = if (isLast) {
+            // Nav-item steps: keep the hole inside the nav bar and off the neighbouring items.
+            spotlightScale = if (spec.kind == StepKind.NAV_ITEM) 0.95f else 1f,
+            // How-to-use step: spotlight the Send screen's "How to use" chip (Compose — no View of
+            // its own), falling back to the nav item if its bounds aren't available yet.
+            targetBoundsProvider = if (spec.kind == StepKind.HOW_TO_USE_CHIP) {
                 { (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.howToUseChipBounds }
             } else null,
         )
@@ -840,6 +864,37 @@ class MainActivity : AppCompatActivity() {
             stepIndexOffset = index,
             totalStepsOverride = TutorialTour.TOUR_STEPS,
             onComplete = { if (isLast) finishForcedTour() else runTourStep(index + 1) },
+        )
+    }
+
+    /** Final tour step: pop the power menu and spotlight the Lite/Pro toggle. */
+    private fun showDesignToggleTourStep(index: Int) {
+        if (!TutorialTour.isForced()) return
+        menuBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        val root = window.decorView.findViewById<ViewGroup>(android.R.id.content)
+        val overlay = TutorialOverlayView(this)
+        root.addView(
+            overlay,
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
+        val step = TutorialStep(
+            targetView = designToggleView,
+            // Let the sheet finish expanding + Compose lay the toggle out before the spotlight resolves.
+            delayMs = 350L,
+            targetViewProvider = { designToggleView },
+            text = getString(R.string.tour_design_mode),
+            hideSkipButton = true,
+            tooltipAboveSpotlight = true,
+            buttonLabel = null,
+        )
+        overlay.start(
+            listOf(step),
+            stepIndexOffset = index,
+            totalStepsOverride = TutorialTour.TOUR_STEPS,
+            onComplete = {
+                menuBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+                finishForcedTour()
+            },
         )
     }
 
