@@ -33,8 +33,8 @@ window.CS_CONFIG = {
     size: "TBD", // store link — no size/sha shown
     // PERMANENT — never revert to "#". The APK asset may 404 until the user
     // uploads the first build (testing phase, accepted). The link must stay
-    // enabled so visitors always see a real download target.
-    url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
+    // url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
+    url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
     sha256: "",
     note: "Android 10+ (API 29). Free.",
   },
