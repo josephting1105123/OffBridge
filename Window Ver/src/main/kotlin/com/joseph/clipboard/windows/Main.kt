@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,12 +23,15 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -617,7 +621,33 @@ fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: Clipbo
 }
 
 fun main() = application {
-    val windowState = rememberWindowState()
+    // Floating (non-maximized) windows default to a scaled-down copy of the current monitor's
+    // work-area shape instead of Compose's stock 800x600 box, so the window always looks like a
+    // smaller version of the maximized layout rather than an unrelated ratio. Computed from the
+    // primary display before the ComposeWindow exists — this app has exactly one window and no
+    // cross-launch position persistence, so that's exactly what Compose would resolve to anyway —
+    // and doing it statically avoids a startup flash from 800x600 to this size.
+    val defaultFloatingSize = remember {
+        val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
+        val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
+        val b = gc.bounds
+        val waWidthPx = b.width - insets.left - insets.right
+        val waHeightPx = b.height - insets.top - insets.bottom
+        DpSize(
+            (waWidthPx * 0.7f / gc.defaultTransform.scaleX).dp,
+            (waHeightPx * 0.7f / gc.defaultTransform.scaleY).dp
+        )
+    }
+    val floatingAspectRatio = remember { (defaultFloatingSize.width.value / defaultFloatingSize.height.value).toDouble() }
+    // Single source of truth for the resize floor — both window.minimumSize (below) and the resize
+    // handles read this one value, pinned to the same primary-monitor scale defaultFloatingSize used,
+    // instead of each re-deriving it from window.graphicsConfiguration at a different point in time
+    // (that used to let the two floors drift apart, or disagree on a null graphicsConfiguration).
+    val minFloatingWidthPx = remember {
+        val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
+        (defaultFloatingSize.width.value * 0.5f * gc.defaultTransform.scaleX).toInt()
+    }
+    val windowState = rememberWindowState(size = defaultFloatingSize)
     // Publish the single-instance mutex once (not per recomposition) so the Inno installer's AppMutex
     // can detect a running instance — even one only minimized to the system tray — and prompt the user
     // to close it before an in-place upgrade replaces an in-use runtime file
@@ -655,6 +685,11 @@ fun main() = application {
         state = windowState,
         title = "Clipboard Share",
         undecorated = true,
+        // The four corner handles below are the only way to resize the floating window — disabling
+        // native resize here guarantees there's exactly one resize mechanism, not a native one
+        // fighting the ratio-locked one (undecorated windows are inconsistent across JDK/runtime
+        // versions about whether they keep a native resize border at all).
+        resizable = false,
         icon = painterResource("icon.xml")
     ) {
         // Undecorated windows maximize to the FULL screen (covering the Windows taskbar) unless we
@@ -722,6 +757,13 @@ fun main() = application {
         }
         LaunchedEffect(Unit) {
             refreshMaximizedBounds()
+            // Secondary floor alongside the resize handles' own coerceAtLeast — minimumSize doesn't
+            // self-enforce on the handles' programmatic window.setBounds calls, but it's cheap
+            // insurance against any other code path resizing the window smaller than usable.
+            window.minimumSize = java.awt.Dimension(
+                minFloatingWidthPx,
+                kotlin.math.round(minFloatingWidthPx / floatingAspectRatio).toInt()
+            )
             appController.onRequestForeground = {
                 windowState.isMinimized = false
                 window.toFront()
@@ -751,42 +793,138 @@ fun main() = application {
 
         CompositionLocalProvider(LocalThemeMode provides themeModeState) {
             ClipboardTheme(themeMode = themeModeState.value) {
-                Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
-                    WindowDraggableArea {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().height(40.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(modifier = Modifier.width(80.dp).fillMaxHeight(), color = MaterialTheme.colors.surface, elevation = 8.dp) {}
-                            Spacer(modifier = Modifier.weight(1f))
-                            IconButton(onClick = { windowState.isMinimized = true }, modifier = Modifier.size(40.dp)) {
-                                Box(modifier = Modifier.width(12.dp).height(2.dp).background(MaterialTheme.colors.onBackground))
-                            }
-                            
-                            IconButton(onClick = {
-                                if (windowState.placement == WindowPlacement.Maximized) {
-                                    windowState.placement = WindowPlacement.Floating
-                                } else {
-                                    refreshMaximizedBounds()
-                                    windowState.placement = WindowPlacement.Maximized
-                                    calibrateMaximizedBoundsOnce()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
+                        WindowDraggableArea {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(40.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(modifier = Modifier.width(80.dp).fillMaxHeight(), color = MaterialTheme.colors.surface, elevation = 8.dp) {}
+                                Spacer(modifier = Modifier.weight(1f))
+                                IconButton(onClick = { windowState.isMinimized = true }, modifier = Modifier.size(40.dp)) {
+                                    Box(modifier = Modifier.width(12.dp).height(2.dp).background(MaterialTheme.colors.onBackground))
                                 }
-                            }, modifier = Modifier.size(40.dp)) {
-                                Box(modifier = Modifier.size(12.dp).border(1.5.dp, MaterialTheme.colors.onBackground))
-                            }
-                            IconButton(onClick = ::exitApplication, modifier = Modifier.size(40.dp)) {
-                                Icon(Icons.Filled.Close, contentDescription = "Close", tint = MaterialTheme.colors.onBackground, modifier = Modifier.size(18.dp))
+
+                                IconButton(onClick = {
+                                    if (windowState.placement == WindowPlacement.Maximized) {
+                                        windowState.placement = WindowPlacement.Floating
+                                    } else {
+                                        refreshMaximizedBounds()
+                                        windowState.placement = WindowPlacement.Maximized
+                                        calibrateMaximizedBoundsOnce()
+                                    }
+                                }, modifier = Modifier.size(40.dp)) {
+                                    Box(modifier = Modifier.size(12.dp).border(1.5.dp, MaterialTheme.colors.onBackground))
+                                }
+                                IconButton(onClick = ::exitApplication, modifier = Modifier.size(40.dp)) {
+                                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = MaterialTheme.colors.onBackground, modifier = Modifier.size(18.dp))
+                                }
                             }
                         }
+                        Box(modifier = Modifier.weight(1f)) {
+                            AppContent(
+                                onMinimize = { windowState.isMinimized = true },
+                                appController = appController
+                            )
+                        }
                     }
-                    Box(modifier = Modifier.weight(1f)) {
-                        AppContent(
-                            onMinimize = { windowState.isMinimized = true },
-                            appController = appController
-                        )
+                    // Maximized fills the whole work area — nothing to resize into, so the handles
+                    // only make sense (and only render) while floating.
+                    if (windowState.placement == WindowPlacement.Floating) {
+                        ResizeHandle(ResizeCorner.TopStart, window, floatingAspectRatio, minFloatingWidthPx, Alignment.TopStart)
+                        ResizeHandle(ResizeCorner.TopEnd, window, floatingAspectRatio, minFloatingWidthPx, Alignment.TopEnd)
+                        ResizeHandle(ResizeCorner.BottomStart, window, floatingAspectRatio, minFloatingWidthPx, Alignment.BottomStart)
+                        ResizeHandle(ResizeCorner.BottomEnd, window, floatingAspectRatio, minFloatingWidthPx, Alignment.BottomEnd)
                     }
                 }
             }
         }
     }
+}
+
+private enum class ResizeCorner { TopStart, TopEnd, BottomStart, BottomEnd }
+
+// Undecorated + resizable=false (see the Window(...) call above) means there is no native resize
+// border at all — these four corner handles are the *only* way to resize the floating window. Each
+// drag derives the other dimension from the locked aspect ratio, so the shape is correct at every
+// intermediate frame instead of being corrected after the fact; the opposite corner stays fixed as
+// the anchor. Plain edges are deliberately not draggable — under a locked ratio a pure edge-drag is
+// redundant with a corner-drag along one axis, so four handles already give full resize coverage.
+//
+// The top corners are inset below the 40dp title bar (see TITLE_BAR_HEIGHT below) rather than
+// sitting flush in the true corner: the Close button occupies that exact top-right 40x40dp square
+// with no margin, so an un-inset handle there would sit entirely inside the Close button's clickable
+// area and steal every click aimed at closing the window.
+private val TITLE_BAR_HEIGHT = 40.dp
+
+@Composable
+private fun BoxScope.ResizeHandle(
+    corner: ResizeCorner,
+    window: ComposeWindow,
+    aspectRatio: Double,
+    minWidthPx: Int,
+    alignment: Alignment,
+) {
+    val topInset = if (corner == ResizeCorner.TopStart || corner == ResizeCorner.TopEnd) TITLE_BAR_HEIGHT else 0.dp
+    Box(
+        modifier = Modifier
+            .align(alignment)
+            .offset(y = topInset)
+            .size(14.dp)
+            .pointerInput(corner) {
+                var startBounds = window.bounds
+                var cumDxPx = 0f
+                var cumDyPx = 0f
+                detectDragGestures(
+                    onDragStart = {
+                        startBounds = window.bounds
+                        cumDxPx = 0f
+                        cumDyPx = 0f
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        // dragAmount arrives in Compose's density-scaled pointer space, but
+                        // window.bounds/setBounds are unscaled AWT logical units — dividing by the
+                        // monitor's transform here keeps the two in the same unit (on a scaled
+                        // display, skipping this makes the handle run away from the cursor by
+                        // exactly the scale factor).
+                        val gc = window.graphicsConfiguration
+                        val scaleX = (gc?.defaultTransform?.scaleX ?: 1.0).toFloat()
+                        val scaleY = (gc?.defaultTransform?.scaleY ?: 1.0).toFloat()
+                        cumDxPx += (if (corner == ResizeCorner.TopEnd || corner == ResizeCorner.BottomEnd) {
+                            dragAmount.x
+                        } else {
+                            -dragAmount.x
+                        }) / scaleX
+                        cumDyPx += (if (corner == ResizeCorner.BottomStart || corner == ResizeCorner.BottomEnd) {
+                            dragAmount.y
+                        } else {
+                            -dragAmount.y
+                        }) / scaleY
+                        // Whichever axis moved further (in its own raw pixels) drives the resize —
+                        // covers a pure vertical drag on a corner, not just horizontal.
+                        val newWidthPx = (
+                            if (kotlin.math.abs(cumDxPx) >= kotlin.math.abs(cumDyPx)) {
+                                startBounds.width + cumDxPx
+                            } else {
+                                (startBounds.height + cumDyPx) * aspectRatio.toFloat()
+                            }
+                        ).toInt().coerceAtLeast(minWidthPx)
+                        val newHeightPx = kotlin.math.round(newWidthPx / aspectRatio).toInt()
+                        val newX = if (corner == ResizeCorner.TopStart || corner == ResizeCorner.BottomStart) {
+                            startBounds.x + startBounds.width - newWidthPx
+                        } else {
+                            startBounds.x
+                        }
+                        val newY = if (corner == ResizeCorner.TopStart || corner == ResizeCorner.TopEnd) {
+                            startBounds.y + startBounds.height - newHeightPx
+                        } else {
+                            startBounds.y
+                        }
+                        window.setBounds(newX, newY, newWidthPx, newHeightPx)
+                    }
+                )
+            }
+    )
 }
