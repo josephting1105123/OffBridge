@@ -537,7 +537,9 @@ fun FileTransferScreen(
                     OutlinedTextField(
                         value = textToSend,
                         onValueChange = { textToSend = it },
-                        modifier = Modifier.fillMaxWidth(),
+                        // Fixed height so long text scrolls inside the field instead of growing
+                        // the dialog off-screen; the inner text field scrolls automatically.
+                        modifier = Modifier.fillMaxWidth().height(140.dp),
                         placeholder = { Text("Type something to send...") },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             textColor = MaterialTheme.colors.onBackground,

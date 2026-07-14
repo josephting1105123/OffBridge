@@ -4,6 +4,30 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.5 — Android (build 27) — download page, scrollable send-text
+
+### Changed
+- **"Windows Version" screen redesigned** as a "Download Clipboard Share for Windows" page with
+  a button that opens the website download section in the browser.
+- **Send-text dialog** capped at 6 visible lines and scrolls internally instead of growing
+  the dialog off-screen.
+- New `download_windows_heading`, `download_windows_blurb`, `download_open_website` strings
+  added to all 10 locale files.
+
+## 3.6.3 — Windows (open-original-file, portrait window, download page, scrollable send-text)
+
+### Changed
+- **Open / Open Folder for sent files** now resolves the original source path (not the
+  receive folder). Outgoing records store source paths; legacy records fall back gracefully.
+- **Floating window is portrait** (9:19.5, ~80% of monitor height) instead of landscape,
+  mirroring the Android app's shape. Corner-drag preserves the ratio; minimum width
+  guardrail keeps the nav rail usable.
+- **"Android Version" screen redesigned** as a "Download Clipboard Share for Android" page
+  with a button that opens the website download section in the browser.
+- **Add-Text dialog** fixed at 140 dp height and scrolls internally.
+- New `download_android_heading`, `download_android_blurb`, `download_open_website`
+  translation keys added to all locale blocks.
+
 ## 3.6.4 — Android (build 26) — tutorial rework, Lite-first default
 
 ### Changed

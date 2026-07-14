@@ -93,8 +93,9 @@
     <string name="initiating_cryptographic_handshake">正在啟動密碼交握...</string>
     <string name="pairing_request_title">配對請求</string>
     <string name="action_accept">接受</string>
-    <string name="clipboard_share_windows_title">Clipboard Share Windows 版</string>
-    <string name="desktop_app_in_development_desc">配套的桌面應用程式目前正在開發中，即將推出。</string>
+    <string name="download_windows_heading">下載 Windows 版 Clipboard Share</string>
+    <string name="download_windows_blurb">取得適用於電腦的桌面版應用程式，在手機與電腦之間同步剪貼簿並傳輸檔案。</string>
+    <string name="download_open_website">前往下載頁面</string>
     <string name="menu_title">選單</string>
     <string name="menu_windows_version">Windows 版本</string>
     <string name="menu_restart_services">重啟服務</string>

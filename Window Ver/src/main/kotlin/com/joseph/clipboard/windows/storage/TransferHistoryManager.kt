@@ -77,6 +77,10 @@ object TransferHistoryManager {
                 addProperty("i", i)
                 addProperty("n", record.fileNames[i])
                 addProperty("s", if (i < record.fileSizes.size) record.fileSizes[i] else 0L)
+                // Source path for outgoing files; omitted when absent (incoming/legacy).
+                if (i < record.filePaths.size && record.filePaths[i].isNotEmpty()) {
+                    addProperty("p", record.filePaths[i])
+                }
             })
         }
         return JsonObject().apply {
@@ -97,12 +101,15 @@ object TransferHistoryManager {
     private fun recordFromJson(json: JsonObject): TransferRecord {
         val names: List<String>
         val sizes: List<Long>
+        val paths: List<String>
         if (json.has("files") && json.get("files").isJsonArray) {
             val entries = json.getAsJsonArray("files")
                 .map { it.asJsonObject }
                 .sortedBy { if (it.has("i")) it.get("i").asInt else 0 }
             names = entries.map { if (it.has("n")) it.get("n").asString else "" }
             sizes = entries.map { if (it.has("s")) it.get("s").asLong else 0L }
+            // `p` absent on incoming and pre-existing outgoing records → "" (falls back in UI).
+            paths = entries.map { if (it.has("p") && !it.get("p").isJsonNull) it.get("p").asString else "" }
         } else {
             names = if (json.has("fileNames")) {
                 json.getAsJsonArray("fileNames").map { it.asString }
@@ -110,6 +117,7 @@ object TransferHistoryManager {
             sizes = if (json.has("fileSizes")) {
                 json.getAsJsonArray("fileSizes").map { it.asLong }
             } else List(names.size) { 0L }
+            paths = emptyList()
         }
         // Guard required fields with has()/!isJsonNull so a record missing a
         // field or carrying a JSON null doesn't throw (the per-element try in
@@ -130,7 +138,8 @@ object TransferHistoryManager {
             totalFiles = if (json.has("totalFiles")) json.get("totalFiles").asInt else names.size,
             fileSizes = sizes,
             currentFileOffset = if (json.has("currentFileOffset")) json.get("currentFileOffset").asLong else 0L,
-            transport = if (json.has("transport")) json.get("transport").asString else "lan"
+            transport = if (json.has("transport")) json.get("transport").asString else "lan",
+            filePaths = paths
         )
     }
 }

@@ -620,32 +620,42 @@ fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: Clipbo
     }
 }
 
+/** Minimum usable width (dp) for the floating portrait window: the 80.dp nav rail plus content. */
+private const val MIN_FLOATING_WIDTH_DP = 340f
+
 fun main() = application {
-    // Floating (non-maximized) windows default to a scaled-down copy of the current monitor's
-    // work-area shape instead of Compose's stock 800x600 box, so the window always looks like a
-    // smaller version of the maximized layout rather than an unrelated ratio. Computed from the
+    // The floating (non-maximized) window is a tall, phone-shaped portrait: ~80% of the current
+    // monitor's work-area height, with width derived from a 9:19.5 phone aspect — so it mirrors the
+    // Android app's vertical shape rather than the monitor's landscape ratio. Computed from the
     // primary display before the ComposeWindow exists — this app has exactly one window and no
-    // cross-launch position persistence, so that's exactly what Compose would resolve to anyway —
-    // and doing it statically avoids a startup flash from 800x600 to this size.
+    // cross-launch position persistence — so it's what Compose would resolve to anyway, and doing it
+    // statically avoids a startup flash from Compose's stock 800x600 box.
+    //
+    // Usability floor: a pure 9:19.5 window is narrow, so width is coerced to at least
+    // MIN_FLOATING_WIDTH_DP (nav rail + content) and never wider than the work area (small screens).
     val defaultFloatingSize = remember {
         val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
         val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
         val b = gc.bounds
         val waWidthPx = b.width - insets.left - insets.right
         val waHeightPx = b.height - insets.top - insets.bottom
-        DpSize(
-            (waWidthPx * 0.7f / gc.defaultTransform.scaleX).dp,
-            (waHeightPx * 0.7f / gc.defaultTransform.scaleY).dp
-        )
+        val heightDp = (waHeightPx * 0.80 / gc.defaultTransform.scaleY).toFloat()
+        val maxWidthDp = (waWidthPx / gc.defaultTransform.scaleX).toFloat()
+        val widthDp = (heightDp * (9f / 19.5f))
+            .coerceIn(MIN_FLOATING_WIDTH_DP.coerceAtMost(maxWidthDp), maxWidthDp)
+        DpSize(widthDp.dp, heightDp.dp)
     }
     val floatingAspectRatio = remember { (defaultFloatingSize.width.value / defaultFloatingSize.height.value).toDouble() }
     // Single source of truth for the resize floor — both window.minimumSize (below) and the resize
     // handles read this one value, pinned to the same primary-monitor scale defaultFloatingSize used,
     // instead of each re-deriving it from window.graphicsConfiguration at a different point in time
     // (that used to let the two floors drift apart, or disagree on a null graphicsConfiguration).
+    // The floor is the larger of half the default width and the usable minimum, so a portrait window
+    // can't be dragged narrow enough to crush the nav rail + content.
     val minFloatingWidthPx = remember {
         val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
-        (defaultFloatingSize.width.value * 0.5f * gc.defaultTransform.scaleX).toInt()
+        val floorDp = maxOf(defaultFloatingSize.width.value * 0.5f, MIN_FLOATING_WIDTH_DP)
+        (floorDp * gc.defaultTransform.scaleX).toInt()
     }
     val windowState = rememberWindowState(size = defaultFloatingSize)
     // Publish the single-instance mutex once (not per recomposition) so the Inno installer's AppMutex

@@ -103,8 +103,9 @@
     <string name="initiating_cryptographic_handshake">暗号化ハンドシェイクを開始しています...</string>
     <string name="pairing_request_title">ペアリングリクエスト</string>
     <string name="action_accept">承認</string>
-    <string name="clipboard_share_windows_title">Clipboard Share Windows版</string>
-    <string name="desktop_app_in_development_desc">コンパニオンのデスクトップアプリは現在開発中であり、間もなく利用可能になります。</string>
+    <string name="download_windows_heading">Windows版 Clipboard Share をダウンロード</string>
+    <string name="download_windows_blurb">パソコン用のデスクトップ版を入手して、この電話とパソコンの間でクリップボードを同期し、ファイルを送信できます。</string>
+    <string name="download_open_website">ダウンロードページへ</string>
     <string name="menu_title">メニュー</string>
     <string name="menu_windows_version">Windows バージョン</string>
     <string name="menu_restart_services">サービスを再起動</string>

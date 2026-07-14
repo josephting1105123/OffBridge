@@ -645,3 +645,26 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** When agents dispute a translation of an ambiguous source string, or when two keys share source text, check where the key is used in code (and whether it is used at all) before adjudicating severity or direction.
 
 **Principle:** The referent of an ambiguous UI string lives in the code that displays it; translation correctness disputes are resolved by usage lookup, and unused keys cap severity at informational.
+
+## Release 3.6.4/3.6.2 Observations
+- **Version Tracks Diverged**: Android is at 3.6.4 (versionCode 26) and Windows is at 3.6.2. They are on separate version tracks since 3.5.1.
+- **Permanent Android Link Rule**: The ndroid.url in website/js/config.js is permanently set to the GitHub releases URL. Never revert it to '#'. It may 404 during testing, which is accepted.
+- **jpackage dependency**: jpackage needs the Adoptium JDK (e.g., at ~/.gradle/jdks/...), not the JBR. The JBR lacks jpackage.exe.
+
+---
+
+### Observation 43: Deleting an Android string key needs a res/-wide reference sweep, not just a Kotlin grep
+
+**Status:** OPEN
+**Date:** 2026-07-14
+**Session context:** Task 4 replaced the in-app "other platform" pages. I deleted two now-unused string keys (`clipboard_share_windows_title`, `desktop_app_in_development_desc`) after grepping only `app/src/main/java` for references and finding they were used solely by the Compose screen I rewrote. The `:app:assembleDebug` then failed at `processDebugResources`: a dead XML layout (`activity_windows_version.xml`, superseded by the Compose screen but never deleted) still referenced both keys via `@string/…`, and AAPT2 compiles every layout regardless of whether it is inflated.
+
+**Skill:** add-i18n-strings
+**Type:** open-source
+**Phase/Area:** Removals ("split-and-filter") — pre-removal reference check
+
+**Issue:** The Removals guidance covers *how* to delete a key safely (split-and-filter, count assertion) but not *when it is safe* — it doesn't require confirming zero remaining references first, and a code-only grep misses `@string/key` uses in layouts, menus, drawables, and `AndroidManifest.xml`. Those still fail the AAPT2 link even when the referencing view is dead.
+
+**Suggested improvement:** Add a pre-removal step to the Removals section: before deleting any Android string key, grep the whole `app/src/main/res` (and `AndroidManifest.xml`) for `@string/<key>` and `R.string.<key>`, not just Kotlin/Java — expect zero hits outside the `values*/strings.xml` definitions. Same idea for Windows keys referenced from non-code assets.
+
+**Principle:** A resource key's references are spread across code *and* declarative assets; deletion safety requires sweeping every referrer surface (layouts/menus/manifest), because the compiler links dead declarative files too and a code-only grep gives false confidence.

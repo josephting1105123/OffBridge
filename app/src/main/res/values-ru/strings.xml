@@ -106,8 +106,9 @@
     <string name="initiating_cryptographic_handshake">Инициализация криптографического квитирования...</string>
     <string name="pairing_request_title">Запрос на сопряжение</string>
     <string name="action_accept">Принять</string>
-    <string name="clipboard_share_windows_title">Clipboard Share для Windows</string>
-    <string name="desktop_app_in_development_desc">Настольное приложение в настоящее время находится в разработке и скоро будет доступно.</string>
+    <string name="download_windows_heading">Скачайте Clipboard Share для Windows</string>
+    <string name="download_windows_blurb">Установите настольную версию для ПК. Синхронизируйте буфер обмена и отправляйте файлы между этим телефоном и компьютером.</string>
+    <string name="download_open_website">Перейти на страницу загрузки</string>
     <string name="menu_title">Меню</string>
     <string name="menu_windows_version">Версия для Windows</string>
     <string name="menu_restart_services">Перезапустить службы</string>

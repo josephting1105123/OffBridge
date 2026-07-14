@@ -42,6 +42,34 @@ import java.util.Date
 import java.util.Locale
 import com.joseph.clipboard.windows.storage.TranslationManager
 
+/**
+ * The on-disk file for a history row's "Open" action. Outgoing records carry the
+ * original source path per file; incoming records live in the configured save folder.
+ * Returns null for legacy outgoing rows with no stored path — callers then no-op
+ * rather than opening the wrong (save) folder.
+ */
+private fun resolveRecordFile(record: TransferRecord, index: Int, fileName: String): File? {
+    if (record.direction == "outgoing") {
+        val src = record.filePaths.getOrNull(index)
+        return if (!src.isNullOrEmpty()) File(src) else null
+    }
+    return File(File(SecurityVault.getSaveLocation()), fileName)
+}
+
+/**
+ * The folder to reveal for a record's "Open Folder" action: the source file's own
+ * folder for outgoing records, else the configured save folder.
+ */
+private fun resolveRecordFolder(record: TransferRecord): File {
+    if (record.direction == "outgoing") {
+        val src = record.filePaths.firstOrNull { it.isNotEmpty() }
+        if (!src.isNullOrEmpty()) {
+            File(src).parentFile?.let { return it }
+        }
+    }
+    return File(SecurityVault.getSaveLocation())
+}
+
 @Composable
 fun TransferHistoryDialog(
     historyList: List<TransferRecord>,
@@ -455,9 +483,9 @@ fun TransferHistoryDialog(
                                         onClick = {
                                             try {
                                                 if (Desktop.isDesktopSupported()) {
-                                                    val saveDir = File(SecurityVault.getSaveLocation())
-                                                    val file = File(saveDir, fileName)
-                                                    if (file.exists()) {
+                                                    // Outgoing → the original source file; incoming → the save folder.
+                                                    val file = resolveRecordFile(record, i, fileName)
+                                                    if (file != null && file.exists()) {
                                                         Desktop.getDesktop().open(file)
                                                     }
                                                 }
@@ -497,9 +525,10 @@ fun TransferHistoryDialog(
                                 onClick = {
                                     try {
                                         if (Desktop.isDesktopSupported()) {
-                                            val saveDir = File(SecurityVault.getSaveLocation())
-                                            if (saveDir.exists()) {
-                                                Desktop.getDesktop().open(saveDir)
+                                            // Outgoing → the source file's own folder; incoming → the save folder.
+                                            val folder = resolveRecordFolder(record)
+                                            if (folder.exists()) {
+                                                Desktop.getDesktop().open(folder)
                                             }
                                         }
                                     } catch (e: Exception) {

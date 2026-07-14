@@ -57,14 +57,86 @@
     "name": "Clipboard Share",
     "operatingSystem": "Android, Windows",
     "applicationCategory": "UtilitiesApplication",
-    "softwareVersion": "3.6.4",
+    "softwareVersion": "3.6.5",
     "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
   }
   </script>
+
+  <!-- Gooey page-load overlay: shown until window load, then fades out. Critical CSS is inlined
+       so the overlay paints styled from the first frame instead of flashing unstyled. -->
+  <style>
+    .gooey-loader-overlay {
+      position: fixed; inset: 0; z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg-deep, #0F0F0F);
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    .gooey-loader-overlay.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .gooey-loader {
+      font-size: 16px; width: 12em; height: 3em;
+      position: relative; overflow: hidden;
+      border-bottom: 8px solid var(--divider, #303030);
+      filter: url(#gooey-loader-filter);
+    }
+    .gooey-loader::before, .gooey-loader::after { content: ''; position: absolute; border-radius: 50%; }
+    .gooey-loader::before {
+      width: 22em; height: 18em; left: -2em; bottom: -18em;
+      background: var(--accent, #22C55E);
+      animation: gooey-wee1 2s linear infinite;
+    }
+    .gooey-loader::after {
+      width: 16em; height: 12em; left: -4em; bottom: -12em;
+      background: var(--accent-text, #4ADE88);
+      animation: gooey-wee2 2s linear infinite .75s;
+    }
+    @keyframes gooey-wee1 {
+      0%   { transform: translateX(-10em) rotate(0deg); }
+      100% { transform: translateX(7em) rotate(180deg); }
+    }
+    @keyframes gooey-wee2 {
+      0%   { transform: translateX(-8em) rotate(0deg); }
+      100% { transform: translateX(8em) rotate(180deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gooey-loader::before, .gooey-loader::after { animation-duration: 5s; }
+      .gooey-loader-overlay { transition: none; }
+    }
+  </style>
 </head>
 <body>
+  <!-- ===================== Gooey loading overlay ========================== -->
+  <div id="gooey-loader" class="gooey-loader-overlay" role="status" aria-label="Loading">
+    <div class="gooey-loader"></div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="gooey-loader-filter">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+          <feColorMatrix in="blur" mode="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 48 -7" result="goo" />
+          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+        </filter>
+      </defs>
+    </svg>
+  </div>
+  <script>
+    (function () {
+      var el = document.getElementById('gooey-loader');
+      if (!el) return;
+      var done = false;
+      function hide() {
+        if (done) return;
+        done = true;
+        el.classList.add('is-hidden');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
+      }
+      if (document.readyState === 'complete') hide();
+      else window.addEventListener('load', hide);
+      setTimeout(hide, 4000); // safety: never trap the user behind the loader
+    })();
+  </script>
+
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- ===================== Inline icon sprite (file:// safe) ============== -->
@@ -561,7 +633,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
               <h3>Android</h3>
-              <span class="badge">v3.6.4</span>
+              <span class="badge">v3.6.5</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -585,7 +657,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
               <h3>Windows</h3>
-              <span class="badge">v3.6.2</span>
+              <span class="badge">v3.6.3</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -625,7 +697,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg></div>
             <h3>Android</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.6.4</span>
+              <span class="badge" data-dl-version>v3.6.5</span>
               <span class="badge badge--muted" data-dl-type>Google Play</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -642,7 +714,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg></div>
             <h3>Windows</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.6.2</span>
+              <span class="badge" data-dl-version>v3.6.3</span>
               <span class="badge badge--muted" data-dl-type>Installer</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -723,8 +795,8 @@
         <div class="footer__col">
           <h3>Versions</h3>
           <ul>
-            <li><a href="#download">Android 3.6.4</a></li>
-            <li><a href="#download">Windows 3.6.2</a></li>
+            <li><a href="#download">Android 3.6.5</a></li>
+            <li><a href="#download">Windows 3.6.3</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>

@@ -80,8 +80,9 @@
     <string name="initiating_cryptographic_handshake">Initiating cryptographic handshake...</string>
     <string name="pairing_request_title">Pairing Request</string>
     <string name="action_accept">Accept</string>
-    <string name="clipboard_share_windows_title">Clipboard Share for Windows</string>
-    <string name="desktop_app_in_development_desc">The companion desktop app is currently in development and will be available soon.</string>
+    <string name="download_windows_heading">Download Clipboard Share for Windows</string>
+    <string name="download_windows_blurb">Get the desktop companion for your PC. Sync your clipboard and send files between this phone and your computer.</string>
+    <string name="download_open_website">Go to download page</string>
     <string name="menu_title">Menu</string>
     <string name="menu_section_settings">Settings</string>
     <string name="menu_section_power">Power Options</string>

@@ -106,8 +106,9 @@
     <string name="initiating_cryptographic_handshake">Kryptografischer Handshake wird initiiert...</string>
     <string name="pairing_request_title">Kopplungsanfrage</string>
     <string name="action_accept">Akzeptieren</string>
-    <string name="clipboard_share_windows_title">Clipboard Share für Windows</string>
-    <string name="desktop_app_in_development_desc">Die begleitende Desktop-App befindet sich derzeit in Entwicklung und wird bald verfügbar sein.</string>
+    <string name="download_windows_heading">Clipboard Share für Windows herunterladen</string>
+    <string name="download_windows_blurb">Hol dir die Desktop-Version für deinen PC. Synchronisiere die Zwischenablage und sende Dateien zwischen diesem Telefon und deinem Computer.</string>
+    <string name="download_open_website">Zur Download-Seite</string>
     <string name="menu_title">Menü</string>
     <string name="menu_windows_version">Windows-Version</string>
     <string name="menu_restart_services">Dienste neu starten</string>

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.EntropicSoftwareLab.ClipboardShare"
-version = "3.6.2"
+version = "3.6.3"
 
 layout.buildDirectory.set(file("build2"))
 
@@ -43,7 +43,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             packageName = "Clipboard Share"
-            packageVersion = "3.6.2"
+            packageVersion = "3.6.3"
             description = "Off-grid file transfer and clipboard sync between Windows and Android"
             vendor = "EntropicSoftwareLab" // must match the Inno installer's MyAppPublisher
             windows {

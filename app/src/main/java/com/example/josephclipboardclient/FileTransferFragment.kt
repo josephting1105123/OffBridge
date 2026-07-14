@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.text.InputType
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -276,6 +277,14 @@ class FileTransferFragment : Fragment() {
         val input = EditText(requireContext())
         input.hint = getString(R.string.transfer_add_text_hint)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+        // Bound the box so long text scrolls inside it instead of growing the dialog off-screen:
+        // start ~4 lines tall, cap at 6, then scroll internally. maxLines caps the WRAP_CONTENT
+        // height, so no fixed pixel height is needed.
+        input.gravity = Gravity.TOP or Gravity.START
+        input.minLines = 4
+        input.maxLines = 6
+        input.setHorizontallyScrolling(false)
+        input.isVerticalScrollBarEnabled = true
 
         val container = FrameLayout(requireContext())
         val padding = (24 * requireContext().resources.displayMetrics.density).toInt()

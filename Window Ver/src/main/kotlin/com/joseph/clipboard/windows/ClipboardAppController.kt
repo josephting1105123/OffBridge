@@ -86,7 +86,11 @@ data class TransferRecord(
     val totalFiles: Int,
     val fileSizes: List<Long>,
     var currentFileOffset: Long,
-    val transport: String = "lan" // "lan" or "p2p"
+    val transport: String = "lan", // "lan" or "p2p"
+    // Absolute source paths for outgoing files, index-aligned to fileNames.
+    // Empty for incoming records and for legacy records saved before this field
+    // existed — the history UI falls back to the save folder in those cases.
+    val filePaths: List<String> = emptyList()
 )
 
 class ClipboardAppController {
@@ -548,7 +552,10 @@ class ClipboardAppController {
                 filesCompleted = 0,
                 totalFiles = files.size,
                 fileSizes = session.fileSizes,
-                currentFileOffset = 0L
+                currentFileOffset = 0L,
+                // Keep the real source paths so history can re-open the original file
+                // (and reveal its folder) after the send completes and the session is gone.
+                filePaths = files.map { it.absolutePath }
             )
             // Atomic prepend so a concurrent transfer's progress update isn't clobbered.
             _transferHistory.update { listOf(record) + it }

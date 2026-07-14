@@ -106,8 +106,9 @@
     <string name="initiating_cryptographic_handshake">Iniciando verificação criptográfica...</string>
     <string name="pairing_request_title">Pedido de Emparelhamento</string>
     <string name="action_accept">Aceitar</string>
-    <string name="clipboard_share_windows_title">Clipboard Share para Windows</string>
-    <string name="desktop_app_in_development_desc">O aplicativo de desktop complementar está atualmente em desenvolvimento e estará disponível em breve.</string>
+    <string name="download_windows_heading">Baixe o Clipboard Share para Windows</string>
+    <string name="download_windows_blurb">Obtenha a versão para computador. Sincronize a área de transferência e envie arquivos entre este telefone e o seu computador.</string>
+    <string name="download_open_website">Ir para a página de download</string>
     <string name="menu_title">Menu</string>
     <string name="menu_windows_version">Versão para Windows</string>
     <string name="menu_restart_services">Reiniciar Serviços</string>

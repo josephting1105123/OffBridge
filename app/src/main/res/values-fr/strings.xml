@@ -106,8 +106,9 @@
     <string name="initiating_cryptographic_handshake">Initialisation de la poignée de main cryptographique...</string>
     <string name="pairing_request_title">Demande de couplage</string>
     <string name="action_accept">Accepter</string>
-    <string name="clipboard_share_windows_title">Clipboard Share pour Windows</string>
-    <string name="desktop_app_in_development_desc">L\'application de bureau complémentaire est en cours de développement et sera bientôt disponible.</string>
+    <string name="download_windows_heading">Téléchargez Clipboard Share pour Windows</string>
+    <string name="download_windows_blurb">Obtenez la version de bureau pour votre PC. Synchronisez le presse-papiers et envoyez des fichiers entre ce téléphone et votre ordinateur.</string>
+    <string name="download_open_website">Aller à la page de téléchargement</string>
     <string name="menu_title">Menu</string>
     <string name="menu_windows_version">Version Windows</string>
     <string name="menu_restart_services">Redémarrer les services</string>

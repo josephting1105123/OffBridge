@@ -106,8 +106,9 @@
     <string name="initiating_cryptographic_handshake">Memulai jabat tangan kriptografi...</string>
     <string name="pairing_request_title">Permintaan Penyandingan</string>
     <string name="action_accept">Terima</string>
-    <string name="clipboard_share_windows_title">Clipboard Share untuk Windows</string>
-    <string name="desktop_app_in_development_desc">Aplikasi desktop pendamping saat ini sedang dalam pengembangan dan akan segera tersedia.</string>
+    <string name="download_windows_heading">Unduh Clipboard Share untuk Windows</string>
+    <string name="download_windows_blurb">Dapatkan aplikasi desktop untuk PC Anda. Sinkronkan papan klip dan kirim file antara ponsel ini dan komputer Anda.</string>
+    <string name="download_open_website">Buka halaman unduhan</string>
     <string name="menu_title">Menu</string>
     <string name="menu_windows_version">Versi Windows</string>
     <string name="menu_restart_services">Mulai Ulang Layanan</string>
