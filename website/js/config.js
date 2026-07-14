@@ -29,14 +29,12 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
-    version: "3.6.1",
+    version: "3.6.4",
     size: "TBD", // store link — no size/sha shown
-    // "#" = designed "coming soon" state (button disabled). The Play listing is not
-    // live yet — the old direct Play URL 404'd for every visitor. Restore the URL
-    // (https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare)
-    // once the app is actually published, or point at a GitHub APK asset if the
-    // sideload lane ships first.
-    url: "#",
+    // PERMANENT — never revert to "#". The APK asset may 404 until the user
+    // uploads the first build (testing phase, accepted). The link must stay
+    // enabled so visitors always see a real download target.
+    url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
     sha256: "",
     note: "Android 10+ (API 29). Free.",
   },
@@ -45,11 +43,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.5.6",
+    version: "3.6.2",
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
-    sha256: "0e6c70f2a649fea469e0f42b4f57e26a472380d007f7f4cd00e8fd0f53342249",
+    sha256: "39fec173e58c4ff93aa4d946f9ca83684356d90fe80fbdb0d1fc5e8714196053",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 

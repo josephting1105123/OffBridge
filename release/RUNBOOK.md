@@ -1,9 +1,9 @@
 # Release runbook — the Claude-free operations manual
 
 This is the manual to run releases and a beta **without AI help**. Everything here is mechanical:
-follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.6.3,
-versionCode 25. (Android and Windows are on separate version tracks since 3.5.1; the Windows
-module is at 3.6.0.)
+follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.6.4,
+versionCode 26. (Android and Windows are on separate version tracks since 3.5.1; the Windows
+module is at 3.6.2.)
 
 ---
 
@@ -52,15 +52,20 @@ separate app id and they coexist).
 # which comes from createReleaseDistributable. Delete the stale app image FIRST so a leftover build
 # from a previous version can't be repackaged into a mislabeled installer:
 rm -rf "Window Ver/build2/compose/binaries/main-release"
-JAVA_HOME="C:/Program Files/Android/Android Studio/jbr" ./gradlew.bat :window-ver:createReleaseDistributable
-# then compile the installer with Inno Setup (ClipboardShare.iss) -> "Clipboard Share Setup.exe"
+JAVA_HOME="C:/Users/josep/.gradle/jdks/eclipse_adoptium-17-amd64-windows.2" ./gradlew.bat :window-ver:createReleaseDistributable
+# then compile the installer with Inno Setup (ClipboardShare.iss) -> ClipboardShareSetup.exe
 ```
-Rename to the stable name `ClipboardShare-windows-setup.exe`. The installer is **unsigned**, so a new
-publisher trips SmartScreen ("unknown publisher"). Until you buy an Authenticode cert (see the
-commented `SignTool` block in `ClipboardShare.iss`): publish the installer's **SHA-256** and tell
-testers to click *More info → Run anyway* (canned reply in `TESTER_REPLIES.md`). Get the hash:
+The stable release asset name is `ClipboardShareSetup.exe` (no spaces, no version in the name) so the
+evergreen URL `releases/latest/download/ClipboardShareSetup.exe` always resolves. **Every** future
+release must attach both stable-named assets (`ClipboardShareSetup.exe` + `ClipboardShare-android.apk`
+once the APK ships) so the `/latest/` links never break.
+
+The installer is **unsigned**, so a new publisher trips SmartScreen ("unknown publisher"). Until you
+buy an Authenticode cert (see the commented `SignTool` block in `ClipboardShare.iss`): publish the
+installer's **SHA-256** and tell testers to click *More info → Run anyway* (canned reply in
+`TESTER_REPLIES.md`). Get the hash:
 ```bash
-certutil -hashfile "ClipboardShare-windows-setup.exe" SHA256
+certutil -hashfile "Window Ver\build2\inno-setup\ClipboardShareSetup.exe" SHA256
 ```
 
 ### Installer error: "IPersistFile::Save failed; code 0x80070005. Access is denied."

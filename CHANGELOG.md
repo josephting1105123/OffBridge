@@ -4,6 +4,28 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.4 — Android (build 26) — tutorial rework, Lite-first default
+
+### Changed
+- **First-launch tutorial reworked.** The per-page pro tutorials that auto-fired on first open of
+  each tab are removed. The tutorial is still reachable from each screen's "How to use" chip.
+- **Fresh installs start in Lite mode.** The full Pro interface is one toggle away but no longer
+  the default for new users.
+- **First Lite→Pro switch triggers the guided tour.** The 7-step tour (previously 6) walks through
+  every main screen, highlights the "How to use" chip, and ends on a new 7th step that opens the
+  power menu to show the Lite/Pro toggle with a brief explanation of what each mode offers.
+- New `tour_design_mode` string added to all 10 locale files.
+
+## 3.6.2 — Windows (fixed-ratio window sizing)
+
+### Changed
+- **Non-fullscreen window uses a proportional size.** The floating window defaults to 70% of the
+  monitor's work area (same aspect ratio, smaller) instead of the stock 800×600, so it always looks
+  like a smaller version of the maximized layout.
+- **Resize locked to the fixed aspect ratio.** Four corner drag-handles are the only resize
+  mechanism (native resize border disabled); dragging any corner preserves the window's proportions
+  at every frame. Minimum size is 50% of the default floating width.
+
 ## 3.6.3 — Android (receive-path data safety, Android 10 storage, cleanup)
 
 Fixes the confirmed file-handling bugs from the pre-tester audit. No wire-protocol, crypto or
