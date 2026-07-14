@@ -47,7 +47,7 @@ window.CS_CONFIG = {
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
-    sha256: "39fec173e58c4ff93aa4d946f9ca83684356d90fe80fbdb0d1fc5e8714196053",
+    sha256: "de359f12208127114f25c5f5b6bec6766523c6941efe6437a3b21330c5e62791",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
