@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -58,9 +59,11 @@ import com.joseph.clipboard.windows.ui.LocalBackdrop
 import com.joseph.clipboard.windows.ui.ReceivingPill
 import com.joseph.clipboard.windows.ui.SettingsScreen
 import com.joseph.clipboard.windows.ui.SystemStatusScreen
+import com.joseph.clipboard.windows.ui.UpdateScreen
 import com.joseph.clipboard.windows.ui.backdropBlur
 import com.joseph.clipboard.windows.ui.modalPopIn
 import com.joseph.clipboard.windows.os.SystemTrayManager
+import com.joseph.clipboard.windows.update.UpdateStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -79,7 +82,7 @@ import com.joseph.clipboard.windows.theme.TextPrimaryDark
 import com.joseph.clipboard.windows.theme.TextSecondaryDark
 
 enum class Screen {
-    SEND_FILES, SYSTEM_STATUS, HISTORY, SETTINGS, ANDROID_VERSION
+    SEND_FILES, SYSTEM_STATUS, HISTORY, SETTINGS, ANDROID_VERSION, SYSTEM_UPDATE
 }
 
 // Global Theme State
@@ -151,6 +154,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
             val historyText = TranslationManager.getString("nav_clipboard").takeIf { it != "nav_clipboard" } ?: "Clipboard"
             val settingsText = TranslationManager.getString("settings_title").takeIf { it != "settings_title" } ?: "Settings"
             val androidText = TranslationManager.getString("nav_android").takeIf { it != "nav_android" } ?: "Android"
+            val updatesText = TranslationManager.getString("nav_updates").takeIf { it != "nav_updates" } ?: "Updates"
+            val updateStatus by appController.updateStatus.collectAsState()
 
             Row(modifier = Modifier.fillMaxSize()) {
             NavigationRail(modifier = Modifier.width(80.dp)) {
@@ -183,6 +188,26 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                     label = { Text(androidText, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible) },
                     selected = currentScreen == Screen.ANDROID_VERSION,
                     onClick = { currentScreen = Screen.ANDROID_VERSION }
+                )
+                NavigationRailItem(
+                    icon = {
+                        Box {
+                            Icon(Icons.Filled.SystemUpdate, contentDescription = updatesText)
+                            // Passive nudge: a new release was found by the startup check, without
+                            // the user having to remember to open this page and look.
+                            if (updateStatus is UpdateStatus.UpdateAvailable) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(8.dp)
+                                        .background(ErrorText, CircleShape)
+                                )
+                            }
+                        }
+                    },
+                    label = { Text(updatesText, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible) },
+                    selected = currentScreen == Screen.SYSTEM_UPDATE,
+                    onClick = { currentScreen = Screen.SYSTEM_UPDATE }
                 )
 
                 // Push power button to bottom
@@ -225,6 +250,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                         Screen.HISTORY -> HistoryScreen(appController)
                         Screen.SETTINGS -> SettingsScreen(appController)
                         Screen.ANDROID_VERSION -> AndroidVersionScreen()
+                        Screen.SYSTEM_UPDATE -> UpdateScreen(appController)
                     }
                 }
 
@@ -750,6 +776,13 @@ fun main() = application {
                 window.toFront()
                 window.requestFocus()
             }
+        }
+        // Passive update check, well after startup so it never competes with daemon/UI init. Only
+        // drives the sidebar badge (checkForUpdates(force = false) also respects the cooldown + the
+        // Settings toggle) — the Updates page runs its own always-fresh check when opened.
+        LaunchedEffect(Unit) {
+            delay(10_000)
+            appController.checkForUpdates(force = false)
         }
         // Seed from config.json; anything unreadable (missing field, hand-edited garbage) falls back
         // to SYSTEM rather than crashing.

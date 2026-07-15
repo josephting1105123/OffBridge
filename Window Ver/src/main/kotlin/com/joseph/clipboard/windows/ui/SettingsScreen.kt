@@ -55,6 +55,7 @@ import com.joseph.clipboard.windows.theme.LocalExtraColors
 fun SettingsScreen(appController: ClipboardAppController) {
     val themeModeState = LocalThemeMode.current
     var saveLocation by remember { mutableStateOf(SecurityVault.getSaveLocation()) }
+    var autoUpdateCheckEnabled by remember { mutableStateOf(SecurityVault.isAutoUpdateCheckEnabled()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
@@ -85,6 +86,8 @@ fun SettingsScreen(appController: ClipboardAppController) {
     val themeText = TranslationManager.getString("theme_setting")
     val languageText = TranslationManager.getString("language_setting")
     val saveToText = TranslationManager.getString("save_to_setting")
+    val updatesText = TranslationManager.getString("settings_section_updates").takeIf { it != "settings_section_updates" } ?: "Updates"
+    val autoUpdateCheckLabel = TranslationManager.getString("update_auto_check_label").takeIf { it != "update_auto_check_label" } ?: "Automatically check for updates"
     val othersText = TranslationManager.getString("settings_section_others").takeIf { it != "settings_section_others" } ?: "Others"
     val supportText = TranslationManager.getString("support_setting").takeIf { it != "support_setting" } ?: "Support"
     val privacyText = TranslationManager.getString("privacy_policy_setting").takeIf { it != "privacy_policy_setting" } ?: "Privacy Policy"
@@ -163,6 +166,21 @@ fun SettingsScreen(appController: ClipboardAppController) {
             GlassCard {
                 GlassToggleRow(discoverableLabel, isDiscoverable, onCheckedChange = { appController.updateDiscoverable(it) })
                 GlassToggleRow(acceptClipboardLabel, acceptClipboard, onCheckedChange = { appController.updateAcceptIncomingClipboard(it) })
+            }
+            Spacer(Modifier.height(Dimens.spaceXl))
+
+            // UPDATES — gates only the passive startup check/badge; opening the Updates page
+            // always checks fresh regardless of this toggle, since that's an explicit user action.
+            SectionHeader(updatesText)
+            GlassCard {
+                GlassToggleRow(
+                    autoUpdateCheckLabel,
+                    autoUpdateCheckEnabled,
+                    onCheckedChange = {
+                        autoUpdateCheckEnabled = it
+                        SecurityVault.setAutoUpdateCheckEnabled(it)
+                    }
+                )
             }
             Spacer(Modifier.height(Dimens.spaceXl))
 

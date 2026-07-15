@@ -17,6 +17,10 @@ import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.network.TransferDaemon
 import com.joseph.clipboard.windows.os.ClipboardManager
+import com.joseph.clipboard.windows.update.AppVersion
+import com.joseph.clipboard.windows.update.UpdateChecker
+import com.joseph.clipboard.windows.update.UpdateInstaller
+import com.joseph.clipboard.windows.update.UpdateStatus
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +51,9 @@ import com.joseph.clipboard.windows.storage.CryptoEngine
  * aborted rather than continued in the clear. Mirrors Android's DowngradeBlockedException.
  */
 class DowngradeBlockedException(message: String) : Exception(message)
+
+/** Minimum gap between passive (startup) update checks — the Updates page's manual check ignores this. */
+private const val UPDATE_CHECK_COOLDOWN_MS = 24L * 60 * 60 * 1000
 
 data class OutgoingFileSession(
     val sessionId: String,
@@ -298,6 +305,9 @@ class ClipboardAppController {
     private val _clipboardHistory = MutableStateFlow<List<String>>(emptyList())
     val clipboardHistory: StateFlow<List<String>> = _clipboardHistory.asStateFlow()
 
+    private val _updateStatus = MutableStateFlow<UpdateStatus>(UpdateStatus.Idle)
+    val updateStatus: StateFlow<UpdateStatus> = _updateStatus.asStateFlow()
+
     fun updateAcceptIncomingClipboard(accept: Boolean) {
         _acceptIncomingClipboard.value = accept
     }
@@ -461,6 +471,53 @@ class ClipboardAppController {
         clipboardDaemon.stop()
         fileTransferDaemon.stop()
         ClipboardManager.stopPolling()
+    }
+
+    // --- Update check / install ---
+
+    /**
+     * Checks GitHub for a newer Windows release. [force] = true (Updates page opened) always hits
+     * the network and updates [updateStatus]. [force] = false (passive startup check) additionally
+     * respects [SecurityVault.isAutoUpdateCheckEnabled] and a cooldown, so it silently no-ops most
+     * launches — this path only drives the sidebar badge, never a popup.
+     */
+    fun checkForUpdates(force: Boolean) {
+        if (!force) {
+            if (!SecurityVault.isAutoUpdateCheckEnabled()) return
+            val elapsed = System.currentTimeMillis() - SecurityVault.getLastUpdateCheckEpochMillis()
+            if (elapsed < UPDATE_CHECK_COOLDOWN_MS) return
+        }
+        scope.launch {
+            _updateStatus.value = UpdateStatus.Checking
+            val result = UpdateChecker.check(AppVersion.VERSION)
+            _updateStatus.value = result
+            SecurityVault.setLastUpdateCheckEpochMillis(System.currentTimeMillis())
+        }
+    }
+
+    /**
+     * Downloads and launches the pending update (must be called only while [updateStatus] is
+     * [UpdateStatus.UpdateAvailable] — the Updates page gates the button on that state). Exits the
+     * app on success; on failure, surfaces [UpdateStatus.CheckFailed] instead of crashing so the
+     * user sees why and can retry.
+     */
+    fun downloadAndInstallUpdate() {
+        val pending = _updateStatus.value as? UpdateStatus.UpdateAvailable ?: return
+        // compareAndSet (not a plain read-then-set) atomically claims the transition: the read of
+        // _updateStatus.value above happens on the caller's thread, but the actual state flip only
+        // happens once this coroutine runs — a rapid double-click on "Continue" could otherwise pass
+        // the guard twice and launch two concurrent downloads that truncate-write the same temp
+        // file. If another caller already claimed it, this one backs out instead of racing it.
+        scope.launch {
+            if (!_updateStatus.compareAndSet(pending, UpdateStatus.Downloading)) return@launch
+            try {
+                val installer = UpdateInstaller.download(pending.downloadUrl, pending.version)
+                UpdateInstaller.launchAndExit(installer) // does not return on success
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _updateStatus.value = UpdateStatus.CheckFailed(e.message ?: e.javaClass.simpleName)
+            }
+        }
     }
 
     fun initiatePairing(ip: String) {

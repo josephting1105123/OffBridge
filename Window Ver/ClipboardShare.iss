@@ -1,5 +1,5 @@
 #define MyAppName "Clipboard Share"
-#define MyAppVersion "3.6.4"
+#define MyAppVersion "3.7.0"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "Clipboard Share.exe"
 

@@ -86,9 +86,18 @@ fun ReceivingPill(
     }
 }
 
-/** The label, animated per letter with the Android stagger (opacity pulse + 5% enlargement). */
+/**
+ * The label, animated per letter with the Android stagger (opacity pulse + 5% enlargement).
+ * `internal` so the Updates page reuses the same in-progress text treatment as the receive pill.
+ * [style]/[color]/[fontWeight] default to the pill's look; the Updates page passes a larger style.
+ */
 @Composable
-private fun StaggeredLabel(text: String) {
+internal fun StaggeredLabel(
+    text: String,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.body2,
+    color: Color = MaterialTheme.colors.onSurface,
+    fontWeight: FontWeight = FontWeight.SemiBold,
+) {
     val transition = rememberInfiniteTransition()
     val progress by transition.animateFloat(
         initialValue = 0f,
@@ -127,9 +136,9 @@ private fun StaggeredLabel(text: String) {
             }
             Text(
                 text = char.toString(),
-                style = MaterialTheme.typography.body2,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colors.onSurface,
+                style = style,
+                fontWeight = fontWeight,
+                color = color,
                 modifier = Modifier
                     .alpha(opacity)
                     .graphicsLayer {
@@ -141,9 +150,13 @@ private fun StaggeredLabel(text: String) {
     }
 }
 
-/** The rotating liquid ring, a 1:1 port of the Android Canvas except for the Skia blur. */
+/**
+ * The rotating liquid ring, a 1:1 port of the Android Canvas except for the Skia blur.
+ * `internal` (not private) so the Updates page reuses the same loader for its checking/downloading
+ * states — it takes only [size] and carries no receive-session data.
+ */
 @Composable
-private fun ReceivingRing(size: Dp, modifier: Modifier = Modifier) {
+internal fun ReceivingRing(size: Dp, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition()
     val rotation by transition.animateFloat(
         initialValue = 90f,

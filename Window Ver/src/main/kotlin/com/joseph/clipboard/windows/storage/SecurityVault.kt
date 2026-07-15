@@ -23,6 +23,10 @@ object SecurityVault {
     // UI-agnostic; the UI layer parses it and falls back to SYSTEM on anything unreadable.
     private var theme: String = "SYSTEM"
     private var saveLocation: String = System.getProperty("user.home") + "\\Downloads"
+    // Passive startup update-check cooldown gate + opt-out — the Updates page's own manual check
+    // ignores both (explicit user action). 0L means "never checked".
+    private var lastUpdateCheckEpochMillis: Long = 0L
+    private var autoUpdateCheckEnabled: Boolean = true
     private val trustedNodes = ConcurrentHashMap<String, String>()
     // Human-readable name per trusted IP, so the Paired list shows names even when a device is offline.
     private val pairedDeviceNames = ConcurrentHashMap<String, String>()
@@ -85,7 +89,9 @@ object SecurityVault {
         val clipboardGcmPinned: List<String>? = null,
         val auth2Pinned: List<String>? = null,
         val fileGcmV2Pinned: List<String>? = null,
-        val theme: String? = null
+        val theme: String? = null,
+        val lastUpdateCheckEpochMillis: Long? = null,
+        val autoUpdateCheckEnabled: Boolean? = null
     )
 
     init {
@@ -108,6 +114,8 @@ object SecurityVault {
             dto.language?.let { language = it }
             dto.theme?.let { theme = it }
             dto.saveLocation?.let { saveLocation = it }
+            dto.lastUpdateCheckEpochMillis?.let { lastUpdateCheckEpochMillis = it }
+            dto.autoUpdateCheckEnabled?.let { autoUpdateCheckEnabled = it }
             var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
                 if (nodesStr.isNotBlank()) {
@@ -146,7 +154,7 @@ object SecurityVault {
     private fun save() {
         try {
             val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
-            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList(), theme)
+            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList(), theme, lastUpdateCheckEpochMillis, autoUpdateCheckEnabled)
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
@@ -205,6 +213,20 @@ object SecurityVault {
 
     fun setSaveLocation(path: String) {
         saveLocation = path
+        save()
+    }
+
+    fun getLastUpdateCheckEpochMillis(): Long = lastUpdateCheckEpochMillis
+
+    fun setLastUpdateCheckEpochMillis(epochMillis: Long) {
+        lastUpdateCheckEpochMillis = epochMillis
+        save()
+    }
+
+    fun isAutoUpdateCheckEnabled(): Boolean = autoUpdateCheckEnabled
+
+    fun setAutoUpdateCheckEnabled(enabled: Boolean) {
+        autoUpdateCheckEnabled = enabled
         save()
     }
 

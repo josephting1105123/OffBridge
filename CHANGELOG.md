@@ -4,6 +4,22 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.0 — Windows (in-app updates)
+
+### Added
+- **Updates page in the sidebar.** The app checks GitHub for a newer release itself and shows a
+  dedicated Updates screen — either "you're on the latest version" or the new version with a
+  Download & Install button that fetches and launches the installer, no trip to the website. A
+  quiet check on startup badges the sidebar when an update is waiting; a Settings toggle turns the
+  automatic check off.
+- **Animated liquid-capsule loader** as the Updates screen's centrepiece, drawn in Compose Canvas
+  in the app's emerald with a warm gloss.
+
+### Fixed
+- **Download follows GitHub's redirects.** Release-asset URLs 302-redirect to a CDN; the download
+  now follows that chain (HTTPS only), so Download & Install actually retrieves the installer
+  instead of stopping at the redirect.
+
 ## 3.6.4 — Windows (power-menu cleanup)
 
 ### Changed
