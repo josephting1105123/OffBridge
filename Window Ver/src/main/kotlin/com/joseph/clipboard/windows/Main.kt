@@ -56,7 +56,6 @@ import com.joseph.clipboard.windows.ui.FileTransferScreen
 import com.joseph.clipboard.windows.ui.HistoryScreen
 import com.joseph.clipboard.windows.ui.LocalBackdrop
 import com.joseph.clipboard.windows.ui.ReceivingPill
-import com.joseph.clipboard.windows.ui.SegmentedControl
 import com.joseph.clipboard.windows.ui.SettingsScreen
 import com.joseph.clipboard.windows.ui.SystemStatusScreen
 import com.joseph.clipboard.windows.ui.backdropBlur
@@ -73,8 +72,7 @@ import androidx.compose.foundation.BorderStroke
 import com.joseph.clipboard.windows.os.SingleInstance
 import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TranslationManager
-import com.joseph.clipboard.windows.theme.AccentMutedDark
-import com.joseph.clipboard.windows.theme.DarkBackground
+import com.joseph.clipboard.windows.theme.SurfaceElevatedDark
 import com.joseph.clipboard.windows.theme.GreenText
 import com.joseph.clipboard.windows.theme.HairlineDark
 import com.joseph.clipboard.windows.theme.TextPrimaryDark
@@ -288,36 +286,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                     }
                                 }
 
-                                // Appearance — Light / System / Dark. Retheming is live behind the scrim,
-                                // so the menu stays open on select. Persistence rides the LaunchedEffect
-                                // watcher in main(). Dark tokens are passed explicitly: this menu is
-                                // hardcoded dark while the theme may resolve light.
-                                val themeModeState = LocalThemeMode.current
-                                val themeModes = listOf(ThemeMode.LIGHT, ThemeMode.SYSTEM, ThemeMode.DARK)
-                                Text(
-                                    TranslationManager.getString("theme_setting"),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = TextSecondaryDark,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                SegmentedControl(
-                                    options = listOf(
-                                        TranslationManager.getString("theme_light"),
-                                        TranslationManager.getString("theme_system"),
-                                        TranslationManager.getString("theme_dark"),
-                                    ),
-                                    selectedIndex = themeModes.indexOf(themeModeState.value),
-                                    onSelect = { themeModeState.value = themeModes[it] },
-                                    fill = DarkBackground,
-                                    borderColor = HairlineDark,
-                                    selectedFill = GreenPrimary,
-                                    selectedLabelColor = DarkBackground,
-                                    labelColor = TextSecondaryDark,
-                                )
-
-                                // Restart Services — emerald tonal (the safe action), on-brand instead of
-                                // the old flat near-black fill. Flat (0 elevation) + hairline = modern tonal.
+                                // Restart Services — glass card (neutral elevated fill + hairline, the app's
+                                // glassSurface recipe); the emerald text/icon carries the meaning, not the fill.
                                 Button(
                                     onClick = {
                                         // Restart the network daemons in-process instead of relaunching
@@ -328,7 +298,7 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                     },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = AccentMutedDark,
+                                        backgroundColor = SurfaceElevatedDark,
                                         contentColor = GreenText
                                     ),
                                     elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
@@ -340,17 +310,18 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                     Text(TranslationManager.getString("menu_restart_services"), color = GreenText, fontWeight = FontWeight.Medium)
                                 }
 
-                                // Power Off — destructive tonal, same muted-red language as the Decline button.
+                                // Power Off — same neutral glass card; the red text/icon carries the
+                                // destructive meaning, no red fill.
                                 Button(
                                     // Daemon teardown happens in the JVM shutdown hook (see main()).
                                     onClick = { exitProcess(0) },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        backgroundColor = ErrorMuted,
+                                        backgroundColor = SurfaceElevatedDark,
                                         contentColor = ErrorText
                                     ),
                                     elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                                    border = BorderStroke(1.dp, ErrorText.copy(alpha = 0.22f)),
+                                    border = BorderStroke(1.dp, HairlineDark),
                                     shape = RoundedCornerShape(10.dp)
                                 ) {
                                     Icon(Icons.Filled.PowerSettingsNew, contentDescription = null, modifier = Modifier.size(18.dp), tint = ErrorText)

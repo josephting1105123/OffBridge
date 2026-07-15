@@ -4,6 +4,14 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.6.4 — Windows (power-menu cleanup)
+
+### Changed
+- **Theme selector removed from the power menu.** Change the theme from Settings instead; the
+  power menu now goes straight to Restart Services and Power Off.
+- **Power-menu buttons restyled as glass cards** (neutral elevated fill + hairline) with the
+  action colour on the text and icon rather than the fill, matching the app's other glass surfaces.
+
 ## 3.6.5 — Android (build 27) — download page, scrollable send-text
 
 ### Changed
