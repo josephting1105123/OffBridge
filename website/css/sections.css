@@ -458,8 +458,12 @@
   .dl-grid {
     grid-template-columns: 1fr 1fr;
   }
-  /* Odd card out (3 cards over 2 columns) spans both instead of sitting
-     half-width under column 1 — centers itself as its own row. */
+}
+/* Odd card out (3 cards over 2 columns, tablet width only) spans both instead
+   of sitting half-width under column 1 — centers itself as its own row. Upper
+   bound keeps this from fighting the 3-column desktop rule below on
+   specificity (it would otherwise win: it's the more specific selector). */
+@media (min-width: 720px) and (max-width: 959px) {
   .dl-grid:has(.dl-card:nth-child(3)):not(:has(.dl-card:nth-child(4)))
     .dl-card:nth-child(3) {
     grid-column: 1 / -1;
@@ -472,11 +476,6 @@
   .dl-grid:has(.dl-card:nth-child(3)) {
     grid-template-columns: repeat(3, 1fr);
     max-width: 1080px;
-  }
-  .dl-grid:has(.dl-card:nth-child(3)) .dl-card:nth-child(3) {
-    grid-column: auto;
-    max-width: none;
-    width: auto;
   }
 }
 
