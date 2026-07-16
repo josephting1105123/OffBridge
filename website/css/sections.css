@@ -458,6 +458,26 @@
   .dl-grid {
     grid-template-columns: 1fr 1fr;
   }
+  /* Odd card out (3 cards over 2 columns) spans both instead of sitting
+     half-width under column 1 — centers itself as its own row. */
+  .dl-grid:has(.dl-card:nth-child(3)):not(:has(.dl-card:nth-child(4)))
+    .dl-card:nth-child(3) {
+    grid-column: 1 / -1;
+    max-width: 380px;
+    margin-inline: auto;
+    width: 100%;
+  }
+}
+@media (min-width: 960px) {
+  .dl-grid:has(.dl-card:nth-child(3)) {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1080px;
+  }
+  .dl-grid:has(.dl-card:nth-child(3)) .dl-card:nth-child(3) {
+    grid-column: auto;
+    max-width: none;
+    width: auto;
+  }
 }
 
 .dl-card {

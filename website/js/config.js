@@ -39,6 +39,19 @@ window.CS_CONFIG = {
     note: "Android 10+ (API 29). Free.",
   },
 
+  // Secondary Android path: sideload the release APK directly, no Play account
+  // needed. Tracks Android's own version — independent of the Windows track.
+  androidApk: {
+    label: "Download APK",
+    os: "Android",
+    fileType: "APK (direct)",
+    version: "3.7.0",
+    size: "29 MB",
+    url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
+    sha256: "2d970aad668d116bc8126bcdb531a26411a506c476786f214bd8a3f1d1afd836",
+    note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
+  },
+
   windows: {
     label: "Download for Windows",
     os: "Windows",

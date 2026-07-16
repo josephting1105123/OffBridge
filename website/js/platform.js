@@ -11,13 +11,14 @@
     if (!cfg) return;
 
     var aReady = wireCard("android", cfg.android);
+    var apkReady = wireCard("apk", cfg.androidApk);
     var wReady = wireCard("windows", cfg.windows);
 
-    // Hide the "builds being published" banner once both downloads are wired.
+    // Hide the "builds being published" banner once all downloads are wired.
     var todo = document.querySelector(".dl-todo");
-    if (todo && aReady && wReady) todo.hidden = true;
+    if (todo && aReady && apkReady && wReady) todo.hidden = true;
     // Developer reminder — console only, never shown to visitors.
-    if (!aReady || !wReady) {
+    if (!aReady || !apkReady || !wReady) {
       console.info(
         "[Clipboard Share] Download links not wired yet — set repo or url/size in js/config.js (see website/README.md)."
       );
