@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -54,6 +56,15 @@ class DowngradeBlockedException(message: String) : Exception(message)
 
 /** Minimum gap between passive (startup) update checks — the Updates page's manual check ignores this. */
 private const val UPDATE_CHECK_COOLDOWN_MS = 24L * 60 * 60 * 1000
+
+/**
+ * Hard wall-clock cap on [ClipboardAppController.checkForUpdates], independent of
+ * [UpdateChecker]'s own connect/request timeouts. Those bound the HttpClient's socket phases, but
+ * not every hang vector (e.g. OS-level DNS resolution or Windows proxy auto-detection stalling
+ * before a connection attempt even starts) — without this backstop the Updates page's "Checking
+ * for updates…" loader can spin forever instead of surfacing a retryable failure.
+ */
+private const val UPDATE_CHECK_TIMEOUT_MS = 15_000L
 
 data class OutgoingFileSession(
     val sessionId: String,
@@ -489,7 +500,14 @@ class ClipboardAppController {
         }
         scope.launch {
             _updateStatus.value = UpdateStatus.Checking
-            val result = UpdateChecker.check(AppVersion.VERSION)
+            // UpdateChecker.check() is a blocking call. Run it on its own IO thread and race it
+            // against UPDATE_CHECK_TIMEOUT_MS instead of just awaiting it inline — a hang inside the
+            // blocking call can't be interrupted by cancellation, but this coroutine can still give
+            // up on it and unstick the UI; the abandoned thread dies on its own once the OS-level
+            // call eventually returns.
+            val pending = async(Dispatchers.IO) { UpdateChecker.check(AppVersion.VERSION) }
+            val result = withTimeoutOrNull(UPDATE_CHECK_TIMEOUT_MS) { pending.await() }
+                ?: UpdateStatus.CheckFailed("Update check timed out")
             _updateStatus.value = result
             SecurityVault.setLastUpdateCheckEpochMillis(System.currentTimeMillis())
         }

@@ -4,6 +4,19 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.2 — Windows (update check can no longer hang forever)
+
+### Fixed
+- **Updates page no longer spins indefinitely.** The HTTP client's connect/request timeouts only
+  cover the socket phases; a stall before the connection even starts (OS-level DNS resolution,
+  Windows proxy auto-detection) slipped past both and left the loader running with no way out. The
+  whole check is now raced against a hard 15-second cap — if it doesn't resolve in time, the retry
+  card appears instead.
+
+### Added
+- **Direct APK download card on the website.** A third card next to Google Play and Windows serves
+  the release APK straight from GitHub (with SHA-256), for phones without a Play account.
+
 ## 3.7.1 — Windows (faster update-check timeout)
 
 ### Fixed
