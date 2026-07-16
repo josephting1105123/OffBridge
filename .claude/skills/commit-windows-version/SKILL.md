@@ -60,6 +60,21 @@ powershell -ExecutionPolicy Bypass -File .claude/skills/commit-windows-version/s
 ```
 It applies the Showcase conventions automatically — **tag = bare version, no `v`** (e.g. `3.6.4`); name = `Clipboard Share Windows <win> / Android <android>` — creates or reuses that release, replaces the asset if one is already attached, uploads `ClipboardShareSetup.exe`, marks it `make_latest`, and prints the result. It **never prints the token**. If it reports `ERROR_NO_CREDENTIAL`, run any `git push` once to cache the credential, then retry.
 
+## 5b — Carry the Android APK forward (MANDATORY since 3.7.2)
+The website's Direct APK card and Android's sideload updater both point at
+`/releases/latest/download/ClipboardShare-android.apk` — but the publish script only uploads the
+Windows installer, so the moment the new release becomes latest, that link 404s unless the APK is
+re-attached. Copy it from the previous release (use the release id printed in step 5):
+
+```bash
+powershell -ExecutionPolicy Bypass -File .claude/skills/commit-windows-version/scripts/copy-apk-asset.ps1 \
+  -FromTag <previous-windows-version> -ToReleaseId <id-from-step-5>
+```
+It downloads the APK from the old tag, prints its SHA-256 (must match `androidApk.sha256` in
+`website/js/config.js` — if Android shipped a new APK since, update that hash instead), uploads it
+to the new release, and verifies the latest release lists **both** assets. Skip only if the old
+release genuinely has no APK asset yet.
+
 ## 6 — Deploy the website
 ```bash
 git push origin main
