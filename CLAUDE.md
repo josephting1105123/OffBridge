@@ -28,15 +28,6 @@ Multiple worktrees exist (`JCC-android`, `JCC-risk`, `JCC-windows` alongside the
 
 Before designing a transport/connection solution, audit what already exists (UDP stack, transport tiers, fallbacks — the `audit-transport` skill) and avoid rebuilding working components. Reuse the existing ladder, session controllers, and helpers rather than introducing parallel implementations.
 
-## Knowledge-Graph Memory (memory MCP server)
-
-A user-scoped `memory` MCP server holds this codebase's architecture as an entity/relation graph (`C:\Users\josep\.claude\memory-graph.json`). First stop, not last:
-
-- **At the start of any non-trivial task**, query the graph (`mcp__memory__search_nodes` / `mcp__memory__open_nodes`) for the components you're about to touch before re-reading whole files. Verify any load-bearing fact against the code — the graph reflects when it was written.
-- **Never call `mcp__memory__read_graph`** — it dumps the entire graph (~8k+ tokens) into context; `search_nodes`/`open_nodes` return only what's asked for.
-- **After work that changes durable architecture facts** (new component/daemon, wire-format or capability-token change, crypto/key-derivation change, port, version bump), update the graph in the same session. Keep observations short and factual — one to two lines; they come back verbatim in every future matching query.
-- If the `mcp__memory__*` tools aren't available, skip silently — never block work on it.
-
 ## Response Style
 
 Keep responses concise and chunk large outputs; do not exceed output token limits when implementing across many files.
@@ -70,5 +61,4 @@ The quality bar in this repo was set by Fable 5 sessions. Check which model you 
 - **Raise the review floor.** Run the `code-review` skill on every non-trivial pending diff at **medium** effort minimum; **high** per the Review economy classes (wire framing, crypto/key derivation, pairing, receive/resume/promote) — not for every diff that merely lives in the transfer daemons. Low tier for doc-only changes. Follow the Review economy model-tiering for subagents. Your own first pass is untrusted until reviewed.
 - **Never edit protocol code from memory.** Before changing any frame, control token, or pairing payload, re-read the current implementation on both platforms (Android app + `Window Ver`) to confirm the wire contract, and update the interop check together with the change.
 - **Verification is the deliverable.** Both platform builds green (`verify` skill) before reporting done, `ship` before committing. If a build was not run, say "unverified" — never imply it passed.
-- **Graph first, code wins.** Query the memory graph before touching a component, but re-verify any fact you rely on against the code; on conflict the code is the truth and the graph gets corrected in the same session.
 - **Decide out loud.** When two approaches are viable, state the tradeoff in a line or two and pick one with a reason — don't silently choose, and don't ask the user something the code can answer.
