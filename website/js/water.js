@@ -20,6 +20,13 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Phones pay the full WebGL + rAF cost for an effect mostly seen at a glance
+  // while scrolling past. Render one still frame instead of animating — same
+  // visual, no per-frame main-thread work. 760px matches the mobile breakpoint
+  // carousel.js already uses.
+  var isMobile =
+    window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+
   var gl =
     canvas.getContext("webgl", {
       antialias: false,
@@ -189,7 +196,20 @@
     gl.uniform2f(uRes, canvas.width, canvas.height);
   }
   resize();
-  window.addEventListener("resize", resize, { passive: true });
+  // syncMotion (defined below) re-checks isMobile on every resize so rotating
+  // a device or resizing a window across the 760px breakpoint doesn't get
+  // stuck in whichever mode the page happened to load in. It's called from
+  // the event listener only, never from the initial resize() above — at that
+  // point mouseX/rips/start below aren't assigned yet, and syncMotion can
+  // call draw().
+  window.addEventListener(
+    "resize",
+    function () {
+      resize();
+      syncMotion();
+    },
+    { passive: true }
+  );
 
   // Ripple ring buffer: (x, y, startTime, travelDir) per ripple, in the
   // shader's normalized space.
@@ -224,6 +244,10 @@
     ripCount = n;
   }
 
+  // Spawning ripples that never get drawn (mobile skips the render loop below)
+  // is harmless — a few floats sit unused in a typed array — so this listener
+  // stays gated on reduced-motion only. The expensive part isMobile guards is
+  // the per-frame draw loop further down, not this cheap distance check.
   if (!reduce) {
     var lastX = 0;
     var lastY = 0;
@@ -289,12 +313,6 @@
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
-  if (reduce) {
-    // One still frame; no animation loop, no ripples.
-    draw(start);
-    return;
-  }
-
   var raf = 0;
   function loop(now) {
     draw(now);
@@ -309,9 +327,27 @@
       raf = 0;
     }
   }
+
+  // Re-decide whether to animate whenever this runs: on setup, and again on
+  // every resize (see the resize listener above) and visibility change. This
+  // is what lets rotating a device or resizing a window across the 760px
+  // breakpoint promote/demote the effect live, the same way carousel.js's own
+  // mq.addEventListener("change", sync) keeps its deck in sync with the
+  // identical breakpoint instead of only deciding once at load.
+  function syncMotion() {
+    isMobile =
+      window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+    if (reduce || isMobile) {
+      pause();
+      draw(performance.now()); // repaint one still frame for the new size/theme
+    } else if (!document.hidden) {
+      play();
+    }
+  }
+
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) pause();
-    else play();
+    else syncMotion();
   });
   // Recover from a lost GL context by falling back rather than freezing.
   canvas.addEventListener(
@@ -324,5 +360,5 @@
     false
   );
 
-  play();
+  syncMotion();
 })();

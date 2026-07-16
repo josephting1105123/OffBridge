@@ -120,7 +120,11 @@
     // Dots — built before the first layout(), which calls updateDots().
     var dots = document.createElement("div");
     dots.className = "mcar-dots";
-    dots.setAttribute("role", "tablist");
+    // These are pagination dots, not tabs — role="tablist" requires role="tab"
+    // children, which these plain buttons aren't. "group" fits without implying
+    // a tab panel relationship that doesn't exist.
+    dots.setAttribute("role", "group");
+    dots.setAttribute("aria-label", "Choose a card");
     this.dotBtns = [];
     for (var i = 0; i < this.n; i++) {
       var b = document.createElement("button");
@@ -210,10 +214,27 @@
   };
 
   Deck.prototype.layout = function (animate) {
+    // Interactivity is computed for every card up front, independent of the
+    // pose-skip below — a card stops being the front the instant this.front
+    // moves, regardless of how long its exit animation takes. layout() skips
+    // posing an _exiting/_held card so its own animation isn't disturbed, but
+    // if inert lived inside poseAt too, an exiting card would stay tappable
+    // for its whole ~600ms exit (poseAt never runs on it again until the exit
+    // settles) — during that window BOTH the outgoing card and the new front
+    // card would be interactive at once, which happens on every autoplay
+    // tick. Only the front card and the currently-held (popout-expanded) card
+    // may be interactive; the peeking cards behind are a visual cue only.
+    // inert removes a card from hit-testing, tab order, and the a11y tree.
     for (var i = 0; i < this.n; i++) {
-      var el = this.cards[i];
+      this.cards[i].toggleAttribute(
+        "inert",
+        this.cards[i] !== this._held && i !== this.front
+      );
+    }
+    for (var j = 0; j < this.n; j++) {
+      var el = this.cards[j];
       if (el._exiting || el === this._held) continue; // don't disturb these
-      this.poseAt(el, this.depthOf(i), animate);
+      this.poseAt(el, this.depthOf(j), animate);
     }
     this.updateDots();
   };
@@ -406,6 +427,7 @@
     removeNode(this.dots);
     this.cards.forEach(function (el) {
       el._exiting = false;
+      el.removeAttribute("inert"); // desktop grid: every card is interactive again
       if (el.getAnimations)
         el.getAnimations().forEach(function (a) {
           a.cancel(); // stop any in-flight arc so it can't hold a transform on desktop

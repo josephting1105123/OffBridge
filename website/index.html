@@ -31,13 +31,80 @@
   <meta name="twitter:image" content="https://clipboard-share-a8e.pages.dev/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-  <link rel="manifest" href="site.webmanifest" />
 
   <!-- Preload the one critical font weight -->
   <link rel="preload" href="fonts/geist_variable.ttf" as="font" type="font/ttf" crossorigin />
 
-  <!-- Theme applied before paint to avoid a flash -->
-  <script src="js/theme.js"></script>
+  <!-- Theme applied before paint to avoid a flash. Inlined (not an external <script src>)
+       so it runs with zero network round-trip — it's the very first thing on the page
+       and blocking is unavoidable, so at least make it free.
+       This is a byte-for-byte copy of js/theme.js, which privacy.html still loads
+       externally (its own head is small enough that inlining wasn't worth the
+       duplication there). No build step exists to share one source between the two —
+       if you change the theme logic, update BOTH this block and js/theme.js. -->
+  <script>
+    (function () {
+      "use strict";
+      var KEY = "cs-theme";
+      var root = document.documentElement;
+      function systemPrefersLight() {
+        return (
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: light)").matches
+        );
+      }
+      function resolveInitial() {
+        var saved = null;
+        try {
+          saved = localStorage.getItem(KEY);
+        } catch (e) {}
+        if (saved === "light" || saved === "dark") return saved;
+        return systemPrefersLight() ? "light" : "dark";
+      }
+      function apply(theme) {
+        if (theme === "light") {
+          root.setAttribute("data-theme", "light");
+        } else {
+          root.removeAttribute("data-theme");
+        }
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "light" ? "#F8FAFC" : "#141414");
+        var btn = document.getElementById("theme-toggle");
+        if (btn) btn.setAttribute("aria-pressed", String(theme === "light"));
+      }
+      var current = resolveInitial();
+      apply(current);
+      function toggle() {
+        current = current === "light" ? "dark" : "light";
+        apply(current);
+        try {
+          localStorage.setItem(KEY, current);
+        } catch (e) {}
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        var btn = document.getElementById("theme-toggle");
+        if (btn) {
+          apply(current);
+          btn.addEventListener("click", toggle);
+        }
+      });
+      if (window.matchMedia) {
+        var mq = window.matchMedia("(prefers-color-scheme: light)");
+        var onChange = function (e) {
+          var saved = null;
+          try {
+            saved = localStorage.getItem(KEY);
+          } catch (err) {}
+          if (saved !== "light" && saved !== "dark") {
+            current = e.matches ? "light" : "dark";
+            apply(current);
+          }
+        };
+        if (mq.addEventListener) mq.addEventListener("change", onChange);
+        else if (mq.addListener) mq.addListener(onChange);
+      }
+    })();
+  </script>
 
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
@@ -45,9 +112,18 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/device.css" />
   <link rel="stylesheet" href="css/sections.css" />
-  <link rel="stylesheet" href="css/popout.css" />
-  <link rel="stylesheet" href="css/carousel.css" />
   <link rel="stylesheet" href="css/animations.css" />
+
+  <!-- Below-the-fold interactive widgets (mobile card carousel, tile expand overlay) —
+       not needed for first paint, so load without blocking render. -->
+  <link rel="preload" href="css/popout.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <link rel="preload" href="css/carousel.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="css/popout.css" />
+    <link rel="stylesheet" href="css/carousel.css" />
+  </noscript>
+
+  <link rel="manifest" href="site.webmanifest" />
 
   <!-- Structured data for search engines -->
   <script type="application/ld+json">
@@ -71,9 +147,15 @@
       position: fixed; inset: 0; z-index: 10000;
       display: flex; align-items: center; justify-content: center;
       background: var(--bg-deep, #0F0F0F);
-      transition: opacity .5s ease, visibility .5s ease;
+      transition: opacity .5s ease;
     }
-    .gooey-loader-overlay.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    /* No visibility:hidden here on purpose — it isn't in the transition list (that's
+       the whole point: visibility can't run on the compositor), so setting it here
+       would snap the element invisible on the very next paint instead of fading with
+       opacity. pointer-events:none blocks interaction immediately; the JS below
+       removes the node from the DOM ~600ms later, which is what finally takes it out
+       of the accessibility tree — visibility doesn't need to do that job too. */
+    .gooey-loader-overlay.is-hidden { opacity: 0; pointer-events: none; }
     .gooey-loader {
       font-size: 16px; width: 12em; height: 3em;
       position: relative; overflow: hidden;
@@ -274,14 +356,14 @@
           <div class="device-stage">
             <div class="device device--phone" data-parallax style="--par:36px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.jpg" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="1280" height="2772" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.webp" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="800" height="1733" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.webp" alt="Clipboard Share on Android — Clipboard tab with Push Current Clipboard and recent copies" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
             <div class="device device--desktop" data-parallax style="--par:18px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-main-dark.png" alt="Clipboard Share on Windows — System Status showing paired devices" width="1600" height="848" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-main-light.png" alt="Clipboard Share on Windows — System Status showing paired devices" width="1600" height="848" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/windows-main-dark.webp" alt="Clipboard Share on Windows — System Status showing paired devices" width="1200" height="636" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/windows-main-light.webp" alt="Clipboard Share on Windows — System Status showing paired devices" width="1200" height="636" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -332,8 +414,8 @@
           <div class="device-stage">
             <div class="device device--phone" data-parallax style="--par:42px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.jpg" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.jpg" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.webp" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.webp" alt="Android Clipboard screen: Push Current Clipboard, Accept Incoming Clipboard, and recent copies" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -360,14 +442,14 @@
           <div class="device-stage">
             <div class="device device--desktop" data-parallax style="--par:18px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-transfer-dark.png" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1600" height="851" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-transfer-light.png" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1600" height="851" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/windows-transfer-dark.webp" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1200" height="638" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/windows-transfer-light.webp" alt="Clipboard Share on Windows — Send Files with a transfer in progress" width="1200" height="638" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
             <div class="device device--phone" data-parallax style="--par:40px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-transfer-dark.jpg" alt="Android transfer in progress showing percentage and size transferred" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-transfer-light.jpg" alt="Android transfer in progress showing percentage and size transferred" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/android-transfer-dark.webp" alt="Android transfer in progress showing percentage and size transferred" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/android-transfer-light.webp" alt="Android transfer in progress showing percentage and size transferred" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
@@ -387,7 +469,7 @@
 
         <div class="bento" data-stagger>
           <!-- Transport ladder (big, animated) -->
-          <article class="glass tile tile--ladder col-6 row-2" data-reveal data-ladder>
+          <div class="glass tile tile--ladder col-6 row-2" data-reveal data-ladder>
             <div>
               <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg></div>
               <h3>The transport ladder</h3>
@@ -406,9 +488,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a link from nothing; bytes stay AES-256 sealed.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-3" data-reveal>
+          <div class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg></div>
             <h3>NFC tap to send</h3>
             <p>Tap two phones to start an off-grid file transfer, no network needed. <span class="badge">Android</span></p>
@@ -420,9 +502,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Still encrypted.</strong> Off-grid doesn't mean in the clear; it's AES-256 end to end.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-3" data-reveal>
+          <div class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></div>
             <h3>QR off-grid</h3>
             <p>Scan a QR to send or receive files with no shared Wi-Fi. Both platforms.</p>
@@ -434,9 +516,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Sealed transfer.</strong> The session it opens is AES-256 encrypted like any other.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-3" data-reveal>
+          <div class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg></div>
             <h3>Hotspot bridge</h3>
             <p>One device hosts and the other joins, with no shared network required.</p>
@@ -448,9 +530,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>Cleaned up after.</strong> The hotspot is torn down when the transfer is done.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-3" data-reveal>
+          <div class="glass tile col-3" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg></div>
             <h3>Share-sheet</h3>
             <p>Send straight from any Android app's share button. <span class="badge">Android</span></p>
@@ -462,9 +544,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Straight to the PC.</strong> Picks the same transport ladder as an in-app send.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-4" data-reveal>
+          <div class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg></div>
             <h3>Filtered history</h3>
             <p>Browse past transfers and copies.</p>
@@ -480,9 +562,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Re-send in a tap.</strong> Reopen or resend a past item straight from the list.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-4" data-reveal>
+          <div class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg></div>
             <h3>Quick-settings tile</h3>
             <p>“Push to PC” from the Android pull-down, without opening the app. <span class="badge">Android</span></p>
@@ -494,9 +576,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Only to paired devices.</strong> The tile respects your verified pairings.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass tile col-4" data-reveal>
+          <div class="glass tile col-4" data-reveal>
             <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg></div>
             <h3>Light &amp; dark</h3>
             <p>A considered theme on both platforms. Try the toggle up top.</p>
@@ -508,7 +590,7 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Consistent across both.</strong> The same considered palette on Android and Windows.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
         </div>
       </div>
     </section>
@@ -554,15 +636,15 @@
           <div class="security__media">
             <div class="device device--phone" data-parallax style="--par:30px">
               <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.jpg" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="1280" height="2772" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+                <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.webp" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
+                <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.webp" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
           </div>
         </div>
 
         <div class="assure-grid">
-          <article class="glass assure" data-reveal>
+          <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg></div>
             <h3>Verified pairing (SAS)</h3>
             <p>A 6-digit code from an ECDH key exchange. You confirm it matches, which stops man-in-the-middle attacks.</p>
@@ -574,8 +656,8 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Pinned after first trust.</strong> A later key swap fails closed instead of silently downgrading.</span></li>
               </ul>
             </div>
-          </article>
-          <article class="glass assure" data-reveal>
+          </div>
+          <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
             <p>Every clipboard payload and file is AES-256 encrypted in flight; the clipboard uses authenticated AES-GCM. Nothing travels in the clear.</p>
@@ -587,8 +669,8 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Never in the clear.</strong> On-grid or off-grid, the bytes are always encrypted.</span></li>
               </ul>
             </div>
-          </article>
-          <article class="glass assure" data-reveal>
+          </div>
+          <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg></div>
             <h3>Keys stay local</h3>
             <p>Per-pairing keys live only on your devices, never uploaded or shared.</p>
@@ -600,8 +682,8 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg><span><strong>Gone on unpair.</strong> Remove a device and its keys are wiped with it.</span></li>
               </ul>
             </div>
-          </article>
-          <article class="glass assure" data-reveal>
+          </div>
+          <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg></div>
             <h3>Zero telemetry</h3>
             <p>No analytics, no ads, no third parties. The app simply doesn't phone home.</p>
@@ -613,7 +695,7 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Nothing to leak.</strong> No account and no profile means nothing to breach.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
         </div>
       </div>
     </section>
@@ -629,7 +711,7 @@
         </div>
 
         <div class="compare">
-          <article class="glass plat-card" data-reveal="left">
+          <div class="glass plat-card" data-reveal="left">
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
               <h3>Android</h3>
@@ -651,9 +733,9 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Push from the shade.</strong> A quick-settings tile sends your clipboard to the PC without opening the app.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
 
-          <article class="glass plat-card" data-reveal="right">
+          <div class="glass plat-card" data-reveal="right">
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
               <h3>Windows</h3>
@@ -675,7 +757,7 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Same crypto.</strong> AES-256 and verified 6-digit pairing, identical to the Android client.</span></li>
               </ul>
             </div>
-          </article>
+          </div>
         </div>
       </div>
     </section>
