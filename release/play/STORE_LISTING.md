@@ -1,6 +1,6 @@
 # Play Console — Store listing copy
 
-App: **Clipboard Share** · package `com.EntropicSoftwareLab.ClipboardShare` · v3.6.5 (versionCode 27)
+App: **Clipboard Share** · package `com.EntropicSoftwareLab.ClipboardShare` · v3.7.0 (versionCode 28)
 Category: **Tools** (alt: Productivity) · Free · No ads · No in-app purchases
 Contact email: `entropic.software.lab@gmail.com`
 

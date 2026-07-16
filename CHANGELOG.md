@@ -4,6 +4,27 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.1 — Windows (faster update-check timeout)
+
+### Fixed
+- **Updates page no longer stalls on a dead network.** The update checker's connect timeout was
+  tied to the same 10s cap as the overall request; an unreachable network sat on the loader for the
+  full 10 seconds before failing. Connect now times out at 5s (the 10s overall cap is unchanged for
+  a slow-but-alive response), so the "Couldn't check for updates" retry card shows up promptly.
+
+## 3.7.0 — Android (build 28) — in-app Updates page
+
+### Added
+- **Updates page in the power menu.** Mirrors the Windows Updates screen: the same animated
+  liquid-capsule loader, and checking / up-to-date / update-available / failed states. Checks the
+  latest ClipboardShare-Showcase GitHub release for a newer Android build; a silent check also runs
+  at app launch so opening the page shows the answer right away instead of waiting on a fresh
+  network round-trip.
+- **Install-source-aware update action.** A Play-installed build sends the user to the Google Play
+  listing (matching signature); a sideloaded/GitHub build downloads the release APK and hands it to
+  the system installer in-app — no browser trip.
+- New `menu_updates` and `update_*` strings added to all 10 locale files.
+
 ## 3.7.0 — Windows (in-app updates)
 
 ### Added
