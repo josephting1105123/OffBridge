@@ -25,8 +25,10 @@ object UpdateChecker {
 
     // api.github.com returns the release JSON with 200 directly (no redirect today), but follow
     // redirects defensively — NORMAL follows them without allowing an HTTPS->HTTP downgrade.
+    // Connect times out at 5s so an unreachable/offline network fails fast (the Updates page otherwise
+    // sits on the loader); the whole request is still hard-capped at 10s by HttpRequest.timeout below.
     private val client: HttpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(10))
+        .connectTimeout(Duration.ofSeconds(5))
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
     private val gson = Gson()

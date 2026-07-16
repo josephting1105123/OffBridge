@@ -640,5 +640,19 @@
     <string name="connected_devices_label">Connected Devices:</string>
     <string name="lite_selected_files_count">Selected Files (%1$d)</string>
     <string name="lite_select_devices_label">Select Devices</string>
+    <string name="menu_updates">Updates</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_up_to_date">No update available</string>
+    <string name="update_current_version_label">Current version</string>
+    <string name="update_latest_version_label">Latest version</string>
+    <string name="update_available_label">Update available</string>
+    <string name="update_play_button">Update on Google Play</string>
+    <string name="update_check_again">Check again</string>
+    <string name="update_check_failed">Couldn\'t check for updates</string>
+    <string name="update_try_again">Try again</string>
+    <string name="update_download_button">Download &amp; Install</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_download_failed">Update download failed</string>
+    <string name="update_allow_install_hint">Allow installing apps, then tap Download again</string>
 </resources>
 

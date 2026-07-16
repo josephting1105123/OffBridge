@@ -71,6 +71,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="100dp"
+            android:layout_marginEnd="@dimen/space_md"
             android:orientation="vertical"
             android:gravity="center"
             android:background="@drawable/rect_button_bg"
@@ -87,6 +88,32 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/menu_windows_version"
+                android:textColor="?attr/appTextPrimaryColor"
+                android:textSize="14sp"
+                android:layout_marginTop="@dimen/space_sm" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btn_menu_updates"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="100dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/rect_button_bg"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground">
+            <ImageView
+                android:layout_width="@dimen/icon_lg"
+                android:layout_height="@dimen/icon_lg"
+                android:src="@drawable/ic_update"
+                app:tint="?attr/appGreen"
+                android:contentDescription="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/menu_updates"
                 android:textColor="?attr/appTextPrimaryColor"
                 android:textSize="14sp"
                 android:layout_marginTop="@dimen/space_sm" />

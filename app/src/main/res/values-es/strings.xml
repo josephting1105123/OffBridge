@@ -645,5 +645,19 @@
     <string name="connected_devices_label">Dispositivos Conectados:</string>
     <string name="lite_selected_files_count">Archivos Seleccionados (%1$d)</string>
     <string name="lite_select_devices_label">Seleccionar Dispositivos</string>
+    <string name="menu_updates">Actualizaciones</string>
+    <string name="update_checking">Buscando actualizaciones…</string>
+    <string name="update_up_to_date">No hay actualizaciones disponibles</string>
+    <string name="update_current_version_label">Versión actual</string>
+    <string name="update_latest_version_label">Última versión</string>
+    <string name="update_available_label">Actualización disponible</string>
+    <string name="update_play_button">Actualizar en Google Play</string>
+    <string name="update_check_again">Volver a comprobar</string>
+    <string name="update_check_failed">No se pudieron buscar actualizaciones</string>
+    <string name="update_try_again">Reintentar</string>
+    <string name="update_download_button">Descargar e instalar</string>
+    <string name="update_downloading">Descargando actualización…</string>
+    <string name="update_download_failed">Error al descargar la actualización</string>
+    <string name="update_allow_install_hint">Permite instalar apps y vuelve a tocar Descargar</string>
 </resources>
 

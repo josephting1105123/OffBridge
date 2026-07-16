@@ -645,5 +645,19 @@
     <string name="connected_devices_label">Perangkat Terhubung:</string>
     <string name="lite_selected_files_count">File Terpilih (%1$d)</string>
     <string name="lite_select_devices_label">Pilih Perangkat</string>
+    <string name="menu_updates">Pembaruan</string>
+    <string name="update_checking">Memeriksa pembaruan…</string>
+    <string name="update_up_to_date">Tidak ada pembaruan yang tersedia</string>
+    <string name="update_current_version_label">Versi saat ini</string>
+    <string name="update_latest_version_label">Versi terbaru</string>
+    <string name="update_available_label">Pembaruan tersedia</string>
+    <string name="update_play_button">Perbarui di Google Play</string>
+    <string name="update_check_again">Periksa lagi</string>
+    <string name="update_check_failed">Tidak dapat memeriksa pembaruan</string>
+    <string name="update_try_again">Coba lagi</string>
+    <string name="update_download_button">Unduh &amp; Instal</string>
+    <string name="update_downloading">Mengunduh pembaruan…</string>
+    <string name="update_download_failed">Gagal mengunduh pembaruan</string>
+    <string name="update_allow_install_hint">Izinkan menginstal aplikasi, lalu ketuk Unduh lagi</string>
 </resources>
 

@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SplashScreen
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
+import com.EntropicSoftwareLab.ClipboardShare.update.UpdateRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -30,6 +31,11 @@ class SplashActivity : AppCompatActivity() {
         // empty (e.g. after a "Clear data" while the folder grant is still held). Runs on IO; the
         // ~2s splash window covers the small read before MainActivity binds the history UI.
         HistoryBackupManager.maybeRestoreOnLaunch(applicationContext)
+
+        // Pre-warm the update check in the background at launch, so opening the Updates page shows the
+        // result after the loader's 2s floor instead of waiting on a fresh GitHub round-trip. Silent —
+        // no popup/badge; the Updates page reads UpdateRepository.status.
+        UpdateRepository.check(applicationContext, force = false)
 
         // Compose splash (logo + name + pulsing dots); navigation below is unchanged.
         setContentView(ComposeView(this).apply {

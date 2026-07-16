@@ -313,6 +313,7 @@ class MainActivity : AppCompatActivity() {
 
         val btnSettings = bottomSheetView.findViewById<View>(R.id.btn_menu_settings)
         val btnWindows = bottomSheetView.findViewById<View>(R.id.btn_menu_windows)
+        val btnUpdates = bottomSheetView.findViewById<View>(R.id.btn_menu_updates)
         designToggleView = bottomSheetView.findViewById(R.id.toggle_design_mode)
         val toggleDesignMode = designToggleView
         val toggleThemeMode = bottomSheetView.findViewById<ComposeView>(R.id.toggle_theme_mode)
@@ -325,6 +326,10 @@ class MainActivity : AppCompatActivity() {
         }
         btnWindows.setOnClickListener {
             startActivity(Intent(this, WindowsVersionActivity::class.java))
+            behavior.state = BottomSheetBehavior.STATE_HIDDEN
+        }
+        btnUpdates.setOnClickListener {
+            startActivity(Intent(this, UpdateActivity::class.java))
             behavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
 

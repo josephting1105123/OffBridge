@@ -1,0 +1,78 @@
+package com.EntropicSoftwareLab.ClipboardShare.update
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+
+/**
+ * Checks the ClipboardShare-Showcase GitHub repo's latest release for a newer Android build, then the
+ * Updates screen sends the user to Google Play to install it (a Play-distributed app can't
+ * self-install). Same repo the Windows checker and the website target.
+ *
+ * The repo tags releases by the WINDOWS version and carries only a Windows installer asset; the
+ * Android version rides along in the release TITLE as "… / Android X.Y.Z" (Android ships via Play, so
+ * there's no Android-versioned tag or APK asset). So we read the Android version out of the title.
+ * Never throws — network/parse failures come back as [UpdateStatus.CheckFailed].
+ */
+object UpdateChecker {
+    private const val OWNER = "josephting1105123"
+    private const val REPO = "ClipboardShare-Showcase"
+    private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
+    private const val TIMEOUT_MS = 10_000
+
+    // Stable asset name for the sideloadable APK on the release (no version in the name, so the
+    // "latest" asset URL always resolves). Absent until the first APK is published — the Updates page
+    // then falls back to the Play listing for sideloaded installs.
+    private const val APK_ASSET_NAME = "ClipboardShare-android.apk"
+
+    private val ANDROID_VERSION_IN_TITLE = Regex("""Android\s+([0-9][0-9.]*)""")
+
+    suspend fun check(currentVersion: String): UpdateStatus = withContext(Dispatchers.IO) {
+        try {
+            val conn = (URL(LATEST_RELEASE_URL).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = TIMEOUT_MS
+                readTimeout = TIMEOUT_MS
+                setRequestProperty("Accept", "application/vnd.github+json")
+                // GitHub's REST API rejects unauthenticated requests that omit a User-Agent.
+                setRequestProperty("User-Agent", "ClipboardShare-Android/$currentVersion")
+            }
+            try {
+                val code = conn.responseCode
+                if (code !in 200..299) {
+                    return@withContext UpdateStatus.CheckFailed("HTTP $code")
+                }
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val json = JSONObject(body)
+                val title = json.optString("name", "")
+                val latest = ANDROID_VERSION_IN_TITLE.find(title)?.groupValues?.get(1)?.trim().orEmpty()
+                if (latest.isEmpty()) {
+                    return@withContext UpdateStatus.CheckFailed("Latest release has no Android version")
+                }
+                if (VersionCompare.isNewer(latest, currentVersion)) {
+                    UpdateStatus.UpdateAvailable(latest, apkAssetUrl(json))
+                } else {
+                    UpdateStatus.UpToDate(currentVersion)
+                }
+            } finally {
+                conn.disconnect()
+            }
+        } catch (e: Exception) {
+            UpdateStatus.CheckFailed(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
+    /** The [APK_ASSET_NAME] asset's download URL on the release, or null if the release has none. */
+    private fun apkAssetUrl(release: JSONObject): String? {
+        val assets = release.optJSONArray("assets") ?: return null
+        for (i in 0 until assets.length()) {
+            val asset = assets.optJSONObject(i) ?: continue
+            if (asset.optString("name") == APK_ASSET_NAME) {
+                return asset.optString("browser_download_url").takeIf { it.isNotBlank() }
+            }
+        }
+        return null
+    }
+}

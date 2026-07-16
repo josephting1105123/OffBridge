@@ -641,5 +641,19 @@
     <string name="connected_devices_label">Подключённые устройства:</string>
     <string name="lite_selected_files_count">Выбранные файлы (%1$d)</string>
     <string name="lite_select_devices_label">Выберите устройства</string>
+    <string name="menu_updates">Обновления</string>
+    <string name="update_checking">Проверка наличия обновлений…</string>
+    <string name="update_up_to_date">Обновлений нет</string>
+    <string name="update_current_version_label">Текущая версия</string>
+    <string name="update_latest_version_label">Последняя версия</string>
+    <string name="update_available_label">Доступно обновление</string>
+    <string name="update_play_button">Обновить в Google Play</string>
+    <string name="update_check_again">Проверить снова</string>
+    <string name="update_check_failed">Не удалось проверить наличие обновлений</string>
+    <string name="update_try_again">Повторить</string>
+    <string name="update_download_button">Скачать и установить</string>
+    <string name="update_downloading">Загрузка обновления…</string>
+    <string name="update_download_failed">Не удалось загрузить обновление</string>
+    <string name="update_allow_install_hint">Разрешите установку приложений и снова нажмите «Скачать»</string>
 </resources>
 

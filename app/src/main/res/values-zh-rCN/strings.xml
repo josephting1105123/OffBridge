@@ -628,5 +628,19 @@
     <string name="connected_devices_label">已连接的设备：</string>
     <string name="lite_selected_files_count">已选文件 (%1$d)</string>
     <string name="lite_select_devices_label">选择设备</string>
+    <string name="menu_updates">更新</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_up_to_date">没有可用更新</string>
+    <string name="update_current_version_label">当前版本</string>
+    <string name="update_latest_version_label">最新版本</string>
+    <string name="update_available_label">有可用更新</string>
+    <string name="update_play_button">在 Google Play 更新</string>
+    <string name="update_check_again">重新检查</string>
+    <string name="update_check_failed">无法检查更新</string>
+    <string name="update_try_again">重试</string>
+    <string name="update_download_button">下载并安装</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="update_download_failed">更新下载失败</string>
+    <string name="update_allow_install_hint">请允许安装应用，然后再次点按“下载”</string>
 </resources>
 

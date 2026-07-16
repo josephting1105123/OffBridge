@@ -668,3 +668,48 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Add a pre-removal step to the Removals section: before deleting any Android string key, grep the whole `app/src/main/res` (and `AndroidManifest.xml`) for `@string/<key>` and `R.string.<key>`, not just Kotlin/Java — expect zero hits outside the `values*/strings.xml` definitions. Same idea for Windows keys referenced from non-code assets.
 
 **Principle:** A resource key's references are spread across code *and* declarative assets; deletion safety requires sweeping every referrer surface (layouts/menus/manifest), because the compiler links dead declarative files too and a code-only grep gives false confidence.
+
+### Observation 44: Reuse the other platform's existing translations when porting a feature
+
+**Status:** OPEN
+**Date:** 2026-07-16
+**Session context:** Porting the Windows in-app update page to Android (Android "Updates" screen). The feature already existed on Windows, whose translation.json.txt carried the same logical strings (nav_updates, update_checking, update_up_to_date, update_current/latest_version_label, update_available_label, update_check_again/failed/try_again) translated into all 10 languages.
+**Skill:** add-i18n-strings
+**Type:** internal
+**Phase/Area:** Sourcing translations for a new key set
+
+**Issue:** When the added strings mirror a feature that already shipped on the other platform, the correct source for the 9 non-English locales is the OTHER platform's existing translation file, not fresh machine translation. I grepped the 9 shared keys out of Window Ver/.../translation.json.txt and mapped them to the Android keys 1:1 (only the Android-specific update_play_button = "Update on Google Play" needed new translation), keeping wording identical across platforms.
+
+**Suggested improvement:** Add a step to the skill's "Sibling updates that ride along" section: before translating fresh, check whether the sibling platform already localizes the same concept and lift those values verbatim (map by meaning, not key name — Windows nav_updates -> Android menu_updates). Preserves cross-platform wording parity for free.
+
+**Principle:** When localizing a feature that already exists on a sibling platform, harvest the sibling's existing translations rather than re-translating — it is both cheaper and keeps user-facing wording consistent across platforms.
+
+### Observation 45: `</resources>` is a valid append anchor for Android strings.xml
+
+**Status:** OPEN
+**Date:** 2026-07-16
+**Session context:** Same Android "Updates" i18n fan-out. The skill's ritual says anchor each insertion on "the translated value of a neighbouring key ... never the English text or a line number."
+**Skill:** add-i18n-strings
+**Type:** internal
+**Phase/Area:** Ritual step 1 (insertion anchoring)
+
+**Issue:** For a pure append of a new key block (no ordering requirement relative to a neighbour), anchoring on `lastIndexOf('</resources>')` is simpler and uniformly correct across all 10 locale files (the closing tag is identical everywhere, unlike per-locale translated values which must be known per file). Verified clean: grep -c = 10 per key, git diff --numstat = 10/0 per file, no EOL churn. The stated "neighbour translated value" anchor is only necessary when the new key must sit at a specific position.
+
+**Suggested improvement:** Clarify step 1: the neighbour-value anchor is for position-sensitive inserts; for order-agnostic appends, `</resources>` (Android) / the block's closing brace (Windows) is an acceptable and simpler anchor. Still forbid line-number and English-text anchors.
+
+**Principle:** Match the insertion anchor to the requirement — a structural end-marker is fine for order-agnostic appends; reserve neighbour-relative anchors for position-sensitive inserts.
+
+### Observation 46: add-i18n-strings must escape `&` as `&amp;` in Android XML, not just apostrophes
+
+**Status:** OPEN
+**Date:** 2026-07-16
+**Session context:** Android in-app update page — adding "Download & Install" (key update_download_button) and other strings across 10 Android strings.xml locales via a Node insertion script.
+**Skill:** add-i18n-strings
+**Type:** internal
+**Phase/Area:** Ritual step 2 (Android XML rules) / the insertion script's escaping function
+
+**Issue:** The skill's Android rules call out escaping apostrophes as `\'` (French AAPT2 breakage) but say nothing about ampersands. A value like "Download & Install" (and "Unduh & Instal", "Herunterladen & Installieren") contains a literal `&`, which is an XML entity start — unescaped it fails mergeDebugResources with "The reference to entity ... must end with ';'". A first-pass esc() that only handled apostrophes would have shipped broken XML; caught it before build. Correct escape: `&` -> `&amp;` (apply FIRST, before other entity replacements), alongside the existing apostrophe rule.
+
+**Suggested improvement:** Extend step 2's Android XML rules and any example esc() to: escape `&` -> `&amp;` first, then apostrophe -> `\'`; also note `<`/`>` -> `&lt;`/`&gt;` if ever present. The reused Windows JSON stores `&` literally, so any string lifted from there with an ampersand must be re-escaped for Android XML.
+
+**Principle:** When targeting XML resource files, escape the ampersand as `&amp;` before any other entity — it is the highest-frequency breakage after the apostrophe and is easy to miss when values are lifted verbatim from a JSON (non-XML) source.
