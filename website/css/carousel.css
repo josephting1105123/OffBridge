@@ -25,9 +25,10 @@
     margin-top: var(--s-24);
   }
 
-  /* The card grid, repurposed as the deck: a fixed-height stacking context with
-     the cards absolutely positioned on top of each other. Height is set inline
-     by carousel.js (tallest card + room for the peeking stack). */
+  /* The card grid, repurposed as the deck: a stacking context with the cards
+     absolutely positioned on top of each other. Height is set (and animated)
+     inline by carousel.js, tracking the current front card + room for the
+     peeking stack, so short cards aren't padded out to match a tall one. */
   .mcar-deck {
     position: relative;
     display: block !important;

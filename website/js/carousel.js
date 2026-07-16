@@ -4,10 +4,16 @@
    DECK OF CARDS: the top card sits on a short stack of the others peeking below.
 
    - Swipe LEFT  -> the top card retracts down and out the bottom, revealing the next.
+     Autoplay advances the same way, every 1.5s, so the automatic and manual
+     "next card" motion always match.
    - Swipe RIGHT -> the top card arcs in a half-circle (rotating 180 along the way,
-     tangent to the path) down to the back of the deck.
-   - Autoplays (arc) every 1.5s. Forward-only and, because the deck cycles by a
-     modulo pointer, inherently circular (no clones).
+     tangent to the path) down to the back of the deck. Manual-only flourish for
+     going backward; autoplay never triggers it.
+   - Forward-only and, because the deck cycles by a modulo pointer, inherently
+     circular (no clones).
+   - The deck's height tracks whichever card is currently in front (animated),
+     not a fixed height shared by every card — so a short card isn't padded out
+     with dead space to match the tallest card in the set.
    - TAP a card to expand it into the popout (same as desktop); a horizontal drag
      swipes instead. Autoplay pauses while a card is expanded.
    - Desktop (>760px) keeps the original grid + popout. This builds on entering the
@@ -23,8 +29,9 @@
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var AUTO_MS = 1500; // time each card is shown before auto-advancing
-  var DECK_TRANS =
-    "transform 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease";
+  var EASE = "cubic-bezier(0.22, 1, 0.36, 1)"; // shared deck-motion easing
+  var DECK_TRANS = "transform 520ms " + EASE + ", opacity 420ms ease";
+  var HEIGHT_TRANS = "height 420ms " + EASE;
   var PEEK = 20; // px each deeper card is offset downward
   var STEP = 0.035; // scale reduction per depth
   var VISIBLE = 2; // depths shown behind the front card (front + 2 peeks)
@@ -92,14 +99,9 @@
       return;
     }
 
-    // Measure the tallest card BEFORE the deck styling makes them absolute, then
-    // give the deck a fixed height and each card a uniform min-height so the stack
-    // is even and its footprint doesn't jump as cards cycle.
-    var maxH = 0;
-    this.cards.forEach(function (el) {
-      maxH = Math.max(maxH, el.offsetHeight);
+    this.cards.forEach(function (el, i) {
+      el._i = i;
     });
-    this.maxH = maxH;
 
     var mcar = document.createElement("div");
     mcar.className = "mcar";
@@ -107,12 +109,15 @@
     mcar.appendChild(grid);
     this.mcar = mcar;
     grid.classList.add("mcar-deck");
-    grid.style.height = maxH + VISIBLE * PEEK + 16 + "px";
 
-    this.cards.forEach(function (el, i) {
-      el._i = i;
-      el.style.minHeight = maxH + "px";
-    });
+    // Measure each card's own content height AFTER the deck styling makes them
+    // absolute (full-width) — some card grids (e.g. #security .assure-grid) are
+    // still 2-column at this breakpoint before .mcar-deck collapses them to one
+    // column, so measuring any earlier would capture the narrower, taller wrap.
+    // A shared min-height used to force every short card to match the tallest
+    // one, leaving a lot of dead space beneath them; the deck is now sized per
+    // current front card instead — see applyHeight().
+    this.measure();
 
     this.front = 0;
     this.deckW = mcar.clientWidth;
@@ -157,6 +162,7 @@
     this.onResize = function () {
       if (!mq.matches) return;
       self.deckW = mcar.clientWidth;
+      self.measure(); // card line-wrapping (and so height) depends on width
       self.layout(false);
     };
     window.addEventListener("resize", this.onResize);
@@ -202,6 +208,29 @@
     return (i - this.front + this.n) % this.n;
   };
 
+  // Re-read each card's own content height. Called on init and on resize —
+  // line-wrapping (and so card height) depends on viewport width. Skips the
+  // held card: while a card is expanded into the popout its geometry belongs
+  // to that (much larger) layout, not the deck, so measuring it here would
+  // poison _h and leave the deck too tall once the popout closes.
+  Deck.prototype.measure = function () {
+    for (var i = 0; i < this.n; i++) {
+      if (this.cards[i] === this._held) continue;
+      this.cards[i]._h = this.cards[i].offsetHeight;
+    }
+  };
+
+  // Size the deck container to the current front card's own height (plus room
+  // for the peeking stack behind it), animated so the resize reads as part of
+  // the same motion as the card transition rather than a jump cut.
+  Deck.prototype.applyHeight = function (animate) {
+    // measure() always runs before the first layout() call and on every
+    // resize, so every card's _h is populated by the time this reads it.
+    var h = this.cards[this.front]._h;
+    this.grid.style.transition = animate && !reduce ? HEIGHT_TRANS : "none";
+    this.grid.style.height = h + VISIBLE * PEEK + 16 + "px";
+  };
+
   // Place one card at a stack depth (0 = front). Deeper than VISIBLE = hidden
   // behind, parked at the last visible pose so it fades in when promoted.
   Deck.prototype.poseAt = function (el, d, animate) {
@@ -236,11 +265,13 @@
       if (el._exiting || el === this._held) continue; // don't disturb these
       this.poseAt(el, this.depthOf(j), animate);
     }
+    this.applyHeight(animate);
     this.updateDots();
   };
 
-  // Advance to the next card. dir "left" flings the top card out the bottom;
-  // anything else (right / autoplay) arcs it to the back of the deck.
+  // Advance to the next card. dir "left" (autoplay always passes this) flings
+  // the top card out the bottom; "right" arcs it to the back of the deck — a
+  // manual-only flourish for the backward gesture.
   Deck.prototype.advance = function (dir) {
     if (this.n < 2 || this._held) return; // don't advance while a card is expanded
     var self = this;
@@ -328,7 +359,7 @@
       return;
     var self = this;
     this.timer = window.setInterval(function () {
-      self.advance(); // arc to the back
+      self.advance("left"); // same retract-down motion as a manual forward swipe
     }, AUTO_MS);
   };
   Deck.prototype.pause = function () {
@@ -440,6 +471,7 @@
     });
     g.classList.remove("mcar-deck");
     g.style.removeProperty("height");
+    g.style.removeProperty("transition");
     if (mcar && mcar.parentNode) {
       mcar.parentNode.insertBefore(g, mcar); // unwrap
       mcar.parentNode.removeChild(mcar);
