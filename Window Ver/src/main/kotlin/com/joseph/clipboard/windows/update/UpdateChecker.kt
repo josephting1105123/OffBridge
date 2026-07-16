@@ -25,10 +25,11 @@ object UpdateChecker {
 
     // api.github.com returns the release JSON with 200 directly (no redirect today), but follow
     // redirects defensively — NORMAL follows them without allowing an HTTPS->HTTP downgrade.
-    // Connect times out at 5s so an unreachable/offline network fails fast (the Updates page otherwise
-    // sits on the loader); the whole request is still hard-capped at 10s by HttpRequest.timeout below.
+    // Connect times out at 2s so an unreachable/offline network fails fast (the Updates page otherwise
+    // sits on the loader); the whole request is hard-capped at 4s by HttpRequest.timeout below, keeping
+    // detection inside the 5s ceiling ClipboardAppController.checkForUpdates enforces overall.
     private val client: HttpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(5))
+        .connectTimeout(Duration.ofSeconds(2))
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
     private val gson = Gson()
@@ -56,7 +57,7 @@ object UpdateChecker {
                 .header("Accept", "application/vnd.github+json")
                 // GitHub's REST API rejects unauthenticated requests that omit a User-Agent header.
                 .header("User-Agent", "ClipboardShare-Windows/$currentVersion")
-                .timeout(Duration.ofSeconds(10))
+                .timeout(Duration.ofSeconds(4))
                 .GET()
                 .build()
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())

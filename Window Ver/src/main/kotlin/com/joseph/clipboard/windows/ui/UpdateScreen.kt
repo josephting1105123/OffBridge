@@ -62,20 +62,21 @@ fun UpdateScreen(appController: ClipboardAppController) {
     var showConfirm by remember { mutableStateOf(false) }
 
     // Each check cycle (screen open, or a manual re-check) bumps this. The effect kicks off the
-    // check and holds the loading animation for a minimum of 2s before the result may reveal.
+    // check and holds the loading animation for a minimum of 1s before the result may reveal —
+    // just enough for the loader not to flash, without delaying the result card.
     var checkCycle by remember { mutableStateOf(0) }
     var minLoadElapsed by remember { mutableStateOf(false) }
     LaunchedEffect(checkCycle) {
         minLoadElapsed = false
         appController.checkForUpdates(force = true)
-        delay(2000)
+        delay(1000)
         minLoadElapsed = true
     }
 
     val resolved = status is UpdateStatus.UpToDate ||
         status is UpdateStatus.UpdateAvailable ||
         status is UpdateStatus.CheckFailed
-    // Reveal the result only once the 2s minimum has passed AND the check has actually resolved.
+    // Reveal the result only once the 1s minimum has passed AND the check has actually resolved.
     val showResult = minLoadElapsed && resolved
     // Hold the last resolved status so the card keeps its content while it animates back out
     // (e.g. on a re-check the status briefly drops to Checking mid-exit).

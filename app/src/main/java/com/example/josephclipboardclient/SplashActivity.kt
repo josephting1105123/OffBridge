@@ -33,7 +33,7 @@ class SplashActivity : AppCompatActivity() {
         HistoryBackupManager.maybeRestoreOnLaunch(applicationContext)
 
         // Pre-warm the update check in the background at launch, so opening the Updates page shows the
-        // result after the loader's 2s floor instead of waiting on a fresh GitHub round-trip. Silent —
+        // result after the loader's 1s floor instead of waiting on a fresh GitHub round-trip. Silent —
         // no popup/badge; the Updates page reads UpdateRepository.status.
         UpdateRepository.check(applicationContext, force = false)
 

@@ -58,13 +58,14 @@ class DowngradeBlockedException(message: String) : Exception(message)
 private const val UPDATE_CHECK_COOLDOWN_MS = 24L * 60 * 60 * 1000
 
 /**
- * Hard wall-clock cap on [ClipboardAppController.checkForUpdates], independent of
- * [UpdateChecker]'s own connect/request timeouts. Those bound the HttpClient's socket phases, but
- * not every hang vector (e.g. OS-level DNS resolution or Windows proxy auto-detection stalling
- * before a connection attempt even starts) — without this backstop the Updates page's "Checking
- * for updates…" loader can spin forever instead of surfacing a retryable failure.
+ * Hard wall-clock ceiling on [ClipboardAppController.checkForUpdates] — detection must resolve
+ * within 5s, one way or the other. [UpdateChecker]'s own connect (2s) / request (4s) timeouts bound
+ * the HttpClient's socket phases and normally fire first (their errors are more specific); this
+ * backstop sits just above them to catch the hang vectors they can't (e.g. OS-level DNS resolution
+ * or Windows proxy auto-detection stalling before a connection attempt even starts) — without it
+ * the Updates page's "Checking for updates…" loader can spin forever.
  */
-private const val UPDATE_CHECK_TIMEOUT_MS = 15_000L
+private const val UPDATE_CHECK_TIMEOUT_MS = 5_000L
 
 data class OutgoingFileSession(
     val sessionId: String,

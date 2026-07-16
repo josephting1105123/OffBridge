@@ -4,15 +4,17 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Process-wide holder for the latest update-check result. A silent check fires at app launch
  * (SplashActivity) to pre-warm this, so opening the Updates page reveals the answer after the loader's
- * 2s floor instead of waiting on a fresh network round-trip. The page observes [status] and can force
+ * 1s floor instead of waiting on a fresh network round-trip. The page observes [status] and can force
  * a re-check ("Check again" / "Try again").
  */
 object UpdateRepository {
@@ -23,6 +25,12 @@ object UpdateRepository {
     // Reuse a recent answered result rather than re-hitting GitHub on every launch/page-open. A failed
     // check is NOT cached (answered == resolved-with-an-answer), so a transient failure re-checks.
     private const val COOLDOWN_MS = 30L * 60 * 1000
+
+    // Hard wall-clock ceiling on detection — mirrors the Windows client's backstop. The checker's
+    // connect/read timeouts bound HttpURLConnection's socket phases and normally fire first, but a
+    // stall before the connection starts (DNS resolution, captive portal) slips past both; without
+    // this cap the Updates page's loader would spin until the OS gives up.
+    private const val CHECK_TIMEOUT_MS = 5_000L
     @Volatile private var lastCheckMs = 0L
     @Volatile private var inFlight = false
 
@@ -51,7 +59,13 @@ object UpdateRepository {
         scope.launch {
             try {
                 _status.value = UpdateStatus.Checking
-                _status.value = UpdateChecker.check(version)
+                // Race the check against the 5s ceiling. The blocking HttpURLConnection read inside
+                // UpdateChecker can't be interrupted by cancellation, so await() (a real suspension
+                // point) is what lets this coroutine give up on time; the abandoned attempt finishes
+                // on its own IO thread and its result is discarded.
+                val pending = async { UpdateChecker.check(version) }
+                _status.value = withTimeoutOrNull(CHECK_TIMEOUT_MS) { pending.await() }
+                    ?: UpdateStatus.CheckFailed("Update check timed out")
                 lastCheckMs = System.currentTimeMillis()
             } finally {
                 inFlight = false

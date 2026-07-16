@@ -80,13 +80,14 @@ fun UpdateScreen(modifier: Modifier = Modifier) {
 
     // Each check cycle (screen open = 0, or a manual re-check) bumps this. Opening the page reuses the
     // launch-time pre-warm (force = false); "Check again"/"Try again" forces a fresh fetch. Either way
-    // the loader is held for a minimum of 2s before the result may reveal.
+    // the loader is held for a minimum of 1s before the result may reveal — just enough not to flash,
+    // without delaying the result card.
     var checkCycle by remember { mutableStateOf(0) }
     var minLoadElapsed by remember { mutableStateOf(false) }
     LaunchedEffect(checkCycle) {
         minLoadElapsed = false
         UpdateRepository.check(context, force = checkCycle > 0)
-        delay(2000)
+        delay(1000)
         minLoadElapsed = true
     }
 
@@ -127,7 +128,7 @@ fun UpdateScreen(modifier: Modifier = Modifier) {
     val resolved = status is UpdateStatus.UpToDate ||
         status is UpdateStatus.UpdateAvailable ||
         status is UpdateStatus.CheckFailed
-    // Reveal the result once the 2s minimum has passed, the check has resolved, and we're not mid-
+    // Reveal the result once the 1s minimum has passed, the check has resolved, and we're not mid-
     // download (during a download the loader takes over with the "Downloading…" label).
     val showResult = minLoadElapsed && resolved && !downloading
     // Hold the last resolved status so the card keeps its content while it animates back out.

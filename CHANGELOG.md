@@ -4,6 +4,16 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.3 — Windows (update detection within 5 seconds)
+
+### Changed
+- **Update detection now resolves within 5 seconds, always.** Connect timeout cut from 5s to 2s,
+  the request cap from 10s to 4s, and the overall wall-clock backstop from 15s to 5s — a dead or
+  flaky network shows the retry card at 5s instead of 15. The loader's minimum hold also drops from
+  2s to 1s, so on a healthy network the result (and the update button) appears in about a second.
+- The Android client got the same tightening (2s connect / 4s read / 5s ceiling — it previously had
+  no overall cap at all); that ships with the next Play release.
+
 ## 3.7.2 — Windows (update check can no longer hang forever)
 
 ### Fixed

@@ -20,7 +20,12 @@ object UpdateChecker {
     private const val OWNER = "josephting1105123"
     private const val REPO = "ClipboardShare-Showcase"
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
-    private const val TIMEOUT_MS = 10_000
+
+    // Connect fails fast at 2s (unreachable/offline network); reads may stall at most 4s each.
+    // Mirrors the Windows checker's 2s/4s split — detection is meant to resolve within the 5s
+    // ceiling UpdateRepository enforces overall.
+    private const val CONNECT_TIMEOUT_MS = 2_000
+    private const val READ_TIMEOUT_MS = 4_000
 
     // Stable asset name for the sideloadable APK on the release (no version in the name, so the
     // "latest" asset URL always resolves). Absent until the first APK is published — the Updates page
@@ -33,8 +38,8 @@ object UpdateChecker {
         try {
             val conn = (URL(LATEST_RELEASE_URL).openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
-                connectTimeout = TIMEOUT_MS
-                readTimeout = TIMEOUT_MS
+                connectTimeout = CONNECT_TIMEOUT_MS
+                readTimeout = READ_TIMEOUT_MS
                 setRequestProperty("Accept", "application/vnd.github+json")
                 // GitHub's REST API rejects unauthenticated requests that omit a User-Agent.
                 setRequestProperty("User-Agent", "ClipboardShare-Android/$currentVersion")
