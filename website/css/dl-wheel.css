@@ -61,17 +61,18 @@
 /* Desktop: cap the deck and shrink the card within it so the rotated
    neighbors peek INSIDE the deck box instead of being clipped by its
    overflow: hidden (on phones the deck is the full container and the
-   neighbors showing as edge slivers is the intended look). Card = 50% of
-   the deck; a neighbor sits at translateX(±54% of card width) scaled
-   ~0.85, so its outer edge lands at ~96% of a card width from center —
-   just inside the deck's half-width with room for the glow. */
+   neighbors showing as edge slivers is the intended look). Card = 42% of
+   the deck (~386px at the cap); dl-wheel.js's wide pose puts a neighbor at
+   translateX(±70% of card width), scaled ~0.85 and rotated 24°, so its
+   outer edge lands ~420px from center — inside the deck's 460px half-width
+   with room for the glow. */
 @media (min-width: 720px) {
   .dl-wheel {
-    max-width: 780px;
+    max-width: 920px;
     margin-inline: auto;
   }
   .dl-wheel-deck > .dl-card {
-    left: 25%;
-    right: 25%;
+    left: 29%;
+    right: 29%;
   }
 }

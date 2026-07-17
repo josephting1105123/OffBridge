@@ -38,8 +38,17 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var STEP_DEG = 30; // rotateY degrees per step away from center
-  var STEP_X = 54; // % of the card's own width, translateX per step
+  // From 720px up (matching dl-wheel.css's desktop deck) the wheel uses the
+  // *_WIDE pose: more lateral travel per step and a flatter rotation — a
+  // bigger wheel radius, so the side cards sit further out instead of
+  // tucking tight behind the center one. Mobile keeps the tighter arc.
+  var wideMq = window.matchMedia("(min-width: 720px)");
+
+  var STEP_DEG = 30; // rotateY degrees per step away from center (mobile)
+  var STEP_DEG_WIDE = 24;
+  var STEP_X = 54; // % of the card's own width, translateX per step (mobile)
+  var STEP_X_WIDE = 70;
+  var STEP_BLUR = 2.5; // px of blur per step away from center
   var STEP_Z = 70; // px pushed back (into the screen) per step
   var STEP_SCALE = 0.15; // scale falloff per step
   var STEP_DIM = 0.24; // brightness falloff per step
@@ -193,9 +202,14 @@
     document.addEventListener("dl:platform-detected", this.onDetected);
   }
 
-  // Re-read each card's own content height. Called on init and on resize —
-  // line-wrapping (and so card height) depends on viewport width.
+  // Re-read each card's own content height and the breakpoint-dependent pose
+  // values. Called on init and on resize — line-wrapping (and so card height),
+  // the card's layout width, and the mobile/wide pose all depend on viewport
+  // width.
   Wheel.prototype.measure = function () {
+    this._stepX = wideMq.matches ? STEP_X_WIDE : STEP_X;
+    this._stepDeg = wideMq.matches ? STEP_DEG_WIDE : STEP_DEG;
+    this._cardW = this.cards[0].offsetWidth || 0;
     for (var i = 0; i < this.n; i++) this.cards[i]._h = this.cards[i].offsetHeight;
   };
 
@@ -219,17 +233,21 @@
     el.style.transition = animate && !reduce ? SPIN_TRANS : "none";
     var off = Math.max(-(VISIBLE_STEPS + 1.4), Math.min(VISIBLE_STEPS + 1.4, offset));
     var mag = Math.abs(off);
-    var x = off * STEP_X;
+    var x = off * this._stepX;
     var z = -mag * STEP_Z;
-    var deg = -off * STEP_DEG;
+    var deg = -off * this._stepDeg;
     var scale = Math.max(0.62, 1 - mag * STEP_SCALE);
     var bright = Math.max(0.55, 1 - mag * STEP_DIM);
+    var blur = Math.min(mag, VISIBLE_STEPS + 1) * STEP_BLUR;
     var op = mag <= VISIBLE_STEPS ? 1 : Math.max(0, 1 - (mag - VISIBLE_STEPS) * 1.4);
     el.style.transform =
       "translateX(" + x.toFixed(2) + "%) translateZ(" + z.toFixed(1) + "px) " +
       "rotateY(" + deg.toFixed(2) + "deg) scale(" + scale.toFixed(3) + ")";
     el.style.opacity = String(op);
-    el.style.filter = mag > 0.02 ? "brightness(" + bright.toFixed(3) + ")" : "none";
+    el.style.filter =
+      mag > 0.02
+        ? "brightness(" + bright.toFixed(3) + ") blur(" + blur.toFixed(2) + "px)"
+        : "none";
     el.style.zIndex = String(100 - Math.round(mag * 10));
   };
 
@@ -283,7 +301,11 @@
     this._frac = 0;
     this.startX = e.clientX;
     this.startY = e.clientY;
-    this.stepPx = Math.max(40, this.deckW * 0.82 * (STEP_X / 100));
+    // One step of drag = the distance a card actually travels per step: its
+    // measured layout width × the lateral travel fraction. (The old
+    // deckW × 0.82 shortcut assumed the mobile card fraction and would have
+    // demanded ~2× the finger travel on the desktop deck.)
+    this.stepPx = Math.max(40, (this._cardW || this.deckW * 0.82) * (this._stepX / 100));
     document.addEventListener("pointermove", this.onMove, { passive: false });
     document.addEventListener("pointerup", this.onUp);
     document.addEventListener("pointercancel", this.onUp);
