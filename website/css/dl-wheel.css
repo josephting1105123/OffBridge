@@ -1,0 +1,77 @@
+/* ==========================================================================
+   dl-wheel.css — "wheel" carousel for the Download section
+   (#download .dl-grid), active at every viewport width (dl-wheel.js wraps
+   the grid and poses the cards; the grid rules in sections.css remain as
+   the no-JS fallback). Same wrapping technique as carousel.css's card deck
+   but a different pose model: cards fan out on a shallow rotateY arc, so
+   the center card reads as a spotlighted pick and the side cards peek in
+   from either edge. Position dots reuse .mcar-dots from carousel.css (same
+   look, no duplicated CSS) and the aria-live status text reuses
+   .visually-hidden from base.css.
+   ========================================================================== */
+
+/* dl-wheel.js sets [inert] on the off-center cards' download link and
+   verify-checksum block only — not the whole card, since tapping a
+   peeking card is how you select it. Fallback for engines that parse
+   inert but don't act on it. */
+.dl-wheel-deck [inert] {
+  pointer-events: none;
+}
+
+.dl-wheel {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: var(--s-24);
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+
+.dl-wheel-deck {
+  position: relative;
+  display: block !important;
+  grid-template-columns: none !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.dl-wheel-deck > .dl-card {
+  position: absolute;
+  top: 0;
+  left: 9%;
+  right: 9%;
+  margin: 0 !important;
+  grid-column: auto !important;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform, opacity, filter;
+}
+
+/* The front card keeps .is-highlight's border/glow (set by dl-wheel.js,
+   which owns highlighting — see the guard in platform.js); its own
+   transform: scale(1.02) is superseded by the card's inline pose
+   transform, which already accounts for front-card scale. */
+
+/* Desktop: cap the deck and shrink the card within it so the rotated
+   neighbors peek INSIDE the deck box instead of being clipped by its
+   overflow: hidden (on phones the deck is the full container and the
+   neighbors showing as edge slivers is the intended look). Card = 50% of
+   the deck; a neighbor sits at translateX(±54% of card width) scaled
+   ~0.85, so its outer edge lands at ~96% of a card width from center —
+   just inside the deck's half-width with room for the glow. */
+@media (min-width: 720px) {
+  .dl-wheel {
+    max-width: 780px;
+    margin-inline: auto;
+  }
+  .dl-wheel-deck > .dl-card {
+    left: 25%;
+    right: 25%;
+  }
+}

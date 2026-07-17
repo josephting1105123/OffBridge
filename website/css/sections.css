@@ -459,11 +459,15 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-/* Odd card out (3 cards over 2 columns, tablet width only) spans both instead
-   of sitting half-width under column 1 — centers itself as its own row. Upper
-   bound keeps this from fighting the 3-column desktop rule below on
-   specificity (it would otherwise win: it's the more specific selector). */
-@media (min-width: 720px) and (max-width: 959px) {
+/* Odd card out (3 cards over 2 columns) spans both instead of sitting
+   half-width under column 1 — centers itself as its own row. Upper bound keeps
+   this from fighting the 3-column rule below on specificity (it would
+   otherwise win: it's the more specific selector). The 3-column band starts at
+   1160px — measured, not guessed: each card's min-content is its nowrap
+   button label (the Play card's is ~368px), and three of those plus gaps and
+   gutters only genuinely fit from ~1150px; below that the grid overflowed and
+   the page clipped the third card. */
+@media (min-width: 720px) and (max-width: 1159px) {
   .dl-grid:has(.dl-card:nth-child(3)):not(:has(.dl-card:nth-child(4)))
     .dl-card:nth-child(3) {
     grid-column: 1 / -1;
@@ -472,9 +476,13 @@
     width: 100%;
   }
 }
-@media (min-width: 960px) {
+@media (min-width: 1160px) {
   .dl-grid:has(.dl-card:nth-child(3)) {
-    grid-template-columns: repeat(3, 1fr);
+    /* minmax(0, …) drops the min-content floor so the three tracks stay EQUAL
+       (plain 1fr floors each track at its card's nowrap-label width, which
+       rendered lopsided 368/332/332 columns). Cards can't clip: their buttons
+       wrap instead (see .dl-card .btn below). */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     max-width: 1080px;
   }
 }
@@ -523,6 +531,10 @@
 }
 .dl-card .btn {
   margin-top: var(--s-4);
+  /* Wrap long labels instead of inheriting .btn's nowrap — inside these fixed-
+     width columns a nowrap label is the card's min-content and either clips or
+     overflows the grid (localized labels run longer than the English ones). */
+  white-space: normal;
 }
 .dl-detected-tag {
   font-size: var(--t-caption);
@@ -556,6 +568,11 @@
   font-size: var(--t-small);
 }
 
+/* The explicit display below would otherwise defeat the UA's [hidden] rule —
+   platform.js hides this banner once every download card is wired. */
+.dl-todo[hidden] {
+  display: none;
+}
 .dl-todo {
   display: block;
   margin: var(--s-16) auto 0;

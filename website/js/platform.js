@@ -36,6 +36,10 @@
     var cards = toArr(document.querySelectorAll("[data-dl-card]"));
     if (cards.length < 2) return;
     function setHighlight(card) {
+      // The mobile wheel carousel (dl-wheel.js) owns highlighting once
+      // built — its front card is the highlight, driven by drag/tap, not
+      // by hover/focus. Bail out so the two don't fight over the ring.
+      if (document.querySelector("#download .dl-wheel")) return;
       for (var i = 0; i < cards.length; i++) {
         cards[i].classList.toggle("is-highlight", cards[i] === card);
       }
@@ -188,6 +192,12 @@
         if (grid && window.matchMedia("(max-width: 719px)").matches) {
           grid.insertBefore(card, grid.firstChild);
         }
+        // Detection is async and can resolve after the mobile wheel carousel
+        // (dl-wheel.js) has already built with a default front card — let it
+        // know so it can spin to match.
+        document.dispatchEvent(
+          new CustomEvent("dl:platform-detected", { detail: { card: card } })
+        );
       }
       if (note) note.hidden = true;
     } else if (note) {
