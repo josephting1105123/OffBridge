@@ -494,9 +494,20 @@
   flex-direction: column;
   align-items: center;
   gap: var(--s-16);
+  /* Sizing context for the CTA label below. The card's width comes from the
+     wheel (a percentage of the deck), not from the viewport, so viewport units
+     would mis-size the label on the way down. */
+  container-type: inline-size;
   transition: transform var(--dur-med) var(--ease),
     border-color var(--dur-med) var(--ease-std),
     box-shadow var(--dur-med) var(--ease-std);
+}
+/* Phones: 32px of side padding out of a ~266px card is a third of the width.
+   Give it back to the CTA so its label stays on one line. */
+@media (max-width: 520px) {
+  .dl-card {
+    padding-inline: var(--s-16);
+  }
 }
 /* The green neon ring is interactive: it follows whichever card the pointer or
    keyboard last landed on (see platform.js), so it's decoupled from .is-detected
@@ -531,9 +542,19 @@
 }
 .dl-card .btn {
   margin-top: var(--s-4);
-  /* Wrap long labels instead of inheriting .btn's nowrap — inside these fixed-
-     width columns a nowrap label is the card's min-content and either clips or
-     overflows the grid (localized labels run longer than the English ones). */
+  /* .btn--lg's 32px side padding does nothing on a full-width button whose
+     content is already centered — it only eats label room. Measured, that was
+     the whole reason "Download for Windows" broke onto a second line: the
+     label needed 225px and the padding left it 222px. */
+  padding-inline: var(--s-8);
+  /* Below ~400px even the trimmed padding isn't enough, so the label scales
+     with the CARD (cqi resolves against the container above — its CONTENT box,
+     hence 6.5 rather than the ~5.6 the full width would suggest). 6.5cqi clears
+     --t-lead at every card width down to 430px, so the clamp pins to --t-lead
+     and the CTA keeps full size; it steps down only on small phones. */
+  font-size: clamp(0.95rem, 6.5cqi, var(--t-lead));
+  /* Safety net, not the plan: a label that still can't fit — a long localized
+     one — wraps rather than clipping or overflowing the grid. */
   white-space: normal;
 }
 .dl-detected-tag {
