@@ -48,7 +48,7 @@ window.CS_CONFIG = {
     version: "3.7.1",
     size: "29 MB",
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
-    sha256: "2d970aad668d116bc8126bcdb531a26411a506c476786f214bd8a3f1d1afd836",
+    sha256: "b4686abf3728e74f4a394e27778d0df6d23044960adb16f12ea261f42f7d3fe1",
     note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
   },
 
