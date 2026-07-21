@@ -22,7 +22,10 @@ data class DiscoveredDevice(
      * with an HMAC proof of the shared pairing key before we show its incoming-file popup. The receiver
      * only issues the challenge to a sender with this flag set; senders that omit it keep today's
      * direct OFFER_RECEIVED handshake. Defaults false so un-updated peers are byte-identical. */
-    val supportsAuth2: Boolean = false
+    val supportsAuth2: Boolean = false,
+    /** Peer's stable install id from the discovery `did:` token; null for peers that predate it. Lets
+     * clipboard auto-push follow this device to a new DHCP address (see [ClipboardTargeting]). */
+    val deviceId: String? = null
 )
 
 data class TransferSession(

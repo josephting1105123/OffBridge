@@ -12,7 +12,8 @@ package com.EntropicSoftwareLab.ClipboardShare
  */
 object PairingWire {
 
-    private const val DEVICE_ID_TOKEN = "did:"
+    /** Prefix marking the stable device-id token in both the pairing tail and the discovery frame. */
+    const val DEVICE_ID_TOKEN = "did:"
 
     /** `PAIR_REQ|name|pubkeyB64|pv2|did:<hex>` */
     fun pairReq(deviceName: String, pubKeyB64: String, deviceId: String): String =

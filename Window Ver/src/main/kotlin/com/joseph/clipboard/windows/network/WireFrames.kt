@@ -25,7 +25,8 @@ object WireFrames {
     // both platforms already read it with `contains`, so appending `did:<32 hex>` is invisible to
     // older builds — they keep their positional fields and ignore the extra token. A peer that
     // sends no did simply doesn't get stale-record eviction.
-    private const val DEVICE_ID_TOKEN = "did:"
+    /** Prefix marking the stable device-id token in both the pairing tail and the discovery frame. */
+    const val DEVICE_ID_TOKEN = "did:"
 
     /** `PAIR_REQ|name|pubkeyB64|pv2|did:<hex>` — bare line for println. */
     fun pairReq(deviceName: String, pubKeyB64: String, deviceId: String): String =

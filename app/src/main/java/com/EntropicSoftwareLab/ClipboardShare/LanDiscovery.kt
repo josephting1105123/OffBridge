@@ -33,7 +33,10 @@ object LanDiscovery {
                 while (isActive) {
                     if (SecurityVault.isDiscoverable(context)) {
                         val myIp = Net.getMyIpAddress()
-                        val message = "FILEBRIDGE_DISCOVERY|${TransferDaemon.customDeviceName}|$myIp|Android|${TransferDaemon.DISCOVERY_CAPS}".toByteArray(Charsets.UTF_8)
+                        // The `did:` token after caps carries this install's stable id so a peer can
+                        // follow us to a new DHCP address for auto-push. Older peers read caps at index
+                        // 4 and ignore anything beyond, so this stays wire-compatible.
+                        val message = "FILEBRIDGE_DISCOVERY|${TransferDaemon.customDeviceName}|$myIp|Android|${TransferDaemon.DISCOVERY_CAPS}|${PairingWire.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId(context)}".toByteArray(Charsets.UTF_8)
 
                         val broadcastAddresses = Net.getAllBroadcastAddresses(context)
                         for (address in broadcastAddresses) {
@@ -94,13 +97,21 @@ object LanDiscovery {
                                 val supportsFile = caps.contains(TransferDaemon.FILE_GCM_CAP)
                                 val supportsFileV2 = caps.contains(TransferDaemon.FILE_GCM_CAP_V2)
                                 val supportsAuth2 = caps.contains(TransferDaemon.OFFER_AUTH_CAP)
+                                // Stable device id from the `did:` token anywhere in the tail after the
+                                // positional fields (absent on peers that predate it). Lets clipboard
+                                // auto-push follow this peer to a new address; see ClipboardTargeting.
+                                val peerDeviceId = PairingWire.parseDeviceId(parts.drop(4))
                                 val actualIp = senderIp
 
                                 if (!Net.isMyOwnIp(actualIp)) {
                                     val isNewNode = !TransferDaemon.discoveredNodes.containsKey(actualIp)
+                                    // Keep the last id we saw: a did-aware peer sends it on every frame, so
+                                    // a stray packet without one must not null out a good id mid-session
+                                    // (mirrors the Windows daemon).
+                                    val effectiveDeviceId = peerDeviceId ?: TransferDaemon.discoveredNodes[actualIp]?.deviceId
                                     TransferDaemon.putDiscoveredNode(
                                         actualIp,
-                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2)
+                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, effectiveDeviceId)
                                     )
                                     if (isNewNode) wakeDiscovery()
 
@@ -109,7 +120,7 @@ object LanDiscovery {
                                             try {
                                                 DatagramSocket().use { replySocket ->
                                                     val myIp = Net.getMyIpAddress()
-                                                    val replyMsg = "FILEBRIDGE_REPLY|${TransferDaemon.customDeviceName}|$myIp|Android|${TransferDaemon.DISCOVERY_CAPS}".toByteArray(Charsets.UTF_8)
+                                                    val replyMsg = "FILEBRIDGE_REPLY|${TransferDaemon.customDeviceName}|$myIp|Android|${TransferDaemon.DISCOVERY_CAPS}|${PairingWire.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId(context)}".toByteArray(Charsets.UTF_8)
                                                     val replyPacket = DatagramPacket(replyMsg, replyMsg.size, InetSocketAddress(senderIp, Ports.DISCOVERY))
                                                     replySocket.send(replyPacket)
                                                 }

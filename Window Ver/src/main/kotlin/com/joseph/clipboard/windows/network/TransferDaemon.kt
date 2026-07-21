@@ -28,7 +28,10 @@ data class DiscoveredDevice(
      * proof of the shared pairing key before we show its incoming-file popup. The receiver only
      * challenges senders with this flag; senders that omit it keep today's direct OFFER_RECEIVED
      * handshake. Defaults false so un-updated peers stay byte-identical. */
-    var supportsAuth2: Boolean = false
+    var supportsAuth2: Boolean = false,
+    /** Peer's stable install id from the discovery `did:` token; null for peers that predate it. Lets
+     * clipboard auto-push follow this device to a new DHCP address (see [ClipboardTargeting]). */
+    var deviceId: String? = null
 )
 
 class TransferDaemon(
@@ -143,10 +146,11 @@ class TransferDaemon(
     private fun broadcastPresence() {
         try {
             val localIp = getLocalIpAddress()
-            // Trailing caps field (|GCM1,FGCM1) advertises clipboard + file AEAD support; older
-            // peers parse with parts.size >= 4 and ignore the extra field, so this stays
-            // wire-compatible.
-            val message = "FILEBRIDGE_DISCOVERY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS"
+            // Trailing caps field (|GCM1,FGCM1) advertises clipboard + file AEAD support; the `did:`
+            // token after it carries this install's stable id so a peer can follow us to a new DHCP
+            // address for auto-push. Older peers parse caps at index 4 and ignore anything beyond, so
+            // this stays wire-compatible.
+            val message = "FILEBRIDGE_DISCOVERY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS|${WireFrames.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId()}"
             val data = message.toByteArray(Charsets.UTF_8)
             val packet = DatagramPacket(
                 data,
@@ -180,6 +184,10 @@ class TransferDaemon(
             val supportsFile = caps.contains(FILE_GCM_CAP)
             val supportsFileV2 = caps.contains(FILE_GCM_CAP_V2)
             val supportsAuth2 = caps.contains(OFFER_AUTH_CAP)
+            // Stable device id from the `did:` token anywhere in the tail after the positional fields
+            // (absent on peers that predate it). Lets clipboard auto-push follow this peer to a new
+            // address; see ClipboardTargeting.
+            val peerDeviceId = WireFrames.parseDeviceId(parts.drop(4))
 
             // Always trust the packet's source address over the payload-declared IP (parts[2]);
             // Android was hardened the same way so a peer behind NAT/misconfig can't have us store an
@@ -201,8 +209,11 @@ class TransferDaemon(
                 existing.supportsAuthFile = supportsFile
                 existing.supportsAuthFileV2 = supportsFileV2
                 existing.supportsAuth2 = supportsAuth2
+                // Keep the last id we saw: a did-aware peer sends it on every frame, and we never want
+                // a stray malformed packet to null out a good id mid-session.
+                if (peerDeviceId != null) existing.deviceId = peerDeviceId
             } else {
-                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2)
+                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId)
             }
 
             // Answer every DISCOVERY with a unicast REPLY (bypasses AP broadcast restrictions), mirroring
@@ -217,7 +228,7 @@ class TransferDaemon(
     private fun sendDiscoveryReply(target: InetAddress) {
         try {
             val localIp = getLocalIpAddress()
-            val message = "FILEBRIDGE_REPLY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS"
+            val message = "FILEBRIDGE_REPLY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS|${WireFrames.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId()}"
             val data = message.toByteArray(Charsets.UTF_8)
             val packet = DatagramPacket(data, data.size, target, DISCOVERY_PORT)
             socket?.send(packet)

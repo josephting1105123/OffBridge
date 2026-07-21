@@ -12,6 +12,7 @@ import com.joseph.clipboard.windows.network.OffGridQrSender
 import com.joseph.clipboard.windows.network.QrHostCoordinator
 import com.joseph.clipboard.windows.network.WireFrames
 import com.joseph.clipboard.windows.network.control.SessionCrypto
+import com.joseph.clipboard.windows.network.ClipboardTargeting
 import com.joseph.clipboard.windows.network.PairingClient
 import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
@@ -357,17 +358,41 @@ class ClipboardAppController {
         }
     }
 
+    /**
+     * Auto-push: send the clipboard to every paired device that is reachable right now, following a
+     * device that changed DHCP lease to its new address by the stable id it advertises in discovery
+     * (see [ClipboardTargeting]). The key and TOFU pin stay under the pairing address [keyIp] even
+     * when the bytes go to a new [targetIp]. A send that gets no ack is logged rather than silently
+     * dropped, so a total miss is visible in diagnostics.
+     */
     private fun pushClipboardToTrustedNodes(text: String) {
-        pushClipboardToSpecificNodes(text, _trustedNodes.value.toList())
+        val trusted = trustedNodes.value.map { ClipboardTargeting.Trusted(it, SecurityVault.getPairedDeviceId(it)) }
+        val live = transferDaemon.getDiscoveredNodes().map { ClipboardTargeting.Live(it.ip, it.deviceId) }
+        ClipboardTargeting.resolve(trusted, live).forEach { (keyIp, targetIp) ->
+            scope.launch {
+                try {
+                    val aesKey = SecurityVault.getAesKey(keyIp) ?: return@launch
+                    val sealed = sealClipboardForPeer(keyIp, targetIp, aesKey, text) ?: return@launch
+                    // Append newline in case receiver uses readLine()
+                    if (!Net.sendString(targetIp, Ports.CLIPBOARD, sealed + "\n")) {
+                        System.err.println("Clipboard auto-push to $targetIp (paired as $keyIp) failed to send")
+                    }
+                } catch (e: Exception) {
+                    System.err.println("Failed to auto-push clipboard to $targetIp: ${e.message}")
+                }
+            }
+        }
     }
 
+    /** Manual send to explicitly chosen live addresses (the send dialog). The chosen ip is both the
+     *  key source and the destination — the user picked a device currently on the list. */
     fun pushClipboardToSpecificNodes(text: String, ips: List<String>) {
         ips.forEach { ip ->
             scope.launch {
                 try {
                     val aesKey = SecurityVault.getAesKey(ip)
                     if (aesKey != null) {
-                        val encryptedBase64 = sealClipboardForPeer(ip, aesKey, text)
+                        val encryptedBase64 = sealClipboardForPeer(ip, ip, aesKey, text)
                         if (encryptedBase64 != null) {
                             // Append newline in case receiver uses readLine()
                             Net.sendString(ip, Ports.CLIPBOARD, encryptedBase64 + "\n")
@@ -387,18 +412,21 @@ class ClipboardAppController {
      * it, and a later loss of GCM1 (a capability-strip on the unauthenticated discovery) makes us
      * skip the peer (return null) rather than send to a suspect channel. Fail closed.
      */
-    private fun sealClipboardForPeer(ip: String, aesKey: ByteArray, plain: String): String? {
-        val supportsAuth = transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuthClipboard }
-        return when (DowngradePolicy.decide(supportsAuth, SecurityVault.isClipboardGcmPinned(ip))) {
+    private fun sealClipboardForPeer(keyIp: String, targetIp: String, aesKey: ByteArray, plain: String): String? {
+        // Capability is read from the device we're actually sending to (it may have moved), but the
+        // anti-downgrade pin stays keyed to the pairing address so a moved device can't reset its own
+        // TOFU state by advertising from a fresh IP.
+        val supportsAuth = transferDaemon.getDiscoveredNodes().any { it.ip == targetIp && it.supportsAuthClipboard }
+        return when (DowngradePolicy.decide(supportsAuth, SecurityVault.isClipboardGcmPinned(keyIp))) {
             DowngradePolicy.Decision.SEAL -> {
-                SecurityVault.pinClipboardGcm(ip)
+                SecurityVault.pinClipboardGcm(keyIp)
                 CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             }
             // CBC retired in 3.5.0: a peer not (yet) advertising GCM1 still gets an authenticated GCM
             // seal (it must update to open it) instead of the malleable unauthenticated CBC path.
             DowngradePolicy.Decision.PLAINTEXT -> CryptoEngine.encryptStringAuthenticated(plain, aesKey)
             DowngradePolicy.Decision.BLOCK -> {
-                System.err.println("Clipboard GCM downgrade blocked for $ip — skipping peer")
+                System.err.println("Clipboard GCM downgrade blocked for $keyIp — skipping peer")
                 null
             }
         }

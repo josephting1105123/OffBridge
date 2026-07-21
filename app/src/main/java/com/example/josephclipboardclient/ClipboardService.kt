@@ -502,17 +502,18 @@ class ClipboardService : Service() {
     private fun broadcastClipboardText(text: String, isManualPush: Boolean = false, targetIps: Array<String>? = null) {
         serviceScope.launch(Dispatchers.IO) {
             var successCount = 0
-            val allPairedNodes = TransferDaemon.discoveredNodes.values.filter { SecurityVault.getKeyForNode(applicationContext, it.ip) != null }
-            val pairedNodes = if (targetIps != null) {
-                allPairedNodes.filter { targetIps.contains(it.ip) }
-            } else {
-                allPairedNodes
+            // Follow each paired device to the address it's actually reachable at right now — a device
+            // that changed DHCP lease is matched by the stable id it advertises in discovery, so
+            // auto-push no longer writes to its dead pairing address (see ClipboardTargeting). A
+            // manual send filters to the live addresses the user explicitly picked.
+            val targets = resolveClipboardTargets().let { all ->
+                if (targetIps != null) all.filter { targetIps.contains(it.second.ip) } else all
             }
 
-            for (node in pairedNodes) {
+            for ((keyIp, node) in targets) {
                 try {
-                    val aesKey = SecurityVault.getKeyForNode(applicationContext, node.ip) ?: continue
-                    val encryptedPayload = sealClipboardForPeer(node.ip, node.supportsAuthClipboard, aesKey, text) ?: continue
+                    val aesKey = SecurityVault.getKeyForNode(applicationContext, keyIp) ?: continue
+                    val encryptedPayload = sealClipboardForPeer(keyIp, node.supportsAuthClipboard, aesKey, text) ?: continue
                     val textBytes = encryptedPayload.toByteArray(Charsets.UTF_8)
 
                     if (Net.sendBytes(node.ip, Ports.CLIPBOARD, textBytes)) successCount++
@@ -523,6 +524,23 @@ class ClipboardService : Service() {
                 if (successCount > 0) showSuccessNotification(text)
                 else withContext(Dispatchers.Main) { Toast.makeText(applicationContext, applicationContext.getString(R.string.toast_push_failed_no_devices), Toast.LENGTH_SHORT).show() }
             }
+        }
+    }
+
+    /**
+     * `(keyIp, liveDevice)` for every paired peer currently reachable. A device still at its pairing
+     * address matches directly; one that moved is followed by the stable id it advertises in
+     * discovery, but only when exactly one live device claims that id (zero → offline, many → a
+     * spoofer racing the real device; both skip rather than misdeliver). The key and TOFU pin stay
+     * keyed to the pairing address [keyIp] even when the bytes go to the device's new address.
+     */
+    private fun resolveClipboardTargets(): List<Pair<String, DiscoveredDevice>> {
+        val live = TransferDaemon.discoveredNodes.values.toList()
+        val trusted = SecurityVault.getTrustedNodes(applicationContext)
+            .map { ClipboardTargeting.Trusted(it, SecurityVault.getPairedDeviceId(applicationContext, it)) }
+        val resolved = ClipboardTargeting.resolve(trusted, live.map { ClipboardTargeting.Live(it.ip, it.deviceId) })
+        return resolved.mapNotNull { (keyIp, targetIp) ->
+            live.firstOrNull { it.ip == targetIp }?.let { keyIp to it }
         }
     }
 
