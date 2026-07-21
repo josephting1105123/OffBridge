@@ -45,6 +45,21 @@ object PairingDaemon {
 
     private val pendingConfirmations = ConcurrentHashMap<String, PrintWriter>()
 
+    // The outbound handshake blocks on a socket read for up to 2 minutes while the peer's human
+    // decides. Cooperative coroutine cancellation can't interrupt that blocking read, so the
+    // requester's Cancel (and leaving the screen) closes this socket to unblock it, and the flag
+    // makes the unblocked handshake refuse to save trust — otherwise a "cancelled" pair could still
+    // complete in the background if the peer accepted a moment later, leaving one-sided trust.
+    @Volatile private var outgoingSocket: Socket? = null
+    @Volatile private var outgoingCancelled = false
+
+    /** Aborts an in-progress [initiatePairing] from the requester UI: unblocks its socket read and
+     *  prevents it from persisting trust. Safe to call when no pairing is in flight. */
+    fun cancelInitiatePairing() {
+        outgoingCancelled = true
+        try { outgoingSocket?.close() } catch (_: Exception) {}
+    }
+
     private val confirmationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val senderIp = intent?.getStringExtra("SENDER_IP") ?: return
@@ -281,8 +296,10 @@ object PairingDaemon {
      */
     suspend fun initiatePairing(context: Context, targetIp: String, myDeviceName: String, targetName: String, onPin: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
         var socket: Socket? = null
+        outgoingCancelled = false
         try {
             socket = Socket()
+            outgoingSocket = socket
             socket.soTimeout = 15000
             socket.connect(InetSocketAddress(targetIp, Ports.PAIRING), 3000)
 
@@ -322,7 +339,9 @@ object PairingDaemon {
                 // initiator give up ("TIMEOUT") while the acceptor still saves trust — one-sided.
                 socket.soTimeout = 120000
                 val finalResponse = reader.readLine()
-                if (finalResponse == "PAIR_ACCEPT") {
+                if (outgoingCancelled) {
+                    return@withContext "CANCELLED"
+                } else if (finalResponse == "PAIR_ACCEPT") {
                     SecurityVault.saveTrustedNode(context, targetIp, aesKey, peerDeviceId, targetName)
                     return@withContext "SUCCESS"
                 } else {
@@ -332,10 +351,14 @@ object PairingDaemon {
         } catch (e: SocketTimeoutException) {
             return@withContext "TIMEOUT"
         } catch (e: Exception) {
+            // A cancel closes the socket mid-read, surfacing here as a SocketException — report it as
+            // the user's cancel, not a failure.
+            if (outgoingCancelled) return@withContext "CANCELLED"
             e.printStackTrace()
         } finally {
+            outgoingSocket = null
             socket?.close()
         }
-        return@withContext "FAILED"
+        return@withContext if (outgoingCancelled) "CANCELLED" else "FAILED"
     }
 }

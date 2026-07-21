@@ -537,8 +537,20 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
                     color = GreenPrimary,
                     modifier = Modifier.size(32.dp)
                 )
-                
+
                 Spacer(modifier = Modifier.height(32.dp))
+
+                // The requester isn't fully dependent on the other side: if the peer never responds
+                // (or never received the request), Cancel aborts the handshake instead of leaving it
+                // spinning until the socket times out.
+                Button(
+                    onClick = { onCancel() },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = ErrorMuted),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(TranslationManager.getString("action_cancel").takeIf { it != "action_cancel" } ?: "Cancel", color = ErrorText)
+                }
             }
         }
     }

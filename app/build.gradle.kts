@@ -30,8 +30,8 @@ android {
         applicationId = "com.EntropicSoftwareLab.ClipboardShare"
         minSdk = 29
         targetSdk = 36
-        versionCode = 28
-        versionName = "3.7.0"
+        versionCode = 29
+        versionName = "3.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

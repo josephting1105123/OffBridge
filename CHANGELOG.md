@@ -4,6 +4,27 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.4 — Windows (cancel a pairing request)
+
+### Added
+- **Cancel button while requesting a pair.** The device asking to pair is no longer at the mercy of
+  the other side. If the receiver never answers — or never got the request — Cancel drops the
+  handshake instead of leaving it spinning until the socket times out.
+
+### Fixed
+- **Cancelling a pair request now actually stops it.** The button previously only hid the overlay
+  while the handshake kept running in the background, and the pair could still complete (saving
+  one-sided trust) if the peer accepted a moment later. Cancel now closes the connection so the
+  handshake unwinds and refuses to persist trust.
+
+## 3.7.1 — Android (build 29) — cancel a pairing request
+
+### Added
+- **Cancel button while requesting a pair.** Mirrors the Windows change: the requester can abort a
+  pairing the other device hasn't answered. Leaving the screen aborts it too, so a pair can't
+  quietly finish and save trust after you've walked away — a blocking socket read that coroutine
+  cancellation alone couldn't stop.
+
 ## 3.7.3 — Windows (update detection within 5 seconds)
 
 ### Changed

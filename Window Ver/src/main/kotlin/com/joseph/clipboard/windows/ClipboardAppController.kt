@@ -609,6 +609,9 @@ class ClipboardAppController {
     }
     
     fun cancelOutgoingPairing() {
+        // Close the handshake socket so the blocking read unwinds and can't finish pairing in the
+        // background; nulling the state alone would only hide the overlay while the pair completed.
+        PairingClient.cancel()
         _outgoingPairingState.value = null
     }
 

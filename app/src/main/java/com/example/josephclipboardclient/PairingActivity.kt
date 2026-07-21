@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -59,6 +60,14 @@ class PairingActivity : AppCompatActivity() {
         findViewById<View>(R.id.tvPairingVerifyLabel).visibility = View.GONE
         findViewById<View>(R.id.pin_code_container).visibility = View.GONE
 
+        // The requester isn't fully at the mercy of the other side: if the peer never responds (or
+        // never got the request), Cancel aborts the handshake instead of leaving it spinning until
+        // the 2-minute socket timeout.
+        findViewById<Button>(R.id.btnPairingCancel).setOnClickListener {
+            PairingDaemon.cancelInitiatePairing()
+            finish()
+        }
+
         activityScope.launch {
             val result = PairingDaemon.initiatePairing(
                 applicationContext, targetIp, TransferDaemon.customDeviceName, targetName,
@@ -85,6 +94,9 @@ class PairingActivity : AppCompatActivity() {
                     "TIMEOUT" -> {
                         Toast.makeText(applicationContext, getString(R.string.pairing_timed_out), Toast.LENGTH_LONG).show()
                     }
+                    "CANCELLED" -> {
+                        // User cancelled — no toast; just close.
+                    }
                     else -> {
                         Toast.makeText(applicationContext, getString(R.string.pairing_failed), Toast.LENGTH_LONG).show()
                     }
@@ -97,6 +109,12 @@ class PairingActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Leaving the screen for good (back press / system finish) aborts the handshake too, so it
+        // can't keep running and save trust after the user is gone. Guard on isFinishing so a mere
+        // config-change recreate (rotation) doesn't cancel a pairing that's still on screen.
+        if (isFinishing) {
+            PairingDaemon.cancelInitiatePairing()
+        }
         activityJob.cancel()
     }
 }

@@ -58,6 +58,17 @@
         android:layout_height="64dp"
         android:indeterminateTint="?attr/appGreen" />
 
+    <Button
+        android:id="@+id/btnPairingCancel"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:backgroundTint="?attr/appCardColor"
+        android:textColor="?attr/appTextSecondaryColor"
+        android:text="@string/action_cancel" />
+
     <LinearLayout
         android:id="@+id/llPairingContent"
         android:layout_width="match_parent"

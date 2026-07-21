@@ -17,6 +17,19 @@ import java.util.Base64
  */
 object PairingClient {
 
+    // The outbound handshake blocks on a socket read for up to 2 minutes while the peer's human
+    // decides. The requester's Cancel closes this socket to unblock that read, and the flag makes the
+    // unblocked handshake refuse to persist trust — otherwise a "cancelled" pair could still complete
+    // in the background if the peer accepted a moment later, leaving one-sided trust.
+    @Volatile private var activeSocket: Socket? = null
+    @Volatile private var cancelled = false
+
+    /** Aborts an in-progress [pair] from the requester UI. Safe to call when no pairing is in flight. */
+    fun cancel() {
+        cancelled = true
+        try { activeSocket?.close() } catch (_: Exception) {}
+    }
+
     /** Outcome delivered to the caller; [visualPin] is non-null when waiting for user acceptance. */
     sealed class Event {
         data class Connecting(val ip: String, val deviceName: String) : Event()
@@ -46,9 +59,11 @@ object PairingClient {
         onPaired: (ip: String, aesKey: ByteArray, peerName: String, peerDeviceId: String?) -> Unit,
     ) {
         var socket: Socket? = null
+        cancelled = false
         try {
             onEvent(Event.Connecting(ip, deviceName))
             socket = Socket()
+            activeSocket = socket
             socket.soTimeout = 15000
             socket.connect(InetSocketAddress(ip, Ports.PAIRING), 3000)
 
@@ -91,17 +106,22 @@ object PairingClient {
                 socket.soTimeout = 120000
                 val finalResponse = reader.readLine()
 
-                if (finalResponse == "PAIR_ACCEPT") {
+                if (finalResponse == "PAIR_ACCEPT" && !cancelled) {
                     onPaired(ip, aesKey, deviceName, peerDeviceId)
                 }
             }
 
             onEvent(Event.Done)
         } catch (e: Exception) {
-            System.err.println("Pairing failed with $ip")
-            e.printStackTrace()
+            // A cancel closes the socket mid-read, surfacing here as a SocketException — that's the
+            // user's cancel, not a real failure, so don't log it as one.
+            if (!cancelled) {
+                System.err.println("Pairing failed with $ip")
+                e.printStackTrace()
+            }
             onEvent(Event.Done)
         } finally {
+            activeSocket = null
             try { socket?.close() } catch (_: Exception) {}
         }
     }
