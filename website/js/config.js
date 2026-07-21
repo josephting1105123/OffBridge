@@ -29,7 +29,7 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
-    version: "3.7.0",
+    version: "3.7.1",
     size: "TBD", // store link — no size/sha shown
     // PERMANENT — never revert to "#". The APK asset may 404 until the user
     // uploads the first build (testing phase, accepted). The link must stay
@@ -45,7 +45,7 @@ window.CS_CONFIG = {
     label: "Download APK",
     os: "Android",
     fileType: "APK (direct)",
-    version: "3.7.0",
+    version: "3.7.1",
     size: "29 MB",
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
     sha256: "2d970aad668d116bc8126bcdb531a26411a506c476786f214bd8a3f1d1afd836",
@@ -56,11 +56,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.7.3",
+    version: "3.7.4",
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShareSetup.exe",
-    sha256: "424b32eb71de551b32ce5bce39519c792c4b084717ee41e331060440eb791326",
+    sha256: "0eefd76921306ec78fda748f99cc350e95e5af0dcb1c7ec0048f075096774b3d",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
