@@ -33,6 +33,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
         val aesKey = intent.getByteArrayExtra("AES_KEY")
         val visualPin = intent.getStringExtra("VISUAL_PIN")
         val expiresAt = intent.getLongExtra(PairingDaemon.EXTRA_EXPIRES_AT, 0L)
+        val senderDeviceId = intent.getStringExtra(PairingDaemon.EXTRA_SENDER_DEVICE_ID)
 
         val deviceNameTextView = findViewById<TextView>(R.id.tv_pairing_device_name)
         val acceptButton = findViewById<Button>(R.id.btn_accept_pairing)
@@ -55,7 +56,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
 
         acceptButton.setOnClickListener {
             if (senderIp != null && aesKey != null) {
-                completePairing(senderIp, aesKey, senderName, expiresAt)
+                completePairing(senderIp, aesKey, senderName, expiresAt, senderDeviceId)
             } else {
                 clearNotification()
                 finish()
@@ -65,7 +66,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
         declineButton.setOnClickListener { declinePairing(senderIp, senderName) }
     }
 
-    private fun completePairing(senderIp: String, aesKey: ByteArray, senderName: String, expiresAt: Long) {
+    private fun completePairing(senderIp: String, aesKey: ByteArray, senderName: String, expiresAt: Long, senderDeviceId: String?) {
         // finish() flips isFinishing synchronously, so this also blocks an Accept double-tap
         // from re-saving trust and re-broadcasting.
         if (isFinishing) return
@@ -78,8 +79,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
             finish()
             return
         }
-        SecurityVault.saveTrustedNode(applicationContext, senderIp, aesKey)
-        SecurityVault.savePairedDeviceName(applicationContext, senderIp, senderName)
+        SecurityVault.saveTrustedNode(applicationContext, senderIp, aesKey, senderDeviceId, senderName)
         sendBroadcast(Intent(PairingDaemon.ACTION_PAIRING_ACCEPTED).apply {
             putExtra("SENDER_IP", senderIp); setPackage(packageName)
         })

@@ -2,6 +2,7 @@ package com.joseph.clipboard.windows.network
 
 import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.storage.EcdhSession
+import com.joseph.clipboard.windows.storage.SecurityVault
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
@@ -31,8 +32,9 @@ object PairingClient {
 
     /**
      * Runs the outbound pairing handshake to [ip]. Calls [onEvent] on each state transition (on the
-     * caller's thread — not dispatched). Calls [onPaired] (ip, aesKey, deviceName) exactly once on
-     * successful key agreement so the caller can persist the key and device name.
+     * caller's thread — not dispatched). Calls [onPaired] (ip, aesKey, deviceName, peerDeviceId)
+     * exactly once on successful key agreement so the caller can persist the key, name and id.
+     * `peerDeviceId` is null when the peer predates device ids.
      *
      * Blocking — call from an IO dispatcher.
      */
@@ -41,7 +43,7 @@ object PairingClient {
         deviceName: String,
         myDeviceName: String,
         onEvent: (Event) -> Unit,
-        onPaired: (ip: String, aesKey: ByteArray, peerName: String) -> Unit,
+        onPaired: (ip: String, aesKey: ByteArray, peerName: String, peerDeviceId: String?) -> Unit,
     ) {
         var socket: Socket? = null
         try {
@@ -58,7 +60,15 @@ object PairingClient {
 
             // "pv2" advertises PIN-v2 support. Older peers omit it and ignore our extra field, so
             // both sides fall back to v1 (see receiver). The AES key is identical either way.
-            writer.println("PAIR_REQ|$myDeviceName|${Base64.getEncoder().encodeToString(myPubKey)}|pv2")
+            // "did:" carries this install's stable id so the peer can retire our old record if we
+            // last paired from a different address.
+            writer.println(
+                WireFrames.pairReq(
+                    myDeviceName,
+                    Base64.getEncoder().encodeToString(myPubKey),
+                    SecurityVault.localDeviceId(),
+                )
+            )
 
             onEvent(Event.WaitingForResponse(ip, deviceName))
             val ackResponse = reader.readLine()
@@ -67,7 +77,10 @@ object PairingClient {
                 val peerPubKey = Base64.getDecoder().decode(ackParts[1])
                 // v2 PIN only when the ACK also advertises pv2 (both peers 3.5.0+). An ACK
                 // without pv2 (old peer) => v1. Extra fields after index 1 are tolerated.
-                val useV2 = ackParts.drop(2).contains("pv2")
+                val ackTail = ackParts.drop(2)
+                val useV2 = ackTail.contains("pv2")
+                // Same tail carries the peer's device id (absent on older peers).
+                val peerDeviceId = WireFrames.parseDeviceId(ackTail)
                 val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
 
                 onEvent(Event.WaitingForAccept(ip, deviceName, visualPin))
@@ -79,7 +92,7 @@ object PairingClient {
                 val finalResponse = reader.readLine()
 
                 if (finalResponse == "PAIR_ACCEPT") {
-                    onPaired(ip, aesKey, deviceName)
+                    onPaired(ip, aesKey, deviceName, peerDeviceId)
                 }
             }
 

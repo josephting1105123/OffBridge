@@ -558,9 +558,8 @@ class ClipboardAppController {
                             _outgoingPairingState.value = null
                     }
                 },
-                onPaired = { peerIp, aesKey, peerName ->
-                    SecurityVault.saveTrustedNode(peerIp, aesKey)
-                    SecurityVault.savePairedDeviceName(peerIp, peerName)
+                onPaired = { peerIp, aesKey, peerName, peerDeviceId ->
+                    SecurityVault.saveTrustedNode(peerIp, aesKey, peerDeviceId, peerName)
                     refreshTrustedNodes()
                 }
             )

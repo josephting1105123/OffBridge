@@ -61,7 +61,7 @@ class PairingActivity : AppCompatActivity() {
 
         activityScope.launch {
             val result = PairingDaemon.initiatePairing(
-                applicationContext, targetIp, TransferDaemon.customDeviceName,
+                applicationContext, targetIp, TransferDaemon.customDeviceName, targetName,
                 onPin = { pin ->
                     runOnUiThread {
                         PinBox.bind(this@PairingActivity, pin)
@@ -73,7 +73,7 @@ class PairingActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 when (result) {
                     "SUCCESS" -> {
-                        SecurityVault.savePairedDeviceName(applicationContext, targetIp, targetName)
+                        // Name/id/key are persisted together by initiatePairing's saveTrustedNode.
                         Toast.makeText(applicationContext, getString(R.string.pairing_success, targetName), Toast.LENGTH_LONG).show()
                         // THE FIX: Use the raw string action instead of the reference to the deleted ClipboardActivity
                         val refreshIntent = Intent("com.example.josephclipboardclient.PAIRING_SUCCESSFUL").setPackage(packageName)

@@ -61,9 +61,10 @@ class ClipboardService : Service() {
                 val aesKey = intent.getByteArrayExtra("AES_KEY")
                 val visualPin = intent.getStringExtra("VISUAL_PIN")
                 val expiresAt = intent.getLongExtra(PairingDaemon.EXTRA_EXPIRES_AT, 0L)
+                val senderDeviceId = intent.getStringExtra(PairingDaemon.EXTRA_SENDER_DEVICE_ID)
 
                 if (senderIp != null && aesKey != null) {
-                    showPairingNotification(senderName, senderIp, aesKey, visualPin, expiresAt)
+                    showPairingNotification(senderName, senderIp, aesKey, visualPin, expiresAt, senderDeviceId)
                 }
             }
         }
@@ -337,13 +338,14 @@ class ClipboardService : Service() {
         }
     }
 
-    private fun showPairingNotification(senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String?, expiresAt: Long) {
+    private fun showPairingNotification(senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String?, expiresAt: Long, senderDeviceId: String?) {
         val fullScreenIntent = Intent(this, PairingConfirmationActivity::class.java).apply {
             putExtra("SENDER_NAME", senderName)
             putExtra("SENDER_IP", senderIp)
             putExtra("AES_KEY", aesKey)
             putExtra("VISUAL_PIN", visualPin)
             putExtra(PairingDaemon.EXTRA_EXPIRES_AT, expiresAt)
+            putExtra(PairingDaemon.EXTRA_SENDER_DEVICE_ID, senderDeviceId)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(this, 3, fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 

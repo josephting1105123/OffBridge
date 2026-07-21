@@ -40,6 +40,8 @@ object PairingDaemon {
      *  notification intent, and the confirmation screen — a typo in any hop would silently fall
      *  back to 0L and disable the expiry check. */
     const val EXTRA_EXPIRES_AT = "EXPIRES_AT"
+    /** Initiator's stable device id from PAIR_REQ; null when the peer predates device ids. */
+    const val EXTRA_SENDER_DEVICE_ID = "SENDER_DEVICE_ID"
 
     private val pendingConfirmations = ConcurrentHashMap<String, PrintWriter>()
 
@@ -176,7 +178,12 @@ object PairingDaemon {
                     val peerPubKey = Base64.decode(parts[2], Base64.NO_WRAP)
                     // v2 PIN only when the initiator advertised pv2. Fields after index 2 are
                     // tolerated (older initiators send none) — absence => v1 fallback.
-                    val initiatorV2 = parts.drop(3).contains("pv2")
+                    // Unordered token tail: pv2 (PIN v2) and the initiator's stable device id, both
+                    // absent on older peers. The id lets the save retire this device's record at a
+                    // previous address.
+                    val tail = parts.drop(3)
+                    val initiatorV2 = tail.contains("pv2")
+                    val senderDeviceId = PairingWire.parseDeviceId(tail)
 
                     val ecdh = EcdhSession()
                     val myPubKey = ecdh.getPublicKey()
@@ -184,7 +191,12 @@ object PairingDaemon {
 
                     // 3.5.0 always advertises pv2; the PIN it displays is v2 only if the initiator
                     // also asked for it (initiatorV2), so both sides stay in agreement.
-                    writer.println("PAIR_ACK|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}|pv2")
+                    writer.println(
+                        PairingWire.pairAck(
+                            Base64.encodeToString(myPubKey, Base64.NO_WRAP),
+                            SecurityVault.localDeviceId(context),
+                        )
+                    )
 
                     // A second PAIR_REQ from the same IP overwrites the map entry; close the
                     // previously parked writer/socket so it isn't leaked forever.
@@ -202,7 +214,7 @@ object PairingDaemon {
                         }
                     }
 
-                    triggerPairingNotificationBroadcast(context, senderName, senderIp, aesKey, visualPin)
+                    triggerPairingNotificationBroadcast(context, senderName, senderIp, aesKey, visualPin, senderDeviceId)
                 }
                 // Socket intentionally left open: the PAIR_REQ path parks its PrintWriter in
                 // pendingConfirmations until the user accepts/declines, so do NOT finally-close here.
@@ -215,13 +227,14 @@ object PairingDaemon {
         }
     }
 
-    private fun triggerPairingNotificationBroadcast(context: Context, senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String) {
+    private fun triggerPairingNotificationBroadcast(context: Context, senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String, senderDeviceId: String?) {
         val broadcastIntent = Intent(ACTION_TRIGGER_PAIRING_NOTIFICATION).apply {
             setPackage(context.packageName)
             putExtra("SENDER_NAME", senderName)
             putExtra("SENDER_IP", senderIp)
             putExtra("AES_KEY", aesKey)
             putExtra("VISUAL_PIN", visualPin)
+            putExtra(EXTRA_SENDER_DEVICE_ID, senderDeviceId)
             putExtra(EXTRA_EXPIRES_AT, System.currentTimeMillis() + PAIR_CONFIRM_WINDOW_MS)
         }
         context.sendBroadcast(broadcastIntent)
@@ -261,7 +274,12 @@ object PairingDaemon {
         return mac.doFinal(message)
     }
 
-    suspend fun initiatePairing(context: Context, targetIp: String, myDeviceName: String, onPin: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
+    /**
+     * Outbound pairing handshake. [targetName] is the peer's display name from discovery; it is
+     * persisted alongside the key so the Paired list can label the device once it goes offline, and
+     * it lets [SecurityVault.saveTrustedNode] retire a pre-device-id record for the same peer.
+     */
+    suspend fun initiatePairing(context: Context, targetIp: String, myDeviceName: String, targetName: String, onPin: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
         var socket: Socket? = null
         try {
             socket = Socket()
@@ -276,7 +294,15 @@ object PairingDaemon {
 
             // "pv2" advertises PIN-v2 support. Older peers omit it and ignore our extra field, so
             // both sides fall back to v1 (see receiver). The AES key is identical either way.
-            writer.println("PAIR_REQ|$myDeviceName|${Base64.encodeToString(myPubKey, Base64.NO_WRAP)}|pv2")
+            // "did:" carries this install's stable id so the peer can retire our old record if we
+            // last paired from a different address.
+            writer.println(
+                PairingWire.pairReq(
+                    myDeviceName,
+                    Base64.encodeToString(myPubKey, Base64.NO_WRAP),
+                    SecurityVault.localDeviceId(context),
+                )
+            )
 
             val ackResponse = reader.readLine()
             if (ackResponse != null && ackResponse.startsWith("PAIR_ACK|")) {
@@ -284,7 +310,10 @@ object PairingDaemon {
                 val peerPubKey = Base64.decode(ackParts[1], Base64.NO_WRAP)
                 // v2 PIN only when the ACK also advertises pv2 (i.e. both peers are 3.5.0+). Extra
                 // fields after index 1 are tolerated; an ACK without pv2 (old peer) => v1.
-                val useV2 = ackParts.drop(2).contains("pv2")
+                val ackTail = ackParts.drop(2)
+                val useV2 = ackTail.contains("pv2")
+                // Same tail carries the peer's device id (absent on older peers).
+                val peerDeviceId = PairingWire.parseDeviceId(ackTail)
                 val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
                 onPin(visualPin)   // surface the MITM-verification code while we wait for the peer to accept
 
@@ -294,7 +323,7 @@ object PairingDaemon {
                 socket.soTimeout = 120000
                 val finalResponse = reader.readLine()
                 if (finalResponse == "PAIR_ACCEPT") {
-                    SecurityVault.saveTrustedNode(context, targetIp, aesKey)
+                    SecurityVault.saveTrustedNode(context, targetIp, aesKey, peerDeviceId, targetName)
                     return@withContext "SUCCESS"
                 } else {
                     return@withContext "DECLINED"

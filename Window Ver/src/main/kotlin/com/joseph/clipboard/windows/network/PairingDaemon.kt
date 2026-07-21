@@ -140,7 +140,12 @@ class PairingDaemon(
                         val peerPubKey = Base64.getDecoder().decode(parts[2])
                         // v2 PIN only when the initiator advertised pv2. Fields after index 2 are
                         // tolerated (older initiators send none) — absence => v1 fallback.
-                        val initiatorV2 = parts.drop(3).contains("pv2")
+                        // Unordered token tail: pv2 (PIN v2) and the initiator's stable device id,
+                        // both absent on older peers. The id lets the save below retire this
+                        // device's record at a previous address.
+                        val tail = parts.drop(3)
+                        val initiatorV2 = tail.contains("pv2")
+                        val senderDeviceId = WireFrames.parseDeviceId(tail)
 
                         val ecdh = EcdhSession()
                         val myPubKey = ecdh.getPublicKey()
@@ -148,7 +153,12 @@ class PairingDaemon(
 
                         // This build always advertises pv2; the PIN it displays is v2 only if the
                         // initiator also asked for it (initiatorV2), so both sides stay in agreement.
-                        writer.println("PAIR_ACK|${Base64.getEncoder().encodeToString(myPubKey)}|pv2")
+                        writer.println(
+                            WireFrames.pairAck(
+                                Base64.getEncoder().encodeToString(myPubKey),
+                                SecurityVault.localDeviceId(),
+                            )
+                        )
 
                         val latch = CountDownLatch(1)
                         var isAccepted = false
@@ -174,8 +184,7 @@ class PairingDaemon(
                             if (writer.checkError()) {
                                 println("Pairing aborted with $senderName ($senderIp): PAIR_ACCEPT write failed")
                             } else {
-                                SecurityVault.saveTrustedNode(senderIp, aesKey)
-                                SecurityVault.savePairedDeviceName(senderIp, senderName)
+                                SecurityVault.saveTrustedNode(senderIp, aesKey, senderDeviceId, senderName)
                                 println("Pairing accepted with $senderName ($senderIp)")
                             }
                         } else {

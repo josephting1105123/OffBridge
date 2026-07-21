@@ -27,9 +27,20 @@ object SecurityVault {
     // ignores both (explicit user action). 0L means "never checked".
     private var lastUpdateCheckEpochMillis: Long = 0L
     private var autoUpdateCheckEnabled: Boolean = true
+    // This install's own stable identifier, minted once and persisted. Trust records are keyed by IP,
+    // so a peer that re-pairs from a new DHCP lease used to land as a SECOND entry next to the stale
+    // one (two "Windows PC" rows in the Paired list). Peers exchange this id during the pairing
+    // handshake so the old record can be evicted. Survives app updates — the installer never touches
+    // %LOCALAPPDATA%\ClipboardShare — and is only lost on a full uninstall, which drops the trust
+    // store with it. Not derived from the off-grid identity key: that one has no Windows counterpart
+    // and is scoped to the QR/BLE ladder.
+    private var deviceId: String = ""
     private val trustedNodes = ConcurrentHashMap<String, String>()
     // Human-readable name per trusted IP, so the Paired list shows names even when a device is offline.
     private val pairedDeviceNames = ConcurrentHashMap<String, String>()
+    // Peer device id per trusted IP (absent for records paired before device ids existed). Non-secret
+    // — it is only an equality token for "same device, new address".
+    private val pairedDeviceIds = ConcurrentHashMap<String, String>()
     // Anti-downgrade pins (TOFU): IPs we've actually negotiated an authenticated channel with. Once
     // pinned, a peer that stops advertising the capability is treated as a downgrade attempt — file
     // transfers refuse the plaintext stream and clipboard sends skip the peer — even if a MITM strips
@@ -85,6 +96,8 @@ object SecurityVault {
         val saveLocation: String? = null,
         val nodes: String? = null,
         val pairedNames: Map<String, String>? = null,
+        val pairedIds: Map<String, String>? = null,
+        val deviceId: String? = null,
         val fileGcmPinned: List<String>? = null,
         val clipboardGcmPinned: List<String>? = null,
         val auth2Pinned: List<String>? = null,
@@ -137,7 +150,9 @@ object SecurityVault {
                     }
                 }
             }
+            dto.deviceId?.let { if (it.isNotBlank()) deviceId = it }
             dto.pairedNames?.let { pairedDeviceNames.putAll(it) }
+            dto.pairedIds?.let { pairedDeviceIds.putAll(it) }
             dto.fileGcmPinned?.let { fileGcmPinned.addAll(it) }
             dto.clipboardGcmPinned?.let { clipboardGcmPinned.addAll(it) }
             dto.auth2Pinned?.let { auth2Pinned.addAll(it) }
@@ -154,7 +169,25 @@ object SecurityVault {
     private fun save() {
         try {
             val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
-            val dto = ConfigDto(deviceName, isDiscoverable, language, saveLocation, nodesStr, pairedDeviceNames.toMap(), fileGcmPinned.toList(), clipboardGcmPinned.toList(), auth2Pinned.toList(), fileGcmV2Pinned.toList(), theme, lastUpdateCheckEpochMillis, autoUpdateCheckEnabled)
+            // Named arguments on purpose: ConfigDto gains fields over time and a positional call
+            // silently shifts every value after the insertion point.
+            val dto = ConfigDto(
+                deviceName = deviceName,
+                isDiscoverable = isDiscoverable,
+                language = language,
+                saveLocation = saveLocation,
+                nodes = nodesStr,
+                pairedNames = pairedDeviceNames.toMap(),
+                pairedIds = pairedDeviceIds.toMap(),
+                deviceId = deviceId.ifBlank { null },
+                fileGcmPinned = fileGcmPinned.toList(),
+                clipboardGcmPinned = clipboardGcmPinned.toList(),
+                auth2Pinned = auth2Pinned.toList(),
+                fileGcmV2Pinned = fileGcmV2Pinned.toList(),
+                theme = theme,
+                lastUpdateCheckEpochMillis = lastUpdateCheckEpochMillis,
+                autoUpdateCheckEnabled = autoUpdateCheckEnabled,
+            )
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
             val tmpFile = File(configDir, "config.json.tmp")
@@ -239,9 +272,53 @@ object SecurityVault {
         }
     }
 
-    fun saveTrustedNode(ipAddress: String, key: ByteArray) {
+    /**
+     * This install's stable device id (32 lowercase hex), minted on first use. Sent to peers in the
+     * pairing handshake so they can recognise this machine again after its LAN address changes.
+     */
+    @Synchronized
+    fun localDeviceId(): String {
+        if (deviceId.isBlank()) {
+            deviceId = java.util.UUID.randomUUID().toString().replace("-", "")
+            save()
+        }
+        return deviceId
+    }
+
+    fun getPairedDeviceId(ipAddress: String): String? = pairedDeviceIds[ipAddress]
+
+    /**
+     * Persists the pairing key for [ipAddress], first dropping any older record that belongs to the
+     * SAME physical device at a stale address — otherwise a peer that re-pairs after a DHCP lease
+     * change shows up twice in the Paired list, and the dead entry can never be removed (the unpair
+     * action only exists on devices currently visible on the LAN).
+     *
+     * [peerDeviceId] is only ever taken from a completed PAIR_REQ/PAIR_ACK exchange, never from the
+     * unauthenticated UDP discovery — the user has confirmed the PIN by then, so a LAN host can't
+     * claim someone else's id and evict their pairing.
+     */
+    fun saveTrustedNode(ipAddress: String, key: ByteArray, peerDeviceId: String? = null, peerName: String? = null) {
+        trustedNodes.keys
+            .filter { it != ipAddress && isSameDeviceAs(it, peerDeviceId, peerName) }
+            .forEach { stale ->
+                println("Re-pairing $ipAddress replaces its stale record at $stale")
+                dropNode(stale)
+            }
         trustedNodes[ipAddress] = Base64.getEncoder().encodeToString(key)
+        if (peerDeviceId != null) pairedDeviceIds[ipAddress] = peerDeviceId
+        if (!peerName.isNullOrBlank()) pairedDeviceNames[ipAddress] = peerName
         save()
+    }
+
+    /** True when the record at [existingIp] is the device now pairing from another address. */
+    private fun isSameDeviceAs(existingIp: String, peerDeviceId: String?, peerName: String?): Boolean {
+        val existingId = pairedDeviceIds[existingIp]
+        if (existingId != null) return peerDeviceId != null && existingId == peerDeviceId
+        // Records written before device ids existed carry no id to match on, so fall back to an exact
+        // name match to clear duplicates that pre-date this version. Self-limiting: every record
+        // written from now on has an id and takes the branch above. Two distinct devices sharing one
+        // name (both left on the "Windows PC" default) would cost one re-pair, once.
+        return !peerName.isNullOrBlank() && pairedDeviceNames[existingIp] == peerName
     }
 
     /** Persist a human-readable name for a paired IP. No-ops when unchanged so it's cheap to call from
@@ -255,14 +332,20 @@ object SecurityVault {
     fun getPairedDeviceName(ipAddress: String): String? = pairedDeviceNames[ipAddress]
 
     fun removeTrustedNode(ipAddress: String) {
+        dropNode(ipAddress)
+        save()
+    }
+
+    /** In-memory half of [removeTrustedNode]; the caller saves (so a batch costs one write). */
+    private fun dropNode(ipAddress: String) {
         trustedNodes.remove(ipAddress)
         pairedDeviceNames.remove(ipAddress)
+        pairedDeviceIds.remove(ipAddress)
         // Drop the anti-downgrade pins too, so a deliberate re-pair starts from a clean TOFU state.
         fileGcmPinned.remove(ipAddress)
         clipboardGcmPinned.remove(ipAddress)
         auth2Pinned.remove(ipAddress)
         fileGcmV2Pinned.remove(ipAddress)
-        save()
     }
 
     // ---- Anti-downgrade pins (TOFU) — mirrors Android SecurityVault ------------------------

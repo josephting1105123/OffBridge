@@ -72,22 +72,86 @@ object SecurityVault {
         return prefs
     }
 
-    fun saveTrustedNode(context: Context, ipAddress: String, aesKey: ByteArray) {
+    /**
+     * Persists the pairing key for [ipAddress], first dropping any older record that belongs to the
+     * SAME physical device at a stale address — otherwise a peer that re-pairs after a DHCP lease
+     * change shows up twice in the Paired list, and the dead entry can never be removed (the unpair
+     * action only exists on devices currently visible on the LAN).
+     *
+     * [peerDeviceId] is only ever taken from a completed PAIR_REQ/PAIR_ACK exchange, never from the
+     * unauthenticated UDP discovery — the user has confirmed the PIN by then, so a LAN host can't
+     * claim someone else's id and evict their pairing.
+     */
+    fun saveTrustedNode(
+        context: Context,
+        ipAddress: String,
+        aesKey: ByteArray,
+        peerDeviceId: String? = null,
+        peerName: String? = null,
+    ) {
+        getTrustedNodes(context)
+            .filter { it != ipAddress && isSameDeviceAs(context, it, peerDeviceId, peerName) }
+            .forEach { removeTrustedNode(context, it) }
+
         val prefs = getEncryptedPrefs(context)
         val base64Key = Base64.encodeToString(aesKey, Base64.NO_WRAP)
         prefs.edit().putString(ipAddress, base64Key).apply()
+        val plain = getPlainPrefs(context).edit()
+        if (peerDeviceId != null) plain.putString(PAIRED_DEVICE_ID_PREFIX + ipAddress, peerDeviceId)
+        if (!peerName.isNullOrBlank()) plain.putString(PAIRED_DEVICE_NAME_PREFIX + ipAddress, peerName)
+        plain.apply()
     }
+
+    /** True when the record at [existingIp] is the device now pairing from another address. */
+    private fun isSameDeviceAs(context: Context, existingIp: String, peerDeviceId: String?, peerName: String?): Boolean {
+        val existingId = getPairedDeviceId(context, existingIp)
+        if (existingId != null) return peerDeviceId != null && existingId == peerDeviceId
+        // Records written before device ids existed carry no id to match on, so fall back to an exact
+        // name match to clear duplicates that pre-date this version. Self-limiting: every record
+        // written from now on has an id and takes the branch above. Two distinct devices sharing one
+        // name (both left on the same default) would cost one re-pair, once.
+        return !peerName.isNullOrBlank() && getPairedDeviceName(context, existingIp) == peerName
+    }
+
+    /**
+     * This install's stable device id (32 lowercase hex), minted on first use. Sent to peers in the
+     * pairing handshake so they can retire this phone's record after its LAN address changes.
+     * Lives in plain prefs (it is an equality token, not a secret) and survives app updates; a
+     * reinstall or Clear Data resets it, but that wipes the trust store with it. Deliberately not
+     * derived from the off-grid IdentityKeyStore: that key can be unavailable on some OEM builds and
+     * is regenerated when the lock-screen credential changes, either of which would silently break
+     * de-duplication.
+     */
+    fun localDeviceId(context: Context): String {
+        val prefs = getPlainPrefs(context)
+        prefs.getString(KEY_LOCAL_DEVICE_ID, null)?.let { if (it.isNotBlank()) return it }
+        synchronized(this) {
+            // Re-read inside the lock so two concurrent pairings can't mint two different ids.
+            prefs.getString(KEY_LOCAL_DEVICE_ID, null)?.let { if (it.isNotBlank()) return it }
+            val minted = java.util.UUID.randomUUID().toString().replace("-", "")
+            prefs.edit().putString(KEY_LOCAL_DEVICE_ID, minted).apply()
+            return minted
+        }
+    }
+
+    /** Peer device id recorded for a paired IP, or null for records paired before device ids existed. */
+    fun getPairedDeviceId(context: Context, ip: String): String? =
+        getPlainPrefs(context).getString(PAIRED_DEVICE_ID_PREFIX + ip, null)
+
+    private const val KEY_LOCAL_DEVICE_ID = "local_device_id"
+    private const val PAIRED_DEVICE_ID_PREFIX = "paired_device_id_"
+    private const val PAIRED_DEVICE_NAME_PREFIX = "paired_device_name_"
 
     fun getPairedDeviceName(context: Context, ip: String): String? {
         val prefs = getPlainPrefs(context)
-        return prefs.getString("paired_device_name_$ip", null)
+        return prefs.getString(PAIRED_DEVICE_NAME_PREFIX + ip, null)
     }
 
     /** Persist a human-readable name for a paired IP so the Paired list shows names even when the device
      *  is offline. Names are non-secret, so they live in plain prefs alongside the discoverable flag. */
     fun savePairedDeviceName(context: Context, ip: String, name: String) {
         if (name.isBlank()) return
-        getPlainPrefs(context).edit().putString("paired_device_name_$ip", name).apply()
+        getPlainPrefs(context).edit().putString(PAIRED_DEVICE_NAME_PREFIX + ip, name).apply()
     }
 
     fun isDiscoverable(context: Context): Boolean {
@@ -105,7 +169,8 @@ object SecurityVault {
         // Also drop the cached display name AND the anti-downgrade pins so an unpaired device
         // doesn't linger in the Paired list and a fresh re-pair starts from a clean TOFU state.
         getPlainPrefs(context).edit()
-            .remove("paired_device_name_$ipAddress")
+            .remove(PAIRED_DEVICE_NAME_PREFIX + ipAddress)
+            .remove(PAIRED_DEVICE_ID_PREFIX + ipAddress)
             .remove(PIN_FILE_GCM_PREFIX + ipAddress)
             .remove(PIN_CLIP_GCM_PREFIX + ipAddress)
             .remove(PIN_AUTH2_PREFIX + ipAddress)
