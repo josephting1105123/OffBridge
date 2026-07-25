@@ -53,45 +53,73 @@ object DownloadEngine {
      * understood [TransferDaemon.ACCEPT_AUTH_CAP] at all), whatever this read consumed is losslessly
      * pushed back onto that same stream — executeDownloadStream then reads the file's original,
      * untouched bytes from the top. This holds regardless of capability beliefs on either side.
+     *
+     * The probe matches [ACCEPT_CHALLENGE_PREFIX] one byte at a time and gives up at the FIRST
+     * differing byte, rather than reading ahead to a newline. That distinction is load-bearing, not
+     * a micro-optimisation: a newline-seeking probe has to keep reading until the file's own bytes
+     * happen to contain a 0x0A, so against a non-challenging sender (every already-shipped
+     * 3.7.1/3.7.4 peer) a transfer whose ENTIRE byte stream is shorter than the scan bound and
+     * contains no newline — a short no-trailing-newline note, a tiny binary, a small sealed file
+     * whose ciphertext happens to lack 0x0A — would block until the socket's own soTimeout and fail
+     * the transfer outright. Matching the prefix instead reads exactly one byte in the overwhelming
+     * common case (a file almost never starts with 'A'), and at most [ACCEPT_CHALLENGE_PREFIX].size.
      */
     private fun answerAcceptChallengeIfExpected(context: Context, connection: TransportConnection, targetIp: String) {
         val pushback = connection.input as? java.io.PushbackInputStream ?: return
-        val buf = java.io.ByteArrayOutputStream()
-        var sawNewline = false
-        // Bounded so a peer that never sends a challenge (and whose file's early bytes never
-        // contain a stray newline either) can't stall past the socket's own soTimeout, and so
-        // binary garbage can't grow this buffer unbounded — comfortably above the longest real
-        // line ("ACCEPT_CHALLENGE|" + base64 of a 16-byte nonce ≈ 40 chars).
-        while (buf.size() < 400) {
-            val b = pushback.read()
-            if (b == -1) break
-            if (b == '\n'.code) { sawNewline = true; break }
-            buf.write(b)
-        }
-        val consumed = buf.toByteArray()
-        val line = if (sawNewline) String(consumed, Charsets.UTF_8) else null
-        if (line != null && line.startsWith("ACCEPT_CHALLENGE|")) {
-            val nonce = try {
-                android.util.Base64.decode(line.removePrefix("ACCEPT_CHALLENGE|"), android.util.Base64.NO_WRAP)
-            } catch (e: Exception) {
-                throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+        val consumed = java.io.ByteArrayOutputStream()
+        var isChallenge = true
+        try {
+            for (expected in ACCEPT_CHALLENGE_PREFIX) {
+                val b = pushback.read()
+                if (b == -1) { isChallenge = false; break }
+                consumed.write(b)
+                if (b.toByte() != expected) { isChallenge = false; break }
             }
-            val pairingKey = SecurityVault.getKeyForNode(context, targetIp)
-                ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
-            val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
-            connection.output.write("ACCEPT_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
-            connection.output.flush()
-            SecurityVault.pinAuth2Accept(context, targetIp)
-        } else {
-            // Not a challenge — restore every consumed byte (and the newline, if one was found) in
-            // original order so executeDownloadStream sees the file's exact original bytes.
-            // unread() is LIFO per call: unread the newline FIRST so unread(consumed) — called
-            // second — surfaces before it on the next read, reproducing consumed[0..N-1] then '\n'
-            // then the untouched rest of the stream, exactly as it arrived.
-            if (sawNewline) pushback.unread('\n'.code)
-            if (consumed.isNotEmpty()) pushback.unread(consumed)
+        } catch (e: java.net.SocketTimeoutException) {
+            // The peer sent nothing at all within the socket timeout. Either a zero-byte payload
+            // from a non-challenging sender, or a link that just died — both are the stream path's
+            // problem to report, not this probe's. Restore and hand over. A read timeout leaves the
+            // socket usable, and the timed-out read itself consumed nothing.
+            isChallenge = false
         }
+        if (!isChallenge) {
+            // Not a challenge — restore every byte this probe consumed, in original order, so
+            // executeDownloadStream reads the file's exact original bytes from the top.
+            val bytes = consumed.toByteArray()
+            if (bytes.isNotEmpty()) pushback.unread(bytes)
+            return
+        }
+        // The full prefix matched, so a challenge really is in flight and the rest of the line is
+        // owed to us — read it to the newline and fail the transfer if it never arrives, rather than
+        // restoring a half-consumed challenge into the file stream.
+        val nonceB64 = java.io.ByteArrayOutputStream()
+        while (nonceB64.size() < ACCEPT_NONCE_MAX_B64_BYTES) {
+            val b = pushback.read()
+            if (b == -1 || b == '\n'.code) break
+            nonceB64.write(b)
+        }
+        val nonce = try {
+            android.util.Base64.decode(nonceB64.toString("UTF-8"), android.util.Base64.NO_WRAP)
+        } catch (e: Exception) {
+            throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+        }
+        val pairingKey = SecurityVault.getKeyForNode(context, targetIp)
+            ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
+        val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
+        connection.output.write("ACCEPT_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
+        connection.output.flush()
+        SecurityVault.pinAuth2Accept(context, targetIp)
     }
+
+    /** Wire constant: the exact bytes an AUTH2R challenge line opens with. Matched byte-by-byte by
+     *  [answerAcceptChallengeIfExpected], so it must stay identical to the Windows client's
+     *  FileTransferDaemon/ClipboardAppController spelling — see Auth2VectorTest, which pins it. */
+    private val ACCEPT_CHALLENGE_PREFIX = "ACCEPT_CHALLENGE|".toByteArray(Charsets.UTF_8)
+
+    /** Bound on the base64 nonce following the prefix (16 raw bytes ⇒ 24 chars). Generous, but
+     *  bounded so a peer that sends a matching prefix and then streams forever can't grow the
+     *  buffer without limit. */
+    private const val ACCEPT_NONCE_MAX_B64_BYTES = 128
 
     /**
      * V4 §2: the carrier-neutral download path — protocol bytes don't depend on the carrier.

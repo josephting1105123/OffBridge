@@ -88,7 +88,11 @@ object SecurityVault {
             val wrapped = com.sun.jna.platform.win32.Crypt32Util.cryptProtectData(raw)
             ENC_PREFIX + Base64.getEncoder().encodeToString(wrapped)
         } catch (e: Throwable) {
+            // Both sinks on purpose: stderr is invisible in a windowed (javaw) launch, so without the
+            // DiagLog line this drop would be completely silent to a user who later finds a pairing
+            // gone after a restart. diagnostics.log is what testers actually send back.
             System.err.println("SecurityVault: DPAPI key encryption failed (${e.message}) — refusing to persist this key in plaintext; it will not survive a restart until DPAPI recovers")
+            DiagLog.w("SecurityVault: DPAPI key encryption failed (${e.message}) — this pairing key was NOT written to config.json (refusing plaintext-at-rest) and will be lost on restart unless DPAPI recovers before the next save. Re-pair if the device disappears.")
             null
         }
     }

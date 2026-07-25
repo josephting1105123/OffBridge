@@ -24,33 +24,49 @@ param(
 $ErrorActionPreference = "Stop"
 
 # --- Guard: -AndroidVersion is free text baked verbatim into the release title, and Android's
-# UpdateChecker parses ITS UPDATE PROMPT DECISION from that title. A stale or typo'd value here
-# would parse fine and silently mis-fire (or suppress) every user's update prompt with no error
-# anywhere. Refuse to publish unless it matches app/build.gradle.kts' actual versionName, so
-# drift is caught here instead of shipping silently wrong.
+# UpdateChecker parses ITS UPDATE PROMPT DECISION from that title. A wrong value here parses fine
+# and mis-fires every user's update prompt with no error anywhere.
+#
+# It must match the Android build we ACTUALLY DISTRIBUTE, which is website/js/config.js's
+# androidApk.version (the same version the site advertises and the same APK carried onto this
+# release by copy-apk-asset.ps1) — NOT app/build.gradle.kts' versionName. Those two diverge
+# whenever source moves ahead of the last signed APK, and an earlier revision of this guard
+# checked the source instead: it forced the release title to announce an Android version that
+# exists only in the repo. Users on the previous build then saw a permanent "update available"
+# prompt for a version no download would ever deliver. Check what ships, not what compiles.
 $repoRoot = "."
-if (-not (Test-Path "app/build.gradle.kts")) {
+if (-not (Test-Path "website/js/config.js")) {
   $repoRoot = Join-Path $PSScriptRoot "../../../.."
 }
+$configPath = Join-Path $repoRoot "website/js/config.js"
 $gradlePath = Join-Path $repoRoot "app/build.gradle.kts"
 $androidVersionOk = $true
-if (Test-Path $gradlePath) {
-  $gradleContent = Get-Content $gradlePath -Raw
-  $m = [regex]::Match($gradleContent, 'versionName\s*=\s*"([^"]+)"')
+if (Test-Path $configPath) {
+  $configContent = Get-Content $configPath -Raw
+  $m = [regex]::Match($configContent, 'androidApk\s*:\s*\{[^}]*?version\s*:\s*"([^"]+)"')
   if ($m.Success) {
-    $actualAndroidVersion = $m.Groups[1].Value
-    if ($actualAndroidVersion -ne $AndroidVersion) {
+    $shippedAndroidVersion = $m.Groups[1].Value
+    if ($shippedAndroidVersion -ne $AndroidVersion) {
       $androidVersionOk = $false
-      Write-Output "ERROR_ANDROID_VERSION_MISMATCH: got -AndroidVersion=$AndroidVersion expected=$actualAndroidVersion from app/build.gradle.kts. Fix the argument or bump build.gradle.kts first, then retry."
+      Write-Output "ERROR_ANDROID_VERSION_MISMATCH: got -AndroidVersion=$AndroidVersion but the distributed APK is $shippedAndroidVersion per website/js/config.js androidApk.version. The release title must name the version users can actually download. Publish a new signed APK and update config.js first, or pass the shipped version."
     }
   } else {
-    Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: could not find versionName in $gradlePath, proceeding without the cross-check."
+    Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: could not find androidApk.version in $configPath, proceeding without the cross-check."
   }
 } else {
-  Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: $gradlePath not found, proceeding without the cross-check."
+  Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: $configPath not found, proceeding without the cross-check."
 }
 if (-not $androidVersionOk) {
   exit 3
+}
+# Source ahead of the shipped APK is normal (unreleased work accumulating), so this is a note, not
+# a failure. It exists so the gap is visible at publish time rather than discovered later.
+if (Test-Path $gradlePath) {
+  $gradleContent = Get-Content $gradlePath -Raw
+  $g = [regex]::Match($gradleContent, 'versionName\s*=\s*"([^"]+)"')
+  if ($g.Success -and $g.Groups[1].Value -ne $AndroidVersion) {
+    Write-Output ("NOTE_ANDROID_SOURCE_AHEAD: app/build.gradle.kts versionName=" + $g.Groups[1].Value + " but shipping/advertising " + $AndroidVersion + ". Expected when Android source has unreleased changes.")
+  }
 }
 
 # --- Read the github.com token from Windows Credential Manager (never printed) ---

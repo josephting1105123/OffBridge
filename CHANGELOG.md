@@ -4,6 +4,37 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.6 — Windows (audit fixes for 3.7.5)
+
+An audit of the 3.7.5 changes found four defects that 3.7.5 shipped with, plus a batch of
+inaccurate claims on the website. Everything here corrects something introduced or missed by that
+release.
+
+### Fixed
+- **Small transfers from a 3.7.1/3.7.4 peer could hang and fail.** 3.7.5's new accept/resume
+  challenge probe scanned ahead for a newline, so against a peer that doesn't send a challenge it
+  kept reading the file's own bytes. Any transfer whose whole byte stream was under the scan bound
+  and contained no newline (a short note with no trailing newline, a small binary) stalled for the
+  socket timeout and then failed. The probe now matches the challenge prefix one byte at a time and
+  stops at the first byte that differs, so it reads a single byte in the normal case. Fixed on
+  Android too, same code path.
+- **A tray notification on every clipboard copy.** 3.7.5 added push success/failure notifications to
+  the manual push button, but wired them into the shared send function, which the automatic
+  clipboard-change listener also calls. With auto-sync on, every copy raised a toast, and every copy
+  raised a warning toast whenever no paired device was online. Notifications are now limited to the
+  manual push.
+- **A dropped pairing key left no trace the user could find.** 3.7.5 correctly stopped writing keys
+  in plaintext when DPAPI fails, but reported it only on stderr, which is invisible in a windowed
+  launch. It now also writes to `diagnostics.log`.
+- **The guided tour used phone wording and English button names.** The tour said "tap" throughout on
+  a mouse-driven app, and told users to press `Pair` and `Select` while those buttons render
+  localized labels ("Koppeln", "配對", "Выбрать"). Corrected in all 10 languages.
+
+### Changed
+- **The release publisher now validates the Android version against the APK being distributed**
+  rather than against `app/build.gradle.kts`. The old check enforced the source version, which is
+  how the 3.7.5 release came to announce an Android build no download could deliver.
+
 ## 3.7.5 — Windows (concurrent-transfer fixes, AUTH2R, guided first-run tour)
 
 ### Fixed
@@ -33,7 +64,12 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
   first launch (the per-screen tutorials already existed; they just never auto-triggered before).
   Localized into all 10 supported languages.
 
-## 3.7.2 — Android (build 30) (concurrent-transfer + interop fixes, AUTH2R)
+## 3.7.2 — Android (build 30) — NOT YET RELEASED (concurrent-transfer + interop fixes, AUTH2R)
+
+> These changes are in the source tree but no signed 3.7.2 APK has been built or published. The
+> current Android download is still 3.7.1. This entry describes what will ship as 3.7.2, not what
+> users have today.
+
 
 ### Fixed
 - **Auto-resume could pick the wrong device and get stuck.** If an unpaired device on the LAN

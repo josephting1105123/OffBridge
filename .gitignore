@@ -20,6 +20,9 @@ jdk17.zip
 Window Ver/build/
 Window Ver/build2/
 app/release/
+# Gradle drops the Play bundle's outputs here (baseline profiles, output-metadata.json).
+# Build products, not sources — app/release/ was already covered but this path was not.
+release/play/release/
 
 # Stray build/daemon logs (machine-specific; may contain absolute paths)
 *.log

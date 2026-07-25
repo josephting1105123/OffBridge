@@ -77,6 +77,15 @@ private const val UPDATE_CHECK_TIMEOUT_MS = 5_000L
 private const val MAX_AUTO_RESUME_ATTEMPTS = 4
 private const val AUTO_RESUME_BASE_DELAY_MS = 1500L
 
+// Wire constant: the exact bytes an AUTH2R challenge line opens with. Matched byte-by-byte by
+// ClipboardAppController.answerAcceptChallengeIfExpected, so it must stay identical to the Android
+// client's DownloadEngine spelling — see Auth2VectorTest, which pins it on both platforms.
+private val ACCEPT_CHALLENGE_PREFIX = "ACCEPT_CHALLENGE|".toByteArray(Charsets.UTF_8)
+
+// Bound on the base64 nonce following the prefix (16 raw bytes ⇒ 24 chars). Generous, but bounded
+// so a peer that sends a matching prefix and then streams forever can't grow the buffer without limit.
+private const val ACCEPT_NONCE_MAX_B64_BYTES = 128
+
 data class OutgoingFileSession(
     val sessionId: String,
     val targetIp: String,
@@ -417,16 +426,20 @@ class ClipboardAppController {
             if (_clipboardHistory.value.firstOrNull() != text) {
                 addToHistory(text)
             }
-            pushClipboardToTrustedNodes(text)
+            pushClipboardToTrustedNodes(text, notify = true)
         }
     }
 
     /**
-     * pushCurrentClipboard() is Windows' only manual push entry point (tray "Push Clipboard" +
-     * the History screen button — both explicit user actions, never an automatic/background
-     * caller), yet it gave zero success/failure feedback: a failed send looked identical to a
-     * successful one. SystemTrayManager.showNotification already existed but had no call site
-     * anywhere in the module. Mirrors Android's showSuccessNotification/toast_push_failed_no_devices.
+     * Tray feedback for a MANUAL push (tray "Push Clipboard" / the History screen button): an
+     * explicit user action that previously gave zero success/failure feedback, so a failed send
+     * looked identical to a successful one. Mirrors Android's showSuccessNotification /
+     * toast_push_failed_no_devices.
+     *
+     * Only ever called with notify=true from [pushCurrentClipboard]. The automatic clipboard-change
+     * path ([start]'s ClipboardManager listener) shares the same send function but must stay silent
+     * — it fires on EVERY copy the user makes, so notifying there would balloon a toast per copy,
+     * and a WARNING toast per copy whenever no paired device happens to be online.
      */
     private fun notifyPushResult(successCount: Int, totalCount: Int) {
         if (totalCount == 0) {
@@ -442,15 +455,16 @@ class ClipboardAppController {
      * Auto-push: send the clipboard to every paired device that is reachable right now, following a
      * device that changed DHCP lease to its new address by the stable id it advertises in discovery
      * (see [ClipboardTargeting]). The key and TOFU pin stay under the pairing address [keyIp] even
-     * when the bytes go to a new [targetIp]. A send that gets no ack is logged, and (since this is
-     * only ever reached from the manual pushCurrentClipboard()) surfaced via a tray notification.
+     * when the bytes go to a new [targetIp]. A send that gets no ack is always logged; [notify]
+     * additionally surfaces the outcome as a tray notification, and is set ONLY by the manual
+     * [pushCurrentClipboard] — see [notifyPushResult] for why the automatic path must stay silent.
      */
-    private fun pushClipboardToTrustedNodes(text: String) {
+    private fun pushClipboardToTrustedNodes(text: String, notify: Boolean = false) {
         val trusted = trustedNodes.value.map { ClipboardTargeting.Trusted(it, SecurityVault.getPairedDeviceId(it)) }
         val live = transferDaemon.getDiscoveredNodes().map { ClipboardTargeting.Live(it.ip, it.deviceId) }
         val targets = ClipboardTargeting.resolve(trusted, live)
         if (targets.isEmpty()) {
-            notifyPushResult(successCount = 0, totalCount = 0)
+            if (notify) notifyPushResult(successCount = 0, totalCount = 0)
             return
         }
         scope.launch {
@@ -469,7 +483,7 @@ class ClipboardAppController {
                     }
                 }
             }.awaitAll()
-            notifyPushResult(successCount = results.count { it }, totalCount = targets.size)
+            if (notify) notifyPushResult(successCount = results.count { it }, totalCount = targets.size)
         }
     }
 
@@ -1248,43 +1262,61 @@ class ClipboardAppController {
      * ACCEPT_AUTH_CAP at all), whatever this read consumed is losslessly pushed back onto that same
      * stream — FileStreamer.receiveToDir then reads the file's original, untouched bytes from the
      * top. This holds regardless of capability beliefs on either side.
+     *
+     * The probe matches [ACCEPT_CHALLENGE_PREFIX] one byte at a time and gives up at the FIRST
+     * differing byte, rather than reading ahead to a newline. That distinction is load-bearing, not
+     * a micro-optimisation: a newline-seeking probe has to keep reading until the file's own bytes
+     * happen to contain a 0x0A, so against a non-challenging sender (every already-shipped
+     * 3.7.1/3.7.4 peer) a transfer whose ENTIRE byte stream is shorter than the scan bound and
+     * contains no newline — a short no-trailing-newline note, a tiny binary, a small sealed file
+     * whose ciphertext happens to lack 0x0A — would block until the socket's own soTimeout and fail
+     * the transfer outright. Matching the prefix instead reads exactly one byte in the overwhelming
+     * common case (a file almost never starts with 'A'), and at most [ACCEPT_CHALLENGE_PREFIX].size.
      */
     private fun answerAcceptChallengeIfExpected(pushback: java.io.PushbackInputStream, output: java.io.OutputStream, targetIp: String) {
-        val buf = java.io.ByteArrayOutputStream()
-        var sawNewline = false
-        // Bounded so a peer that never sends a challenge (and whose file's early bytes never contain
-        // a stray newline either) can't stall past the socket's own soTimeout, and so binary garbage
-        // can't grow this buffer unbounded — comfortably above the longest real line
-        // ("ACCEPT_CHALLENGE|" + base64 of a 16-byte nonce ≈ 40 chars).
-        while (buf.size() < 400) {
-            val b = pushback.read()
-            if (b == -1) break
-            if (b == '\n'.code) { sawNewline = true; break }
-            buf.write(b)
-        }
-        val consumed = buf.toByteArray()
-        val line = if (sawNewline) String(consumed, Charsets.UTF_8) else null
-        if (line != null && line.startsWith("ACCEPT_CHALLENGE|")) {
-            val nonce = try {
-                java.util.Base64.getDecoder().decode(line.removePrefix("ACCEPT_CHALLENGE|"))
-            } catch (e: Exception) {
-                throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+        val consumed = java.io.ByteArrayOutputStream()
+        var isChallenge = true
+        try {
+            for (expected in ACCEPT_CHALLENGE_PREFIX) {
+                val b = pushback.read()
+                if (b == -1) { isChallenge = false; break }
+                consumed.write(b)
+                if (b.toByte() != expected) { isChallenge = false; break }
             }
-            val pairingKey = SecurityVault.getAesKey(targetIp)
-                ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
-            val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
-            output.write("ACCEPT_PROOF|${java.util.Base64.getEncoder().encodeToString(proof)}\n".toByteArray(Charsets.UTF_8))
-            output.flush()
-            SecurityVault.pinAuth2Accept(targetIp)
-        } else {
-            // Not a challenge — restore every consumed byte (and the newline, if one was found) in
-            // original order so receiveToDir sees the file's exact original bytes. unread() is LIFO
-            // per call: unread the newline FIRST so unread(consumed) — called second — surfaces
-            // before it on the next read, reproducing consumed[0..N-1] then '\n' then the untouched
-            // rest of the stream, exactly as it arrived.
-            if (sawNewline) pushback.unread('\n'.code)
-            if (consumed.isNotEmpty()) pushback.unread(consumed)
+        } catch (e: java.net.SocketTimeoutException) {
+            // The peer sent nothing at all within the socket timeout. Either a zero-byte payload
+            // from a non-challenging sender, or a link that just died — both are the stream path's
+            // problem to report, not this probe's. Restore and hand over. A read timeout leaves the
+            // socket usable, and the timed-out read itself consumed nothing.
+            isChallenge = false
         }
+        if (!isChallenge) {
+            // Not a challenge — restore every byte this probe consumed, in original order, so
+            // receiveToDir reads the file's exact original bytes from the top.
+            val bytes = consumed.toByteArray()
+            if (bytes.isNotEmpty()) pushback.unread(bytes)
+            return
+        }
+        // The full prefix matched, so a challenge really is in flight and the rest of the line is
+        // owed to us — read it to the newline and fail the transfer if it never arrives, rather than
+        // restoring a half-consumed challenge into the file stream.
+        val nonceB64 = java.io.ByteArrayOutputStream()
+        while (nonceB64.size() < ACCEPT_NONCE_MAX_B64_BYTES) {
+            val b = pushback.read()
+            if (b == -1 || b == '\n'.code) break
+            nonceB64.write(b)
+        }
+        val nonce = try {
+            java.util.Base64.getDecoder().decode(nonceB64.toString(Charsets.UTF_8.name()))
+        } catch (e: Exception) {
+            throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+        }
+        val pairingKey = SecurityVault.getAesKey(targetIp)
+            ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
+        val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
+        output.write("ACCEPT_PROOF|${java.util.Base64.getEncoder().encodeToString(proof)}\n".toByteArray(Charsets.UTF_8))
+        output.flush()
+        SecurityVault.pinAuth2Accept(targetIp)
     }
 
     private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long, fileKey: ByteArray? = null, useV2: Boolean = false, input: java.io.InputStream = socket.getInputStream()) {
