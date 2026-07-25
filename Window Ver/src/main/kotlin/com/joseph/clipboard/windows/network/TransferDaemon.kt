@@ -31,11 +31,21 @@ data class DiscoveredDevice(
     var supportsAuth2: Boolean = false,
     /** Peer's stable install id from the discovery `did:` token; null for peers that predate it. Lets
      * clipboard auto-push follow this device to a new DHCP address (see [ClipboardTargeting]). */
-    var deviceId: String? = null
+    var deviceId: String? = null,
+    /** Peer advertised [TransferDaemon.ACCEPT_AUTH_CAP] → it will answer an ACCEPT_CHALLENGE with an
+     * HMAC proof of the shared pairing key before it (as sender) starts streaming bytes in response
+     * to our ACCEPT_OFFER/RESUME_REQUEST — the accept/resume-direction mirror of [supportsAuth2].
+     * Defaults false so un-updated peers are byte-identical. */
+    var supportsAuth2Accept: Boolean = false,
 )
 
 class TransferDaemon(
-    private val deviceNameProvider: () -> String
+    private val deviceNameProvider: () -> String,
+    // Fired when a peer's FILEBRIDGE_RESUME_REQUEST nudge arrives on the discovery port — Android's
+    // outgoing-transfer "Resume" sends this to prompt US (the receiver) to reconnect. Previously
+    // unhandled: Windows silently dropped the nudge, so an Android→Windows outgoing resume looked
+    // like it "sent" (Android's local send() succeeded) but the transfer never actually resumed.
+    private val onResumeRequested: (sessionId: String, fromIp: String) -> Unit = { _, _ -> },
 ) {
     private val DISCOVERY_PORT = Ports.DISCOVERY
     // Match Android's DISCOVERY_NODE_TIMEOUT_MS (20s). Android backs its broadcaster off toward 12s
@@ -66,8 +76,17 @@ class TransferDaemon(
          * tolerates both the challenge and a direct OFFER_RECEIVED, so old↔new stays byte-identical. */
         const val OFFER_AUTH_CAP = "AUTH2"
 
+        /** ACCEPT/RESUME admission-proof token, advertised comma-joined after [OFFER_AUTH_CAP]
+         * (`...|Windows|GCM1,FGCM1,FGCM2,AUTH2,AUTH2R`). The accept/resume-direction mirror of
+         * [OFFER_AUTH_CAP]: presence means the peer will answer an ACCEPT_CHALLENGE with an HMAC
+         * proof of the shared pairing key before it (as sender) streams bytes in response to our
+         * ACCEPT_OFFER/RESUME_REQUEST. Deliberately a SEPARATE token from OFFER_AUTH_CAP — already-
+         * shipped 3.7.1/3.7.4 builds advertise AUTH2 but do not implement this direction's challenge,
+         * so reusing AUTH2 would silently break them. Mirrors Android's TransferDaemon.ACCEPT_AUTH_CAP. */
+        const val ACCEPT_AUTH_CAP = "AUTH2R"
+
         /** Capability list advertised in discovery — comma-joined, parsed by `contains`. */
-        private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP"
+        private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP"
     }
 
     private val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
@@ -166,6 +185,12 @@ class TransferDaemon(
 
     private fun handleIncomingPacket(data: String, sender: InetAddress) {
         val parts = data.split("|")
+        if (parts.getOrNull(0) == "FILEBRIDGE_RESUME_REQUEST") {
+            val sessionId = parts.getOrNull(1)
+            val fromIp = sender.hostAddress
+            if (sessionId != null && fromIp != null) onResumeRequested(sessionId, fromIp)
+            return
+        }
         // Accept the unicast FILEBRIDGE_REPLY as well as the broadcast FILEBRIDGE_DISCOVERY; Android
         // emits a directed REPLY so peers can find each other under AP client-isolation (which drops
         // broadcasts). Both carry the same name|ip|os|caps fields and are processed identically.
@@ -184,6 +209,7 @@ class TransferDaemon(
             val supportsFile = caps.contains(FILE_GCM_CAP)
             val supportsFileV2 = caps.contains(FILE_GCM_CAP_V2)
             val supportsAuth2 = caps.contains(OFFER_AUTH_CAP)
+            val supportsAuth2Accept = caps.contains(ACCEPT_AUTH_CAP)
             // Stable device id from the `did:` token anywhere in the tail after the positional fields
             // (absent on peers that predate it). Lets clipboard auto-push follow this peer to a new
             // address; see ClipboardTargeting.
@@ -209,11 +235,12 @@ class TransferDaemon(
                 existing.supportsAuthFile = supportsFile
                 existing.supportsAuthFileV2 = supportsFileV2
                 existing.supportsAuth2 = supportsAuth2
+                existing.supportsAuth2Accept = supportsAuth2Accept
                 // Keep the last id we saw: a did-aware peer sends it on every frame, and we never want
                 // a stray malformed packet to null out a good id mid-session.
                 if (peerDeviceId != null) existing.deviceId = peerDeviceId
             } else {
-                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId)
+                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId, supportsAuth2Accept)
             }
 
             // Answer every DISCOVERY with a unicast REPLY (bypasses AP broadcast restrictions), mirroring

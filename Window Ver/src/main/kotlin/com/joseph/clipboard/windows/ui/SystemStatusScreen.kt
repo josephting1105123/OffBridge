@@ -48,8 +48,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import com.joseph.clipboard.windows.storage.TranslationManager
 
+private fun tr(key: String, fallback: String): String =
+    TranslationManager.getString(key).takeIf { it != key } ?: fallback
+
 @Composable
-fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNext: (Screen) -> Unit = {}) {
+fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNext: (Screen) -> Unit = {}, tutorialTrigger: Int = 0) {
     val deviceName by appController.deviceName.collectAsState()
     val isDiscoverable by appController.isDiscoverable.collectAsState()
     val discoveredDevices by appController.discoveredDevices.collectAsState()
@@ -69,6 +72,10 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
     var showTutorial by remember { mutableStateOf(false) }
     var showPairedDialog by remember { mutableStateOf(false) }
     val tutorialBounds = remember { mutableStateMapOf<String, Rect>() }
+
+    LaunchedEffect(tutorialTrigger) {
+        if (tutorialTrigger > 0) showTutorial = true
+    }
 
     val focusManager = LocalFocusManager.current
     val extra = LocalExtraColors.current
@@ -302,16 +309,16 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
             val devicesEmpty = discoveredDevices.isEmpty()
             TutorialOverlay(
                 steps = listOf(
-                    TutorialStep("deviceNameField", "Tap here to change your device's display name for easier identification."),
+                    TutorialStep("deviceNameField", tr("tutorial_status_device_name", "Tap here to change your device's display name for easier identification.")),
                     TutorialStep(
                         "discoverableSwitch",
-                        "Turn this off when you don't want to be discoverable by other devices.",
+                        tr("tutorial_status_discoverable", "Turn this off when you don't want to be discoverable by other devices."),
                         // Tighten onto the discoverable row (the capture box includes extra padding)
                         spotlightVerticalInset = 5.dp
                     ),
                     TutorialStep(
                         "deviceCard",
-                        "Tap 'Pair' on a nearby device to pair with it and start transferring files.",
+                        tr("tutorial_status_tap_pair", "Tap 'Pair' on a nearby device to pair with it and start transferring files."),
                         placeholderContent = if (devicesEmpty) {
                             { TutorialPlaceholderDevice() }
                         } else null,
@@ -321,7 +328,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                     ),
                     TutorialStep(
                         "deviceCard",
-                        "Tap the Pair button to connect to this device and start sharing files.",
+                        tr("tutorial_status_pair_button", "Tap the Pair button to connect to this device and start sharing files."),
                         hideSkipButton = true,
                         placeholderContent = if (devicesEmpty) {
                             { TutorialPlaceholderDevice(showPairButton = true) }
@@ -337,6 +344,11 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 onDismiss = { showTutorial = false },
                 onComplete = {
                     showTutorial = false
+                    // Guided first-run tour: SEND_FILES -> SYSTEM_STATUS -> HISTORY. Only a genuine
+                    // "clicked through every step" completion advances the chain — Skip/dismiss just
+                    // closes here (the tour is already marked shown at Main.kt's trigger point, so it
+                    // won't be re-offered either way, but a skip shouldn't force the remaining screens).
+                    onTutorialChainNext(Screen.HISTORY)
                 }
             )
         }

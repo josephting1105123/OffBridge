@@ -4,6 +4,52 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.5 — Windows (concurrent-transfer fixes, AUTH2R, guided first-run tour)
+
+### Fixed
+- **Concurrent incoming transfers sharing a filename could corrupt each other.** Two same-named
+  files landing at once used to race on one shared `.part` file; names are now reserved across every
+  live incoming session, not just within one manifest.
+- **Outgoing "Resume" did nothing.** The button now actually nudges the receiving device to
+  reconnect, instead of silently no-opping.
+- **A "paused" transfer (unacknowledged offer) had no action button at all.** Added a Resume action
+  matching the existing "failed" state.
+- **Clipboard push gave no feedback.** Success and failure now surface as tray notifications; the
+  notification plumbing existed but was never wired up.
+- **No auto-retry on a dropped incoming transfer.** Added the same bounded, backed-off auto-resume
+  Android already had.
+- **A pairing Accept clicked after the request expired silently failed** (paired on only one side).
+  Now refused with a clear notification instead of closing as if it succeeded.
+- **Pairing keys could fall back to plaintext on disk** if DPAPI encryption failed. Now fails closed
+  (drops the key, forcing re-pair) instead of ever storing it unencrypted.
+
+### Added
+- **AUTH2R: proof-of-key-possession on the accept/resume side of a file transfer.** Mirrors the
+  existing AUTH2 challenge on the offer side — the sender can now require the peer accepting or
+  resuming a transfer to prove it holds the shared pairing key before any bytes stream, closing an
+  IP-spoofing gap. New capability token, independent from AUTH2 so already-paired 3.7.1/3.7.4
+  installs aren't affected until both sides update.
+- **Guided first-run tour.** A short walkthrough of the three main screens now runs automatically on
+  first launch (the per-screen tutorials already existed; they just never auto-triggered before).
+  Localized into all 10 supported languages.
+
+## 3.7.2 — Android (build 30) (concurrent-transfer + interop fixes, AUTH2R)
+
+### Fixed
+- **Auto-resume could pick the wrong device and get stuck.** If an unpaired device on the LAN
+  broadcast the same display name as the real sender and happened to be enumerated first, resume
+  would give up instead of trying the next matching candidate.
+- **A LAN discovery entry could go stale between packets.** Pruning now runs on an independent timer
+  instead of only as a side effect of receiving unrelated traffic.
+- **Cancel didn't work on an outgoing transfer**, even though the engine already supported it —
+  Windows already allowed this. Now symmetric.
+- **A resume-request nudge to a Windows peer silently vanished** while still showing "sent" —
+  Windows didn't handle that UDP frame at all (fixed on the Windows side).
+
+### Added
+- **AUTH2R: proof-of-key-possession on the accept/resume side of a file transfer** — see the Windows
+  3.7.5 entry above for the full description; this is the Android half of the same wire change.
+
 ## 3.7.4 — Windows (cancel a pairing request)
 
 ### Added

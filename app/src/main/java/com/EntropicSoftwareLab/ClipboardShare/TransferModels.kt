@@ -25,7 +25,14 @@ data class DiscoveredDevice(
     val supportsAuth2: Boolean = false,
     /** Peer's stable install id from the discovery `did:` token; null for peers that predate it. Lets
      * clipboard auto-push follow this device to a new DHCP address (see [ClipboardTargeting]). */
-    val deviceId: String? = null
+    val deviceId: String? = null,
+    /** Peer advertised the [TransferDaemon.ACCEPT_AUTH_CAP] token → it will answer an
+     * ACCEPT_CHALLENGE with an HMAC proof of the shared pairing key before we (as sender) start
+     * streaming bytes in response to its ACCEPT_OFFER/RESUME_REQUEST — the accept/resume-direction
+     * mirror of [supportsAuth2]. Appended at the end (not inserted among the existing fields) so
+     * every pre-existing positional [DiscoveredDevice] constructor call stays valid unchanged.
+     * Defaults false so un-updated peers are byte-identical. */
+    val supportsAuth2Accept: Boolean = false,
 )
 
 data class TransferSession(

@@ -27,6 +27,11 @@ object SecurityVault {
     // ignores both (explicit user action). 0L means "never checked".
     private var lastUpdateCheckEpochMillis: Long = 0L
     private var autoUpdateCheckEnabled: Boolean = true
+    // First-ever-launch guided tour (see Main.kt's tutorial chain): set once the tour auto-fires, so
+    // an install that quit mid-tour isn't re-offered it every subsequent launch. Mirrors Android's
+    // TutorialTour.KEY_COMPLETED_V2 in spirit, but simpler — Windows has no Lite/Pro mode gate, so
+    // this is a single persisted "has this ever been shown" flag, not a resumable step counter.
+    private var firstRunTourShown: Boolean = false
     // This install's own stable identifier, minted once and persisted. Trust records are keyed by IP,
     // so a peer that re-pairs from a new DHCP lease used to land as a SECOND entry next to the stale
     // one (two "Windows PC" rows in the Paired list). Peers exchange this id during the pairing
@@ -53,6 +58,11 @@ object SecurityVault {
     // fail closed on a later strip. Mirrors the Android SecurityVault pins; cleared on unpair.
     private val auth2Pinned = ConcurrentHashMap.newKeySet<String>()
     private val fileGcmV2Pinned = ConcurrentHashMap.newKeySet<String>()
+    // Separate set from auth2Pinned on purpose — see TransferDaemon.ACCEPT_AUTH_CAP's doc for why
+    // the capability token itself must be a new one, not a reuse of AUTH2; the pin follows the same
+    // reasoning (an already-shipped AUTH2-pinned peer must not be treated as having proven the
+    // accept/resume-direction challenge it doesn't yet implement).
+    private val acceptAuth2Pinned = ConcurrentHashMap.newKeySet<String>()
 
     // DPAPI (Windows Data Protection API) wraps each pairing key at rest so config.json no longer holds
     // recoverable key material (Android keeps the equivalents in the Keystore). Windows-only; on any
@@ -62,15 +72,24 @@ object SecurityVault {
                                           // never collides with a legacy base64 value or the ip ':' split
     private val dpapiAvailable: Boolean = try { com.sun.jna.Platform.isWindows() } catch (e: Throwable) { false }
 
-    /** Raw-key base64 (the in-memory form) -> the string persisted in config.json. */
-    private fun encodeKeyForDisk(base64Raw: String): String {
+    /** Raw-key base64 (the in-memory form) -> the string persisted in config.json, or null if it
+     *  can't be encrypted — the caller (see [save]) then drops the entry rather than ever write raw
+     *  key material to disk. Previously fell back to plaintext-on-disk on ANY DPAPI failure ("never
+     *  lose a key over an encryption failure"), silently downgrading every pairing key to cleartext
+     *  storage on a transient DPAPI/JNA hiccup with no signal to the user. Failing closed means a
+     *  broken keyset just doesn't persist across restart (forcing re-pair) instead of ever sitting on
+     *  disk unencrypted — matches Android's equivalent failure mode (a corrupted keyset is dropped and
+     *  recreated, never silently written as plaintext). Does NOT touch the in-memory [trustedNodes]
+     *  map, so a transient failure self-heals on the next [save] once DPAPI recovers. */
+    private fun encodeKeyForDisk(base64Raw: String): String? {
         if (!dpapiAvailable) return base64Raw
         return try {
             val raw = Base64.getDecoder().decode(base64Raw)
             val wrapped = com.sun.jna.platform.win32.Crypt32Util.cryptProtectData(raw)
             ENC_PREFIX + Base64.getEncoder().encodeToString(wrapped)
         } catch (e: Throwable) {
-            base64Raw // never lose a key over an encryption failure
+            System.err.println("SecurityVault: DPAPI key encryption failed (${e.message}) — refusing to persist this key in plaintext; it will not survive a restart until DPAPI recovers")
+            null
         }
     }
 
@@ -102,9 +121,11 @@ object SecurityVault {
         val clipboardGcmPinned: List<String>? = null,
         val auth2Pinned: List<String>? = null,
         val fileGcmV2Pinned: List<String>? = null,
+        val acceptAuth2Pinned: List<String>? = null,
         val theme: String? = null,
         val lastUpdateCheckEpochMillis: Long? = null,
-        val autoUpdateCheckEnabled: Boolean? = null
+        val autoUpdateCheckEnabled: Boolean? = null,
+        val firstRunTourShown: Boolean? = null
     )
 
     init {
@@ -129,6 +150,7 @@ object SecurityVault {
             dto.saveLocation?.let { saveLocation = it }
             dto.lastUpdateCheckEpochMillis?.let { lastUpdateCheckEpochMillis = it }
             dto.autoUpdateCheckEnabled?.let { autoUpdateCheckEnabled = it }
+            dto.firstRunTourShown?.let { firstRunTourShown = it }
             var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
                 if (nodesStr.isNotBlank()) {
@@ -157,6 +179,7 @@ object SecurityVault {
             dto.clipboardGcmPinned?.let { clipboardGcmPinned.addAll(it) }
             dto.auth2Pinned?.let { auth2Pinned.addAll(it) }
             dto.fileGcmV2Pinned?.let { fileGcmV2Pinned.addAll(it) }
+            dto.acceptAuth2Pinned?.let { acceptAuth2Pinned.addAll(it) }
             // One-time migration: rewrite config.json so legacy plaintext keys become DPAPI-wrapped.
             if (legacyKeysPresent) save()
         } catch (e: Exception) {
@@ -168,7 +191,7 @@ object SecurityVault {
     @Synchronized
     private fun save() {
         try {
-            val nodesStr = trustedNodes.map { "${it.key}:${encodeKeyForDisk(it.value)}" }.joinToString(",")
+            val nodesStr = trustedNodes.mapNotNull { (ip, key) -> encodeKeyForDisk(key)?.let { "$ip:$it" } }.joinToString(",")
             // Named arguments on purpose: ConfigDto gains fields over time and a positional call
             // silently shifts every value after the insertion point.
             val dto = ConfigDto(
@@ -184,9 +207,11 @@ object SecurityVault {
                 clipboardGcmPinned = clipboardGcmPinned.toList(),
                 auth2Pinned = auth2Pinned.toList(),
                 fileGcmV2Pinned = fileGcmV2Pinned.toList(),
+                acceptAuth2Pinned = acceptAuth2Pinned.toList(),
                 theme = theme,
                 lastUpdateCheckEpochMillis = lastUpdateCheckEpochMillis,
                 autoUpdateCheckEnabled = autoUpdateCheckEnabled,
+                firstRunTourShown = firstRunTourShown,
             )
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
@@ -260,6 +285,14 @@ object SecurityVault {
 
     fun setAutoUpdateCheckEnabled(enabled: Boolean) {
         autoUpdateCheckEnabled = enabled
+        save()
+    }
+
+    fun isFirstRunTourShown(): Boolean = firstRunTourShown
+
+    fun markFirstRunTourShown() {
+        if (firstRunTourShown) return
+        firstRunTourShown = true
         save()
     }
 
@@ -346,6 +379,7 @@ object SecurityVault {
         clipboardGcmPinned.remove(ipAddress)
         auth2Pinned.remove(ipAddress)
         fileGcmV2Pinned.remove(ipAddress)
+        acceptAuth2Pinned.remove(ipAddress)
     }
 
     // ---- Anti-downgrade pins (TOFU) — mirrors Android SecurityVault ------------------------
@@ -366,6 +400,13 @@ object SecurityVault {
 
     /** True once [ipAddress] completed an AUTH2 proof — a later loss of AUTH2 is a downgrade attempt. */
     fun isAuth2Pinned(ipAddress: String): Boolean = auth2Pinned.contains(ipAddress)
+
+    /** Remember that [ipAddress] proved possession of the pairing key via the AUTH2R
+     *  ACCEPT_CHALLENGE (accept/resume direction — see [acceptAuth2Pinned]). */
+    fun pinAuth2Accept(ipAddress: String) { if (acceptAuth2Pinned.add(ipAddress)) save() }
+
+    /** True once [ipAddress] completed an AUTH2R proof — a later loss of AUTH2R is a downgrade. */
+    fun isAuth2AcceptPinned(ipAddress: String): Boolean = acceptAuth2Pinned.contains(ipAddress)
 
     /** Remember that [ipAddress] negotiated a v2 (per-session key) FileSeal stream. */
     fun pinFileGcmV2(ipAddress: String) { if (fileGcmV2Pinned.add(ipAddress)) save() }

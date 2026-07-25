@@ -32,6 +32,14 @@ object FileStreamer {
      * and renaming on completion. Non-null [fileKey] ⇒ the stream is FileSeal-sealed; [useV2]
      * selects the v2 per-session key + session/file-bound AAD (must mirror the sender exactly).
      * Throws on premature EOF, AEAD failure, or a failed .part rename.
+     *
+     * [names] is the final on-disk leaf name for each manifest entry, index-aligned. Pass the SAME
+     * list on every call for a given [sessionId] (accept and every resume) — the caller is
+     * responsible for resolving it once and reusing it, typically via a cross-session-aware
+     * reservation (see ClipboardAppController.resolveIncomingNames) so two concurrent incoming
+     * sessions carrying same-named files don't land on one shared ".part" and corrupt each other.
+     * Defaults to the within-manifest-only [deCollideNames] when omitted, for callers (tests) that
+     * don't need cross-session awareness.
      */
     fun receiveToDir(
         input: InputStream,
@@ -43,17 +51,13 @@ object FileStreamer {
         fileKey: ByteArray?,
         useV2: Boolean,
         listener: Listener,
+        names: List<String> = deCollideNames(manifest),
     ) {
         if (!saveDir.exists()) saveDir.mkdirs()
 
         val buffer = ByteArray(8192)
         val fs = FileSeal
         val aeadKeySpec = fileKey?.let { fs.keySpec(if (useV2) fs.deriveKeyV2(it, sessionId) else fs.deriveKey(it)) }
-
-        // Give each manifest entry its own on-disk name even when a folder flattened two files to
-        // the same leaf, so the second no longer overwrites the first. Deterministic, so a resume
-        // (which recomputes this) addresses the same .part.
-        val names = deCollideNames(manifest)
 
         for (i in startFileIndex until manifest.size) {
             val name = names[i]
@@ -266,15 +270,22 @@ object FileStreamer {
 
     /**
      * De-collides duplicate leaf names WITHIN one manifest, deterministically — the result depends
-     * only on the manifest, so a resume recomputes identical names. A sent folder can flatten two
-     * files to the same leaf ("a.txt" under two subfolders); without this the second would delete
-     * and overwrite the first on disk (silent data loss). Non-duplicate manifests are returned
-     * unchanged, so ordinary transfers stay byte-identical. Does NOT dedupe against files already in
-     * the save folder — that pre-existing-file overwrite behavior is intentionally unchanged.
+     * only on the manifest and [reserved], so a resume recomputes identical names as long as the
+     * caller passes the same [reserved] snapshot (see [receiveToDir]'s `names` contract — in
+     * practice callers resolve once and cache, rather than relying on this determinism directly,
+     * since [reserved] itself is NOT stable across calls once other sessions start/finish).
+     * A sent folder can flatten two files to the same leaf ("a.txt" under two subfolders); without
+     * this the second would delete and overwrite the first on disk (silent data loss). [reserved]
+     * additionally seeds the "already taken" set — e.g. names another concurrently-active incoming
+     * session has already claimed — so two concurrent same-name transfers don't collide either.
+     * Non-duplicate, non-reserved manifests are returned unchanged, so ordinary transfers stay
+     * byte-identical. Does NOT dedupe against pre-existing FINISHED files in the save folder —
+     * that overwrite behavior is intentionally unchanged (unlike [reserved] entries, which are
+     * in-flight ".part" claims, not completed files).
      */
-    fun deCollideNames(manifest: List<Pair<String, Long>>): List<String> {
+    fun deCollideNames(manifest: List<Pair<String, Long>>, reserved: Set<String> = emptySet()): List<String> {
         val out = ArrayList<String>(manifest.size)
-        val used = HashSet<String>()
+        val used = HashSet<String>(reserved)
         for ((rawName, _) in manifest) {
             var candidate = rawName
             var counter = 1

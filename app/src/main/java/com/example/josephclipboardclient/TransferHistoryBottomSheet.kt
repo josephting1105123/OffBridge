@@ -587,7 +587,9 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     private fun onDetailAction(record: TransferRecord) {
         when (record.status) {
             "completed", "declined", "cancelled" -> onBackToList()
-            "transferring" -> if (record.direction == "incoming") cancelTransfer(record) else { /* outgoing: disabled */ }
+            // Cancel now works for both directions: UploadEngine checks session.isCancelled per
+            // chunk exactly like DownloadEngine, so a local-only cancel aborts an outgoing send too.
+            "transferring" -> cancelTransfer(record)
             "pending" -> { /* disabled */ }
             else -> resumeTransfer(record) // paused / failed
         }

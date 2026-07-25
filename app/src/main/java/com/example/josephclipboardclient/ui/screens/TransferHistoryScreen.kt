@@ -414,10 +414,10 @@ private fun detailAction(record: TransferRecord): DetailActionStyle {
     val colors = AppThemeTokens.colors
     return when (record.status) {
         "completed", "declined", "cancelled" -> DetailActionStyle(R.string.action_close, true, colors.surfaceElevated, colors.textPrimary)
-        "transferring" -> if (record.direction == "incoming")
-            DetailActionStyle(R.string.action_cancel, true, colors.error, Color.White)
-        else
-            DetailActionStyle(R.string.status_transferring_dots, false, colors.divider, colors.textSecondary)
+        // Cancel is available for both directions: UploadEngine checks session.isCancelled per
+        // chunk exactly like DownloadEngine does, so an outgoing cancel is just as safe locally
+        // (Windows already allows this — see FileTransferScreen.kt).
+        "transferring" -> DetailActionStyle(R.string.action_cancel, true, colors.error, Color.White)
         "pending" -> DetailActionStyle(R.string.history_pending_accept, false, colors.divider, colors.textSecondary)
         else -> DetailActionStyle(R.string.action_resume, true, colors.green, Color.Black)
     }

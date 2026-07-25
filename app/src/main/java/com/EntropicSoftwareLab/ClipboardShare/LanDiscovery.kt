@@ -22,6 +22,18 @@ object LanDiscovery {
     }
 
     fun start(context: Context, daemonScope: CoroutineScope) {
+        // Independent pruning timer: the receive loop only prunes stale nodes as a side effect of
+        // an incoming packet, so on a near-silent LAN (the exact moment auto-push/auto-resume needs
+        // fresh discovery data to fail over) a dead entry can sit unpruned indefinitely. Windows runs
+        // an equivalent dedicated poller (TransferDaemon.kt "Discovery-Pruner", every 2s); this
+        // matches that cadence so the two platforms fail over on comparable timelines.
+        daemonScope.launch {
+            while (isActive) {
+                delay(2000L)
+                val now = System.currentTimeMillis()
+                TransferDaemon.removeDiscoveredNodesIf { now - it.value.lastSeen > TransferDaemon.DISCOVERY_NODE_TIMEOUT_MS }
+            }
+        }
         daemonScope.launch {
             var udpSocket: DatagramSocket? = null
             try {
@@ -97,6 +109,7 @@ object LanDiscovery {
                                 val supportsFile = caps.contains(TransferDaemon.FILE_GCM_CAP)
                                 val supportsFileV2 = caps.contains(TransferDaemon.FILE_GCM_CAP_V2)
                                 val supportsAuth2 = caps.contains(TransferDaemon.OFFER_AUTH_CAP)
+                                val supportsAuth2Accept = caps.contains(TransferDaemon.ACCEPT_AUTH_CAP)
                                 // Stable device id from the `did:` token anywhere in the tail after the
                                 // positional fields (absent on peers that predate it). Lets clipboard
                                 // auto-push follow this peer to a new address; see ClipboardTargeting.
@@ -111,7 +124,7 @@ object LanDiscovery {
                                     val effectiveDeviceId = peerDeviceId ?: TransferDaemon.discoveredNodes[actualIp]?.deviceId
                                     TransferDaemon.putDiscoveredNode(
                                         actualIp,
-                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, effectiveDeviceId)
+                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, effectiveDeviceId, supportsAuth2Accept)
                                     )
                                     if (isNewNode) wakeDiscovery()
 

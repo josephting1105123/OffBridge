@@ -122,6 +122,7 @@ object FileTransferServer {
                     val fileIndex = parts[2].toIntOrNull()
                     val offset = parts[3].toLongOrNull()
                     if (fileIndex == null || offset == null) { socket.close(); return }
+                    if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) { socket.close(); return }
                     // Receiver flags after the offset, order-independent: "ack" → wait for the delivery
                     // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
                     val flags = parts.drop(4)
@@ -229,6 +230,7 @@ object FileTransferServer {
                     val sessionId = parts[1]
                     val session = TransferDaemon.activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
+                        if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) { socket.close(); return }
                         session.isPaused = false
                         // Receiver appended "fgcm" ⇒ seal the bulk stream with FileSeal under the shared
                         // pairing key (the trust gate above guarantees we hold it). Absent ⇒ plaintext,
@@ -480,5 +482,52 @@ object FileTransferServer {
             // close() can itself throw (already-reset socket); swallow so the handler exits cleanly.
             runCatching { socket.close() }
         }
+    }
+
+    /**
+     * Accept/resume-direction AUTH2R challenge: the mirror of the OFFER-direction AUTH2 challenge
+     * above, symmetric in the opposite role. The plain trust gate in [handleIncomingConnection] only
+     * checks that [senderIp] has a stored pairing key — a host spoofing a paired peer's IP (without
+     * the key) could otherwise still receive an outbound file stream by sending ACCEPT_OFFER/
+     * RESUME_REQUEST. If [senderIp] advertises [TransferDaemon.ACCEPT_AUTH_CAP], require it to PROVE
+     * possession of the shared pairing key via an HMAC challenge-response BEFORE any file bytes are
+     * sent. A peer that doesn't advertise it (old build, or a legacy pin) skips this — byte-identical
+     * to before. TOFU-pinned via [SecurityVault.pinAuth2Accept] so a later capability-strip is a
+     * downgrade, not a silent skip.
+     *
+     * [inputStream] must be the SAME stream [handleIncomingConnection] has already been reading the
+     * batch header from (not a fresh `socket.getInputStream()`), so the proof-line read continues
+     * from exactly where header parsing left off. Returns false ⇒ caller must close the socket and
+     * stop; no popup, no bytes, no state mutated on this session.
+     */
+    private fun performAcceptAuth2Challenge(context: Context, socket: Socket, inputStream: java.io.InputStream, senderIp: String): Boolean {
+        val decision = DowngradePolicy.decide(
+            peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2Accept == true,
+            pinned = SecurityVault.isAuth2AcceptPinned(context, senderIp)
+        )
+        if (decision == DowngradePolicy.Decision.BLOCK) {
+            TransportDiag.log("TX: ACCEPT/RESUME from $senderIp dropped — AUTH2R downgrade blocked")
+            return false
+        }
+        if (decision == DowngradePolicy.Decision.SEAL) {
+            val pairingKey = SecurityVault.getKeyForNode(context, senderIp) ?: return false
+            val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+            val outStream = socket.getOutputStream()
+            outStream.write("ACCEPT_CHALLENGE|${Base64.encodeToString(nonce, Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
+            outStream.flush()
+            val proofLine = TransferUtils.readUntilNewline(inputStream)
+            val proof = if (proofLine.startsWith("ACCEPT_PROOF|")) {
+                try { Base64.decode(proofLine.removePrefix("ACCEPT_PROOF|"), Base64.NO_WRAP) } catch (_: Exception) { null }
+            } else null
+            val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
+            if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
+                TransportDiag.log("TX: ACCEPT/RESUME from $senderIp dropped — AUTH2R proof failed")
+                return false
+            }
+            SecurityVault.pinAuth2Accept(context, senderIp)
+        }
+        // DowngradePolicy.Decision.PLAINTEXT → legacy peer that never advertised AUTH2R: skip the
+        // challenge, exactly as before.
+        return true
     }
 }

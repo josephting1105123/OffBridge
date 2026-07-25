@@ -29,6 +29,71 @@ object DownloadEngine {
     }
 
     /**
+     * Accept/resume-direction AUTH2R challenge, requester side (mirrors
+     * FileTransferServer.performAcceptAuth2Challenge, the responder side). ALWAYS speculatively
+     * peeks up to one short line off [connection]'s input for an ACCEPT_CHALLENGE and, if present,
+     * answers it with an HMAC proof of the shared pairing key — proving to the sender that WE hold
+     * the key before it starts streaming bytes to us.
+     *
+     * Deliberately unconditional (no discovery-capability gate): the sender's decision to challenge
+     * is driven by ITS OWN belief about US (does IT see us as AUTH2R-capable), which is a DIFFERENT
+     * fact from whether WE believe the sender supports AUTH2R — the two beliefs are independently
+     * derived from passively-received, lossy UDP discovery caches and can disagree, especially right
+     * after a network blip (exactly when auto-resume fires). An earlier version gated this peek on
+     * our own belief about the sender; when that belief was stale/false while the sender's belief
+     * about US was fresh/true, the sender sent a real challenge that this function never looked for,
+     * and the raw "ACCEPT_CHALLENGE|..." bytes got fed to executeDownloadStream as if they were file
+     * content — corrupting the start of the file. Peeking unconditionally costs one bounded,
+     * non-blocking-beyond-soTimeout buffer scan (a few method calls, not a network round trip) and
+     * removes the race entirely: the requester no longer needs to correctly guess anything.
+     *
+     * Safety: [connection] must be a [SocketConnection] (its `input` is a cached
+     * [java.io.PushbackInputStream] — see that class). If the sender decided NOT to challenge this
+     * time (e.g. its own DowngradePolicy computed PLAINTEXT, or it's an old build that never
+     * understood [TransferDaemon.ACCEPT_AUTH_CAP] at all), whatever this read consumed is losslessly
+     * pushed back onto that same stream — executeDownloadStream then reads the file's original,
+     * untouched bytes from the top. This holds regardless of capability beliefs on either side.
+     */
+    private fun answerAcceptChallengeIfExpected(context: Context, connection: TransportConnection, targetIp: String) {
+        val pushback = connection.input as? java.io.PushbackInputStream ?: return
+        val buf = java.io.ByteArrayOutputStream()
+        var sawNewline = false
+        // Bounded so a peer that never sends a challenge (and whose file's early bytes never
+        // contain a stray newline either) can't stall past the socket's own soTimeout, and so
+        // binary garbage can't grow this buffer unbounded — comfortably above the longest real
+        // line ("ACCEPT_CHALLENGE|" + base64 of a 16-byte nonce ≈ 40 chars).
+        while (buf.size() < 400) {
+            val b = pushback.read()
+            if (b == -1) break
+            if (b == '\n'.code) { sawNewline = true; break }
+            buf.write(b)
+        }
+        val consumed = buf.toByteArray()
+        val line = if (sawNewline) String(consumed, Charsets.UTF_8) else null
+        if (line != null && line.startsWith("ACCEPT_CHALLENGE|")) {
+            val nonce = try {
+                android.util.Base64.decode(line.removePrefix("ACCEPT_CHALLENGE|"), android.util.Base64.NO_WRAP)
+            } catch (e: Exception) {
+                throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+            }
+            val pairingKey = SecurityVault.getKeyForNode(context, targetIp)
+                ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
+            val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
+            connection.output.write("ACCEPT_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
+            connection.output.flush()
+            SecurityVault.pinAuth2Accept(context, targetIp)
+        } else {
+            // Not a challenge — restore every consumed byte (and the newline, if one was found) in
+            // original order so executeDownloadStream sees the file's exact original bytes.
+            // unread() is LIFO per call: unread the newline FIRST so unread(consumed) — called
+            // second — surfaces before it on the next read, reproducing consumed[0..N-1] then '\n'
+            // then the untouched rest of the stream, exactly as it arrived.
+            if (sawNewline) pushback.unread('\n'.code)
+            if (consumed.isNotEmpty()) pushback.unread(consumed)
+        }
+    }
+
+    /**
      * V4 §2: the carrier-neutral download path — protocol bytes don't depend on the carrier.
      * A non-null [fileKey] (the shared pairing key) means the bulk stream is FileSeal-sealed and is
      * decrypted here; null keeps the legacy plaintext read (off-grid + legacy peers).
@@ -411,7 +476,11 @@ object DownloadEngine {
                 // OS default SYN timeout (tens of seconds); mirrors Net.sendBytes.
                 socket = Socket().apply { connect(InetSocketAddress(session.targetIp, Ports.FILE_TRANSFER), 8000) }
                 socket.soTimeout = 10000
-                val outStream = socket.getOutputStream()
+                // SocketConnection (not a raw getOutputStream()/getInputStream() pair) so the
+                // AUTH2R challenge peek below and executeDownloadStream share the SAME
+                // PushbackInputStream — see answerAcceptChallengeIfExpected's doc for why.
+                val connection = SocketConnection(socket)
+                val outStream = connection.output
                 var trueOffset = session.currentOffset
                 if (fileKey != null) {
                     // FileSeal records are not byte-seekable, so an AEAD resume restarts the
@@ -475,7 +544,8 @@ object DownloadEngine {
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                executeDownloadStream(context, socket, session, fileKey)
+                answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                executeDownloadStream(context, connection, session, fileKey)
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.
@@ -542,7 +612,11 @@ object DownloadEngine {
                 // default SYN timeout; mirrors Net.sendBytes.
                 socket = Socket().apply { connect(InetSocketAddress(session.targetIp, Ports.FILE_TRANSFER), 8000) }
                 socket.soTimeout = 10000
-                val outStream = socket.getOutputStream()
+                // SocketConnection (not a raw getOutputStream()/getInputStream() pair) so the
+                // AUTH2R challenge peek below and executeDownloadStream share the SAME
+                // PushbackInputStream — see answerAcceptChallengeIfExpected's doc for why.
+                val connection = SocketConnection(socket)
+                val outStream = connection.output
                 // Request authenticated (FileSeal) file bytes when both peers support it; "fgcm"/"fgcm2"
                 // tells the sender to seal (v1/v2). Legacy senders ignore the extra field and stream plaintext.
                 val fgcmFlag = if (useV2) "fgcm2" else "fgcm"
@@ -550,7 +624,8 @@ object DownloadEngine {
                 outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                executeDownloadStream(context, socket, session, fileKey)
+                answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                executeDownloadStream(context, connection, session, fileKey)
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the
                 // bytes in the clear. Terminal (cancelled), not paused, so we don't auto-retry into it.

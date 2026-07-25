@@ -24,6 +24,11 @@ class FileTransferDaemon(
      * the OFFER branch can decide whether to issue the AUTH2 admission challenge. Defaults to "no
      * AUTH2" so a caller that doesn't wire it keeps today's behavior. */
     private val supportsAuth2Provider: (ip: String) -> Boolean = { false },
+    /** True iff the peer at [ip] advertised [TransferDaemon.ACCEPT_AUTH_CAP] in discovery — the
+     * accept/resume-direction mirror of [supportsAuth2Provider]. Drives whether the ACCEPT_OFFER/
+     * RESUME_REQUEST branches challenge the requester before handing the socket off to the streaming
+     * callback. Defaults to "no AUTH2R" so a caller that doesn't wire it keeps today's behavior. */
+    private val supportsAcceptAuth2Provider: (ip: String) -> Boolean = { false },
     /** True iff [sessionId] names a live OUTGOING off-grid (p2p) session. An off-grid receiver resumes
      * from an ephemeral, never-paired IP, so a matching RESUME_REQUEST is exempt from the LAN trust
      * gate below (XP-05) — the sessionId was issued over the ECDH-authenticated P2P_WELCOME, so it is
@@ -217,6 +222,7 @@ class FileTransferDaemon(
                     val acceptFlags = parts.drop(2)
                     val fgcm2 = acceptFlags.contains("fgcm2")
                     val fgcm = acceptFlags.contains("fgcm") || fgcm2
+                    if (!performAcceptAuth2Challenge(clientSocket, inputStream)) { clientSocket.close(); return@thread }
                     // Hand off socket to app controller to stream files out
                     onAcceptReceived(sessionId, fgcm, fgcm2, clientSocket)
                 } else if (header.startsWith("RESUME_REQUEST|")) {
@@ -236,6 +242,7 @@ class FileTransferDaemon(
                         // is malformed — reject it here rather than seal from a wrong chunk index that
                         // only fails later at the receiver's tag check. Mirrors the Android guard.
                         if (fgcm && offset != 0L) { clientSocket.close(); return@thread }
+                        if (!performAcceptAuth2Challenge(clientSocket, inputStream)) { clientSocket.close(); return@thread }
                         onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, fgcm2, clientSocket)
                     } else {
                         clientSocket.close()
@@ -267,4 +274,56 @@ class FileTransferDaemon(
         }
     }
 
+    /**
+     * Accept/resume-direction AUTH2R challenge (mirrors the OFFER-direction AUTH2 challenge above,
+     * symmetric in the opposite role). The plain trust gate at the top of [handleIncomingConnection]
+     * only checks that the sender has a stored pairing key — a host spoofing a paired peer's IP
+     * (without the key) could otherwise still receive an outbound file stream by sending
+     * ACCEPT_OFFER/RESUME_REQUEST. If the sender advertises [TransferDaemon.ACCEPT_AUTH_CAP], require
+     * it to PROVE possession of the shared pairing key via an HMAC challenge-response BEFORE the
+     * socket is handed off to [onAcceptReceived]/[onResumeReceived]. A peer that doesn't advertise it
+     * (old build, or a legacy pin) skips this — byte-identical to before. TOFU-pinned via
+     * [SecurityVault.pinAuth2Accept] so a later capability-strip is a downgrade, not a silent skip.
+     *
+     * [inputStream] must be the SAME stream [handleIncomingConnection] has already read the header
+     * from, so the proof-line read continues from exactly where header parsing left off. Returns
+     * false ⇒ caller must close the socket and stop; no callback, no bytes.
+     */
+    private fun performAcceptAuth2Challenge(clientSocket: Socket, inputStream: java.io.InputStream): Boolean {
+        val senderIp = clientSocket.inetAddress?.hostAddress ?: return false
+        val decision = DowngradePolicy.decide(
+            peerOffersAead = supportsAcceptAuth2Provider(senderIp),
+            pinned = SecurityVault.isAuth2AcceptPinned(senderIp)
+        )
+        if (decision == DowngradePolicy.Decision.BLOCK) {
+            System.err.println("Blocked ACCEPT/RESUME from $senderIp — AUTH2R downgrade blocked")
+            DiagLog.w("DROP $senderIp: ACCEPT/RESUME — AUTH2R downgrade blocked (peer was pinned AUTH2R-capable but this request's discovery advert did not offer it).")
+            return false
+        }
+        if (decision == DowngradePolicy.Decision.SEAL) {
+            val pairingKey = SecurityVault.getAesKey(senderIp)
+            if (pairingKey == null) {
+                DiagLog.w("DROP $senderIp: ACCEPT/RESUME — pairing key vanished between trust gate and AUTH2R challenge.")
+                return false
+            }
+            val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+            clientSocket.getOutputStream().write("ACCEPT_CHALLENGE|${java.util.Base64.getEncoder().encodeToString(nonce)}\n".toByteArray(Charsets.UTF_8))
+            clientSocket.getOutputStream().flush()
+            val proofLine = Net.readLineUtf8(inputStream)
+            val proof = if (proofLine.startsWith("ACCEPT_PROOF|")) {
+                try { java.util.Base64.getDecoder().decode(proofLine.removePrefix("ACCEPT_PROOF|")) } catch (_: Exception) { null }
+            } else null
+            val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
+            if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
+                System.err.println("Blocked ACCEPT/RESUME from $senderIp — AUTH2R proof failed")
+                DiagLog.w("DROP $senderIp: ACCEPT/RESUME — AUTH2R proof failed (peer answered the challenge but the HMAC did not match this device's stored key).")
+                return false
+            }
+            SecurityVault.pinAuth2Accept(senderIp)
+        }
+        // DowngradePolicy.Decision.PLAINTEXT → legacy peer that never advertised AUTH2R (this also
+        // covers off-grid p2p requesters, which never appear in LAN discovery at all): skip the
+        // challenge, exactly as before.
+        return true
+    }
 }

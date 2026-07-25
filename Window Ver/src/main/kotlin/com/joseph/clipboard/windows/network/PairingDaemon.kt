@@ -21,6 +21,15 @@ class PairingDaemon(
     private val onIncomingPairingRequest: (senderIp: String, senderName: String, visualPin: String, accept: () -> Unit, decline: () -> Unit) -> Unit,
     private val onUnpaired: ((senderIp: String) -> Unit)? = null
 ) {
+    companion object {
+        /** How long the daemon's parked socket/thread waits for the user to answer a pairing dialog
+         *  before giving up and sending PAIR_DECLINE on its own. Exposed so the UI layer can compute
+         *  the same expiry and refuse a stale Accept click instead of silently completing pairing on
+         *  only this side — the daemon thread already sent DECLINE and moved on by then, so an Accept
+         *  after this window would save a key the other device never confirmed (mirrors Android's
+         *  AND-36 fix in PairingConfirmationActivity.completePairing). */
+        const val PAIR_CONFIRM_WINDOW_MS = 120_000L
+    }
     private val PAIRING_PORT = Ports.PAIRING
     private var isRunning = false
     private var serverSocket: ServerSocket? = null
@@ -172,7 +181,7 @@ class PairingDaemon(
                         })
 
                         // A never-answered pairing dialog must not pin this thread+socket forever.
-                        if (!latch.await(2, TimeUnit.MINUTES)) {
+                        if (!latch.await(PAIR_CONFIRM_WINDOW_MS, TimeUnit.MILLISECONDS)) {
                             isAccepted = false
                         }
 

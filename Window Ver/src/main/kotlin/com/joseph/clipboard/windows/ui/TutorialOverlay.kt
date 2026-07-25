@@ -32,9 +32,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.joseph.clipboard.windows.storage.TranslationManager
 import com.joseph.clipboard.windows.theme.GreenPrimary
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+
+private fun tr(key: String, fallback: String): String =
+    TranslationManager.getString(key).takeIf { it != key } ?: fallback
 
 /**
  * A single tutorial step definition. Ports the Android TutorialStep
@@ -318,7 +322,7 @@ fun TutorialOverlay(
                         ) {
                             if (!step.hideSkipButton) {
                                 TextButton(onClick = onDismiss) {
-                                    Text("Skip", color = Color.Gray, fontSize = 13.sp)
+                                    Text(tr("tutorial_skip", "Skip"), color = Color.Gray, fontSize = 13.sp)
                                 }
                             } else {
                                 Spacer(Modifier.width(1.dp))
@@ -329,7 +333,7 @@ fun TutorialOverlay(
                                 shape = RoundedCornerShape(50)
                             ) {
                                 Text(
-                                    step.buttonLabel ?: if (isLastStep) "Done" else "Next",
+                                    step.buttonLabel ?: if (isLastStep) tr("tutorial_done", "Done") else tr("tutorial_next", "Next"),
                                     color = Color.Black,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp

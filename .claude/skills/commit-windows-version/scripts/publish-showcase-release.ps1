@@ -23,6 +23,29 @@ param(
 )
 $ErrorActionPreference = "Stop"
 
+# --- Guard: -AndroidVersion is free text baked verbatim into the release title, and Android's
+# UpdateChecker parses ITS UPDATE PROMPT DECISION from that title (Regex "Android\s+([0-9][0-9.]*)")
+# — a stale or typo'd value here would parse fine and silently mis-fire (or suppress) every user's
+# update prompt with no error anywhere. Refuse to publish unless it matches app/build.gradle.kts'
+# actual versionName, so drift is caught here instead of shipping silently wrong.
+$repoRoot = if (Test-Path "app/build.gradle.kts") { "." } else { Join-Path $PSScriptRoot "../../../.." }
+$gradlePath = Join-Path $repoRoot "app/build.gradle.kts"
+if (Test-Path $gradlePath) {
+  $gradleContent = Get-Content $gradlePath -Raw
+  $m = [regex]::Match($gradleContent, 'versionName\s*=\s*"([^"]+)"')
+  if ($m.Success) {
+    $actualAndroidVersion = $m.Groups[1].Value
+    if ($actualAndroidVersion -ne $AndroidVersion) {
+      Write-Output "ERROR_ANDROID_VERSION_MISMATCH: -AndroidVersion '$AndroidVersion' does not match app/build.gradle.kts versionName '$actualAndroidVersion'. Fix the -AndroidVersion argument (or bump build.gradle.kts first) and retry."
+      exit 3
+    }
+  } else {
+    Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: could not find versionName in $gradlePath — proceeding without the cross-check."
+  }
+} else {
+  Write-Output "WARN_ANDROID_VERSION_UNVERIFIED: $gradlePath not found — proceeding without the cross-check."
+}
+
 # --- Read the github.com token from Windows Credential Manager (never printed) ---
 Add-Type -TypeDefinition @"
 using System; using System.Runtime.InteropServices;

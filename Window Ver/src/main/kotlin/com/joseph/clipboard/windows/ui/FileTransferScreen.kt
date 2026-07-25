@@ -55,6 +55,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.window.Dialog
 import com.joseph.clipboard.windows.storage.TranslationManager
 
+private fun tr(key: String, fallback: String): String =
+    TranslationManager.getString(key).takeIf { it != key } ?: fallback
+
 @Composable
 fun FileTransferScreen(
     appController: ClipboardAppController,
@@ -362,7 +365,7 @@ fun FileTransferScreen(
                 steps = listOf(
                     TutorialStep(
                         "selectionButtons",
-                        "Select the file type to send: File, Folder, or Text.",
+                        tr("tutorial_send_select_type", "Select the file type to send: File, Folder, or Text."),
                         // The selection row's content padding sits INSIDE its captured bounds, so the
                         // spotlight's left edge bled off-window. Trim both edges by the content padding
                         // (24dp) for a symmetric ~12dp rounded inset on the left AND right.
@@ -371,7 +374,7 @@ fun FileTransferScreen(
                     ),
                     TutorialStep(
                         "selectedFilesRow",
-                        "Your selected files will appear here.",
+                        tr("tutorial_send_files_appear", "Your selected files will appear here."),
                         // When real files are queued, don't overlay fakes — spotlight the real row.
                         placeholderContent = if (chosenFiles.isEmpty()) {
                             { TutorialPlaceholderFiles(selected = false, alignStart = true) }
@@ -386,7 +389,7 @@ fun FileTransferScreen(
                     ),
                     TutorialStep(
                         "selectedFilesRow",
-                        "Click a file to select it, then delete the selected files. Double-click a file to preview it.",
+                        tr("tutorial_send_click_select", "Click a file to select it, then delete the selected files. Double-click a file to preview it."),
                         placeholderContent = if (chosenFiles.isEmpty()) {
                             { TutorialPlaceholderFiles(selected = true, alignStart = true) }
                         } else null,
@@ -398,7 +401,7 @@ fun FileTransferScreen(
                     // Step 4: Send now opens the "Send Via" chooser
                     TutorialStep(
                         "sendButton",
-                        "With files selected, tap Send to choose how to send.",
+                        tr("tutorial_send_tap_send", "With files selected, tap Send to choose how to send."),
                         onShow = { tutorialForceSend = true },
                         onHide = { tutorialForceSend = false }
                     ),
@@ -407,24 +410,24 @@ fun FileTransferScreen(
                     // QR is desktop's off-grid path (no NFC).
                     TutorialStep(
                         "deviceList",
-                        "Connected Devices uses your Wi-Fi network. QR lets a nearby Android phone scan and receive — no pairing needed.",
+                        tr("tutorial_send_via_options", "Connected Devices uses your Wi-Fi network. QR lets a nearby Android phone scan and receive — no pairing needed."),
                         fullScreenContent = { TutorialReplicaSendVia() }
                     ),
                     // Step 6: replay the Send-Via sheet, tap "Connected Devices", reveal the dialog replica.
                     TutorialStep(
                         "deviceList",
-                        "Pick one or more paired devices, then hit Send. If no devices are connected, tap Go to Pairing to pair one first.",
+                        tr("tutorial_send_pick_devices", "Pick one or more paired devices, then hit Send. If no devices are connected, tap Go to Pairing to pair one first."),
                         fullScreenContent = { TutorialRevealConnectedDevices() }
                     ),
                     // Step 7: replay the Send-Via sheet, tap "QR", reveal the QR dialog replica (a nearby
                     // Android phone scans it; no NFC on desktop).
                     TutorialStep(
                         "deviceList",
-                        "Choose QR to show a code — a nearby Android phone scans it and receives your files over the local network.",
+                        tr("tutorial_send_qr_option", "Choose QR to show a code — a nearby Android phone scans it and receives your files over the local network."),
                         fullScreenContent = { TutorialRevealQr() }
                     ),
                     // Step 8: square spotlight centered on the round history icon button, shrunk 10%.
-                    TutorialStep("historyButton", "Tap here to view your transfer history and track progress.", buttonLabel = "Next", spotlightSquare = true, spotlightScale = 0.9f)
+                    TutorialStep("historyButton", tr("tutorial_send_history_button", "Tap here to view your transfer history and track progress."), buttonLabel = tr("tutorial_next", "Next"), spotlightSquare = true, spotlightScale = 0.9f)
                 ),
                 totalSteps = 13,
                 stepOffset = 0,
@@ -505,14 +508,29 @@ fun FileTransferScreen(
             onResumeTransfer = { record ->
                 if (record.direction == "incoming") {
                     appController.resumeIncomingFileTransfer(record.sessionId)
+                } else {
+                    // The actual reconnect must be initiated by the receiving device, but Windows
+                    // can still nudge it: send the same FILEBRIDGE_RESUME_REQUEST prompt Android's
+                    // outgoing resume sends (previously this branch did nothing at all).
+                    appController.requestPeerResumeOutgoing(record.sessionId)
                 }
-                // Outgoing resume must be initiated from the receiving device.
             },
             onDismiss = {
                 showTransferHistory = false
                 showTransferHistoryInTutorialMode = false
                 preselectedSessionId = null
-            }
+            },
+            // Guided first-run tour continuation (SEND_FILES's own tutorial + this nested history
+            // tutorial together form step 1 of the chain — see Main.kt): only a genuine full
+            // completion advances to SYSTEM_STATUS, mirroring SystemStatusScreen's own onComplete.
+            onTutorialComplete = if (showTransferHistoryInTutorialMode) {
+                {
+                    showTransferHistory = false
+                    showTransferHistoryInTutorialMode = false
+                    preselectedSessionId = null
+                    onTutorialChainNext(Screen.SYSTEM_STATUS)
+                }
+            } else null
         )
     }
 

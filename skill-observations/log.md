@@ -713,3 +713,139 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** Extend step 2's Android XML rules and any example esc() to: escape `&` -> `&amp;` first, then apostrophe -> `\'`; also note `<`/`>` -> `&lt;`/`&gt;` if ever present. The reused Windows JSON stores `&` literally, so any string lifted from there with an ampersand must be re-escaped for Android XML.
 
 **Principle:** When targeting XML resource files, escape the ampersand as `&amp;` before any other entity — it is the highest-frequency breakage after the apostrophe and is easy to miss when values are lifted verbatim from a JSON (non-XML) source.
+
+### Observation 47: Measure the CSS deficit before choosing a text-wrapping fix
+
+**Status:** OPEN
+**Date:** 2026-07-18
+**Session context:** Website download card: "Download for Windows" was wrapping onto a second line inside the wheel carousel's CTA button.
+**Skill:** impeccable
+**Type:** open-source
+**Phase/Area:** Layout/typography debugging
+
+**Issue:** The obvious fixes for a wrapping label (force `white-space: nowrap`, shrink the font, widen the container) are all guesses at *which* constraint is short. A DOM probe — clone the label, set `white-space: nowrap; position: absolute; visibility: hidden`, measure its width, and compare against `buttonWidth - padding - icon - gap` — turned an aesthetic complaint into a number: the label needed 225px and had 222px. That named the actual thief (a 64px horizontal padding on a full-width, centre-aligned button, where padding buys nothing visually) and proved the same bug hit two other cards at narrower widths, which reading the CSS had not revealed. Running the same probe across nine viewport widths also caught a regression mid-fix: `cqi` resolves against the container's *content* box, not its border box, so the first coefficient silently shrank the desktop CTA by 3px.
+
+**Suggested improvement:** Add a "measure the deficit" step to the layout/typography debugging guidance: for any overflow, wrap, clip, or truncation complaint, script `need` vs `room` per element across the responsive range before editing CSS. Report the deficit in pixels, fix the largest contributor, and re-run the same script as the acceptance test.
+
+**Principle:** A layout complaint is a measurement, not an opinion. Compute what the content needs against what the box offers, per breakpoint, before choosing a fix — the numbers name the responsible property, expose sibling cases the eye missed, and become the regression test that catches the fix's own side effects.
+
+### Observation 48: Procedural guides must be executed once before delivery
+
+**Status:** OPEN
+**Date:** 2026-07-18
+**Session context:** Writing a screenshot-capture guide for the website + showcase imagery, covering Android emulator staging and Windows window capture.
+**Skill:** New skill candidate: procedural-guide-authoring (or a rule added to the existing doc-writing guidance)
+**Type:** open-source
+**Phase/Area:** Guide authoring / verification
+
+**Issue:** The first draft of the capture guide was assembled from codebase research and standard platform knowledge. Booting the emulator and actually running the steps invalidated three of them: (1) the documented system dark/light toggle had no effect because the app owns its own theme setting, (2) the status-bar demo-mode network command left a "no internet" badge without an extra flag, (3) an app-launched toast covered the bottom navigation for several seconds after every navigation, silently ruining any capture taken too early. None of these were discoverable by reading code. A guide shipped without executing it would have wasted the reader's whole first session.
+
+**Suggested improvement:** Add an explicit gate to any guide-producing workflow: before delivery, execute every command in the guide in order, on the real target, and record which steps were verified and when. Steps that genuinely cannot be executed get labelled unverified in the text rather than being silently presented as fact. Date-stamp the verification in the document header so future readers know its shelf life.
+
+**Principle:** A how-to document is a program whose runtime is a human. Delivering one without running it is shipping untested code — and its failure mode is worse, because the human absorbs the cost silently and cannot read a stack trace.
+
+### Observation 49: Validate doc enumerations against the consuming code, not the prior doc
+
+**Status:** OPEN
+**Date:** 2026-07-18
+**Session context:** Same screenshot-guide task; building a --check mode that reports which screenshot assets are present.
+**Skill:** New skill candidate: procedural-guide-authoring
+**Type:** open-source
+**Phase/Area:** Doc/asset inventory
+
+**Issue:** The existing README listed six "essential" screenshots. The tooling and the rewritten guide initially inherited that list verbatim. Grepping the actual consuming file showed it referenced only five — one entry had been aspirational or had been dropped from the page, and the doc never caught up. Inheriting the list would have propagated a stale claim into a new checker script that then reported a permanent false "MISSING", training the reader to ignore its output.
+
+**Suggested improvement:** When a document or tool enumerates assets, endpoints, config keys, or files, derive the list from the code that consumes them (a grep of the referencing source) and diff it against whatever the previous doc claimed. Treat any delta as a finding to report, not a discrepancy to quietly reconcile.
+
+**Principle:** Documentation drifts in one direction: toward what used to be true. Any inherited list is a claim about the present that was last checked in the past — re-derive it from the consuming code, or inherit the staleness along with it.
+
+### Observation 50: Verify the identity key before accepting a bug's stated trigger
+
+**Status:** OPEN
+**Date:** 2026-07-18
+**Session context:** "Paired devices duplicate when I update to a newer version" on both Android and Windows clients.
+
+**Skill:** New skill candidate: identity-key-audit (or a rule inside code-review)
+**Type:** open-source
+**Phase/Area:** Diagnosis, before designing a fix
+
+**Issue:** The user attributed duplicate paired-device rows to the app update. Reading the storage layer showed pairing records are keyed by IP address on both platforms, with no device identity anywhere in the LAN pairing path. The update was only a correlate: it forced a restart, the machine took a new DHCP lease, the trust record (keyed by the old IP) no longer matched, the device appeared unpaired, and re-pairing wrote a second record. Fixing "duplicates on update" as stated would have produced a display-level dedupe that left the real defect — unstable identity — in place, along with an unremovable stale trust record. The diagnosis only became provable by asking one question of the code: what field is the dedupe/upsert key, and is it stable across the event the user described?
+
+**Suggested improvement:** For any duplicate/ghost/stale-record bug, make the first step "locate the upsert key and prove its stability across the reported trigger" before proposing a fix. Concretely: find the storage write, name the key, then check whether that key is derived from something the trigger can change (network address, install id, regenerated keypair, user-editable name). Report the key's lifetime to the user alongside the diagnosis, since it usually reframes the bug.
+
+**Principle:** When a user reports duplicates, the stated trigger is usually a correlate, not the cause — the cause is that the record's identity key is unstable across that trigger. Identify the key and its lifetime before designing any fix; a dedupe applied above an unstable key hides the defect instead of removing it.
+
+### Observation 51: Reading the app's own on-disk state beat two full code traces at localising a bug
+
+**Status:** OPEN
+**Date:** 2026-07-20
+**Session context:** User reported "auto push not working on Android and Windows"; two Explore agents traced the full clipboard push path on both platforms and produced accurate but non-decisive findings (several plausible silent-failure guards each).
+**Skill:** audit-transport (and any diagnosis-oriented skill)
+**Type:** open-source
+**Phase/Area:** Diagnosis / evidence gathering
+
+**Issue:** Both code traces were correct but returned a *list* of candidate causes, not the cause. What actually localised it was reading the shipping client's persisted config (`%LOCALAPPDATA%\ClipboardShare\config.json`) and comparing it to the machine's live network state: one phone held five trust records at five different addresses, none matching its current one. That single read collapsed a five-candidate list to one confirmed root cause. The one clarifying question to the user ("manual works, auto doesn't") did comparable work by splitting the send path from the trigger path.
+
+**Suggested improvement:** Add an evidence-ordering step to diagnosis skills: before (or alongside) tracing code, enumerate the runtime state the app has already written down — config files, prefs, logs, caches — and read it. State that a code trace establishes what *can* fail, while persisted state establishes what *did*.
+
+**Principle:** A code trace enumerates possible failures; the program's own persisted state identifies the actual one. When a running system has written its state to disk, read that before or alongside reading its source — and when a symptom could sit in either the trigger or the action, ask the one question that separates them before investigating either.
+
+### Observation 52: Extracting the risk-dense wire decision into a pure, byte-identical resolver made the interop check runnable and caught a security gap
+
+**Status:** OPEN
+**Date:** 2026-07-20
+**Session context:** Fixed clipboard auto-push to follow a paired device across a DHCP IP change (added a `did:` id token to LAN discovery on both Android + Windows and retargeted the push). The hard part was the targeting decision (prefer direct address vs follow-by-id, spoofer ambiguity, reused-lease collision).
+**Skill:** cross-platform-parity-fix
+**Type:** open-source
+**Phase/Area:** Implementation / cross-platform interop verification
+
+**Issue:** The clipboard send path was tangled into platform I/O (Android Service + coroutines, Windows controller + StateFlow), so the actual decision logic couldn't be tested without a live LAN. Pulling it into a pure, argument-only function (`ClipboardTargeting.resolve(trusted, live)`) held byte-identical on both clients, plus a mirrored unit-test class, turned the interop contract into something a build actually runs (9 cases per platform). It also paid off directly: writing the test cases surfaced a security-relevant gap the first implementation missed — "prefer the pairing address" misdelivered to whatever different device now held a reused DHCP lease, instead of following the real device by id. That was found and fixed only because the logic was isolated enough to enumerate cases against.
+
+**Suggested improvement:** cross-platform-parity-fix should recommend, for any non-trivial wire/decision change, extracting the platform-neutral decision into a pure function duplicated byte-identically on both sides and pinned by a mirrored test suite — rather than verifying parity only by reading the two I/O paths side by side. The pure-function + mirrored-test pair IS the interop check, and it makes the case enumeration (where the real bugs hide) cheap.
+
+**Principle:** Cross-platform interop is easiest to guarantee when the shared contract is a pure, byte-identical function with a mirrored test suite on each platform — isolating the decision from I/O both makes the parity check executable and forces the edge-case enumeration where the subtle (often security-relevant) bugs actually live.
+
+### Observation 53: A cross-platform release had to override commit-windows-version's "Windows-only, stop on Android changes" guard
+
+**Status:** OPEN
+**Date:** 2026-07-20
+**Session context:** Added a Cancel button to the pairing-requester UI on BOTH clients, then cut a release: bumped Android 3.7.0->3.7.1 and Windows 3.7.3->3.7.4 together, built + published the Windows installer, carried the APK forward, deployed the website.
+**Skill:** commit-windows-version
+**Type:** open-source
+**Phase/Area:** Release ritual / scope guard
+
+**Issue:** commit-windows-version explicitly says "pending changes should be Windows-only; if there are stray Android changes, stop and ask," and "never bump Android." That guard is right for the common case (Android ships via Play on a separate track), but it doesn't cover a genuinely cross-platform change that lands on both clients in one release — here the same feature (requester Cancel) shipped on Android and Windows simultaneously, so both tracks legitimately bumped in one release. Following the skill literally would have blocked the task; the user's explicit instruction ("bump both, commit, push") overrode it. The rest of the ritual (installer build, showcase publish with -AndroidVersion in the release title, APK carry-forward, website SHA) still applied unchanged.
+
+**Suggested improvement:** commit-windows-version should document the cross-platform-release variant: when a single change ships on both clients, bumping Android alongside Windows is expected — bump app/build.gradle.kts (versionCode + versionName), the Android website/config/README/STORE_LISTING version spots, and pass the new Android version to the publish script's -AndroidVersion (it already feeds the release title the Android updater parses). Keep the "stop and ask" guard only for UNRELATED stray Android changes, not for the intended cross-platform feature.
+
+**Principle:** A release skill scoped to one platform needs an explicit escape hatch for genuinely cross-platform changes — distinguish "unrelated stray changes on the other platform" (stop and ask) from "the same feature intentionally shipping on both" (bump both, one release). A hard "never touch the other platform" guard misfires on legitimate simultaneous releases.
+
+### Observation 54: No skill fits an open-ended "did I miss anything" whole-app audit
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** User asked "check if there's anything I missed? any intended function missing, security loopholes, and bugs" on a two-client app. The repo's audit skills (audit-testable, security-review, code-review, report-verify) each fit a narrower slice: audit-testable = pure-function coverage, security-review/code-review = a *pending diff*, not the whole codebase. None covers "audit the whole app, both platforms, across three dimensions at once."
+**Skill:** New skill candidate: whole-app-audit (or extend audit-testable's fan-out pattern)
+**Type:** open-source
+**Phase/Area:** Audit/review skill family — coverage gap between diff-scoped review and function-scoped coverage audit
+
+**Issue:** The task decomposed cleanly into three parallel background fan-out agents — (1) per-platform security audit of the highest-risk subsystems, (2) cross-platform parity + wire-drift audit, (3) missing/incomplete-functionality audit — each returning ranked findings with file:line + confidence, followed by main-loop verification of the top findings before relaying. This structure recurred naturally and worked well (tiered sonnet finders, adjudication kept in the main loop, top claims re-read from source). It is not captured anywhere; the next such request would rebuild the prompts from scratch.
+
+**Suggested improvement:** Consider a `whole-app-audit` skill encoding the three-dimension fan-out (security / parity / missing-function), the "prefer N verified findings over 3N speculative" instruction, the file:line+confidence return schema, and the mandatory main-loop re-read of every HIGH finding before it reaches the user. Distinguish it from security-review (diff-scoped) and audit-testable (function-scoped) so triggering stays unambiguous.
+
+**Principle:** A review/audit skill family should cover both axes — *scope* (pending diff vs. whole codebase) and *dimension* (security vs. correctness vs. feature-completeness). An open-ended "did I miss anything" request spans all dimensions over the whole codebase, which no diff-scoped or single-dimension skill serves; that shape recurs and is worth its own fan-out skill. Always re-verify HIGH findings from source in the main loop before relaying — subagent findings are untrusted input.
+
+### Observation 55: code-review skill has disable-model-invocation set, blocking CLAUDE.md's mandatory self-review step
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** Large multi-file "fix everything" implementation session (bug fixes + a new AUTH2R wire-protocol extension + a new Windows onboarding feature). Project CLAUDE.md's Quality Gates section requires running the `code-review` skill (high effort for wire/crypto-touching diffs) before commit, and the `ship` skill's ritual assumes the same.
+**Skill:** code-review, ship, verify
+**Type:** internal
+**Phase/Area:** Self-review invocation
+
+**Issue:** Calling `Skill({skill: "code-review", ...})` from within the agent loop returned an error: "Skill code-review cannot be used with Skill tool due to disable-model-invocation" — the skill is configured user-triggered-only (e.g. `/code-review`), so an agent cannot invoke it on its own initiative even though CLAUDE.md mandates it as a required step before every non-trivial commit. Worked around by manually replicating the intended pattern: fan out sonnet-tier verifier subagents scoped to the highest-risk changed files, then adjudicate their findings in the main loop — but this is an ad hoc substitute, not the documented ritual, and its quality depends on the agent correctly reconstructing what code-review would have done.
+
+**Suggested improvement:** Either (a) remove disable-model-invocation from code-review's config so CLAUDE.md's mandatory step is actually satisfiable by an agent working autonomously, or (b) if the restriction is intentional (e.g. cost control), have CLAUDE.md's Quality Gates section document the model-invocable fallback procedure explicitly (fan-out prompt template, effort-tiering, adjudication-in-main-loop) so every session doesn't have to improvise it from scratch. The `ship` and `verify` skills should also note this gap since they assume code-review is callable.
+
+**Principle:** A skill referenced as a *mandatory* step in CLAUDE.md must be invocable by the agent, not just by the user — otherwise the written process and the enforceable process silently diverge, and every session pays the reconstruction cost independently instead of once.

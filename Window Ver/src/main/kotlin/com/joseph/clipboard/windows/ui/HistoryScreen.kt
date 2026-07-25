@@ -42,6 +42,9 @@ import com.joseph.clipboard.windows.os.ClipboardManager
 import androidx.compose.runtime.LaunchedEffect
 import com.joseph.clipboard.windows.storage.TranslationManager
 
+private fun tr(key: String, fallback: String): String =
+    TranslationManager.getString(key).takeIf { it != key } ?: fallback
+
 @Composable
 fun HistoryScreen(
     appController: ClipboardAppController,
@@ -170,11 +173,11 @@ fun HistoryScreen(
                 steps = listOf(
                     TutorialStep(
                         "pushButton",
-                        "Tap here to instantly push your current clipboard text to all paired devices."
+                        tr("tutorial_clipboard_push_button", "Tap here to instantly push your current clipboard text to all paired devices.")
                     ),
                     TutorialStep(
                         "acceptSwitch",
-                        "Turn this off if you don't want to receive clipboard content from other devices.",
+                        tr("tutorial_clipboard_accept_switch", "Turn this off if you don't want to receive clipboard content from other devices."),
                         hideSkipButton = true
                     )
                 ),

@@ -70,6 +70,9 @@ private fun resolveRecordFolder(record: TransferRecord): File {
     return File(SecurityVault.getSaveLocation())
 }
 
+private fun trTop(key: String, fallback: String): String =
+    TranslationManager.getString(key).takeIf { it != key } ?: fallback
+
 @Composable
 fun TransferHistoryDialog(
     historyList: List<TransferRecord>,
@@ -79,7 +82,12 @@ fun TransferHistoryDialog(
     onCancelTransfer: (String) -> Unit,
     onResumeTransfer: (TransferRecord) -> Unit,
     isDeviceConnected: (String) -> Boolean,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    // Fired instead of onDismiss when the embedded tutorial (tutorialMode) is clicked all the way
+    // through — distinct from onDismiss (Skip/close) so a caller chaining a multi-screen guided tour
+    // (see FileTransferScreen's call site) only advances on genuine completion, not a skip. Null =
+    // fall back to onDismiss, preserving today's behavior for any non-chaining caller.
+    onTutorialComplete: (() -> Unit)? = null
 ) {
     var isSelectionMode by remember { mutableStateOf(false) }
     var selectedSessionId by remember { mutableStateOf(initialSelectedSessionId) }
@@ -331,23 +339,23 @@ fun TransferHistoryDialog(
                         // tooltip drops over empty list space rather than hiding the bottom of the dialog.
                         TutorialStep(
                             "headerRow",
-                            "Here you can see all your recent file transfers.",
+                            trTop("tutorial_history_overview", "Here you can see all your recent file transfers."),
                             unionTargetKey = "historyList"
                         ),
                         // Filter capsules — new in 2.2.1, first tutorial coverage
                         TutorialStep(
                             "filterRow",
-                            "Filter by Incoming, Outgoing, Paused or Cancelled — tap a capsule."
+                            trTop("tutorial_history_filter", "Filter by Incoming, Outgoing, Paused or Cancelled — tap a capsule.")
                         ),
                         // Step 11: spotlight only the Select checkbox (anchored on the checkbox itself).
                         TutorialStep(
                             "btnSelect",
-                            "Tap 'Select' to manage and delete transfer records."
+                            trTop("tutorial_history_select", "Tap 'Select' to manage and delete transfer records.")
                         ),
                         // Step 12: spotlight just the cards (first→last union), tooltip BELOW the cards.
                         TutorialStep(
                             "historyItem",
-                            "Tap on any transfer record to see its details and progress.",
+                            trTop("tutorial_history_tap_record", "Tap on any transfer record to see its details and progress."),
                             unionTargetKey = "historyItemLast"
                         ),
                         // Step 13: animate a finger tapping the received card AT ITS REAL LIST POSITION
@@ -355,7 +363,7 @@ fun TransferHistoryDialog(
                         // spotlight the Open button. No NFC; replica only.
                         TutorialStep(
                             "historyItem",
-                            "Press open button to open received file.",
+                            trTop("tutorial_history_open_button", "Press open button to open received file."),
                             hideSkipButton = true,
                             // Drop the tooltip into the detail's empty middle band (below the file rows /
                             // spotlighted Open button, above the bottom "Open Folder"), so it doesn't cover
@@ -368,7 +376,7 @@ fun TransferHistoryDialog(
                     stepOffset = 8,
                     boundsMap = tutorialBounds,
                     onDismiss = { showTutorialOverlay = false; selectedSessionId = null; onDismiss() },
-                    onComplete = { showTutorialOverlay = false; selectedSessionId = null; onDismiss() },
+                    onComplete = { showTutorialOverlay = false; selectedSessionId = null; (onTutorialComplete ?: onDismiss)() },
                     advanceTrigger = tutorialAdvanceRequest
                 )
             }
@@ -568,6 +576,19 @@ fun TransferHistoryDialog(
                                     color = if (connected) Color.Black else Color.White,
                                     fontWeight = FontWeight.Bold
                                 )
+                            }
+                        } else if (record.status == "paused") {
+                            // "paused" only ever occurs on an OUTGOING session whose OFFER went
+                            // unacknowledged (see ClipboardAppController.sendFiles) — previously this
+                            // status had no button at all (empty action area, only escape was Delete).
+                            // Same action as "failed" outgoing: nudge the receiver to reconnect.
+                            Button(
+                                onClick = { onResumeTransfer(record) },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                                shape = RoundedCornerShape(Dimens.radiusMd),
+                                modifier = Modifier.fillMaxWidth().height(64.dp).padding(top = Dimens.spaceLg)
+                            ) {
+                                Text("Resume", style = MaterialTheme.typography.subtitle1, color = Color.Black, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

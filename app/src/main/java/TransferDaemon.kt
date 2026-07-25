@@ -158,11 +158,17 @@ object TransferDaemon {
                         // session was authenticated (AES-GCM) once, refuse an IP that isn't FGCM-pinned
                         // so a same-name impostor can't force an unauthenticated downgrade. A blocked
                         // match is treated as "sender not present" — the session stays paused.
-                        val senderIp = _discoveredNodes.entries.find { it.value.name == session.senderName }?.key
-                            ?.takeIf { ip ->
-                                SecurityVault.getKeyForNode(context, ip) != null &&
-                                    (!session.fileGcmNegotiated || SecurityVault.isFileGcmPinned(context, ip))
-                            }
+                        //
+                        // firstOrNull over the full filtered set, not find()+takeIf on just the first
+                        // name match: an unpaired device broadcasting a colliding display name could
+                        // otherwise sort before the real (paired) sender and permanently block resume,
+                        // even though the real sender's entry — passing every check — sits later in
+                        // the map.
+                        val senderIp = _discoveredNodes.entries.firstOrNull { entry ->
+                            entry.value.name == session.senderName &&
+                                SecurityVault.getKeyForNode(context, entry.key) != null &&
+                                (!session.fileGcmNegotiated || SecurityVault.isFileGcmPinned(context, entry.key))
+                        }?.key
                         if (senderIp != null) {
                             session.targetIp = senderIp // Update IP in case it changed
                             val firstSeen = pendingReconnects.getOrPut(sessionId) { now }
@@ -307,8 +313,27 @@ object TransferDaemon {
      */
     const val OFFER_AUTH_CAP = "AUTH2"
 
+    /**
+     * ACCEPT/RESUME admission-proof capability token, advertised comma-joined after [OFFER_AUTH_CAP]
+     * (`...|Android|GCM1,FGCM1,FGCM2,AUTH2,AUTH2R`). The accept/resume-direction mirror of
+     * [OFFER_AUTH_CAP]: presence means the peer will answer an ACCEPT_CHALLENGE with an HMAC proof
+     * of the shared pairing key before it (as sender) starts streaming bytes in response to our
+     * ACCEPT_OFFER/RESUME_REQUEST — closing the "spoof a paired peer's IP to receive an outbound
+     * stream without holding the key" hole on the sender side. Deliberately a SEPARATE token from
+     * OFFER_AUTH_CAP, not a reused one: already-shipped 3.7.1/3.7.4 builds advertise AUTH2 and
+     * implement the OFFER-direction challenge, but do NOT implement this accept/resume-direction
+     * read/answer — reusing AUTH2 here would silently break those already-deployed clients the
+     * moment they resumed/accepted from an updated peer. A receiver only issues the challenge to an
+     * acceptor/resumer that advertises this; the challenge itself is speculatively peeked via a
+     * pushback stream (see [DownloadEngine.answerAcceptChallengeIfExpected] /
+     * [com.EntropicSoftwareLab.ClipboardShare.FileTransferServer]) so a stale/wrong capability
+     * belief on either side degrades to normal streaming instead of corrupting the byte stream.
+     * Parsed into [DiscoveredDevice.supportsAuth2Accept].
+     */
+    const val ACCEPT_AUTH_CAP = "AUTH2R"
+
     /** Capability list advertised in discovery — comma-joined, order-stable, parsed by `contains`. */
-    internal val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP"
+    internal val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP"
     internal const val DISCOVERY_INTERVAL_MIN_MS = 3000L
     internal const val DISCOVERY_INTERVAL_MAX_MS = 12000L
     internal const val DISCOVERY_WAKE_WINDOW_MS = 20000L

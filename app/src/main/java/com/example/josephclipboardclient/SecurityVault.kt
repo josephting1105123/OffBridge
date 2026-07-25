@@ -175,6 +175,7 @@ object SecurityVault {
             .remove(PIN_CLIP_GCM_PREFIX + ipAddress)
             .remove(PIN_AUTH2_PREFIX + ipAddress)
             .remove(PIN_FILE_GCM_V2_PREFIX + ipAddress)
+            .remove(PIN_AUTH2_ACCEPT_PREFIX + ipAddress)
             .apply()
     }
 
@@ -194,6 +195,11 @@ object SecurityVault {
     // downgrade. Pin both once genuinely used and fail closed on a later strip, same TOFU rule.
     private const val PIN_AUTH2_PREFIX = "auth2_pinned_"
     private const val PIN_FILE_GCM_V2_PREFIX = "file_gcm_v2_pinned_"
+    // Separate pin from PIN_AUTH2_PREFIX on purpose — see TransferDaemon.ACCEPT_AUTH_CAP's doc for
+    // why the capability token itself must be a new one, not a reuse of AUTH2; the pin follows the
+    // same reasoning (an already-3.7.1/3.7.4-pinned AUTH2 peer must not be treated as having proven
+    // the accept/resume-direction challenge it doesn't yet implement).
+    private const val PIN_AUTH2_ACCEPT_PREFIX = "auth2_accept_pinned_"
 
     /** Remember that [ip] negotiated an authenticated (FileSeal/FGCM1) bulk-file stream. */
     fun pinFileGcm(context: Context, ip: String) {
@@ -212,6 +218,16 @@ object SecurityVault {
     /** True once [ip] has completed an AUTH2 proof — a later loss of AUTH2 is a downgrade attempt. */
     fun isAuth2Pinned(context: Context, ip: String): Boolean =
         getPlainPrefs(context).getBoolean(PIN_AUTH2_PREFIX + ip, false)
+
+    /** Remember that [ip] proved possession of the pairing key via the AUTH2R ACCEPT_CHALLENGE
+     *  (accept/resume direction — see [PIN_AUTH2_ACCEPT_PREFIX]). */
+    fun pinAuth2Accept(context: Context, ip: String) {
+        getPlainPrefs(context).edit().putBoolean(PIN_AUTH2_ACCEPT_PREFIX + ip, true).apply()
+    }
+
+    /** True once [ip] has completed an AUTH2R proof — a later loss of AUTH2R is a downgrade attempt. */
+    fun isAuth2AcceptPinned(context: Context, ip: String): Boolean =
+        getPlainPrefs(context).getBoolean(PIN_AUTH2_ACCEPT_PREFIX + ip, false)
 
     /** Remember that [ip] negotiated a v2 (per-session key) FileSeal stream. */
     fun pinFileGcmV2(context: Context, ip: String) {

@@ -244,6 +244,14 @@ class PcQrSenderController(
             // A PC cannot join a phone-hosted network — these tiers are never ordered, so any
             // HOST_READY / REQ_TRANSPORT from the phone is a protocol mismatch; drop silently.
             ControlProtocol.HOST_READY, ControlProtocol.REQ_TRANSPORT -> Unit
+            // Previously unhandled: the phone's ReceiverSessionController never actually sends this
+            // in today's flow (it tears down locally instead — see handleControlLost), so this was a
+            // dormant gap rather than an active hang. Mirrors Android SenderSessionController's own
+            // ABORT handling (listener.onLadderExhausted(GENERIC)) — stop cleanly instead of riding
+            // out the full RESULT_TIMEOUT_MS/HELLO_WATCHDOG_MS. No FailureCode maps to "peer aborted"
+            // (Android's own ABORT handler bypasses FailureCode entirely), so this reuses
+            // FAILURE_CONNECT_TIMEOUT purely as a generic terminal code for the status line.
+            ControlProtocol.ABORT -> finish(QrControlState.Failed(FAILURE_CONNECT_TIMEOUT, firewallSuspected = false))
         }
     }
 

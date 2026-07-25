@@ -2,6 +2,8 @@ package com.joseph.clipboard.windows.network
 
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
@@ -31,6 +33,23 @@ object Net {
             true
         } catch (e: Exception) {
             System.err.println("Net.sendString to $ip:$port failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Fire-and-forget UDP unicast: opens a short-lived socket, sends [message], closes. Returns true
+     *  iff the local send succeeded — UDP is best-effort, so this is NOT a delivery confirmation.
+     *  Mirrors Android's Net.sendUdp; used for the outgoing-transfer resume nudge
+     *  (FILEBRIDGE_RESUME_REQUEST), which prompts the receiver to reconnect and RESUME_REQUEST. */
+    fun sendUdp(ip: String, port: Int, message: String): Boolean {
+        return try {
+            DatagramSocket().use { sock ->
+                val data = message.toByteArray(Charsets.UTF_8)
+                sock.send(DatagramPacket(data, data.size, InetSocketAddress(ip, port)))
+            }
+            true
+        } catch (e: Exception) {
+            System.err.println("Net.sendUdp to $ip:$port failed: ${e.message}")
             false
         }
     }

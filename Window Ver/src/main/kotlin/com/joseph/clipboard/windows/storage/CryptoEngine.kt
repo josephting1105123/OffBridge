@@ -106,6 +106,15 @@ class EcdhSession {
 object CryptoEngine {
     private const val IV_SIZE = 16
 
+    // Validate AES key length up front (mirrors Android CryptoEngine.requireValidAesKey, H-26). A
+    // wrong-size key otherwise surfaces as an opaque InvalidKeyException deep inside cipher.init;
+    // failing fast here gives a clear message instead. This app uses 32-byte keys.
+    private fun requireValidAesKey(key: ByteArray) {
+        require(key.size == 16 || key.size == 24 || key.size == 32) {
+            "Invalid AES key length: ${key.size} bytes (expected 16, 24, or 32)"
+        }
+    }
+
     fun generateRandomBytes(size: Int): ByteArray {
         val bytes = ByteArray(size)
         SecureRandom().nextBytes(bytes)
@@ -121,6 +130,7 @@ object CryptoEngine {
     // since the CBC retirement in 3.5.0. Output is standard Base64 of the sealed blob, matching
     // Android's encryptStringAuthenticated (android.util.Base64.NO_WRAP).
     fun encryptStringAuthenticated(plainText: String, key: ByteArray): String {
+        requireValidAesKey(key)
         val blob = ClipboardSeal.seal(key, plainText.toByteArray(Charsets.UTF_8), System.currentTimeMillis())
         return Base64.getEncoder().encodeToString(blob)
     }
@@ -132,6 +142,7 @@ object CryptoEngine {
         level = DeprecationLevel.ERROR
     )
     fun encryptString(plainText: String, key: ByteArray): String {
+        requireValidAesKey(key)
         val iv = generateRandomBytes(IV_SIZE)
         val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
         val secretKeySpec = SecretKeySpec(key, "AES")
@@ -151,6 +162,7 @@ object CryptoEngine {
     // non-sealed payload is refused outright — no pin check, because there is no legacy branch left
     // to fall back to. [senderIp] only names the peer in the rejection error.
     fun decryptString(cipherTextBase64: String, key: ByteArray, senderIp: String? = null): String {
+        requireValidAesKey(key)
         val cleanBase64 = cipherTextBase64.replace(Regex("\\s+"), "")
         // Validate before slicing: a hostile/truncated payload would otherwise throw an
         // opaque NegativeArraySizeException (combined.size - IV_SIZE < 0) or an

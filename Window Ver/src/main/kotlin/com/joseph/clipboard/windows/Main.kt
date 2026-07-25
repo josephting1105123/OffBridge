@@ -133,6 +133,20 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
         tutorialChainCounter++
     }
 
+    // First-ever-launch guided tour: walks SEND_FILES -> (its own tutorial + the nested transfer-
+    // history tutorial) -> SYSTEM_STATUS -> HISTORY, chaining via onTutorialChainNext at each
+    // screen's genuine completion (see FileTransferScreen/SystemStatusScreen/HistoryScreen). Marked
+    // shown immediately (not on completion) so quitting or skipping mid-tour never re-offers it on a
+    // later launch — this infrastructure (tutorialChainTarget/Counter, per-screen tutorialTrigger)
+    // already existed for a manual "walk me through everything" flow but nothing auto-fired it,
+    // which was the actual gap (Android has an equivalent forced first-run tour; Windows had none).
+    LaunchedEffect(Unit) {
+        if (!SecurityVault.isFirstRunTourShown()) {
+            SecurityVault.markFirstRunTourShown()
+            onTutorialChainNext(Screen.SEND_FILES)
+        }
+    }
+
     val incomingPairing by appController.incomingPairingRequest.collectAsState()
     val outgoingPairing by appController.outgoingPairingState.collectAsState()
 
@@ -245,9 +259,14 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                         )
                         Screen.SYSTEM_STATUS -> SystemStatusScreen(
                             appController = appController,
-                            onTutorialChainNext = onTutorialChainNext
+                            onTutorialChainNext = onTutorialChainNext,
+                            tutorialTrigger = if (tutorialChainTarget == Screen.SYSTEM_STATUS) tutorialChainCounter else 0
                         )
-                        Screen.HISTORY -> HistoryScreen(appController)
+                        Screen.HISTORY -> HistoryScreen(
+                            appController = appController,
+                            onTutorialChainNext = onTutorialChainNext,
+                            tutorialTrigger = if (tutorialChainTarget == Screen.HISTORY) tutorialChainCounter else 0
+                        )
                         Screen.SETTINGS -> SettingsScreen(appController)
                         Screen.ANDROID_VERSION -> AndroidVersionScreen()
                         Screen.SYSTEM_UPDATE -> UpdateScreen(appController)

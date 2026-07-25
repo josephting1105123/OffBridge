@@ -18,6 +18,7 @@ import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.network.TransferDaemon
 import com.joseph.clipboard.windows.os.ClipboardManager
+import com.joseph.clipboard.windows.os.SystemTrayManager
 import com.joseph.clipboard.windows.update.AppVersion
 import com.joseph.clipboard.windows.update.UpdateChecker
 import com.joseph.clipboard.windows.update.UpdateInstaller
@@ -27,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +41,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
+import java.awt.TrayIcon
 import java.util.Base64
 import java.net.InetSocketAddress
 import com.joseph.clipboard.windows.storage.EcdhSession
@@ -68,6 +71,12 @@ private const val UPDATE_CHECK_COOLDOWN_MS = 24L * 60 * 60 * 1000
  */
 private const val UPDATE_CHECK_TIMEOUT_MS = 5_000L
 
+// Auto-resume backoff for a dropped incoming transfer (mirrors Android TransferDaemon:
+// MAX_AUTO_RESUME_ATTEMPTS / AUTO_RESUME_BASE_DELAY_MS exactly — same cap, same linear
+// 1.5s/3s/4.5s/6s backoff). See ClipboardAppController.scheduleAutoResume.
+private const val MAX_AUTO_RESUME_ATTEMPTS = 4
+private const val AUTO_RESUME_BASE_DELAY_MS = 1500L
+
 data class OutgoingFileSession(
     val sessionId: String,
     val targetIp: String,
@@ -86,7 +95,22 @@ data class IncomingFileSession(
     val sessionId: String,
     val senderIp: String,
     val senderName: String,
-    val manifest: List<Pair<String, Long>>
+    val manifest: List<Pair<String, Long>>,
+    // Auto-resume backoff state (see ClipboardAppController.scheduleAutoResume), mutated in place on
+    // this retained instance across attempts — mirrors Android TransferSession.autoResumeAttempts /
+    // lastResumeOffset. -1 sentinels ensure the very first failure always counts as "no progress yet"
+    // rather than a false match against the record's initial filesCompleted=0/currentFileOffset=0.
+    var autoResumeAttempts: Int = 0,
+    var lastResumeFilesCompleted: Int = -1,
+    var lastResumeOffset: Long = -1L,
+    // Atomic claim guarding resumeIncomingFileTransfer against a concurrent second attempt for the
+    // SAME session. record.status doesn't flip "failed" -> "transferring" until deep inside
+    // receiveFilesFromSocket (after a multi-second connect + AUTH2R challenge sequence), so a manual
+    // Resume click racing the auto-retry timer (or two rapid clicks) could otherwise both pass the
+    // plain status == "failed" check and open two sockets writing the SAME .part file concurrently —
+    // exactly the corruption class the cross-session name-reservation fix exists to prevent, just
+    // triggered by two attempts on ONE session instead of two sessions sharing a name.
+    val resumeInFlight: java.util.concurrent.atomic.AtomicBoolean = java.util.concurrent.atomic.AtomicBoolean(false),
 )
 
 // Mirrors Android TransferRecord (schema v2): per-file facts are
@@ -122,7 +146,12 @@ class ClipboardAppController {
         val name: String,
         val pin: String,
         val onAccept: () -> Unit,
-        val onDecline: () -> Unit
+        val onDecline: () -> Unit,
+        // Wall-clock deadline mirroring PairingDaemon's own latch.await window (PAIR_CONFIRM_WINDOW_MS):
+        // the daemon's parked socket gives up and sends PAIR_DECLINE on its own after this. onAccept
+        // checks it before saving so a stale click (dialog left open past the window) surfaces an
+        // error instead of silently completing pairing on only this side.
+        val expiresAt: Long = 0L,
     )
 
     data class OutgoingPairingState(
@@ -142,7 +171,17 @@ class ClipboardAppController {
 
     // Daemons
     private val transferDaemon = TransferDaemon(
-        deviceNameProvider = { SecurityVault.getDeviceName() }
+        deviceNameProvider = { SecurityVault.getDeviceName() },
+        // Android's outgoing-transfer "Resume" sends this UDP nudge asking US (the receiver) to
+        // reconnect; previously unhandled here, so an Android→Windows resume looked "sent" on the
+        // Android side but silently vanished. See requestPeerResumeOutgoing for the mirror (Windows
+        // sending the same nudge when Windows is the outgoing side).
+        onResumeRequested = { _, _ ->
+            SystemTrayManager.showNotification(
+                "Resume Request",
+                "A peer is requesting to resume a transfer. Open Clipboard Share to continue."
+            )
+        }
     )
     
     // File Transfer State
@@ -151,6 +190,13 @@ class ClipboardAppController {
     // Concurrent: written from FileTransferDaemon's per-connection handler (onOfferReceived) and
     // read/removed from receive coroutines — must not be an unsynchronized plain map.
     private val activeIncomingFileSessions = java.util.concurrent.ConcurrentHashMap<String, IncomingFileSession>()
+    // sessionId -> the on-disk leaf name resolved for each manifest entry, computed ONCE (see
+    // resolveIncomingNames) and reused unchanged for the life of the session, including every
+    // resume — recomputing per-call would let the cross-session reservation drift between accept
+    // and resume (a sibling session active at accept time may have finished by resume time),
+    // making a resume address a DIFFERENT .part than the one it originally wrote. Removed in step
+    // with activeIncomingFileSessions (see receiveFilesFromSocket's finally block).
+    private val resolvedIncomingNames = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
     // Off-grid "send via QR" advertising window (Windows = sender). All QR/hotspot/BLE-control state
     // lives in the coordinator; it asks isTransferActive() so it never drops the AP mid-stream.
     private val qrHost = QrHostCoordinator(isTransferActive = { activeOutgoingFileSessions.isNotEmpty() })
@@ -191,17 +237,28 @@ class ClipboardAppController {
                 return@PairingDaemon
             }
 
+            val expiresAt = System.currentTimeMillis() + PairingDaemon.PAIR_CONFIRM_WINDOW_MS
             _incomingPairingRequest.value = IncomingPairingData(ip, name, pin, {
-                accept()
-                _incomingPairingRequest.value = null
-                scope.launch {
-                    delay(500) // Wait for PairingDaemon to finish saving the key
-                    refreshTrustedNodes()
+                // Stale click guard (mirrors Android's AND-36 fix): past this deadline the daemon's
+                // parked socket already gave up and sent PAIR_DECLINE on its own — accept() here would
+                // be a no-op countDown on an already-released latch, and saving the key would trust a
+                // peer that saw DECLINE, not ACCEPT (paired on only one side). Refuse and tell the user
+                // instead of silently closing the dialog as if pairing had actually succeeded.
+                if (System.currentTimeMillis() > expiresAt) {
+                    _incomingPairingRequest.value = null
+                    SystemTrayManager.showNotification("Pairing Request Expired", "Ask $name to try pairing again.", TrayIcon.MessageType.WARNING)
+                } else {
+                    accept()
+                    _incomingPairingRequest.value = null
+                    scope.launch {
+                        delay(500) // Wait for PairingDaemon to finish saving the key
+                        refreshTrustedNodes()
+                    }
                 }
             }, {
                 decline()
                 _incomingPairingRequest.value = null
-            })
+            }, expiresAt)
             onRequestForeground?.invoke()
         },
         onUnpaired = { senderIp ->
@@ -281,6 +338,11 @@ class ClipboardAppController {
             // close so the stream's catch sees it and doesn't overwrite with "failed"/keep-session.
             activeOutgoingFileSessions.remove(sessionId)
             activeIncomingFileSessions.remove(sessionId)
+            // A peer CANCEL can arrive while we're between resume attempts (mid-backoff, no live
+            // receiveFilesFromSocket coroutine to hit its own finally-block cleanup) — without this,
+            // resolveIncomingNames' cache for this sessionId leaks forever and needlessly reserves
+            // its names against any future session that happens to share a filename.
+            resolvedIncomingNames.remove(sessionId)
             try { activeFileTransferSockets.remove(sessionId)?.close() } catch (e: Exception) {}
         },
         onP2pHelloReceived = { socket, header -> handleP2pHello(socket, header) },
@@ -288,6 +350,7 @@ class ClipboardAppController {
         // the OFFER branch can decide whether to issue the AUTH2 admission challenge. Mirrors how the
         // FileSeal-v2 send path reads supportsAuthFileV2 off the same discovered-node set.
         supportsAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2 } },
+        supportsAcceptAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2Accept } },
         // XP-05: admit an off-grid receiver's RESUME_REQUEST past the LAN trust gate when its sessionId
         // names a live outgoing p2p session (registered in handleP2pHello with transport="p2p").
         isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" }
@@ -359,49 +422,76 @@ class ClipboardAppController {
     }
 
     /**
+     * pushCurrentClipboard() is Windows' only manual push entry point (tray "Push Clipboard" +
+     * the History screen button — both explicit user actions, never an automatic/background
+     * caller), yet it gave zero success/failure feedback: a failed send looked identical to a
+     * successful one. SystemTrayManager.showNotification already existed but had no call site
+     * anywhere in the module. Mirrors Android's showSuccessNotification/toast_push_failed_no_devices.
+     */
+    private fun notifyPushResult(successCount: Int, totalCount: Int) {
+        if (totalCount == 0) {
+            SystemTrayManager.showNotification("Clipboard Share", "Push failed: no paired devices online.", TrayIcon.MessageType.WARNING)
+        } else if (successCount > 0) {
+            SystemTrayManager.showNotification("Clipboard Share", "Clipboard pushed to $successCount device${if (successCount == 1) "" else "s"}.")
+        } else {
+            SystemTrayManager.showNotification("Clipboard Share", "Clipboard push failed — no device reachable.", TrayIcon.MessageType.WARNING)
+        }
+    }
+
+    /**
      * Auto-push: send the clipboard to every paired device that is reachable right now, following a
      * device that changed DHCP lease to its new address by the stable id it advertises in discovery
      * (see [ClipboardTargeting]). The key and TOFU pin stay under the pairing address [keyIp] even
-     * when the bytes go to a new [targetIp]. A send that gets no ack is logged rather than silently
-     * dropped, so a total miss is visible in diagnostics.
+     * when the bytes go to a new [targetIp]. A send that gets no ack is logged, and (since this is
+     * only ever reached from the manual pushCurrentClipboard()) surfaced via a tray notification.
      */
     private fun pushClipboardToTrustedNodes(text: String) {
         val trusted = trustedNodes.value.map { ClipboardTargeting.Trusted(it, SecurityVault.getPairedDeviceId(it)) }
         val live = transferDaemon.getDiscoveredNodes().map { ClipboardTargeting.Live(it.ip, it.deviceId) }
-        ClipboardTargeting.resolve(trusted, live).forEach { (keyIp, targetIp) ->
-            scope.launch {
-                try {
-                    val aesKey = SecurityVault.getAesKey(keyIp) ?: return@launch
-                    val sealed = sealClipboardForPeer(keyIp, targetIp, aesKey, text) ?: return@launch
-                    // Append newline in case receiver uses readLine()
-                    if (!Net.sendString(targetIp, Ports.CLIPBOARD, sealed + "\n")) {
-                        System.err.println("Clipboard auto-push to $targetIp (paired as $keyIp) failed to send")
+        val targets = ClipboardTargeting.resolve(trusted, live)
+        if (targets.isEmpty()) {
+            notifyPushResult(successCount = 0, totalCount = 0)
+            return
+        }
+        scope.launch {
+            val results = targets.map { (keyIp, targetIp) ->
+                async {
+                    try {
+                        val aesKey = SecurityVault.getAesKey(keyIp) ?: return@async false
+                        val sealed = sealClipboardForPeer(keyIp, targetIp, aesKey, text) ?: return@async false
+                        // Append newline in case receiver uses readLine()
+                        val sent = Net.sendString(targetIp, Ports.CLIPBOARD, sealed + "\n")
+                        if (!sent) System.err.println("Clipboard auto-push to $targetIp (paired as $keyIp) failed to send")
+                        sent
+                    } catch (e: Exception) {
+                        System.err.println("Failed to auto-push clipboard to $targetIp: ${e.message}")
+                        false
                     }
-                } catch (e: Exception) {
-                    System.err.println("Failed to auto-push clipboard to $targetIp: ${e.message}")
                 }
-            }
+            }.awaitAll()
+            notifyPushResult(successCount = results.count { it }, totalCount = targets.size)
         }
     }
 
     /** Manual send to explicitly chosen live addresses (the send dialog). The chosen ip is both the
      *  key source and the destination — the user picked a device currently on the list. */
     fun pushClipboardToSpecificNodes(text: String, ips: List<String>) {
-        ips.forEach { ip ->
-            scope.launch {
-                try {
-                    val aesKey = SecurityVault.getAesKey(ip)
-                    if (aesKey != null) {
-                        val encryptedBase64 = sealClipboardForPeer(ip, ip, aesKey, text)
-                        if (encryptedBase64 != null) {
-                            // Append newline in case receiver uses readLine()
-                            Net.sendString(ip, Ports.CLIPBOARD, encryptedBase64 + "\n")
-                        }
+        if (ips.isEmpty()) return
+        scope.launch {
+            val results = ips.map { ip ->
+                async {
+                    try {
+                        val aesKey = SecurityVault.getAesKey(ip) ?: return@async false
+                        val encryptedBase64 = sealClipboardForPeer(ip, ip, aesKey, text) ?: return@async false
+                        // Append newline in case receiver uses readLine()
+                        Net.sendString(ip, Ports.CLIPBOARD, encryptedBase64 + "\n")
+                    } catch (e: Exception) {
+                        System.err.println("Failed to push clipboard to $ip: ${e.message}")
+                        false
                     }
-                } catch (e: Exception) {
-                    System.err.println("Failed to push clipboard to $ip: ${e.message}")
                 }
-            }
+            }.awaitAll()
+            notifyPushResult(successCount = results.count { it }, totalCount = ips.size)
         }
     }
 
@@ -845,6 +935,10 @@ class ClipboardAppController {
                 // timeout (~minutes) when the sender is unreachable (mirrors sendFiles).
                 socket = Socket().also { it.connect(InetSocketAddress(session.senderIp, Ports.FILE_TRANSFER), 3000) }
                 socket.soTimeout = 10000
+                // Small pushback buffer: lets answerAcceptChallengeIfExpected speculatively peek a
+                // short ACCEPT_CHALLENGE line and losslessly restore any consumed bytes if the sender
+                // decided not to challenge this time — see that function's doc.
+                val pushbackInput = java.io.PushbackInputStream(socket.getInputStream(), 512)
                 val outStream = socket.getOutputStream()
                 val acceptCmd = if (fileKey != null) "ACCEPT_OFFER|${sessionId}|${if (useV2) "fgcm2" else "fgcm"}\n" else "ACCEPT_OFFER|${sessionId}\n"
                 outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
@@ -869,7 +963,8 @@ class ClipboardAppController {
                 _transferHistory.update { listOf(record) + it }
                 saveHistory()
 
-                receiveFilesFromSocket(session, socket, sessionId, 0, 0L, fileKey, useV2)
+                answerAcceptChallengeIfExpected(pushbackInput, outStream, session.senderIp)
+                receiveFilesFromSocket(session, socket, sessionId, 0, 0L, fileKey, useV2, pushbackInput)
             } catch (e: DowngradeBlockedException) {
                 // A pinned sender dropped FGCM1/FGCM2 ⇒ downgrade attempt. Terminal (cancelled), and do
                 // NOT restore the offer dialog — else Accept loops straight back into the same block.
@@ -969,12 +1064,39 @@ class ClipboardAppController {
         }
     }
 
+    /**
+     * Windows' outgoing-transfer "Resume" button was previously a dead no-op — correct that the
+     * actual reconnect must come from the receiver, but wrong that Windows did nothing at all.
+     * Sends the same FILEBRIDGE_RESUME_REQUEST nudge Android's outgoing resume sends, prompting
+     * the receiver (Android or Windows) to reconnect and drive the real TCP RESUME_REQUEST.
+     */
+    fun requestPeerResumeOutgoing(sessionId: String) {
+        val targetIp = activeOutgoingFileSessions[sessionId]?.targetIp
+        if (targetIp == null) {
+            SystemTrayManager.showNotification("Clipboard Share", "Can't resume: the receiving device is no longer known.", TrayIcon.MessageType.WARNING)
+            return
+        }
+        scope.launch {
+            val sent = Net.sendUdp(targetIp, Ports.DISCOVERY, "FILEBRIDGE_RESUME_REQUEST|$sessionId")
+            SystemTrayManager.showNotification(
+                "Clipboard Share",
+                if (sent) "Resume request sent." else "Failed to send resume request.",
+                if (sent) TrayIcon.MessageType.INFO else TrayIcon.MessageType.WARNING
+            )
+        }
+    }
+
     fun resumeIncomingFileTransfer(sessionId: String) {
         val session = activeIncomingFileSessions[sessionId] ?: return
         val records = _transferHistory.value
         val record = records.find { it.sessionId == sessionId } ?: return
         if (record.status != "failed") return
-        
+        // The real synchronization point — see IncomingFileSession.resumeInFlight's doc. The
+        // status == "failed" check above is a UI-facing hint, not a lock: it stays "failed" for the
+        // whole connect+challenge window, so without this CAS a second concurrent call (manual
+        // Resume racing the auto-retry timer) would also pass it.
+        if (!session.resumeInFlight.compareAndSet(false, true)) return
+
         scope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
@@ -986,16 +1108,23 @@ class ClipboardAppController {
                 // for the full OS timeout (mirrors sendFiles / acceptIncomingFileTransfer).
                 socket = Socket().also { it.connect(InetSocketAddress(session.senderIp, Ports.FILE_TRANSFER), 3000) }
                 socket.soTimeout = 10000
+                // Small pushback buffer: lets answerAcceptChallengeIfExpected speculatively peek a
+                // short ACCEPT_CHALLENGE line and losslessly restore any consumed bytes if the sender
+                // decided not to challenge this time — see that function's doc.
+                val pushbackInput = java.io.PushbackInputStream(socket.getInputStream(), 512)
                 val outStream = socket.getOutputStream()
                 val startFileIndex = record.filesCompleted
                 var trueOffset = 0L
                 if (fileKey == null && startFileIndex < session.manifest.size) {
                     // Plaintext resume recomputes from the .part length. AEAD resume restarts the
                     // in-progress file at chunk 0 (FileSeal records aren't byte-seekable), so offset
-                    // stays 0 and the receiver reopens the .part fresh. Use the same de-collided name
-                    // receiveToDir writes, so a duplicate-leaf file reads its own .part length.
-                    val name = FileStreamer.deCollideNames(session.manifest)[startFileIndex]
+                    // stays 0 and the receiver reopens the .part fresh. Read from the SAME cached,
+                    // cross-session-resolved name receiveToDir actually wrote to (resolveIncomingNames
+                    // is idempotent — this session's names were already resolved at accept time, so
+                    // this just returns the cached list) — a raw recompute here could pick a different
+                    // name than the original accept did if another session's reservation changed.
                     val saveDir = File(SecurityVault.getSaveLocation())
+                    val name = resolveIncomingNames(sessionId, session, saveDir)[startFileIndex]
                     val partFile = File(saveDir, "$name.part")
                     if (partFile.exists()) {
                         trueOffset = partFile.length()
@@ -1008,7 +1137,8 @@ class ClipboardAppController {
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                receiveFilesFromSocket(session, socket, sessionId, startFileIndex, trueOffset, fileKey, useV2)
+                answerAcceptChallengeIfExpected(pushbackInput, outStream, session.senderIp)
+                receiveFilesFromSocket(session, socket, sessionId, startFileIndex, trueOffset, fileKey, useV2, pushbackInput)
             } catch (e: DowngradeBlockedException) {
                 // A pinned sender dropped FGCM1/FGCM2 ⇒ downgrade attempt. Mark "cancelled" (terminal),
                 // NOT "failed" — the resume gate above only re-runs on status=="failed", so "failed"
@@ -1017,6 +1147,10 @@ class ClipboardAppController {
                 System.err.println("RX: ${e.message} — refusing plaintext resume")
                 try { socket?.close() } catch (_: Exception) {}
                 activeIncomingFileSessions.remove(sessionId)
+                // This session may have been resolved during an earlier accept/resume cycle — drop
+                // that cache entry too, or it leaks forever (this is a terminal state; the session
+                // can never resume again to reuse it).
+                resolvedIncomingNames.remove(sessionId)
                 updateRecord(sessionId) { it.copy(status = "cancelled") }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -1026,11 +1160,134 @@ class ClipboardAppController {
                 // Main dispatcher on its classpath (no coroutines-swing/javafx) — so the first failed
                 // resume attempt crashed this coroutine instead of marking the record failed.
                 updateRecord(sessionId) { it.copy(status = "failed") }
+                scheduleAutoResume(sessionId, session)
+            } finally {
+                // Release the claim on every exit — success, either catch, or (via receiveFilesFromSocket
+                // returning normally after handling its own internal failure) a completed attempt that
+                // already scheduled its own retry. scheduleAutoResume's delay (>=1.5s) is released well
+                // before its own timer fires, so this can't race the retry it just scheduled.
+                session.resumeInFlight.set(false)
             }
         }
     }
 
-    private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long, fileKey: ByteArray? = null, useV2: Boolean = false) {
+    /**
+     * A dropped incoming transfer auto-reconnects via [resumeIncomingFileTransfer] — bounded and
+     * linearly backed off (1.5s/3s/4.5s/6s) so transient blips self-heal without a click, while a
+     * genuinely dead route still degrades to the manual Resume/paused button. Mirrors Android
+     * TransferDaemon.scheduleAutoResume: same attempt cap, same backoff, same
+     * progress-since-last-attempt reset (forgives prior failures once bytes are moving again).
+     * Called from both a failed reconnect attempt ([resumeIncomingFileTransfer]'s own catch) and a
+     * mid-stream drop ([receiveFilesFromSocket]'s catch) so the retry chain covers either failure
+     * point, same as Android's three call sites.
+     */
+    private fun scheduleAutoResume(sessionId: String, session: IncomingFileSession) {
+        val record = _transferHistory.value.find { it.sessionId == sessionId } ?: return
+        val progressed = record.filesCompleted > session.lastResumeFilesCompleted ||
+            (record.filesCompleted == session.lastResumeFilesCompleted && record.currentFileOffset > session.lastResumeOffset)
+        if (progressed) session.autoResumeAttempts = 0
+        session.lastResumeFilesCompleted = record.filesCompleted
+        session.lastResumeOffset = record.currentFileOffset
+        if (session.autoResumeAttempts >= MAX_AUTO_RESUME_ATTEMPTS) return
+        session.autoResumeAttempts++
+        val delayMs = AUTO_RESUME_BASE_DELAY_MS * session.autoResumeAttempts
+        scope.launch {
+            delay(delayMs)
+            resumeIncomingFileTransfer(sessionId)
+        }
+    }
+
+    /**
+     * Final on-disk leaf name for every entry in [session]'s manifest, resolved once and cached
+     * under [sessionId] so accept and every subsequent resume reuse the identical assignment (see
+     * [resolvedIncomingNames] and [FileStreamer.receiveToDir]'s `names` contract). Reserves against:
+     *  - names any OTHER currently-active incoming session has already resolved, so two concurrent
+     *    same-name transfers land on different files instead of racing on one shared ".part";
+     *  - any "<name>.part" sidecar already on disk, closing the same-instant race where a sibling
+     *    session claimed a name microseconds ago and hasn't reached [resolvedIncomingNames] yet.
+     * computeIfAbsent makes the "resolve once" itself atomic under concurrent accepts; only reading
+     * (never writing) other entries of the same map from inside the computation is safe under
+     * ConcurrentHashMap's reentrancy rules.
+     */
+    private fun resolveIncomingNames(sessionId: String, session: IncomingFileSession, saveDir: File): List<String> =
+        resolvedIncomingNames.computeIfAbsent(sessionId) {
+            val reserved = HashSet<String>()
+            for ((otherId, otherNames) in resolvedIncomingNames) {
+                if (otherId != sessionId) reserved.addAll(otherNames)
+            }
+            try {
+                saveDir.list()?.forEach { entry ->
+                    if (entry.endsWith(".part")) reserved.add(entry.removeSuffix(".part"))
+                }
+            } catch (_: Exception) {}
+            FileStreamer.deCollideNames(session.manifest, reserved)
+        }
+
+    /**
+     * Accept/resume-direction AUTH2R challenge, requester side (mirrors
+     * FileTransferDaemon.performAcceptAuth2Challenge, the responder side). ALWAYS speculatively
+     * peeks up to one short line off [pushback] for an ACCEPT_CHALLENGE and, if present, answers it
+     * with an HMAC proof of the shared pairing key — proving to the sender that WE hold the key
+     * before it starts streaming bytes to us.
+     *
+     * Deliberately unconditional (no discovery-capability gate): the sender's decision to challenge
+     * is driven by ITS OWN belief about US (does IT see us as AUTH2R-capable), which is a DIFFERENT
+     * fact from whether WE believe the sender supports AUTH2R — the two beliefs are independently
+     * derived from passively-received, lossy UDP discovery caches and can disagree, especially right
+     * after a network blip (exactly when auto-resume fires). An earlier version gated this peek on
+     * our own belief about the sender; when that belief was stale/false while the sender's belief
+     * about US was fresh/true, the sender sent a real challenge that this function never looked for,
+     * and the raw "ACCEPT_CHALLENGE|..." bytes got fed to FileStreamer.receiveToDir as if they were
+     * file content — corrupting the start of the file. Peeking unconditionally costs one bounded,
+     * non-blocking-beyond-soTimeout buffer scan (a few method calls, not a network round trip) and
+     * removes the race entirely: the requester no longer needs to correctly guess anything.
+     *
+     * Safety: [pushback] must be the SAME PushbackInputStream later passed as receiveFilesFromSocket's
+     * `input` — see that call site. If the sender decided NOT to challenge this time (its own
+     * DowngradePolicy computed PLAINTEXT, or it's an old build that never understood
+     * ACCEPT_AUTH_CAP at all), whatever this read consumed is losslessly pushed back onto that same
+     * stream — FileStreamer.receiveToDir then reads the file's original, untouched bytes from the
+     * top. This holds regardless of capability beliefs on either side.
+     */
+    private fun answerAcceptChallengeIfExpected(pushback: java.io.PushbackInputStream, output: java.io.OutputStream, targetIp: String) {
+        val buf = java.io.ByteArrayOutputStream()
+        var sawNewline = false
+        // Bounded so a peer that never sends a challenge (and whose file's early bytes never contain
+        // a stray newline either) can't stall past the socket's own soTimeout, and so binary garbage
+        // can't grow this buffer unbounded — comfortably above the longest real line
+        // ("ACCEPT_CHALLENGE|" + base64 of a 16-byte nonce ≈ 40 chars).
+        while (buf.size() < 400) {
+            val b = pushback.read()
+            if (b == -1) break
+            if (b == '\n'.code) { sawNewline = true; break }
+            buf.write(b)
+        }
+        val consumed = buf.toByteArray()
+        val line = if (sawNewline) String(consumed, Charsets.UTF_8) else null
+        if (line != null && line.startsWith("ACCEPT_CHALLENGE|")) {
+            val nonce = try {
+                java.util.Base64.getDecoder().decode(line.removePrefix("ACCEPT_CHALLENGE|"))
+            } catch (e: Exception) {
+                throw Exception("Malformed ACCEPT_CHALLENGE from $targetIp")
+            }
+            val pairingKey = SecurityVault.getAesKey(targetIp)
+                ?: throw Exception("No pairing key to answer ACCEPT_CHALLENGE for $targetIp")
+            val proof = SessionCrypto.hmacSha256(pairingKey, nonce)
+            output.write("ACCEPT_PROOF|${java.util.Base64.getEncoder().encodeToString(proof)}\n".toByteArray(Charsets.UTF_8))
+            output.flush()
+            SecurityVault.pinAuth2Accept(targetIp)
+        } else {
+            // Not a challenge — restore every consumed byte (and the newline, if one was found) in
+            // original order so receiveToDir sees the file's exact original bytes. unread() is LIFO
+            // per call: unread the newline FIRST so unread(consumed) — called second — surfaces
+            // before it on the next read, reproducing consumed[0..N-1] then '\n' then the untouched
+            // rest of the stream, exactly as it arrived.
+            if (sawNewline) pushback.unread('\n'.code)
+            if (consumed.isNotEmpty()) pushback.unread(consumed)
+        }
+    }
+
+    private fun receiveFilesFromSocket(session: IncomingFileSession, socket: Socket, sessionId: String, startFileIndex: Int, startOffset: Long, fileKey: ByteArray? = null, useV2: Boolean = false, input: java.io.InputStream = socket.getInputStream()) {
         try {
             _activeIncomingSessions.update { it + sessionId }
             activeFileTransferSockets[sessionId] = socket
@@ -1038,9 +1295,10 @@ class ClipboardAppController {
             updateRecord(sessionId) { it.copy(status = "transferring") }
 
             val saveDir = File(SecurityVault.getSaveLocation())
+            val names = resolveIncomingNames(sessionId, session, saveDir)
 
             FileStreamer.receiveToDir(
-                input = socket.getInputStream(),
+                input = input,
                 saveDir = saveDir,
                 manifest = session.manifest,
                 sessionId = sessionId,
@@ -1048,6 +1306,7 @@ class ClipboardAppController {
                 startOffset = startOffset,
                 fileKey = fileKey,
                 useV2 = useV2,
+                names = names,
                 listener = object : FileStreamer.Listener {
                     override fun onProgress(fileIndex: Int, currentFileOffset: Long) {
                         updateRecord(sessionId, persist = false) { it.copy(currentFileOffset = currentFileOffset) }
@@ -1063,6 +1322,7 @@ class ClipboardAppController {
             e.printStackTrace()
             if (_transferHistory.value.find { it.sessionId == sessionId }?.status != "cancelled") {
                 updateRecord(sessionId) { it.copy(status = "failed") }
+                scheduleAutoResume(sessionId, session)
             }
         } finally {
             _activeIncomingSessions.update { it - sessionId }
@@ -1072,6 +1332,7 @@ class ClipboardAppController {
             // reconnect. Completed/cancelled transfers can never resume, so remove them here.
             if (_transferHistory.value.find { it.sessionId == sessionId }?.status != "failed") {
                 activeIncomingFileSessions.remove(sessionId)
+                resolvedIncomingNames.remove(sessionId)
             }
             try { socket.close() } catch(e:Exception){}
         }

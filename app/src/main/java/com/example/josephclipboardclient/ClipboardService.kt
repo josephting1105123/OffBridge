@@ -517,7 +517,9 @@ class ClipboardService : Service() {
                     val textBytes = encryptedPayload.toByteArray(Charsets.UTF_8)
 
                     if (Net.sendBytes(node.ip, Ports.CLIPBOARD, textBytes)) successCount++
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                    Log.w("ClipboardService", "Clipboard push to ${node.ip} failed: ${e.message}")
+                }
             }
 
             if (isManualPush) {

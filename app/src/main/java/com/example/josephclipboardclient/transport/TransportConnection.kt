@@ -23,7 +23,15 @@ interface TransportConnection : Closeable {
 
 /** TCP carrier — the only carrier in use. */
 class SocketConnection(private val socket: Socket) : TransportConnection {
-    override val input: InputStream get() = socket.getInputStream()
+    // Wrapped (once, cached) in a small PushbackInputStream so a caller can speculatively peek a
+    // short protocol line (the accept/resume AUTH2R challenge — see DownloadEngine.
+    // answerAcceptChallengeIfExpected) and losslessly restore any consumed bytes if the peer turns
+    // out to have sent something else (the start of the raw file stream) instead of a challenge.
+    // Must be cached, not re-derived: a fresh PushbackInputStream over the raw stream on every
+    // access would not see bytes already unread() into an earlier instance, and
+    // socket.getInputStream() itself always returns the same underlying stream regardless.
+    private val pushbackInput by lazy { java.io.PushbackInputStream(socket.getInputStream(), 512) }
+    override val input: InputStream get() = pushbackInput
     override val output: OutputStream get() = socket.getOutputStream()
     override val remoteIdentifier: String get() = socket.inetAddress?.hostAddress ?: ""
 
