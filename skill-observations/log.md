@@ -864,3 +864,63 @@ DECLINED = user decided not to pursue
 **Suggested improvement:** When a safety mechanism is unconditionally correct and cheap (lossless, bounded cost), don't gate it behind a "do I think I need this" check driven by a cache/belief that can independently diverge from the other party's actual behavior — the gate becomes the bug. This is a general pattern to check for in any protocol/interop skill: two peers making independent decisions from separately-stale state (discovery caches, feature-flag polls, capability negotiation) is a race whenever their decisions must correlate but the underlying facts they're checking are NOT the same fact.
 
 **Principle:** If an operation is safe and cheap to always perform, don't make it conditional on a belief that a different, effectively-random peer could contradict — unconditional-and-cheap beats conditional-and-racy. Caught by an independent adversarial fan-out (sonnet-tier reviewer with fresh eyes and file access, not just re-reading my own diff) — worth keeping that step mandatory for any wire-level change per the project's own Quality Gates, since this exact bug survived my own in-session design reasoning at the time I wrote it.
+
+### Observation 57: A release guard that validates the wrong invariant manufactures the defect it was added to prevent
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** Auditing the previous session's 3.7.5 release. The publish script's `-AndroidVersion` guard, added in that same session, compared the release title against `app/build.gradle.kts` versionName.
+**Skill:** commit-windows-version
+**Type:** internal
+**Phase/Area:** publish-showcase-release.ps1 pre-flight guard
+
+**Issue:** The guard forced the release title's Android version to equal the SOURCE version. But the release carries a carried-forward APK from a previous tag, and Android's in-app update checker parses its prompt decision from that title. Source was 3.7.2 (unreleased, no signed APK possible without keystore.properties); the shipped APK was 3.7.1. The guard therefore *required* publishing a title announcing a build no download could deliver, giving every 3.7.1 user a permanent "update to 3.7.2" prompt that no action could clear. Without the guard the operator would likely have passed the correct value by hand. Adding it made the wrong value mandatory.
+
+**Suggested improvement:** State the invariant a release guard enforces in artifact terms before writing it: "the title names the version a user who clicks download actually receives." Then pick the source of truth that tracks the artifact (here `website/js/config.js` androidApk.version, which is also what the download page advertises), not the one that tracks the repo. Where source legitimately runs ahead of the last shipped binary, emit a NOTE, never a failure.
+
+**Principle:** A guard encodes a belief about what must be true. If that belief is wrong the guard does not fail open, it enforces the wrong state and removes the human judgement that was previously compensating. Before adding an automated check, write down the invariant in terms of the observable outcome it protects, and confirm the field being compared actually determines that outcome.
+
+### Observation 58: A comment asserting "this is only ever called from X" is a claim to verify, not documentation to write
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** 3.7.5 added clipboard push success/failure tray notifications, documented as "pushCurrentClipboard() is Windows' only manual push entry point ... never an automatic/background caller". A grep found a second call site: the automatic clipboard-change listener. Shipped result was a tray balloon on every copy, and a warning balloon on every copy whenever no paired device was online.
+**Skill:** code-review
+**Type:** open-source
+**Phase/Area:** review of behaviour-changing edits to shared helper functions
+
+**Issue:** The safety of the change rested entirely on a call-site claim, and the claim was stated confidently in a doc comment rather than checked. Both the author and the review pass read the comment as established context instead of as the single assumption the change depended on. A one-line grep would have refuted it.
+
+**Suggested improvement:** Add a review trigger: when a diff adds a user-visible side effect (notification, toast, sound, dialog, network call, write) to an EXISTING shared function rather than to a new one, enumerate that function's call sites and state the count in the review. Treat any "only called from" or "never called by" phrasing in a diff as an unverified claim that must be checked, especially when the diff itself introduced the comment.
+
+**Principle:** Confident prose in a diff is the weakest evidence in the diff, because it was written by the same reasoning the review is meant to check. A claim about reachability is mechanically checkable in seconds; when a change's correctness depends on one, check it rather than read it.
+
+### Observation 59: Marketing claims about security behaviour need a periodic diff against the code that implements them
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** User asked to make sure the site does not advertise false information. The site asserted off-grid (QR/NFC/Wi-Fi Direct) transfers were "AES-256 sealed", "AES-256 end to end", "always encrypted", in four bullets plus the meta and social descriptions. The implementing file says in its own header that the off-grid session key is used only for HMAC key confirmation and the file stream is plaintext.
+**Skill:** report-verify
+**Type:** open-source
+**Phase/Area:** claims about shipped behaviour in public-facing copy
+
+**Issue:** The copy was probably true-in-intent when written and drifted, or was written from the feature name rather than the implementation. Nothing in the release process compares public claims against code, so it survived multiple releases. Two adjacent claims failed the same way for different reasons: "the only network traffic is to the device you paired" ignored the update check both clients make against api.github.com, and the SmartScreen FAQ said the app "runs nothing in the background" two sections after the page describes it as a system-tray background app.
+
+**Suggested improvement:** Keep a short list of the site's falsifiable claims (encryption scope, network egress, background behaviour, what a download actually contains) and check each against a named source file before any release that touches the site. The check is cheap because the list is small; the failure mode is expensive because overstating encryption on a privacy-positioned product is the least forgivable thing to get wrong.
+
+**Principle:** Public claims about security are assertions about code, and they decay silently because nothing compiles them. The dangerous ones are not the invented claims but the ones that were true of one path and got generalised to all paths.
+
+### Observation 60: A speculative read on a shared stream must match a fixed prefix, never scan for a delimiter
+
+**Status:** OPEN
+**Date:** 2026-07-25
+**Session context:** The AUTH2R requester peeks at a socket to see whether the sender issued a challenge before the file bytes start. The implementation read up to 400 bytes looking for a newline, then pushed back what it consumed if the line was not a challenge.
+**Skill:** cross-platform-parity-fix
+**Type:** open-source
+**Phase/Area:** speculative protocol reads over a stream shared with bulk data
+
+**Issue:** Against a peer that never sends the optional frame (every already-deployed build during a rollout), the scan reads the payload's own bytes hunting for a delimiter the payload may not contain. Any transfer whose entire stream was shorter than the scan bound and free of 0x0A blocked until the socket timeout and then failed, discarding the consumed bytes; the retry deterministically repeated it. The pushback made the read lossless, which is what made the design feel safe, but losslessness says nothing about whether the read terminates.
+
+**Suggested improvement:** For an optional frame on a stream that also carries opaque data, match the frame's fixed prefix byte by byte and abandon at the first differing byte. That reads one byte whenever the payload does not start with the prefix's first character. Treat a read timeout during the probe as "no frame", restoring what was consumed, which also covers a zero-length payload. Reserve unbounded reading for after the full prefix has matched, at which point the rest of the frame is genuinely owed.
+
+**Principle:** Lossless and terminating are separate properties. A pushback buffer guarantees you can undo a read; it does not guarantee the data being waited on will ever arrive. Any speculative read on a stream shared with opaque data needs a bound derived from the protocol token itself, not from a delimiter the other side is under no obligation to send.
