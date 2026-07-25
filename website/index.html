@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clipboard Share — Off-grid clipboard sync & file transfer</title>
-  <meta name="description" content="Clipboard Share syncs your clipboard and transfers files between Android and Windows — peer-to-peer over LAN or fully off-grid (QR, NFC, Wi-Fi Direct). No cloud, no internet, AES-256 encrypted." />
+  <meta name="description" content="Clipboard Share syncs your clipboard and transfers files between Android and Windows — peer-to-peer over LAN or fully off-grid (QR, NFC, Wi-Fi Direct). No cloud, no internet, AES-256 encrypted over your network." />
   <meta name="theme-color" content="#141414" />
   <meta name="color-scheme" content="dark light" />
 
@@ -18,7 +18,7 @@
   <meta property="og:site_name" content="Clipboard Share" />
   <meta property="og:url" content="https://clipboard-share-a8e.pages.dev/" />
   <meta property="og:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
-  <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
+  <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted over your network." />
   <meta property="og:image" content="https://clipboard-share-a8e.pages.dev/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -27,7 +27,7 @@
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Clipboard Share — Off-grid clipboard sync & file transfer" />
-  <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted." />
+  <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted over your network." />
   <meta name="twitter:image" content="https://clipboard-share-a8e.pages.dev/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -136,7 +136,7 @@
     "operatingSystem": "Android, Windows",
     "applicationCategory": "UtilitiesApplication",
     "softwareVersion": "3.7.1",
-    "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted.",
+    "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted over your network.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
   }
@@ -335,7 +335,7 @@
             Clipboard Share syncs text and sends files between your Android phone and
             Windows PC, directly, device to device. Pair once by confirming a 6-digit
             code, then move files over your network or completely off-grid via QR or NFC.
-            Encrypted end to end; nothing ever touches a server.
+            AES-256 encrypted over your network, and nothing ever touches a server.
           </p>
           <div class="hero__cta" data-reveal>
             <a class="btn btn--primary btn--lg" data-cta="android" href="#download">
@@ -487,7 +487,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg><span><strong>LAN.</strong> Same router, direct over your Wi-Fi at full local speed.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Wi-Fi Direct / hotspot.</strong> A peer link or a hosted hotspot when there's no router.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a link from nothing; bytes stay AES-256 sealed.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a private two-device link from nothing, with no network at all.</span></li>
               </ul>
             </div>
           </div>
@@ -501,7 +501,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap to begin.</strong> The NFC bump seeds an off-grid handshake between the two phones.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Then the fastest link.</strong> Bytes move over the quickest path the phones can form.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Still encrypted.</strong> Off-grid doesn't mean in the clear; it's AES-256 end to end.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Only the phone you tapped.</strong> The bump keys an ECDH handshake, so no other device can join the link.</span></li>
               </ul>
             </div>
           </div>
@@ -515,7 +515,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Show, then scan.</strong> The code holds everything the two devices need to meet.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Both platforms.</strong> Windows presents the code; Android scans it with the camera.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Sealed transfer.</strong> The session it opens is AES-256 encrypted like any other.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Verified session.</strong> An ECDH handshake proves the scan, so only the scanning device connects.</span></li>
               </ul>
             </div>
           </div>
@@ -662,13 +662,13 @@
           <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
-            <p>Every clipboard payload and file is AES-256 encrypted in flight; the clipboard uses authenticated AES-GCM. Nothing travels in the clear.</p>
+            <p>Over your network, every clipboard payload and file is sealed with authenticated AES-256-GCM before it leaves the device.</p>
             <div class="card-more">
-              <p class="card-more__lead">Whatever you send is sealed with AES-256 before it leaves the device. The clipboard path uses authenticated AES-GCM, so tampering is detected, not just hidden.</p>
+              <p class="card-more__lead">On a shared network, what you send is sealed with AES-256-GCM under the key from pairing. GCM is authenticated, so tampering is detected, not just hidden.</p>
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Authenticated.</strong> AES-GCM verifies integrity, not only confidentiality.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Files too.</strong> Large transfers are sealed the same way, chunk by chunk.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Never in the clear.</strong> On-grid or off-grid, the bytes are always encrypted.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Off-grid differs.</strong> A QR / NFC link is a direct connection between just those two devices, protected by an authenticated handshake rather than a sealed stream.</span></li>
               </ul>
             </div>
           </div>
@@ -688,12 +688,12 @@
           <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg></div>
             <h3>Zero telemetry</h3>
-            <p>No analytics, no ads, no third parties. The app simply doesn't phone home.</p>
+            <p>No analytics, no ads, no third parties. Nothing about you is ever sent anywhere.</p>
             <div class="card-more">
               <p class="card-more__lead">There are no analytics SDKs, no ad networks and no crash-reporting that phones home. The app has nothing to send about you and nowhere to send it.</p>
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>No third parties.</strong> No trackers, no ad libraries, no hidden SDKs.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Only your devices.</strong> The only network traffic is to the device you paired.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Only your devices.</strong> Your clipboard and files go to the device you paired, nowhere else. The one other request the app makes is a version check against GitHub, which sends nothing about you.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Nothing to leak.</strong> No account and no profile means nothing to breach.</span></li>
               </ul>
             </div>
@@ -741,7 +741,7 @@
             <div class="plat-card__head">
               <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
               <h3>Windows</h3>
-              <span class="badge">v3.7.5</span>
+              <span class="badge">v3.7.6</span>
             </div>
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
@@ -815,7 +815,7 @@
             <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg></div>
             <h3>Windows</h3>
             <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.7.5</span>
+              <span class="badge" data-dl-version>v3.7.6</span>
               <span class="badge badge--muted" data-dl-type>Installer</span>
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
@@ -842,7 +842,7 @@
         <div class="faq">
           <details class="faq__item" data-reveal>
             <summary>Does it need an internet connection?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>No. On the same Wi-Fi it goes direct over your LAN; with no network at all it creates its own link via QR, NFC, Wi-Fi Direct or a hotspot bridge. Nothing routes through the internet.</p></div></div>
+            <div class="faq__body"><div><p>No. On the same Wi-Fi it goes direct over your LAN; with no network at all it creates its own link via QR, NFC, Wi-Fi Direct or a hotspot bridge. Your clipboard and files never route through the internet. The app does reach out for one thing, and only if it can: a version check that asks GitHub whether a newer build exists.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>Does it use my mobile data?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
@@ -850,7 +850,7 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>Is my data uploaded anywhere?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Never. There are no servers and no account. Clipboard contents and files move straight between your paired devices, AES-256 encrypted, with keys stored only on your hardware.</p></div></div>
+            <div class="faq__body"><div><p>Never. There are no servers and no account. Clipboard contents and files move straight between your devices, with keys stored only on your hardware. Over a shared network those bytes are AES-256-GCM sealed. On an off-grid QR or NFC link there is no network to share in the first place: the two devices talk directly to each other over a connection nothing else can join.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>What is the 6-digit code?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
@@ -866,7 +866,7 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>Windows blocked the installer or can't verify the publisher?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p><p>Clipboard Share is off-grid, has no account and runs nothing in the background; it's simply an unsigned indie build with no reputation yet. You can confirm the download with the SHA-256 on the Windows card above. The build has been submitted to Microsoft for review and a properly signed release is on the way, so if Smart App Control is blocking you, the signed build (or checking back once the review clears) is the fix. We don't suggest turning the feature off.</p></div></div>
+            <div class="faq__body"><div><p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p><p>Clipboard Share is off-grid and has no account; it's simply an unsigned indie build with no reputation yet. It does sit in the system tray so it can receive transfers, which is the app doing its job rather than anything hidden. You can confirm any download against the SHA-256 on the Windows card above.</p><p>Two honest caveats. Smart App Control decides per file hash, so clearing one build does nothing for the next one. And the app is not code-signed yet, so we can't promise a date when a given release stops being flagged. If SmartScreen is all that's in your way, More info then Run anyway gets you through. If Smart App Control is on, there's no per-app override, and we'd rather you skip the install than switch the feature off.</p></div></div>
           </details>
         </div>
       </div>
@@ -897,7 +897,7 @@
           <h3>Versions</h3>
           <ul>
             <li><a href="#download">Android 3.7.1</a></li>
-            <li><a href="#download">Windows 3.7.5</a></li>
+            <li><a href="#download">Windows 3.7.6</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>
