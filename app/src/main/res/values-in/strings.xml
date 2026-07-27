@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Perangkat Terhubung</string>
     <string name="action_send">Kirim</string>
     <string name="history_and_push_title">Papan Klip</string>
+    <string name="clipboard_autosync_title">Papan Klip (Auto-Sinkron)</string>
     <string name="action_push_current_clipboard">Dorong Papan Klip Saat Ini</string>
     <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk melihat)</string>
     <string name="required_permissions_title">Izin yang Diperlukan</string>
@@ -677,7 +678,7 @@
     <string name="connected_devices_label">Perangkat Terhubung:</string>
     <string name="lite_selected_files_count">File Terpilih (%1$d)</string>
     <string name="lite_select_devices_label">Pilih Perangkat</string>
-    <string name="menu_updates">Pembaruan</string>
+    <string name="menu_updates">Pembaruan (Beta)</string>
     <string name="update_checking">Memeriksa pembaruan…</string>
     <string name="update_up_to_date">Tidak ada pembaruan yang tersedia</string>
     <string name="update_current_version_label">Versi saat ini</string>

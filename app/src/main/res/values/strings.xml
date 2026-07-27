@@ -103,6 +103,7 @@
     <string name="select_trusted_recipients_title">Connected Devices</string>
     <string name="action_send">Send</string>
     <string name="history_and_push_title">Clipboard</string>
+    <string name="clipboard_autosync_title">Clipboard (Auto-Sync)</string>
     <string name="action_push_current_clipboard">Push Current Clipboard</string>
     <string name="recent_copies_hint">Recent Copies (Tap to view)</string>
     <string name="selected_files_empty_hint">Files selected will be shown here</string>
@@ -672,7 +673,7 @@
     <string name="connected_devices_label">Connected Devices:</string>
     <string name="lite_selected_files_count">Selected Files (%1$d)</string>
     <string name="lite_select_devices_label">Select Devices</string>
-    <string name="menu_updates">Updates</string>
+    <string name="menu_updates">Updates (Beta)</string>
     <string name="update_checking">Checking for updates…</string>
     <string name="update_up_to_date">No update available</string>
     <string name="update_current_version_label">Current version</string>

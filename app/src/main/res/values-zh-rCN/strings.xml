@@ -112,6 +112,7 @@
     <string name="select_trusted_recipients_title">已连接设备</string>
     <string name="action_send">发送</string>
     <string name="history_and_push_title">剪贴板</string>
+    <string name="clipboard_autosync_title">剪贴板（自动同步）</string>
     <string name="action_push_current_clipboard">推送当前剪贴板</string>
     <string name="recent_copies_hint">最近复制内容（点击查看）</string>
     <string name="required_permissions_title">所需权限</string>
@@ -660,7 +661,7 @@
     <string name="connected_devices_label">已连接的设备：</string>
     <string name="lite_selected_files_count">已选文件 (%1$d)</string>
     <string name="lite_select_devices_label">选择设备</string>
-    <string name="menu_updates">更新</string>
+    <string name="menu_updates">更新（Beta）</string>
     <string name="update_checking">正在检查更新…</string>
     <string name="update_up_to_date">没有可用更新</string>
     <string name="update_current_version_label">当前版本</string>

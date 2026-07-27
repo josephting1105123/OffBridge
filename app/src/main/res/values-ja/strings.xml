@@ -122,6 +122,7 @@
     <string name="select_trusted_recipients_title">接続されているデバイス</string>
     <string name="action_send">送信</string>
     <string name="history_and_push_title">クリップボード</string>
+    <string name="clipboard_autosync_title">クリップボード（自動同期）</string>
     <string name="action_push_current_clipboard">現在のクリップボードをプッシュ</string>
     <string name="recent_copies_hint">最近のコピー（タップして表示）</string>
     <string name="required_permissions_title">必要な権限</string>
@@ -670,7 +671,7 @@
     <string name="connected_devices_label">接続済みデバイス：</string>
     <string name="lite_selected_files_count">選択したファイル（%1$d）</string>
     <string name="lite_select_devices_label">デバイスを選択</string>
-    <string name="menu_updates">アップデート</string>
+    <string name="menu_updates">アップデート（Beta）</string>
     <string name="update_checking">アップデートを確認しています…</string>
     <string name="update_up_to_date">利用可能なアップデートはありません</string>
     <string name="update_current_version_label">現在のバージョン</string>

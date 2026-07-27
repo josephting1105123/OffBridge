@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
     <string name="history_and_push_title">Área de Transferência</string>
+    <string name="clipboard_autosync_title">Área de Transferência (Auto)</string>
     <string name="action_push_current_clipboard">Enviar Área de Transferência Atual</string>
     <string name="recent_copies_hint">Cópias Recentes (Toque para ver)</string>
     <string name="required_permissions_title">Permissões Necessárias</string>
@@ -677,7 +678,7 @@
     <string name="connected_devices_label">Dispositivos Conectados:</string>
     <string name="lite_selected_files_count">Arquivos Selecionados (%1$d)</string>
     <string name="lite_select_devices_label">Selecionar Dispositivos</string>
-    <string name="menu_updates">Atualizações</string>
+    <string name="menu_updates">Atualizações (Beta)</string>
     <string name="update_checking">Verificando atualizações…</string>
     <string name="update_up_to_date">Nenhuma atualização disponível</string>
     <string name="update_current_version_label">Versão atual</string>

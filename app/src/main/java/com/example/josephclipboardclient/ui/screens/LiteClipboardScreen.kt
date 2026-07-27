@@ -102,7 +102,7 @@ fun LiteClipboardScreen(
                     )
                 }
                 Text(
-                    stringResource(R.string.lite_clipboard),
+                    stringResource(R.string.clipboard_autosync_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f)

@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Подключенные устройства</string>
     <string name="action_send">Отправить</string>
     <string name="history_and_push_title">Буфер обмена</string>
+    <string name="clipboard_autosync_title">Буфер обмена (автосинхр.)</string>
     <string name="action_push_current_clipboard">Отправить текущий буфер обмена</string>
     <string name="recent_copies_hint">Недавние копии (нажмите, чтобы просмотреть)</string>
     <string name="required_permissions_title">Необходимые разрешения</string>
@@ -673,7 +674,7 @@
     <string name="connected_devices_label">Подключённые устройства:</string>
     <string name="lite_selected_files_count">Выбранные файлы (%1$d)</string>
     <string name="lite_select_devices_label">Выберите устройства</string>
-    <string name="menu_updates">Обновления</string>
+    <string name="menu_updates">Обновления (бета)</string>
     <string name="update_checking">Проверка наличия обновлений…</string>
     <string name="update_up_to_date">Обновлений нет</string>
     <string name="update_current_version_label">Текущая версия</string>

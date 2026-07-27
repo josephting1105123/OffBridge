@@ -84,7 +84,7 @@ fun HistoryScreen(
                     modifier = Modifier.padding(end = Dimens.spaceLg).size(Dimens.iconLg)
                 )
                 Text(
-                    TranslationManager.getString("history_and_push_title").takeIf { it != "history_and_push_title" } ?: "Clipboard & Push",
+                    TranslationManager.getString("clipboard_autosync_title").takeIf { it != "clipboard_autosync_title" } ?: "Clipboard (Auto-Sync)",
                     style = MaterialTheme.typography.h5,
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.weight(1f)
@@ -152,36 +152,18 @@ fun HistoryScreen(
                 }
             }
 
-            // Push Current Clipboard button — pinned at the bottom, below the recent-copies
-            // list. The list scrolls inside its own weighted region above, so it never covers
-            // this button and the button never moves as the list scrolls.
-            Spacer(Modifier.height(Dimens.spaceLg))
-            Box(modifier = Modifier.onGloballyPositioned { coords ->
-                tutorialBounds["pushButton"] = coords.boundsInWindow()
-            }) {
-                AppButton(
-                    text = TranslationManager.getString("action_push_current_clipboard").takeIf { it != "action_push_current_clipboard" } ?: "Push Current Clipboard",
-                    onClick = { appController.pushCurrentClipboard() },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
         }
 
         if (showTutorial) {
             TutorialOverlay(
                 steps = listOf(
                     TutorialStep(
-                        "pushButton",
-                        tr("tutorial_clipboard_push_button", "Tap here to instantly push your current clipboard text to all paired devices.")
-                    ),
-                    TutorialStep(
                         "acceptSwitch",
                         tr("tutorial_clipboard_accept_switch", "Turn this off if you don't want to receive clipboard content from other devices."),
                         hideSkipButton = true
                     )
                 ),
-                totalSteps = 2,
+                totalSteps = 1,
                 stepOffset = 0,
                 boundsMap = tutorialBounds,
                 onDismiss = { showTutorial = false },
