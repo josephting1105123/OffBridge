@@ -112,6 +112,7 @@
     <string name="select_trusted_recipients_title">已连接设备</string>
     <string name="action_send">发送</string>
     <string name="history_and_push_title">剪贴板</string>
+    <string name="clipboard_autosync_title">剪贴板（自动同步）</string>
     <string name="action_push_current_clipboard">推送当前剪贴板</string>
     <string name="recent_copies_hint">最近复制内容（点击查看）</string>
     <string name="required_permissions_title">所需权限</string>

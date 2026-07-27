@@ -103,6 +103,7 @@
     <string name="select_trusted_recipients_title">Connected Devices</string>
     <string name="action_send">Send</string>
     <string name="history_and_push_title">Clipboard</string>
+    <string name="clipboard_autosync_title">Clipboard (Auto-Sync)</string>
     <string name="action_push_current_clipboard">Push Current Clipboard</string>
     <string name="recent_copies_hint">Recent Copies (Tap to view)</string>
     <string name="selected_files_empty_hint">Files selected will be shown here</string>

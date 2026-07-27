@@ -51,7 +51,6 @@ fun ClipboardScreen(
     pairedDeviceCount: Int,
     acceptSync: Boolean,
     onAcceptSyncChange: (Boolean) -> Unit,
-    onPushCurrent: () -> Unit,
     onCopy: (String) -> Unit,
     onDelete: (String) -> Unit
 ) {
@@ -80,7 +79,7 @@ fun ClipboardScreen(
                     modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
                 )
                 Text(
-                    stringResource(R.string.lite_clipboard),
+                    stringResource(R.string.clipboard_autosync_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f)
@@ -156,26 +155,6 @@ fun ClipboardScreen(
                         }
                     }
                 }
-            }
-
-            Spacer(Modifier.height(dimens.spaceLg))
-
-            // Push current clipboard — Pro's manual foreground push to all paired devices.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(dimens.radiusLg))
-                    .background(colors.green)
-                    .clickable { onPushCurrent() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    stringResource(R.string.action_push_current_clipboard),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
 

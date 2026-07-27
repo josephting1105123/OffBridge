@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Подключенные устройства</string>
     <string name="action_send">Отправить</string>
     <string name="history_and_push_title">Буфер обмена</string>
+    <string name="clipboard_autosync_title">Буфер обмена (автосинхр.)</string>
     <string name="action_push_current_clipboard">Отправить текущий буфер обмена</string>
     <string name="recent_copies_hint">Недавние копии (нажмите, чтобы просмотреть)</string>
     <string name="required_permissions_title">Необходимые разрешения</string>

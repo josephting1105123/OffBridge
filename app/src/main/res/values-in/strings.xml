@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Perangkat Terhubung</string>
     <string name="action_send">Kirim</string>
     <string name="history_and_push_title">Papan Klip</string>
+    <string name="clipboard_autosync_title">Papan Klip (Auto-Sinkron)</string>
     <string name="action_push_current_clipboard">Dorong Papan Klip Saat Ini</string>
     <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk melihat)</string>
     <string name="required_permissions_title">Izin yang Diperlukan</string>

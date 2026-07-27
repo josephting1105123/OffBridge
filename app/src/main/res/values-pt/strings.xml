@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
     <string name="history_and_push_title">Área de Transferência</string>
+    <string name="clipboard_autosync_title">Área de Transferência (Auto)</string>
     <string name="action_push_current_clipboard">Enviar Área de Transferência Atual</string>
     <string name="recent_copies_hint">Cópias Recentes (Toque para ver)</string>
     <string name="required_permissions_title">Permissões Necessárias</string>

@@ -89,7 +89,6 @@ class HistoryFragment : Fragment() {
                                 ClipboardService.isSyncEnabled = enabled
                                 acceptSyncState.value = enabled
                             },
-                            onPushCurrent = { executeForegroundPush() },
                             onCopy = { copyToClipboard(it) },
                             onDelete = { deleteEntry(it) }
                         )
@@ -185,27 +184,6 @@ class HistoryFragment : Fragment() {
                 // Receiver was not registered; ignore.
             }
             receiverRegistered = false
-        }
-    }
-
-    private fun executeForegroundPush() {
-        try {
-            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = clipboard.primaryClip
-            val textToPush = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).text?.toString() ?: "" else ""
-
-            if (textToPush.isNotEmpty()) {
-                val serviceIntent = Intent(requireContext(), ClipboardService::class.java).apply {
-                    action = ClipboardService.ACTION_EXECUTE_NETWORK_PUSH
-                    putExtra("PAYLOAD", textToPush)
-                }
-                requireContext().startService(serviceIntent)
-                Toast.makeText(requireContext(), getString(R.string.history_toast_pushing), Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), getString(R.string.history_toast_empty), Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), getString(R.string.history_toast_read_failed), Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -122,6 +122,7 @@
     <string name="select_trusted_recipients_title">接続されているデバイス</string>
     <string name="action_send">送信</string>
     <string name="history_and_push_title">クリップボード</string>
+    <string name="clipboard_autosync_title">クリップボード（自動同期）</string>
     <string name="action_push_current_clipboard">現在のクリップボードをプッシュ</string>
     <string name="recent_copies_hint">最近のコピー（タップして表示）</string>
     <string name="required_permissions_title">必要な権限</string>

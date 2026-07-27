@@ -112,6 +112,7 @@
     <string name="select_trusted_recipients_title">已連接裝置</string>
     <string name="action_send">傳送</string>
     <string name="history_and_push_title">剪貼簿</string>
+    <string name="clipboard_autosync_title">剪貼簿（自動同步）</string>
     <string name="action_push_current_clipboard">推送當前剪貼簿</string>
     <string name="recent_copies_hint">最近複製內容（點擊以查看）</string>
     <string name="required_permissions_title">所需權限</string>

@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Verbundene Geräte</string>
     <string name="action_send">Senden</string>
     <string name="history_and_push_title">Zwischenablage</string>
+    <string name="clipboard_autosync_title">Zwischenablage (Auto-Sync)</string>
     <string name="action_push_current_clipboard">Aktuelle Zwischenablage senden</string>
     <string name="recent_copies_hint">Kürzlich kopiert (Tippen zum Anzeigen)</string>
     <string name="required_permissions_title">Erforderliche Berechtigungen</string>

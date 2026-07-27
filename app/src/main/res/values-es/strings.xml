@@ -125,6 +125,7 @@
     <string name="select_trusted_recipients_title">Dispositivos Conectados</string>
     <string name="action_send">Enviar</string>
     <string name="history_and_push_title">Portapapeles</string>
+    <string name="clipboard_autosync_title">Portapapeles (Auto-sinc.)</string>
     <string name="action_push_current_clipboard">Enviar Portapapeles Actual</string>
     <string name="recent_copies_hint">Copias Recientes (Toca para ver)</string>
     <string name="required_permissions_title">Permisos Requeridos</string>
