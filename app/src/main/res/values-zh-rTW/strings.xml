@@ -629,7 +629,7 @@
     <string name="connected_devices_label">已連線的裝置：</string>
     <string name="lite_selected_files_count">已選檔案 (%1$d)</string>
     <string name="lite_select_devices_label">選擇裝置</string>
-    <string name="menu_updates">更新</string>
+    <string name="menu_updates">更新（Beta）</string>
     <string name="update_checking">正在檢查更新…</string>
     <string name="update_up_to_date">沒有可用更新</string>
     <string name="update_current_version_label">目前版本</string>

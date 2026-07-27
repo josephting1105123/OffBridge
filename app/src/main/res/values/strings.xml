@@ -641,7 +641,7 @@
     <string name="connected_devices_label">Connected Devices:</string>
     <string name="lite_selected_files_count">Selected Files (%1$d)</string>
     <string name="lite_select_devices_label">Select Devices</string>
-    <string name="menu_updates">Updates</string>
+    <string name="menu_updates">Updates (Beta)</string>
     <string name="update_checking">Checking for updates…</string>
     <string name="update_up_to_date">No update available</string>
     <string name="update_current_version_label">Current version</string>

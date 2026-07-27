@@ -642,7 +642,7 @@
     <string name="connected_devices_label">Appareils connectés :</string>
     <string name="lite_selected_files_count">Fichiers sélectionnés (%1$d)</string>
     <string name="lite_select_devices_label">Sélectionner les appareils</string>
-    <string name="menu_updates">Mises à jour</string>
+    <string name="menu_updates">Mises à jour (bêta)</string>
     <string name="update_checking">Recherche de mises à jour…</string>
     <string name="update_up_to_date">Aucune mise à jour disponible</string>
     <string name="update_current_version_label">Version actuelle</string>

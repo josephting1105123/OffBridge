@@ -646,7 +646,7 @@
     <string name="connected_devices_label">Perangkat Terhubung:</string>
     <string name="lite_selected_files_count">File Terpilih (%1$d)</string>
     <string name="lite_select_devices_label">Pilih Perangkat</string>
-    <string name="menu_updates">Pembaruan</string>
+    <string name="menu_updates">Pembaruan (Beta)</string>
     <string name="update_checking">Memeriksa pembaruan…</string>
     <string name="update_up_to_date">Tidak ada pembaruan yang tersedia</string>
     <string name="update_current_version_label">Versi saat ini</string>
