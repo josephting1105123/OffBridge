@@ -88,6 +88,15 @@ data class TransferSession(
      */
     @Volatile var acceptStarted: Boolean = false,
     /**
+     * Off-grid (p2p) sessions only: the RAW ECDH secret agreed during the P2P_HELLO/P2P_WELCOME
+     * handshake, present iff both ends negotiated [TransportCaps.SEALED_STREAM]. Handed to the
+     * download/upload engine as its `fileKey` (with the v2 path), which applies
+     * [FileSeal.deriveKeyV2] itself — so this stays RAW, exactly like the stored pairing key does on
+     * the LAN path. Pre-deriving here would derive twice and the two ends would never agree.
+     * Null on a legacy peer, which keeps the pre-3.7.7 plaintext off-grid stream.
+     */
+    @Volatile var p2pSealKey: ByteArray? = null,
+    /**
      * Receive-side destination snapshot, resolved from the "save_location_uri"/"save_media_to"
      * prefs ONCE when the session's first download stream opens and pinned here for every later
      * write pass and resume-offset probe. Each pass used to re-read the prefs live, so flipping

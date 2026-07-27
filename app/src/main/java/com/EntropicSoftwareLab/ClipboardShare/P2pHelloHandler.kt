@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 
@@ -164,14 +165,25 @@ object P2pHelloHandler {
                     ctx.onTransferError(false)
                     return@launch
                 }
-                val ackExpected = replyParts.getOrNull(2) == "ack"
+                // Trailing flags are order-independent ("ack" and/or "seal"), so match by membership
+                // rather than by position — positional indexing broke the moment a second optional
+                // flag existed. "seal" is only ever sent by a receiver that saw our SEALED_STREAM
+                // cap, so an old receiver silently keeps the pre-3.7.7 plaintext stream.
+                val replyFlags = replyParts.drop(2)
+                val ackExpected = replyFlags.contains("ack")
+                val sealKey = if (replyFlags.contains(OffGridHandshake.ACCEPT_FLAG_SEAL)) sharedKey else null
 
                 TransportDiag.log("TX: ACCEPT_OFFER received → streaming files")
                 TransferHistoryManager.updateStatus(context, sessionId, "transferring")
                 val myGen = session.sendGeneration.incrementAndGet()
 
                 try {
-                    UploadEngine.streamSessionFiles(context, session, outStream, sendGen = myGen)
+                    // Raw ECDH secret as fileKey — streamSessionFiles applies deriveKeyV2 itself, so
+                    // pre-deriving would derive twice and the receiver's tag check would fail.
+                    UploadEngine.streamSessionFiles(
+                        context, session, outStream,
+                        fileKey = sealKey, sendGen = myGen, useFileV2 = sealKey != null,
+                    )
                     if (ackExpected && !UploadEngine.awaitCompletionAck(connection, sessionId)) {
                         // Bytes were written but the receiver never confirmed delivery (late drop).
                         // Keep the session paused so the receiver's resume can reconnect to it.

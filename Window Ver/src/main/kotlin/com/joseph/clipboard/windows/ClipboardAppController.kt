@@ -899,7 +899,14 @@ class ClipboardAppController {
 
                 // Reuse the existing byte-pump: streams in manifest order, then (when the phone
                 // advertised the delivery ack) waits for TRANSFER_COMPLETE before finishing.
-                streamFilesToSocket(outSession, socket, 0, 0L, handshake.ackExpected)
+                // A non-null sealKey means the phone asked for the sealed off-grid stream, so the
+                // same FileSeal v2 path the LAN transfers use runs here too (useV2 is implied — the
+                // off-grid seal has no v1 form, it was introduced already at v2).
+                streamFilesToSocket(
+                    outSession, socket, 0, 0L, handshake.ackExpected,
+                    fileKey = handshake.sealKey,
+                    useV2 = handshake.sealKey != null,
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
                 activeOutgoingFileSessions.remove(session.sessionId)

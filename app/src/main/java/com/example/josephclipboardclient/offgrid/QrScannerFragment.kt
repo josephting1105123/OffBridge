@@ -1168,7 +1168,7 @@ class QrScannerFragment : Fragment() {
                                 transport = "p2p"
                             ))
 
-                            com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session)
+                            com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session, session.p2pSealKey)
                             handedOff = true
                         }
                     }
@@ -1360,7 +1360,7 @@ class QrScannerFragment : Fragment() {
                     }
                     TransferHistoryManager.updateStatus(appContext, sessionId, "transferring")
                     activeConnection = connection
-                    com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session)
+                    com.EntropicSoftwareLab.ClipboardShare.DownloadEngine.executeDownloadStream(appContext, connection, session, session.p2pSealKey)
                     true
                 } catch (e: Exception) {
                     e.printStackTrace()

@@ -117,4 +117,17 @@ object TransportCaps {
      * receiver's resume reconnect to a still-live session after a late drop.
      */
     const val COMPLETION_ACK = 1 shl 5
+
+    /**
+     * Data-plane (not a transport tier): the sender will FileSeal (AES-256-GCM) the off-grid file
+     * stream when the receiver asks for it, keyed by the session's ECDH secret. Identical to Windows
+     * `OffGridQrSender.CAP_SEALED_STREAM`.
+     *
+     * Historically the off-grid stream was PLAINTEXT — the ECDH secret authenticated admission (the
+     * P2P_HELLO/P2P_WELCOME HMACs) but never protected the bytes, unlike the LAN path which has been
+     * sealed since 3.4.0. Negotiation is two-sided so nothing already installed breaks: an old sender
+     * never sets this bit so a new receiver never asks, and an old receiver ignores an unknown bit so
+     * it never sends the "seal" flag. Only new↔new seals.
+     */
+    const val SEALED_STREAM = 1 shl 6
 }

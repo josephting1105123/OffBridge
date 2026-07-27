@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.storage.CryptoEngine
 import com.joseph.clipboard.windows.storage.EcdhSession
+import com.joseph.clipboard.windows.storage.FileSeal
 import java.io.File
 import java.net.Socket
 import java.security.MessageDigest
@@ -61,6 +62,27 @@ object OffGridQrSender {
      */
     const val CAP_BLE_ADVERTISE = 1 shl 0
 
+    /**
+     * `cap` bit advertising that we will FileSeal (AES-256-GCM) the off-grid file stream when the
+     * receiver asks for it — identical to Android `TransportCaps.SEALED_STREAM`. Bit 6 is the first
+     * free one (0..5 are BLE_ADVERTISE, BLE_SCAN, BT_L2CAP, LOHS, AWARE, COMPLETION_ACK).
+     *
+     * Historically the off-grid stream was PLAINTEXT: the ECDH secret authenticated admission (the
+     * two HMAC key-confirmation values) but never protected the bytes, unlike the LAN path which has
+     * been FileSeal-sealed since 3.4.0. This closes that gap without inventing any crypto: the
+     * already-agreed, already-mutually-confirmed ECDH secret is fed to the same [FileSeal] v2 path
+     * the LAN transfers use, and HKDF's distinct info label domain-separates the AEAD sub-key from
+     * that secret's other use as the raw HMAC key for the two confirmation values.
+     *
+     * Negotiation is two-sided so nothing already installed breaks: an old sender never sets this
+     * bit, so a new receiver never asks; an old receiver ignores an unknown bit, so it never sends
+     * the `seal` flag and we stream plaintext exactly as before. Only new↔new seals.
+     */
+    const val CAP_SEALED_STREAM = 1 shl 6
+
+    /** Flag a sealing-capable receiver appends to ACCEPT_OFFER, mirroring the LAN path's "fgcm2". */
+    const val ACCEPT_FLAG_SEAL = "seal"
+
     private val gson = GsonBuilder().disableHtmlEscaping().create()
 
     /** One active QR advertising window: ephemeral key + admission token + the files to serve. */
@@ -91,7 +113,7 @@ object OffGridQrSender {
         session: HostSession,
         hotspot: HotspotController.HotspotInfo?,
         lanIp: String?,
-        cap: Int = CAP_COMPLETION_ACK
+        cap: Int = CAP_COMPLETION_ACK or CAP_SEALED_STREAM
     ): String {
         val b64 = Base64.getEncoder()
         val totalBytes = session.files.sumOf { it.length() }
@@ -126,7 +148,17 @@ object OffGridQrSender {
      * appended "|ack" to ACCEPT_OFFER (i.e. it will send TRANSFER_COMPLETE and we
      * must wait for it before declaring the transfer done).
      */
-    data class HandshakeResult(val accepted: Boolean, val ackExpected: Boolean) {
+    data class HandshakeResult(
+        val accepted: Boolean,
+        val ackExpected: Boolean,
+        /** Non-null iff the receiver asked for [ACCEPT_FLAG_SEAL]: the RAW ECDH secret, to be handed
+         *  to the byte-pump as its `fileKey` with `useV2 = true`. Raw and not pre-derived on purpose
+         *  — FileStreamer already applies [FileSeal.deriveKeyV2] itself, exactly as it does to the
+         *  stored pairing key on the LAN path, so pre-deriving here would derive twice and the two
+         *  ends would never agree. Null means a legacy receiver that can't unseal, and the caller
+         *  streams plaintext as before. */
+        val sealKey: ByteArray? = null,
+    ) {
         companion object { val REJECTED = HandshakeResult(false, false) }
     }
 
@@ -185,12 +217,19 @@ object OffGridQrSender {
         out.write(manifest.toByteArray(Charsets.UTF_8))
         out.flush()
 
-        // Receiver confirms on the same socket before any bytes flow. A COMPLETION_ACK-capable
-        // receiver appends "|ack"; index positionally so the optional suffix is tolerated.
+        // Receiver confirms on the same socket before any bytes flow. Trailing flags after the
+        // sessionId are order-independent (a COMPLETION_ACK-capable receiver appends "ack"; a
+        // sealing-capable one appends "seal"), so match by membership rather than by position —
+        // positional indexing broke the moment a second optional flag existed.
         val reply = Net.readLineUtf8(socket.getInputStream())
         val replyParts = reply.split("|")
         val accepted = replyParts.getOrNull(0) == "ACCEPT_OFFER" && replyParts.getOrNull(1) == session.sessionId
-        return HandshakeResult(accepted, accepted && replyParts.getOrNull(2) == "ack")
+        if (!accepted) return HandshakeResult.REJECTED
+        val flags = replyParts.drop(2)
+        // Seal only when the receiver actually asked. It only asks when it saw CAP_SEALED_STREAM,
+        // so an old receiver silently keeps the pre-3.7.7 plaintext behavior.
+        val sealKey = if (flags.contains(ACCEPT_FLAG_SEAL)) sharedKey else null
+        return HandshakeResult(true, flags.contains("ack"), sealKey)
     }
 
     /** Reject an inbound off-grid dial when no QR is being shown (or one is in flight). */

@@ -148,6 +148,7 @@ class SenderSessionController(
         // Bluetooth is no longer a DATA path (too slow at any PHY) — never advertise BT_L2CAP.
         cap = cap or TransportCaps.LOHS // declared; runtime denial is a ladder outcome, not a cap
         cap = cap or TransportCaps.COMPLETION_ACK // build-level: this generation waits for the delivery ack
+        cap = cap or TransportCaps.SEALED_STREAM // build-level: this generation can FileSeal the off-grid stream
         return cap
     }
 

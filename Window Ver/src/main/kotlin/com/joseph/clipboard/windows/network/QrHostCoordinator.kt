@@ -34,7 +34,10 @@ class QrHostCoordinator(private val isTransferActive: () -> Boolean) {
     @Volatile private var qrPeripheral: BleControlPeripheral? = null
 
     @Volatile private var qrLanIp: String? = null
-    @Volatile private var qrCap: Int = OffGridQrSender.CAP_COMPLETION_ACK
+    // Build-level caps: this generation both waits for the delivery ack and can FileSeal the
+    // off-grid stream. BLE_ADVERTISE is added per-session below, only once the GATT advert starts.
+    @Volatile private var qrCap: Int =
+        OffGridQrSender.CAP_COMPLETION_ACK or OffGridQrSender.CAP_SEALED_STREAM
     @Volatile private var qrGatewayIp: String = "192.168.49.1"
 
     /** Result of opening a QR host session: the QR payload plus the AP creds to display (null when LAN-only). */
@@ -107,7 +110,7 @@ class QrHostCoordinator(private val isTransferActive: () -> Boolean) {
         // instant it scans (parallel with its Wi-Fi join) and the PC gets live status + coordinated
         // retry. LAN-only sessions don't need it (the phone dials the LAN IP directly). Fail-soft:
         // if the adapter can't advertise, cap stays COMPLETION_ACK and the QR is unchanged from before.
-        var cap = OffGridQrSender.CAP_COMPLETION_ACK
+        var cap = OffGridQrSender.CAP_COMPLETION_ACK or OffGridQrSender.CAP_SEALED_STREAM
         if (hotspot != null) {
             val peripheral = BleControlPeripheral()
             val advertising = try {

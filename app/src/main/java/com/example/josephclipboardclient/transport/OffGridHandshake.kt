@@ -25,6 +25,10 @@ object OffGridHandshake {
     const val MANIFEST = "MANIFEST"
     const val ACCEPT_OFFER = "ACCEPT_OFFER"
 
+    /** Flag appended to ACCEPT_OFFER to request the sealed off-grid stream. Wire constant — must
+     *  stay identical to Windows `OffGridQrSender.ACCEPT_FLAG_SEAL`. */
+    const val ACCEPT_FLAG_SEAL = "seal"
+
     enum class HandshakeOutcome { STARTED, BUSY, EXPIRED, FAILED }
 
     interface Listener {
@@ -121,7 +125,15 @@ object OffGridHandshake {
             if (manifest.isEmpty()) return HandshakeOutcome.FAILED
 
             val ackSupported = (payload.cap and TransportCaps.COMPLETION_ACK) != 0
-            val acceptCmd = if (ackSupported) "$ACCEPT_OFFER|$sessionId|ack\n" else "$ACCEPT_OFFER|$sessionId\n"
+            // Ask for the sealed stream only when the sender advertised it; a sender that didn't
+            // wouldn't understand the flag and would stream plaintext regardless, so requesting it
+            // blindly would leave us trying to unseal raw file bytes.
+            val sealSupported = (payload.cap and TransportCaps.SEALED_STREAM) != 0
+            val acceptFlags = buildList {
+                if (ackSupported) add("ack")
+                if (sealSupported) add(ACCEPT_FLAG_SEAL)
+            }
+            val acceptCmd = (listOf(ACCEPT_OFFER, sessionId) + acceptFlags).joinToString("|") + "\n"
             outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
             outStream.flush()
 
@@ -133,7 +145,18 @@ object OffGridHandshake {
                 targetIp = payload.ip,
                 isIncoming = true,
                 transport = "p2p",
-                completionAckRequired = ackSupported
+                completionAckRequired = ackSupported,
+                // Raw secret, not pre-derived — see TransferSession.p2pSealKey. Only set when we
+                // actually asked for the seal, so the receive path can't try to unseal a plaintext
+                // stream (or vice versa): this field IS the negotiated outcome, not a capability.
+                p2pSealKey = if (sealSupported) sharedKey else null,
+                // The off-grid seal exists only in the v2 form, and DownloadEngine reads this flag
+                // (not the key's presence) to choose deriveKeyV2 + the session/file-bound AAD
+                // prefix. Leaving it false would derive the v1 key against a v2 sender and every
+                // chunk would fail its tag check. Deliberately NOT also setting fileGcmNegotiated:
+                // that one gates the LAN name-based resume watcher on an FGCM-pinned IP, which an
+                // ephemeral off-grid peer can never be.
+                fileV2Negotiated = sealSupported,
             )
             
             listener.onTransferStarted(sessionId, connection, session)
