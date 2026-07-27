@@ -29,6 +29,9 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
+    // Tracks what Play actually SERVES, which lags the direct APK: a build has to clear review and
+    // finish rollout before this may move. Bump it only once the new version is live on the store
+    // listing, never at the same time as androidApk below.
     version: "3.7.1",
     size: "TBD", // store link — no size/sha shown
     // PERMANENT — never revert to "#". The APK asset may 404 until the user
@@ -45,10 +48,10 @@ window.CS_CONFIG = {
     label: "Download APK",
     os: "Android",
     fileType: "APK (direct)",
-    version: "3.7.1",
+    version: "3.7.2",
     size: "29 MB",
     url: "https://github.com/josephting1105123/ClipboardShare-Showcase/releases/latest/download/ClipboardShare-android.apk",
-    sha256: "b4686abf3728e74f4a394e27778d0df6d23044960adb16f12ea261f42f7d3fe1",
+    sha256: "949d3d47622b0e50b23201cb3d3c76c8f74eb16897738211a3a33a0662ffa72e",
     note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
   },
 

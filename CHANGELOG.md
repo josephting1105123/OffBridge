@@ -64,11 +64,10 @@ release.
   first launch (the per-screen tutorials already existed; they just never auto-triggered before).
   Localized into all 10 supported languages.
 
-## 3.7.2 — Android (build 30) — NOT YET RELEASED (concurrent-transfer + interop fixes, AUTH2R)
+## 3.7.2 — Android (build 30) (concurrent-transfer + interop fixes, AUTH2R)
 
-> These changes are in the source tree but no signed 3.7.2 APK has been built or published. The
-> current Android download is still 3.7.1. This entry describes what will ship as 3.7.2, not what
-> users have today.
+> Published as a signed APK on the Showcase release. Google Play lags this: the store still serves
+> 3.7.1 until the AAB clears review and finishes rollout.
 
 
 ### Fixed
