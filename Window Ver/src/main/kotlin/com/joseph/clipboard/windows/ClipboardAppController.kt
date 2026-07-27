@@ -10,6 +10,8 @@ import com.joseph.clipboard.windows.network.ManifestCodec
 import com.joseph.clipboard.windows.network.Net
 import com.joseph.clipboard.windows.network.OffGridQrSender
 import com.joseph.clipboard.windows.network.QrHostCoordinator
+import com.joseph.clipboard.windows.network.QrPairCoordinator
+import com.joseph.clipboard.windows.network.QrPairHost
 import com.joseph.clipboard.windows.network.WireFrames
 import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.network.ClipboardTargeting
@@ -208,7 +210,17 @@ class ClipboardAppController {
     private val resolvedIncomingNames = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
     // Off-grid "send via QR" advertising window (Windows = sender). All QR/hotspot/BLE-control state
     // lives in the coordinator; it asks isTransferActive() so it never drops the AP mid-stream.
-    private val qrHost = QrHostCoordinator(isTransferActive = { activeOutgoingFileSessions.isNotEmpty() })
+    private val qrHost = QrHostCoordinator(
+        isTransferActive = { activeOutgoingFileSessions.isNotEmpty() },
+        isPairingWindowOpen = { QrPairHost.isOpen(System.currentTimeMillis()) },
+    )
+    // "Pair with QR" window. Separate from qrHost (that one advertises files); this one only ever
+    // hands out a pairing credential, and defers to qrHost for the shared AP's lifetime.
+    private val qrPair = QrPairCoordinator(releaseHotspot = { qrHost.stopHotspotIfIdle() })
+    // Name of the device that just paired by scanning our code — the QR dialog turns this into its
+    // success state. Declared ahead of pairingDaemon so the daemon's callback never sees it unset.
+    private val _qrPairedDevice = MutableStateFlow<String?>(null)
+    val qrPairedDevice: StateFlow<String?> = _qrPairedDevice.asStateFlow()
     private val activeFileTransferSockets = java.util.concurrent.ConcurrentHashMap<String, java.net.Socket>()
     
     private val _transferHistory = MutableStateFlow<List<TransferRecord>>(emptyList())
@@ -273,6 +285,12 @@ class ClipboardAppController {
         onUnpaired = { senderIp ->
             println("Remote device $senderIp unpaired us — refreshing trusted nodes")
             refreshTrustedNodes()
+        },
+        onQrPaired = { senderIp, senderName ->
+            // The daemon has already stored the key by the time this fires (it only fires after the
+            // scanner's confirmation verified), so the list can be refreshed straight away.
+            refreshTrustedNodes()
+            _qrPairedDevice.value = senderName.ifBlank { senderIp }
         }
     )
     private val clipboardDaemon = ClipboardDaemon(
@@ -836,6 +854,20 @@ class ClipboardAppController {
 
     /** Tear down an unscanned QR window (dialog dismissed); see [QrHostCoordinator.cancelQrHostSession]. */
     fun cancelQrHostSession() = qrHost.cancelQrHostSession()
+
+    // --- "Pair with QR" (Windows shows the code; the phone scans it) ---
+
+    /** Opens a QR pairing window; see [QrPairCoordinator.open]. Blocks when it raises the AP. */
+    fun startQrPairSession(forceHotspot: Boolean = false): QrPairCoordinator.PairQrInfo? {
+        _qrPairedDevice.value = null
+        return qrPair.open(forceHotspot)
+    }
+
+    /** Closes the pairing window (dialog dismissed or pairing finished). */
+    fun cancelQrPairSession() {
+        qrPair.close()
+        _qrPairedDevice.value = null
+    }
 
     /**
      * Inbound off-grid dial from an Android scanner (handed over by the file

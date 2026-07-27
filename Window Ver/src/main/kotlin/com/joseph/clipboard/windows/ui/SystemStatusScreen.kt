@@ -13,6 +13,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Wifi
@@ -71,6 +72,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
 
     var showTutorial by remember { mutableStateOf(false) }
     var showPairedDialog by remember { mutableStateOf(false) }
+    var showQrPairDialog by remember { mutableStateOf(false) }
     val tutorialBounds = remember { mutableStateMapOf<String, Rect>() }
 
     LaunchedEffect(tutorialTrigger) {
@@ -148,10 +150,13 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.spaceLg),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spaceMd)
             ) {
+                // Was a passive "Nearby" count — the same number the device list below already
+                // shows. Traded for the one pairing action that had nowhere else to live.
                 BentoTile(
-                    value = discoveredDevices.size.toString(),
-                    label = "Nearby",
-                    icon = Icons.Filled.Wifi,
+                    value = tr("bento_qr_pair_value", "Pair"),
+                    label = tr("bento_qr_pair", "with QR"),
+                    icon = Icons.Filled.QrCode2,
+                    onClick = { showQrPairDialog = true },
                     modifier = Modifier.weight(1f)
                 )
                 BentoTile(
@@ -302,6 +307,13 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 trustedNodes = trustedNodes,
                 discoveredDevices = discoveredDevices,
                 onDismiss = { showPairedDialog = false }
+            )
+        }
+
+        if (showQrPairDialog) {
+            QrPairDialog(
+                appController = appController,
+                onDismiss = { showQrPairDialog = false }
             )
         }
 

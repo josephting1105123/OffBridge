@@ -2,6 +2,7 @@ package com.joseph.clipboard.windows.network
 
 import com.joseph.clipboard.windows.storage.CryptoEngine
 import com.joseph.clipboard.windows.storage.EcdhSession
+import com.joseph.clipboard.windows.storage.PairSeal
 import com.joseph.clipboard.windows.storage.SecurityVault
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -19,7 +20,10 @@ import kotlin.concurrent.thread
 
 class PairingDaemon(
     private val onIncomingPairingRequest: (senderIp: String, senderName: String, visualPin: String, accept: () -> Unit, decline: () -> Unit) -> Unit,
-    private val onUnpaired: ((senderIp: String) -> Unit)? = null
+    private val onUnpaired: ((senderIp: String) -> Unit)? = null,
+    /** Fired after a QR pairing completes, so the screen showing the code can report the result
+     *  instead of waiting for the next discovery sweep. */
+    private val onQrPaired: ((senderIp: String, senderName: String) -> Unit)? = null
 ) {
     companion object {
         /** How long the daemon's parked socket/thread waits for the user to answer a pairing dialog
@@ -86,6 +90,85 @@ class PairingDaemon(
         serverSocket = null
     }
 
+    /**
+     * Host half of QR pairing. The scanner's token claims the open window ([QrPairHost]); both sides
+     * then derive the same AES-256 key from ECDH and prove it with a [PairSeal] blob.
+     *
+     * Trust is stored last, only once the scanner's FIN opens under that key — so a peer that dialed
+     * in with a stolen-but-valid token, or one that can't complete the exchange, leaves nothing
+     * behind. On any failure the window is restored, letting the user's genuine second attempt work
+     * without regenerating the code.
+     *
+     * Byte-identical counterpart: Android `PairingDaemon.handleQrPairing`.
+     */
+    private fun handleQrPairing(
+        reader: BufferedReader,
+        writer: PrintWriter,
+        senderIp: String,
+        request: String
+    ) {
+        var claimed: QrPairHost.Session? = null
+        try {
+            val req = QrPairWire.parseReq(request)
+            if (req == null) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            // Screen the peer's key BEFORE claiming: a malformed or off-curve key can then never
+            // burn the one-shot window, and the agreement below never sees a point off P-256.
+            if (!PairQrPayload.isP256PublicKey(req.publicKey)) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            val session = QrPairHost.claim(req.token, System.currentTimeMillis())
+            if (session == null) {
+                // Expired, already claimed, or never opened — one answer for all three so a prober
+                // on the LAN can't learn which.
+                writer.println(QrPairWire.deny(QrPairWire.DENY_NO_SESSION))
+                return
+            }
+            claimed = session
+
+            val aesKey = try {
+                session.ecdh.deriveSecrets(req.publicKey).first
+            } catch (e: Exception) {
+                // A malformed or off-curve key from the scanner surfaces here as a
+                // GeneralSecurityException out of KeyFactory/KeyAgreement.
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            val tokenHex = session.tokenHex()
+            writer.println(
+                QrPairWire.ack(
+                    SecurityVault.localDeviceId(),
+                    PairSeal.seal(aesKey, PairSeal.hostConfirmation(tokenHex), System.currentTimeMillis())
+                )
+            )
+            // PrintWriter(autoflush) swallows IOExceptions; checkError() flushes and reports them.
+            // If the ACK never left, the scanner can't have stored anything — bail before we do.
+            if (writer.checkError()) return
+
+            val finLine = reader.readLine() ?: return
+            val fin = QrPairWire.parseFin(finLine)
+            if (fin == null || !PairSeal.verify(aesKey, fin, PairSeal.peerConfirmation(tokenHex), System.currentTimeMillis())) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            SecurityVault.saveTrustedNode(senderIp, aesKey, req.deviceId, req.deviceName)
+            claimed = null // paired — the window is spent, don't hand it back
+            println("QR pairing completed with ${req.deviceName} ($senderIp)")
+            onQrPaired?.invoke(senderIp, req.deviceName)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            claimed?.let { QrPairHost.restore(it) }
+        }
+    }
+
     private fun handleIncomingPairing(clientSocket: Socket) {
         val senderIp = clientSocket.inetAddress.hostAddress
 
@@ -139,6 +222,21 @@ class PairingDaemon(
                         }
                     }
                     clientSocket.close()
+                    return@thread
+                }
+
+                if (request.startsWith("${QrPairWire.VERB_REQ}|")) {
+                    // QR pairing: no dialog, no Accept click. The scanner proved physical access to
+                    // this screen by presenting the one-shot token, and both sides prove the derived
+                    // key to each other, so there is nothing left for a human to check.
+                    //
+                    // Deliberately NOT gated on the discoverable toggle the way the PIN path is.
+                    // That toggle is a standing "don't let devices find me"; putting a code on
+                    // screen is a stronger, explicit, per-session consent that supersedes it — and
+                    // gating this would make a user who turned discovery off watch their own
+                    // displayed code fail for no stated reason. A window only exists while that
+                    // dialog is open, which is the real gate.
+                    handleQrPairing(reader, writer, senderIp, request)
                     return@thread
                 }
 

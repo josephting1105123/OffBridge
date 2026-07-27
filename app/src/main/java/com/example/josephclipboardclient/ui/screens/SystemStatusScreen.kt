@@ -90,6 +90,7 @@ fun SystemStatusScreen(
     onPair: (DeviceUi) -> Unit,
     onUnpair: (DeviceUi) -> Unit,
     onActionButton: () -> Unit,
+    onQrPair: () -> Unit,
     showTutorial: Boolean,
     onShowTutorial: () -> Unit,
     onTutorialDismiss: () -> Unit,
@@ -134,10 +135,13 @@ fun SystemStatusScreen(
                 modifier = Modifier.fillMaxWidth().padding(bottom = dimens.spaceLg),
                 horizontalArrangement = Arrangement.spacedBy(dimens.spaceMd),
             ) {
+                // Was a passive "Nearby" count — the same number the device list below already
+                // shows. Traded for the one pairing action that had nowhere else to live.
                 BentoTile(
-                    label = stringResource(R.string.bento_nearby),
-                    value = devices.size.toString(),
-                    icon = ImageVector.vectorResource(R.drawable.ic_device),
+                    label = stringResource(R.string.bento_qr_pair),
+                    value = stringResource(R.string.bento_qr_pair_value),
+                    icon = ImageVector.vectorResource(R.drawable.ic_qr_code),
+                    onClick = onQrPair,
                     modifier = Modifier.weight(1f),
                 )
                 BentoTile(

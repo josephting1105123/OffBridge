@@ -123,6 +123,7 @@
             android:excludeFromRecents="true" />
         <activity android:name=".ClipboardProxyActivity" android:exported="false" android:theme="@android:style/Theme.Translucent.NoTitleBar" android:excludeFromRecents="true" />
         <activity android:name=".WindowsVersionActivity" android:exported="false" />
+        <activity android:name=".QrPairActivity" android:exported="false" />
         <activity android:name=".UpdateActivity" android:exported="false" />
         <activity android:name=".AppSelectionActivity" android:exported="false" />
         <activity android:name=".offgrid.OffGridSendActivity" android:exported="false" />

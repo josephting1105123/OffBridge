@@ -6,6 +6,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Base64
 import androidx.core.content.ContextCompat
+import com.EntropicSoftwareLab.ClipboardShare.pairing.PairQrPayload
+import com.EntropicSoftwareLab.ClipboardShare.pairing.QrPairHost
+import com.EntropicSoftwareLab.ClipboardShare.pairing.QrPairWire
+import com.EntropicSoftwareLab.ClipboardShare.transport.PairSeal
 import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -31,6 +35,10 @@ object PairingDaemon {
     const val ACTION_PAIRING_DECLINED = "com.EntropicSoftwareLab.ClipboardShare.PAIRING_DECLINED"
     const val ACTION_TRIGGER_PAIRING_NOTIFICATION = "com.EntropicSoftwareLab.ClipboardShare.TRIGGER_PAIRING_NOTIFICATION"
 
+    /** Fired after a QR pairing completes on the HOST side, so the screen showing the code can
+     *  report the result instead of waiting for the next discovery sweep. */
+    const val ACTION_QR_PAIRED = "com.EntropicSoftwareLab.ClipboardShare.QR_PAIRED"
+
     /** Human-accept window: the initiator's final read, the parked-socket expiry, and the
      *  confirmation screen's Accept deadline must all agree, or a late Accept records trust
      *  the initiator never learns about (one-sided pairing, AND-36). */
@@ -44,6 +52,16 @@ object PairingDaemon {
     const val EXTRA_SENDER_DEVICE_ID = "SENDER_DEVICE_ID"
 
     private val pendingConfirmations = ConcurrentHashMap<String, PrintWriter>()
+
+    // Inbound-connection guards, matching the Windows daemon's values so both platforms present the
+    // same floor on the same unauthenticated port.
+    private const val MAX_PENDING_HANDLERS = 8
+    private const val PER_IP_MIN_INTERVAL_MS = 2000L
+    /** Bounds for the throttle's own bookkeeping — see the prune in [handleIncomingPairing]. */
+    private const val MAX_TRACKED_PEERS = 256
+    private const val PEER_ENTRY_TTL_MS = 60_000L
+    private val pendingHandlers = java.util.concurrent.atomic.AtomicInteger(0)
+    private val lastAcceptedAt = ConcurrentHashMap<String, Long>()
 
     // The outbound handshake blocks on a socket read for up to 2 minutes while the peer's human
     // decides. Cooperative coroutine cancellation can't interrupt that blocking read, so the
@@ -150,6 +168,38 @@ object PairingDaemon {
     }
 
     private fun handleIncomingPairing(context: Context, socket: Socket) {
+        val senderAddress = try {
+            (socket.remoteSocketAddress as InetSocketAddress).address.hostAddress
+        } catch (_: Exception) {
+            null
+        }
+
+        // Per-source-IP throttle, mirroring the Windows daemon: drop repeat connects that arrive
+        // faster than the minimum interval so one LAN peer can't spam the accept loop and clobber
+        // the pairing prompt. Both platforms listen on the same unauthenticated port, so the two
+        // daemons need the same floor — Android had neither guard until QR pairing added a second
+        // way in.
+        val now = System.currentTimeMillis()
+        if (senderAddress != null) {
+            val previous = lastAcceptedAt.put(senderAddress, now)
+            if (previous != null && now - previous < PER_IP_MIN_INTERVAL_MS) {
+                runCatching { socket.close() }
+                return
+            }
+            // Keep the map bounded by peers seen recently rather than by every address that has
+            // ever connected — otherwise the throttle itself becomes the memory-growth vector.
+            if (lastAcceptedAt.size > MAX_TRACKED_PEERS) {
+                lastAcceptedAt.entries.removeAll { now - it.value > PEER_ENTRY_TTL_MS }
+            }
+        }
+
+        // Concurrent cap: bound how many handlers can sit on the 20-second read at once.
+        if (pendingHandlers.incrementAndGet() > MAX_PENDING_HANDLERS) {
+            pendingHandlers.decrementAndGet()
+            runCatching { socket.close() }
+            return
+        }
+
         daemonScope.launch {
             try {
                 // Bound the handshake read so a peer that connects but never sends a request
@@ -181,6 +231,20 @@ object PairingDaemon {
                         }
                     }
                     socket.close()
+                    return@launch
+                }
+
+                if (request != null && request.startsWith("${QrPairWire.VERB_REQ}|")) {
+                    // QR pairing: no notification, no Accept screen. The scanner proved physical
+                    // access to this screen by presenting the one-shot token, and both sides prove
+                    // the derived key to each other, so there is nothing left for a human to check.
+                    //
+                    // Deliberately NOT gated on the discoverable toggle. That toggle is a standing
+                    // "don't let devices find me"; putting a code on screen is a stronger, explicit,
+                    // per-session consent that supersedes it — and gating this would make a user who
+                    // turned discovery off watch their own displayed code fail for no stated reason.
+                    // A window only exists while that screen is open, which is the real gate.
+                    handleQrPairing(context, socket, reader, writer, senderIp, request)
                     return@launch
                 }
 
@@ -238,7 +302,93 @@ object PairingDaemon {
                 // close() can itself throw; on the plain-Job daemon scope an uncaught throw here
                 // would cancel the scope and kill the whole pairing loop, so swallow it.
                 runCatching { socket.close() }
+            } finally {
+                // Released when this coroutine ends, NOT when the socket closes: the PAIR_REQ path
+                // deliberately parks its writer and returns, and a parked writer costs no handler.
+                pendingHandlers.decrementAndGet()
             }
+        }
+    }
+
+    /**
+     * Host half of QR pairing. The scanner's token claims the open window ([QrPairHost]); both sides
+     * then derive the same AES-256 key from ECDH and prove it with a [PairSeal] blob.
+     *
+     * Trust is stored last, only once the scanner's FIN opens under that key — so a peer that dialed
+     * in with a stolen-but-valid token, or one that can't complete the exchange, leaves nothing
+     * behind. On any failure the window is restored, letting the user's genuine second attempt work
+     * without regenerating the code.
+     */
+    private fun handleQrPairing(
+        context: Context,
+        socket: Socket,
+        reader: BufferedReader,
+        writer: PrintWriter,
+        senderIp: String,
+        request: String,
+    ) {
+        var claimed: QrPairHost.Session? = null
+        try {
+            val req = QrPairWire.parseReq(request)
+            if (req == null) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            // Screen the peer's key BEFORE claiming: a malformed or off-curve key can then never
+            // burn the one-shot window, and the agreement below never sees a point off P-256.
+            if (!PairQrPayload.isP256PublicKey(req.publicKey)) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            val session = QrPairHost.claim(req.token, System.currentTimeMillis())
+            if (session == null) {
+                // Expired, already claimed, or never opened — one answer for all three so a prober
+                // on the LAN can't learn which.
+                writer.println(QrPairWire.deny(QrPairWire.DENY_NO_SESSION))
+                return
+            }
+            claimed = session
+
+            val aesKey = try {
+                session.ecdh.deriveSecrets(req.publicKey).first
+            } catch (_: IllegalArgumentException) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            val tokenHex = session.tokenHex()
+            writer.println(
+                QrPairWire.ack(
+                    SecurityVault.localDeviceId(context),
+                    PairSeal.seal(aesKey, PairSeal.hostConfirmation(tokenHex), System.currentTimeMillis()),
+                )
+            )
+            // PrintWriter(autoflush) swallows IOExceptions; checkError() flushes and reports them.
+            // If the ACK never left, the scanner can't have stored anything — bail before we do.
+            if (writer.checkError()) return
+
+            val finLine = reader.readLine() ?: return
+            val fin = QrPairWire.parseFin(finLine)
+            if (fin == null || !PairSeal.verify(aesKey, fin, PairSeal.peerConfirmation(tokenHex), System.currentTimeMillis())) {
+                writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
+                return
+            }
+
+            SecurityVault.saveTrustedNode(context, senderIp, aesKey, req.deviceId, req.deviceName)
+            claimed = null // paired — the window is spent, don't hand it back
+            context.sendBroadcast(
+                Intent(ACTION_QR_PAIRED)
+                    .setPackage(context.packageName)
+                    .putExtra("SENDER_NAME", req.deviceName)
+                    .putExtra("SENDER_IP", senderIp)
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            claimed?.let { QrPairHost.restore(it) }
+            runCatching { socket.close() }
         }
     }
 
