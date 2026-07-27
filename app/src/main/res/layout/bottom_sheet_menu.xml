@@ -62,6 +62,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/menu_settings"
                 android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center"
                 android:textSize="14sp"
                 android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
@@ -89,6 +90,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/menu_windows_version"
                 android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center"
                 android:textSize="14sp"
                 android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
@@ -115,6 +117,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/menu_updates"
                 android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center"
                 android:textSize="14sp"
                 android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
@@ -162,6 +165,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/menu_restart_services"
                 android:textColor="?attr/appTextPrimaryColor"
+                android:gravity="center"
                 android:textSize="14sp"
                 android:layout_marginTop="@dimen/space_sm" />
         </LinearLayout>
@@ -188,6 +192,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/menu_power_off"
                 android:textColor="?attr/appError"
+                android:gravity="center"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:layout_marginTop="@dimen/space_sm" />
