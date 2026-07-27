@@ -23,7 +23,12 @@ import java.util.concurrent.atomic.AtomicReference
  * joined for the whole transfer) without this class knowing about the controller's session maps.
  * Wire format is unchanged and stays byte-identical to the Android scanner.
  */
-class QrHostCoordinator(private val isTransferActive: () -> Boolean) {
+class QrHostCoordinator(
+    private val isTransferActive: () -> Boolean,
+    /** True while a QR *pairing* window is on screen. That window can be the only reason the AP is
+     *  up, so the idle check must see it or dismissing a send-QR would strand the pairing code. */
+    private val isPairingWindowOpen: () -> Boolean = { false },
+) {
 
     private val pendingQrSession = AtomicReference<OffGridQrSender.HostSession?>(null)
     // Monotonic "QR intent" counter. Bumped by start AND cancel so an in-flight startQrHostSession
@@ -179,11 +184,12 @@ class QrHostCoordinator(private val isTransferActive: () -> Boolean) {
     }
 
     /**
-     * Drop the Wi-Fi Direct AP once nothing needs it: no QR is being shown AND no outgoing transfer is
-     * streaming. (The phone must stay joined for the whole transfer, so we never stop it mid-stream.)
+     * Drop the Wi-Fi Direct AP once nothing needs it: no send-QR is being shown, no pairing QR is
+     * being shown, and no outgoing transfer is streaming. (The phone must stay joined for the whole
+     * transfer, so we never stop it mid-stream.)
      */
     fun stopHotspotIfIdle() {
-        if (pendingQrSession.get() == null && !isTransferActive()) {
+        if (pendingQrSession.get() == null && !isTransferActive() && !isPairingWindowOpen()) {
             HotspotController.stop()
         }
     }

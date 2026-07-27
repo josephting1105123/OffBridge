@@ -85,6 +85,9 @@ class SystemStatusFragment : Fragment() {
                         onPair = ::onPair,
                         onUnpair = ::onUnpair,
                         onActionButton = ::onActionButton,
+                        onQrPair = {
+                            startActivity(Intent(requireContext(), QrPairActivity::class.java))
+                        },
                         showTutorial = showTutorialState.value,
                         onShowTutorial = { showTutorialState.value = true },
                         onTutorialDismiss = { showTutorialState.value = false },

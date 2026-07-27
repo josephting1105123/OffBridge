@@ -1,0 +1,136 @@
+package com.EntropicSoftwareLab.ClipboardShare.pairing
+
+import android.content.Context
+import com.EntropicSoftwareLab.ClipboardShare.EcdhSession
+import com.EntropicSoftwareLab.ClipboardShare.Net
+import com.EntropicSoftwareLab.ClipboardShare.Ports
+import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
+import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
+import com.EntropicSoftwareLab.ClipboardShare.transport.FailureCode
+import com.EntropicSoftwareLab.ClipboardShare.transport.hotspot.LocalOnlyHotspotHost
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
+
+/**
+ * Host side of QR pairing on Android: opens the window in [QrPairHost] and produces the code to
+ * render. Mirror of Windows `QrPairCoordinator`.
+ *
+ * A local-only hotspot is raised only on request. Doing it automatically would drop the phone off
+ * its own Wi-Fi for the overwhelmingly common case where both devices are already on the same
+ * network and the LAN address is all the scanner needs.
+ */
+object QrPairSession {
+
+    /** What the QR screen renders. */
+    data class PairQrInfo(
+        val qrText: String,
+        val ssid: String?,
+        val passphrase: String?,
+        val hotspotActive: Boolean,
+        val expiresAtMs: Long,
+    )
+
+    /** Failure reasons the screen turns into a message; success is a non-null [PairQrInfo]. */
+    sealed class OpenResult {
+        data class Ready(val info: PairQrInfo) : OpenResult()
+
+        /** Neither a LAN address nor a hotspot — nothing a scanner could connect to. */
+        object NoRoute : OpenResult()
+
+        /** The hotspot was asked for and refused (permission, OEM limits, tethering already on). */
+        object HotspotUnavailable : OpenResult()
+    }
+
+    private const val LOHS_BUDGET_MS = 12_000L
+
+    @Volatile private var hotspot: LocalOnlyHotspotHost? = null
+
+    /**
+     * Opens a fresh window, retiring any previous one. Suspends for up to [LOHS_BUDGET_MS] when
+     * [withHotspot] is set, so callers run it off the main dispatcher.
+     */
+    suspend fun open(context: Context, withHotspot: Boolean): OpenResult {
+        close()
+
+        val lanIp = Net.localLanIpv4()
+        var apSsid: String? = null
+        var apPsk: String? = null
+        var apHostIp: String? = null
+
+        if (withHotspot) {
+            val host = LocalOnlyHotspotHost(context)
+            val started = withTimeoutOrNull(LOHS_BUDGET_MS + 2_000L) {
+                suspendCancellableCoroutine<Triple<String, String, String>?> { cont ->
+                    host.start(LOHS_BUDGET_MS, object : LocalOnlyHotspotHost.Listener {
+                        override fun onStarted(ssid: String, psk: String, hostIp: String) {
+                            if (cont.isActive) cont.resume(Triple(ssid, psk, hostIp))
+                        }
+
+                        override fun onFailed(code: FailureCode) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    })
+                    cont.invokeOnCancellation { host.stop() }
+                }
+            }
+            if (started == null) {
+                host.stop()
+                return OpenResult.HotspotUnavailable
+            }
+            hotspot = host
+            apSsid = started.first
+            apPsk = started.second
+            apHostIp = started.third
+        }
+
+        // Dial address: the AP interface when we raised one (a scanner that joins the group can only
+        // reach us there), else our address on the shared network.
+        val advertisedIp = apHostIp ?: lanIp ?: return OpenResult.NoRoute
+        val now = System.currentTimeMillis()
+        val session = QrPairHost.open(
+            ecdh = EcdhSession(),
+            token = PairQrPayload.newToken(),
+            nowMs = now,
+            advertisedIp = advertisedIp,
+            lanIp = lanIp,
+        )
+
+        val payload = PairQrPayload.build(
+            ip = advertisedIp,
+            port = Ports.PAIRING,
+            // The name rides a '|'-separated frame after base64, but strip delimiters anyway so the
+            // decoded value can't desync a peer that logs or re-emits it.
+            name = TransferDaemon.customDeviceName
+                .replace('|', ' ').replace('\n', ' ').replace('\r', ' ').trim(),
+            deviceId = SecurityVault.localDeviceId(context),
+            publicKey = session.ecdh.getPublicKey(),
+            token = session.token,
+            nowMs = now,
+            ssid = apSsid,
+            psk = apPsk,
+            // Only worth a separate route token when it isn't the address already published as the
+            // dial target.
+            lanIp = lanIp?.takeIf { it != advertisedIp },
+        )
+
+        return OpenResult.Ready(
+            PairQrInfo(
+                qrText = payload.encode(),
+                ssid = apSsid,
+                passphrase = apPsk,
+                hotspotActive = apHostIp != null,
+                expiresAtMs = session.expiresAtMs,
+            )
+        )
+    }
+
+    /** Closes the window and drops a hotspot raised for it. Idempotent. */
+    fun close() {
+        QrPairHost.close()
+        hotspot?.let {
+            hotspot = null
+            it.stop()
+        }
+    }
+}
