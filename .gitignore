@@ -28,8 +28,12 @@ release/play/release/
 *.log
 build_info.log
 
-# Machine-local Claude Code permission cache (contains absolute paths)
-/.claude/settings.local.json
+# Claude Code working files — project instructions, skills, permission cache and the
+# skill-observation notebook. Local tooling, not part of the app; kept out of the tree so
+# nothing here ends up in a public repo.
+/CLAUDE.md
+/.claude/
+/skill-observations/
 
 # Release signing — never commit the keystore or its credentials
 keystore.properties

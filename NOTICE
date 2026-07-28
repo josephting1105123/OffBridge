@@ -1,0 +1,42 @@
+Clipboard Share
+Copyright 2026 EntropicSoftwareLab
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License in the LICENSE file at the root of this repository, or at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+
+================================================================================
+Bundled fonts
+================================================================================
+
+One font file is redistributed, under the SIL Open Font License 1.1. The full
+licence text is in licenses/OFL-1.1.txt.
+
+  IBM Plex Sans    Copyright (c) 2019 IBM Corp.
+                   app/src/main/res/font/ibm_plex_sans_variable.ttf
+                   Window Ver/src/main/resources/font/ibm_plex_sans_variable.ttf
+
+Everything else is set in the platform's generic serif family, which resolves to
+a font already on the user's device (DirectWrite on Windows, the system serif on
+Android). No serif font is bundled or redistributed by this project.
+
+
+================================================================================
+Third-party dependencies
+================================================================================
+
+Declared in gradle/libs.versions.toml and resolved at build time; not
+redistributed in this source tree. Notable licences:
+
+  AndroidX, Jetpack Compose, Room, Kotlin, kotlinx.coroutines   Apache-2.0
+  ZXing (barcode decoding)                                      Apache-2.0
+  Facebook Shimmer                                              BSD
+
+  Google ML Kit Barcode Scanning                                Proprietary
+      Google's ML Kit is a closed-source SDK distributed under the Google APIs
+      Terms of Service. It is redistributable as part of an application but is
+      not open source, which matters for any programme requiring a fully
+      open-source dependency tree.
