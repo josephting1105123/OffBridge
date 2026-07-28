@@ -69,14 +69,13 @@ fun QrPairDialog(
 ) {
     val colors = LocalExtraColors.current
     var uiState by remember { mutableStateOf<PairQrUiState>(PairQrUiState.Loading) }
-    // Bumped by "start a hotspot" and by refreshing an expired code; each change re-opens the window.
+    // Bumped by the hotspot retry and by refreshing an expired code; each change re-opens the window.
     var openEpoch by remember { mutableStateOf(0) }
-    var forceHotspot by remember { mutableStateOf(false) }
     val pairedWith by appController.qrPairedDevice.collectAsState()
 
     LaunchedEffect(openEpoch) {
         uiState = PairQrUiState.Loading
-        val info = withContext(Dispatchers.IO) { appController.startQrPairSession(forceHotspot) }
+        val info = withContext(Dispatchers.IO) { appController.startQrPairSession() }
         uiState = if (info == null) {
             PairQrUiState.Error(str("qr_pair_no_route", "This device has no network to pair over, and couldn't start a hotspot."))
         } else {
@@ -120,7 +119,10 @@ fun QrPairDialog(
                         else PairCodeBlock(
                             state = s,
                             onRefresh = { openEpoch++ },
-                            onStartHotspot = { forceHotspot = true; openEpoch++ },
+                            // The AP is now attempted on every open, so this button is only reachable
+                            // when starting it failed (no Wi-Fi Direct adapter, radio off). Re-opening
+                            // retries it, which is the only useful action left at that point.
+                            onStartHotspot = { openEpoch++ },
                         )
                 }
 

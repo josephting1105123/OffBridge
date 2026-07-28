@@ -857,10 +857,10 @@ class ClipboardAppController {
 
     // --- "Pair with QR" (Windows shows the code; the phone scans it) ---
 
-    /** Opens a QR pairing window; see [QrPairCoordinator.open]. Blocks when it raises the AP. */
-    fun startQrPairSession(forceHotspot: Boolean = false): QrPairCoordinator.PairQrInfo? {
+    /** Opens a QR pairing window; see [QrPairCoordinator.open]. Blocks while it raises the AP. */
+    fun startQrPairSession(): QrPairCoordinator.PairQrInfo? {
         _qrPairedDevice.value = null
-        return qrPair.open(forceHotspot)
+        return qrPair.open()
     }
 
     /** Closes the pairing window (dialog dismissed or pairing finished). */
