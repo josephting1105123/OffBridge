@@ -4,6 +4,39 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.7 — Windows (off-grid encryption, QR pairing)
+
+### Added
+- **Off-grid transfers are now encrypted.** QR, NFC, Wi-Fi Direct and hotspot transfers previously
+  sent file bytes in the clear — the ECDH secret authenticated who was allowed to connect, but never
+  protected the payload, unlike LAN transfers which have been sealed since 3.4.0. The same secret now
+  feeds the existing FileSeal v2 path (AES-256-GCM, HKDF-derived per-session sub-key, session- and
+  file-bound AAD). No new cryptography was introduced.
+
+  Requires **both** devices to be updated. The capability is negotiated in both directions, so a
+  transfer involving any older build falls back to the previous behaviour rather than failing.
+- **Pair by QR code**, alongside the existing 6-digit PIN. Windows shows a code for a phone to scan;
+  scanning itself needs a camera the desktop doesn't have. Works off-grid: with no shared network the
+  host raises its access point and puts the credentials in the code.
+
+### Changed
+- Version pages: centred menu labels, brand-aligned both screens, Updates marked Beta.
+- Clipboard page: the title now says Auto-Sync and the redundant manual push button is gone.
+
+---
+
+## 3.7.3 — Android (build 31) — NOT YET RELEASED (off-grid encryption, QR pairing)
+
+> These changes are in the source tree; no signed 3.7.3 APK has been built or published. The current
+> Android download is still 3.7.2. Off-grid encryption needs BOTH platforms updated, so it does not
+> take effect for anyone until this ships.
+
+### Added
+- The receiving and sending halves of the off-grid sealed stream described under Windows 3.7.7.
+- Pair by QR code: shows a code and scans one (CameraX + ML Kit).
+
+---
+
 ## 3.7.6 — Windows (audit fixes for 3.7.5)
 
 An audit of the 3.7.5 changes found four defects that 3.7.5 shipped with, plus a batch of
