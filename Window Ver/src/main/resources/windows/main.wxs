@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  FIREWALL NOTE / DISTRIBUTION FLAG: unlike the Inno installer (ClipboardShare.iss), this MSI/EXE
+  FIREWALL NOTE / DISTRIBUTION FLAG: unlike the Inno installer (OffBridge.iss), this MSI/EXE
   adds NO inbound firewall rules, so any peer that DIALS this PC (phone-initiated pairing, clipboard
   push, or a file OFFER) is silently blocked by Windows Defender Firewall on a fresh install done via
   the MSI/EXE — while this PC dialing the phone still works (outbound is allowed by default). A WiX
   util:FirewallException is not added here on purpose: the compose packageName produces a per-user
   (perUser) install with no guaranteed elevation, and per-user firewall writes are unreliable/fragile.
-  RECOMMENDATION: ship Windows exclusively through the Inno lane (ClipboardShare.iss), which opens ALL
+  RECOMMENDATION: ship Windows exclusively through the Inno lane (OffBridge.iss), which opens ALL
   of the app's listening ports elevated via netsh: TCP 65432 (clipboard), 65433 (file transfer),
   65435 (pairing) and UDP 50001 (discovery), profile=any. If the MSI/EXE must ship, first make the
   install per-machine + elevated, THEN add util:FirewallException entries mirroring those .iss rules
@@ -137,9 +137,10 @@
       <Custom Action="LaunchApp" After="InstallFinalize">NOT Installed</Custom>
     </InstallExecuteSequence>
 
-    <!-- Quote the full exe path: JpAppName is "Clipboard Share" (contains a space), so the resolved
-         path C:\...\Clipboard Share\Clipboard Share.exe must be wrapped in quotes or the launcher
-         mis-parses it. &quot; emits a literal double-quote into the ExeCommand string. -->
+    <!-- Quote the full exe path. JpAppName is the compose packageName ("OffBridge"), so today's
+         resolved path C:\...\OffBridge\OffBridge.exe has no space — but the quotes stay: rename the
+         package to anything containing a space and an unquoted launcher would mis-parse it.
+         &quot; emits a literal double-quote into the ExeCommand string. -->
     <CustomAction Id="LaunchApp" Directory="INSTALLDIR" ExeCommand="&quot;[INSTALLDIR]$(var.JpAppName).exe&quot;" Execute="immediate" Impersonate="yes" Return="asyncNoWait" />
 
   </Product>
