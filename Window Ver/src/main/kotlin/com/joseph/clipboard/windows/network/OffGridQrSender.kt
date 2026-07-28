@@ -3,6 +3,7 @@ package com.joseph.clipboard.windows.network
 import com.google.gson.GsonBuilder
 import com.joseph.clipboard.windows.network.control.SessionCrypto
 import com.joseph.clipboard.windows.storage.CryptoEngine
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.EcdhSession
 import com.joseph.clipboard.windows.storage.FileSeal
 import java.io.File
@@ -229,6 +230,13 @@ object OffGridQrSender {
         // Seal only when the receiver actually asked. It only asks when it saw CAP_SEALED_STREAM,
         // so an old receiver silently keeps the pre-3.7.7 plaintext behavior.
         val sealKey = if (flags.contains(ACCEPT_FLAG_SEAL)) sharedKey else null
+        // Log the negotiated OUTCOME. A plaintext fallback is externally indistinguishable from a
+        // sealed transfer — the files still arrive and nothing errors — so without this line there
+        // is no way to tell the two apart on a machine or in a diagnostics.log a tester sends back.
+        DiagLog.w(
+            if (sealKey != null) "QR send: off-grid stream SEALED (AES-256-GCM, FileSeal v2 off the ECDH secret)"
+            else "QR send: off-grid stream PLAINTEXT — the phone did not request the seal; update the phone to encrypt off-grid transfers"
+        )
         return HandshakeResult(true, flags.contains("ack"), sealKey)
     }
 

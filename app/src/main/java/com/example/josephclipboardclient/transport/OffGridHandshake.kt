@@ -136,6 +136,14 @@ object OffGridHandshake {
             val acceptCmd = (listOf(ACCEPT_OFFER, sessionId) + acceptFlags).joinToString("|") + "\n"
             outStream.write(acceptCmd.toByteArray(Charsets.UTF_8))
             outStream.flush()
+            // Log the negotiated OUTCOME, not just the request. A seal that silently fails to
+            // negotiate looks identical to a successful one from the outside — the file still
+            // arrives, nothing errors — so without this line there is no way to tell an encrypted
+            // off-grid transfer from a plaintext fallback, on a device or in a bug report.
+            TransportDiag.log(
+                if (sealSupported) "handshake: off-grid stream SEALED (AES-256-GCM, FileSeal v2 off the ECDH secret)"
+                else "handshake: off-grid stream PLAINTEXT — sender did not advertise SEALED_STREAM (cap=${payload.cap}); update the sending device to encrypt off-grid transfers"
+            )
 
             val session = TransferSession(
                 sessionId = sessionId,

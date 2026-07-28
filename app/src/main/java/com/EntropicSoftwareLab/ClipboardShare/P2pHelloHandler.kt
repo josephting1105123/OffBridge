@@ -173,7 +173,12 @@ object P2pHelloHandler {
                 val ackExpected = replyFlags.contains("ack")
                 val sealKey = if (replyFlags.contains(OffGridHandshake.ACCEPT_FLAG_SEAL)) sharedKey else null
 
-                TransportDiag.log("TX: ACCEPT_OFFER received → streaming files")
+                // See OffGridHandshake's twin line: a plaintext fallback is externally
+                // indistinguishable from a sealed transfer, so the outcome must be stated.
+                TransportDiag.log(
+                    if (sealKey != null) "TX: ACCEPT_OFFER received → streaming files, off-grid stream SEALED (AES-256-GCM)"
+                    else "TX: ACCEPT_OFFER received → streaming files, off-grid stream PLAINTEXT — receiver did not request the seal; update the receiving device to encrypt off-grid transfers"
+                )
                 TransferHistoryManager.updateStatus(context, sessionId, "transferring")
                 val myGen = session.sendGeneration.incrementAndGet()
 
