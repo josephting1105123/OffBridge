@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -50,6 +51,22 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import kotlinx.coroutines.delay
 
 /** Which half of the pairing screen is on show. */
+/**
+ * Ceilings for the two big square-ish blocks on this screen.
+ *
+ * Both used to be sized purely as a fraction of screen width, which is fine on a phone and breaks on
+ * a tablet: 82% of a 1000dp-wide window is an 820dp square, taller than the viewport, so the pairing
+ * code could not be shown at all. Width alone is the wrong input — what has to fit is height.
+ *
+ * [QR_MAX_SIZE] matches the flat 280dp frame the off-grid send screen has always used
+ * (res/layout/fragment_qr_display.xml). A QR is read by a camera at arm's length; past that size more
+ * pixels buy nothing, so a hard ceiling costs no scannability. The camera preview gets a looser one
+ * because a bigger viewfinder genuinely is easier to aim, and its cap sits above any phone width so
+ * phones keep the full-width preview they have today.
+ */
+private val QR_MAX_SIZE = 280.dp
+private val SCAN_PREVIEW_MAX_WIDTH = 420.dp
+
 enum class QrPairMode { SHOW, SCAN }
 
 /** What the screen is doing right now; the activity owns every transition between these. */
@@ -238,30 +255,38 @@ private fun ShowCodeBlock(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.82f)
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(dimens.radiusLg))
-                .background(Color.White)
-                .padding(dimens.spaceMd),
+        // BoxWithConstraints rather than chaining widthIn onto fillMaxWidth: fillMaxWidth hands down a
+        // FIXED width constraint, and a later widthIn(max=) gets coerced back up to that fixed minimum,
+        // so the ceiling would silently do nothing. Reading maxWidth and picking the size outright is
+        // the only form of this that actually caps.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            ui.qr?.let {
-                Image(
-                    bitmap = it,
-                    contentDescription = stringResource(R.string.qr_pair_code_desc),
-                    // Fading rather than hiding keeps the layout still while the refresh action
-                    // appears underneath.
-                    modifier = Modifier.fillMaxSize().alpha(if (expired) 0.12f else 1f),
-                )
-            }
-            if (expired) {
-                Text(
-                    stringResource(R.string.qr_pair_expired),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black,
-                )
+            Box(
+                modifier = Modifier
+                    .size((maxWidth * 0.82f).coerceAtMost(QR_MAX_SIZE))
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(Color.White)
+                    .padding(dimens.spaceMd),
+                contentAlignment = Alignment.Center,
+            ) {
+                ui.qr?.let {
+                    Image(
+                        bitmap = it,
+                        contentDescription = stringResource(R.string.qr_pair_code_desc),
+                        // Fading rather than hiding keeps the layout still while the refresh action
+                        // appears underneath.
+                        modifier = Modifier.fillMaxSize().alpha(if (expired) 0.12f else 1f),
+                    )
+                }
+                if (expired) {
+                    Text(
+                        stringResource(R.string.qr_pair_expired),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Black,
+                    )
+                }
             }
         }
 
@@ -332,35 +357,44 @@ private fun ScanBlock(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.85f)
-                .clip(RoundedCornerShape(dimens.radiusLg))
-                .background(colors.card),
+        // Same unbounded-growth problem as the code block above, and worse: aspectRatio(0.85f) makes
+        // the preview TALLER than it is wide, so a 1000dp-wide tablet window asked for ~1180dp of
+        // height. Cap the width above any phone's, so phones keep today's full-width viewfinder and
+        // only large windows are held back.
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            if (ui.cameraGranted) {
-                AndroidView(
-                    factory = { ctx -> PreviewView(ctx).also(onPreviewReady) },
-                    modifier = Modifier.fillMaxSize(),
-                )
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(dimens.spaceXl),
-                ) {
-                    Text(
-                        stringResource(R.string.qr_pair_camera_needed),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.textSecondary,
-                        textAlign = TextAlign.Center,
+            Box(
+                modifier = Modifier
+                    .width(maxWidth.coerceAtMost(SCAN_PREVIEW_MAX_WIDTH))
+                    .aspectRatio(0.85f)
+                    .clip(RoundedCornerShape(dimens.radiusLg))
+                    .background(colors.card),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (ui.cameraGranted) {
+                    AndroidView(
+                        factory = { ctx -> PreviewView(ctx).also(onPreviewReady) },
+                        modifier = Modifier.fillMaxSize(),
                     )
-                    Button(
-                        onClick = onRequestCamera,
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.green, contentColor = Color.Black),
-                        modifier = Modifier.padding(top = dimens.spaceLg),
-                    ) { Text(stringResource(R.string.qr_pair_camera_grant), fontWeight = FontWeight.Bold) }
+                } else {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(dimens.spaceXl),
+                    ) {
+                        Text(
+                            stringResource(R.string.qr_pair_camera_needed),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.textSecondary,
+                            textAlign = TextAlign.Center,
+                        )
+                        Button(
+                            onClick = onRequestCamera,
+                            colors = ButtonDefaults.buttonColors(containerColor = colors.green, contentColor = Color.Black),
+                            modifier = Modifier.padding(top = dimens.spaceLg),
+                        ) { Text(stringResource(R.string.qr_pair_camera_grant), fontWeight = FontWeight.Bold) }
+                    }
                 }
             }
         }

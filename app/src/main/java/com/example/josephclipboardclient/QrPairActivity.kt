@@ -296,6 +296,12 @@ class QrPairActivity : AppCompatActivity() {
     }
 
     private companion object {
-        const val QR_SIZE_PX = 720
+        /**
+         * Matches the off-grid send screen's encode size (QrDisplayFragment). The code is drawn into a
+         * 280dp frame, which is 840px on a 3x display, so 720 was being upscaled and softening the
+         * module edges a scanner has to resolve. Not a size the layout reads — purely the bitmap's own
+         * resolution.
+         */
+        const val QR_SIZE_PX = 800
     }
 }
