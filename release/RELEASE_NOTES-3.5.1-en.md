@@ -1,10 +1,10 @@
-# ClipboardShare 3.5.1
+# OffBridge 3.5.1
 
 Android and Windows both move to 3.5.1. These notes cover everything since 2.1.
 
 ## Updating from 2.1 — read this first
 
-The app changed its package identity when it became **ClipboardShare** by Entropic Software Lab. If your 2.1 install predates the rename, this version installs **alongside** the old app instead of updating it. Uninstall the old version first, then pair your devices again — pairings, history and settings do not carry over.
+The app changed its package identity when it became **OffBridge** by Entropic Software Lab. If your 2.1 install predates the rename, this version installs **alongside** the old app instead of updating it. Uninstall the old version first, then pair your devices again — pairings, history and settings do not carry over.
 
 ## Your transfers are now encrypted
 

@@ -13,7 +13,7 @@
   redrawing the mark by hand — exactly the drift this script exists to prevent.
 
   Output: ../src/main/resources/windows/app.ico  (9 sizes, 32-bit PNG-compressed entries)
-  Both build.gradle.kts (iconFile) and ClipboardShare.iss (SetupIconFile) point at that one file,
+  Both build.gradle.kts (iconFile) and OffBridge.iss (SetupIconFile) point at that one file,
   so the app, its shortcuts and the installer all follow.
 
   Run from anywhere:

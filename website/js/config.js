@@ -6,8 +6,8 @@
    1. Create a GitHub Release and attach the two binaries, keeping the asset
       filenames STABLE across releases (don't put the version in the name) so
       the "latest" link always resolves:
-        ClipboardShare-android.apk
-        ClipboardShare-windows-setup.exe
+        OffBridge-android.apk
+        OffBridge-windows-setup.exe
    2. The stable direct-download URL pattern is:
         https://github.com/<owner>/<repo>/releases/latest/download/<asset-name>
       Clicking it downloads the file instantly — the visitor never sees a
@@ -36,7 +36,7 @@ window.CS_CONFIG = {
     size: "TBD", // store link — no size/sha shown
     // PERMANENT — never revert to "#". The APK asset may 404 until the user
     // uploads the first build (testing phase, accepted). The link must stay
-    // url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/ClipboardShare-android.apk",
+    // url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
     url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
     sha256: "",
     note: "Android 10+ (API 29). Free.",
@@ -50,7 +50,7 @@ window.CS_CONFIG = {
     fileType: "APK (direct)",
     version: "3.7.2",
     size: "29 MB",
-    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/ClipboardShare-android.apk",
+    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
     sha256: "949d3d47622b0e50b23201cb3d3c76c8f74eb16897738211a3a33a0662ffa72e",
     note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
   },
@@ -62,7 +62,7 @@ window.CS_CONFIG = {
     version: "3.7.7",
     size: "83 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
-    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/ClipboardShareSetup.exe",
+    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
     sha256: "358eaceb4f0584ec8638a034b0b429a58ad39b3be44fb9de18367e2e7d1b9086",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },

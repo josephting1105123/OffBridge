@@ -5,7 +5,7 @@ import android.content.Intent
 import org.json.JSONArray
 
 object ClipboardHistoryManager {
-    private const val PREFS_NAME = "ClipboardShareHistory"
+    private const val PREFS_NAME = "OffBridgeHistory"
     private const val KEY_HISTORY = "clipboard_ledger"
     private const val MAX_ENTRIES = 100
 

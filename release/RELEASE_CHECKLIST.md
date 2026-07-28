@@ -10,7 +10,7 @@ GitHub + website (Lane A), with the Play clock (Lane B) running in parallel to f
 - [x] Website versions bumped to 3.4.0; privacy effective date synced across platforms
 - [x] `.gitignore` protects keystore + `keystore.properties` (verified)
 - [x] Keystore generator script + properties example + backup guide (`release/keystore/`)
-- [x] Windows installer `SignTool` block + SmartScreen guidance staged in `ClipboardShare.iss`
+- [x] Windows installer `SignTool` block + SmartScreen guidance staged in `OffBridge.iss`
 - [x] Play Data Safety / content-rating / store-listing copy drafted (`release/play/`)
 - [x] Runbook + canned tester replies (`release/RUNBOOK.md`, `TESTER_REPLIES.md`)
 - [x] Regression tests: 18 new pure-JVM tests (framing fuzz, GO election, transport-id codec), all green; off-grid payload instrumented test compiles

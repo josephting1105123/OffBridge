@@ -35,8 +35,8 @@ just have to live somewhere with a stable URL. Recommended: **GitHub Releases**.
 1. Create a GitHub Release for the app repo and attach the two binaries. Keep the
    asset filenames **stable across releases** (don't put the version in the name)
    so a "latest" link always resolves, e.g.:
-   - `ClipboardShare-android.apk`
-   - `ClipboardShare-windows-setup.exe`
+   - `OffBridge-android.apk`
+   - `OffBridge-windows-setup.exe`
 2. Open [`js/config.js`](js/config.js) and either:
    - set `repo.owner` / `repo.name` (the page auto-builds the
      `…/releases/latest/download/<asset>` URLs), **or**

@@ -1,4 +1,4 @@
-# ClipboardShare 3.5.5 (Windows)
+# OffBridge 3.5.5 (Windows)
 
 A Windows-only release. Features, crypto and pairing are the same as 3.5.4 — this release fixes
 **sending a folder**. Android is on 3.5.2 (which carries the receiver-side and Android-only fixes).

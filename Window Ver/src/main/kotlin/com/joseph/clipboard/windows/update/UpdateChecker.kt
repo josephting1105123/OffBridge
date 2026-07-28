@@ -12,7 +12,7 @@ import java.time.Duration
  * Checks the OffBridge-Showcase GitHub repo's latest release for a newer Windows build.
  * Reads directly off the release the existing manual RUNBOOK process already publishes — no
  * separate manifest file, no extra release-day step. See release/RUNBOOK.md for the publish flow
- * (tag vX.Y.Z, attach a stably-named ClipboardShareSetup.exe asset).
+ * (tag vX.Y.Z, attach a stably-named OffBridgeSetup.exe asset).
  */
 object UpdateChecker {
     // Same owner/repo the website's download button targets — see the CS_CONFIG.windows block in
@@ -21,7 +21,7 @@ object UpdateChecker {
     private const val OWNER = "josephting1105123"
     private const val REPO = "OffBridge-Showcase"
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
-    private const val INSTALLER_ASSET_NAME = "ClipboardShareSetup.exe"
+    private const val INSTALLER_ASSET_NAME = "OffBridgeSetup.exe"
 
     // api.github.com returns the release JSON with 200 directly (no redirect today), but follow
     // redirects defensively — NORMAL follows them without allowing an HTTPS->HTTP downgrade.
@@ -56,7 +56,7 @@ object UpdateChecker {
                 .uri(URI.create(LATEST_RELEASE_URL))
                 .header("Accept", "application/vnd.github+json")
                 // GitHub's REST API rejects unauthenticated requests that omit a User-Agent header.
-                .header("User-Agent", "ClipboardShare-Windows/$currentVersion")
+                .header("User-Agent", "OffBridge-Windows/$currentVersion")
                 .timeout(Duration.ofSeconds(4))
                 .GET()
                 .build()

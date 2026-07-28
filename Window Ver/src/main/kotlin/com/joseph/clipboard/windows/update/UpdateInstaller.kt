@@ -44,13 +44,13 @@ object UpdateInstaller {
             throw UntrustedDownloadHostException(host)
         }
 
-        val tempDir = File(System.getProperty("java.io.tmpdir"), "ClipboardShareUpdate")
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "OffBridgeUpdate")
         tempDir.mkdirs()
-        val target = File(tempDir, "ClipboardShareSetup-$targetVersion.exe")
+        val target = File(tempDir, "OffBridgeSetup-$targetVersion.exe")
 
         val request = HttpRequest.newBuilder()
             .uri(uri)
-            .header("User-Agent", "ClipboardShare-Windows/$targetVersion")
+            .header("User-Agent", "OffBridge-Windows/$targetVersion")
             .timeout(Duration.ofMinutes(5))
             .GET()
             .build()

@@ -71,8 +71,8 @@
     if (!url && window.CS_CONFIG.latestUrl) {
       var asset =
         key === "android"
-          ? "ClipboardShare-android.apk"
-          : "ClipboardShare-windows-setup.exe";
+          ? "OffBridge-android.apk"
+          : "OffBridge-windows-setup.exe";
       var built = window.CS_CONFIG.latestUrl(asset);
       if (built) url = built;
     }

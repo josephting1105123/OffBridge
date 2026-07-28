@@ -30,7 +30,7 @@ object UpdateChecker {
     // Stable asset name for the sideloadable APK on the release (no version in the name, so the
     // "latest" asset URL always resolves). Absent until the first APK is published — the Updates page
     // then falls back to the Play listing for sideloaded installs.
-    private const val APK_ASSET_NAME = "ClipboardShare-android.apk"
+    private const val APK_ASSET_NAME = "OffBridge-android.apk"
 
     private val ANDROID_VERSION_IN_TITLE = Regex("""Android\s+([0-9][0-9.]*)""")
 
@@ -42,7 +42,7 @@ object UpdateChecker {
                 readTimeout = READ_TIMEOUT_MS
                 setRequestProperty("Accept", "application/vnd.github+json")
                 // GitHub's REST API rejects unauthenticated requests that omit a User-Agent.
-                setRequestProperty("User-Agent", "ClipboardShare-Android/$currentVersion")
+                setRequestProperty("User-Agent", "OffBridge-Android/$currentVersion")
             }
             try {
                 val code = conn.responseCode

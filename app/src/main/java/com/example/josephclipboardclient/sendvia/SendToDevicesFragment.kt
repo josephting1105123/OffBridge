@@ -555,7 +555,7 @@ class SendToDevicesFragment : Fragment() {
                     // failed. Key case for the phone->laptop "no popup" bug: "No pairing key to answer
                     // OFFER_CHALLENGE for <ip>" means the phone can't answer the receiver's AUTH2
                     // challenge (missing key for the targeted IP) vs a plain connect timeout.
-                    Log.w("ClipboardShareXfer", "OFFER to $targetName ($targetIp) failed: ${e.message}", e)
+                    Log.w("OffBridgeXfer", "OFFER to $targetName ($targetIp) failed: ${e.message}", e)
                     hasFailures = true
                     // Keep the session alive and mark as paused so receiver can reconnect
                     session.isPaused = true

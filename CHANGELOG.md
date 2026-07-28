@@ -534,7 +534,7 @@ Both platforms now report **3.4.0**.
 - Added a **GitHub Actions CI** workflow that runs the Windows-module golden-vector tests, the Android
   unit tests, and both the debug and release (R8) Android builds on every push/PR.
 - Repo cleanup: removed unreferenced `empty*.jar` / `empty.txt` / `dummy_app/` and the stale duplicate
-  `installer.iss` (the live installer is `ClipboardShare.iss`).
+  `installer.iss` (the live installer is `OffBridge.iss`).
 
 ### Accessibility (Android)
 - Central TalkBack semantics on the shared components: tappable `GlassCard` surfaces (bento tiles,

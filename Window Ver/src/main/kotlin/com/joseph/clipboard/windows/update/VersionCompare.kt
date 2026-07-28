@@ -1,7 +1,7 @@
 package com.joseph.clipboard.windows.update
 
 /**
- * Dotted-integer version comparison — mirrors ClipboardShare.iss's CompareVersions (Pascal Script)
+ * Dotted-integer version comparison — mirrors OffBridge.iss's CompareVersions (Pascal Script)
  * so the in-app update checker agrees with what the installer itself uses to detect upgrades.
  * Numeric per component, not lexicographic: "3.5.2" < "3.5.10". A missing or non-numeric component
  * is treated as 0, matching the installer's StrToIntDef(part, 0) fallback.

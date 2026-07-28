@@ -1,4 +1,4 @@
-# ClipboardShare 3.5.4 (Windows)
+# OffBridge 3.5.4 (Windows)
 
 A Windows-only release. Features, crypto and pairing are the same as 3.5.2 — this release reworks the Windows **installer** and gives the in-app power menu a small visual refresh. Android stays on 3.5.1 (Google Play).
 

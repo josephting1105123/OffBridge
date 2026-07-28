@@ -43,7 +43,7 @@ class QrPairCodecTest {
             publicKey = publicKey,
             token = token,
             nowMs = now,
-            ssid = "ClipboardShare-1234",
+            ssid = "OffBridge-1234",
             psk = "hunter2hunter2",
             lanIp = "192.168.1.20",
         )
@@ -77,7 +77,7 @@ class QrPairCodecTest {
     /** Half a credential pair is worse than none — it sends the scanner at an AP it can't join. */
     @Test
     fun `an ssid without a psk is dropped rather than half-used`() {
-        val encoded = payload().encode() + "|ssid:" + b64("ClipboardShare-1234")
+        val encoded = payload().encode() + "|ssid:" + b64("OffBridge-1234")
         val parsed = PairQrPayload.parse(encoded, now) as PairQrPayload.ParseResult.Valid
         assertFalse(parsed.payload.hasApCredentials())
     }

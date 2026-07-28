@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object SecurityVault {
     private val appDataPath = System.getenv("LOCALAPPDATA") ?: System.getProperty("user.home")
-    private val configDir = File("$appDataPath\\ClipboardShare")
+    private val configDir = File("$appDataPath\\OffBridge")
     private val configFile = File(configDir, "config.json")
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
@@ -36,7 +36,7 @@ object SecurityVault {
     // so a peer that re-pairs from a new DHCP lease used to land as a SECOND entry next to the stale
     // one (two "Windows PC" rows in the Paired list). Peers exchange this id during the pairing
     // handshake so the old record can be evicted. Survives app updates — the installer never touches
-    // %LOCALAPPDATA%\ClipboardShare — and is only lost on a full uninstall, which drops the trust
+    // %LOCALAPPDATA%\OffBridge — and is only lost on a full uninstall, which drops the trust
     // store with it. Not derived from the off-grid identity key: that one has no Windows counterpart
     // and is scoped to the QR/BLE ladder.
     private var deviceId: String = ""

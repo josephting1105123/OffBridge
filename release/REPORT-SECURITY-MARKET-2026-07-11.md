@@ -1,4 +1,4 @@
-# ClipboardShare — Security Assessment & Market Plausibility
+# OffBridge — Security Assessment & Market Plausibility
 
 **Date:** 2026-07-11
 **Scope:** Android client (`app/`) and Windows Compose-Desktop module (`Window Ver/`), at commit `331a71f` (Windows 3.6.0) with the current Android working tree (3.6.3). Read-only audit; no code was changed.
@@ -45,7 +45,7 @@ This is an above-average security posture for an app of this size. The findings 
 
 **1 — Android pairing port has no rate limiting (Medium).** The Windows `PairingDaemon` caps concurrent handlers (8) and throttles repeat connects per source IP (2s). The Android `PairingDaemon` has neither: every inbound `PAIR_REQ` spawns a coroutine and raises `PairingConfirmationActivity`, which is declared `showOnLockScreen="true" turnScreenOn="true"`. An attacker on the LAN sending from many (spoofed) source IPs can repeatedly wake the screen and spam pairing prompts — with a residual risk that a fatigued user taps Accept. *Fix: mirror the Windows caps (per-IP throttle + pending-handler ceiling) on Android.*
 
-**2 — Windows firewall `profile=any` on four ports (Medium, documented tradeoff).** The installer opens TCP 65432/65433/65435 and UDP 50001 for all firewall profiles including Public (`ClipboardShare.iss:116-125`). The code comment justifies it — the Wi-Fi Direct group-owner interface is classified Public, and narrowing to Private would break the core off-grid path. The effect is that on an untrusted public network the PC also accepts inbound pairing/clipboard/file connections. The trust gate and AUTH2 limit what an attacker can *do*, but the listeners are reachable. *Fix (harder): scope the rules to the group-owner adapter once it can be reliably identified, rather than opening Public globally.*
+**2 — Windows firewall `profile=any` on four ports (Medium, documented tradeoff).** The installer opens TCP 65432/65433/65435 and UDP 50001 for all firewall profiles including Public (`OffBridge.iss:116-125`). The code comment justifies it — the Wi-Fi Direct group-owner interface is classified Public, and narrowing to Private would break the core off-grid path. The effect is that on an untrusted public network the PC also accepts inbound pairing/clipboard/file connections. The trust gate and AUTH2 limit what an attacker can *do*, but the listeners are reachable. *Fix (harder): scope the rules to the group-owner adapter once it can be reliably identified, rather than opening Public globally.*
 
 **3 — Windows clipboard daemon buffers before authenticating (Medium).** `ClipboardDaemon.kt:82-99` reads the entire payload (up to a 16 MiB cap) into memory *before* looking up the pairing key. An unpaired attacker can force the PC to buffer 16 MiB per connection with no authentication, and the file/clipboard daemons spawn one handler thread per connection with no concurrency cap. Android does this correctly — it checks the key first and drops unpaired peers before reading. *Fix: move the key lookup ahead of the bulk read on Windows and cap concurrent handlers on both daemons.*
 
@@ -107,13 +107,13 @@ Verified against current source. Everything security-relevant that `release/AUDI
 
 Sources are listed at the end.
 
-## B.2 Where ClipboardShare actually differs
+## B.2 Where OffBridge actually differs
 
-Lay the field on two axes — *does it need a shared network?* and *does it sync the clipboard as well as files?* — and ClipboardShare occupies a corner almost no one else does.
+Lay the field on two axes — *does it need a shared network?* and *does it sync the clipboard as well as files?* — and OffBridge occupies a corner almost no one else does.
 
 | | Shared network required? | Clipboard sync? | Files? | Platforms | Encryption story |
 |---|---|---|---|---|---|
-| **ClipboardShare** | **No** (off-grid QR/NFC) or LAN | **Yes** | Yes | Android, Windows | Authenticated (AES-256-GCM), pairing-gated |
+| **OffBridge** | **No** (off-grid QR/NFC) or LAN | **Yes** | Yes | Android, Windows | Authenticated (AES-256-GCM), pairing-gated |
 | LocalSend | Yes | No | Yes | 5 platforms | TLS on LAN |
 | KDE Connect | Yes | Yes | Yes | Linux-centric + others | TLS, device-paired |
 | ClipCascade / CrossPaste | Yes (or self-host) | Yes | Some | Cross-platform | Encrypted / self-hosted |
@@ -125,9 +125,9 @@ The genuine, defensible combination is **off-grid + clipboard + files + strong p
 
 A differentiator isn't a moat. Three things work against it:
 
-1. **Platform coverage.** Android + Windows only. LocalSend and the clipboard tools cover five platforms including iOS, macOS, and Linux. A meaningful slice of the audience wants phone↔Mac or cross-vendor, and ClipboardShare simply can't serve them today. This is the biggest ceiling on addressable market.
+1. **Platform coverage.** Android + Windows only. LocalSend and the clipboard tools cover five platforms including iOS, macOS, and Linux. A meaningful slice of the audience wants phone↔Mac or cross-vendor, and OffBridge simply can't serve them today. This is the biggest ceiling on addressable market.
 2. **Distribution and trust.** It isn't installable by a normal user right now: the Android release keystore exists but isn't wired into the build (`keystore.properties` is missing at the repo root, so release builds come out debug-signed), and the Windows installer is unsigned — it trips SmartScreen for everyone and is hard-blocked by Smart App Control on some Windows 11 machines. Every one of those friction points costs installs, and in a category where the leaders are one-click and reputation-established, an "unknown publisher" warning is a real conversion killer.
-3. **Discoverability and maintenance signal.** The incumbents are open-source with large communities, active repos, and years of reputation. ClipboardShare is a solo effort with a private codebase. Off-grid transfer is also the hardest thing to get reliably right across the messy space of Android OEM Wi-Fi-Direct behavior — the very complexity that differentiates it is also its top support-cost and reliability risk.
+3. **Discoverability and maintenance signal.** The incumbents are open-source with large communities, active repos, and years of reputation. OffBridge is a solo effort with a private codebase. Off-grid transfer is also the hardest thing to get reliably right across the messy space of Android OEM Wi-Fi-Direct behavior — the very complexity that differentiates it is also its top support-cost and reliability risk.
 
 ## B.4 Go-to-market blockers (must clear before it can compete)
 

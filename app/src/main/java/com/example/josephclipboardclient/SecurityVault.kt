@@ -10,9 +10,9 @@ object SecurityVault {
     // Encrypted keystore — holds the per-node AES keys ONLY. Never write plaintext here:
     // mixing a plain SharedPreferences with EncryptedSharedPreferences on the same file
     // corrupts the keyset (InvalidProtocolBufferException on the next open).
-    private const val PREFS_NAME = "ClipboardShare_Secure_Vault"
+    private const val PREFS_NAME = "OffBridge_Secure_Vault"
     // Separate plain file for non-secret flags / display names.
-    private const val PLAIN_PREFS_NAME = "ClipboardShare_Prefs"
+    private const val PLAIN_PREFS_NAME = "OffBridge_Prefs"
     private const val MIGRATED_FLAG = "__migrated_from_vault"
 
     // Built once per process: MasterKey + EncryptedSharedPreferences.create is full Keystore

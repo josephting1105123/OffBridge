@@ -22,7 +22,7 @@ JAVA_HOME="C:/Program Files/Android/Android Studio/jbr" ./gradlew.bat :app:assem
 #   -> app/build/outputs/apk/release/app-release.apk
 ```
 
-Rename the APK to the **stable** asset name before uploading: `ClipboardShare-android.apk`
+Rename the APK to the **stable** asset name before uploading: `OffBridge-android.apk`
 (website/js/config.js builds the "latest download" URL from that exact name).
 
 ## 2. The versionCode rule (read this every time)
@@ -53,19 +53,19 @@ separate app id and they coexist).
 # from a previous version can't be repackaged into a mislabeled installer:
 rm -rf "Window Ver/build2/compose/binaries/main-release"
 JAVA_HOME="C:/Users/josep/.gradle/jdks/eclipse_adoptium-17-amd64-windows.2" ./gradlew.bat :window-ver:createReleaseDistributable
-# then compile the installer with Inno Setup (ClipboardShare.iss) -> ClipboardShareSetup.exe
+# then compile the installer with Inno Setup (OffBridge.iss) -> OffBridgeSetup.exe
 ```
-The stable release asset name is `ClipboardShareSetup.exe` (no spaces, no version in the name) so the
-evergreen URL `releases/latest/download/ClipboardShareSetup.exe` always resolves. **Every** future
-release must attach both stable-named assets (`ClipboardShareSetup.exe` + `ClipboardShare-android.apk`
+The stable release asset name is `OffBridgeSetup.exe` (no spaces, no version in the name) so the
+evergreen URL `releases/latest/download/OffBridgeSetup.exe` always resolves. **Every** future
+release must attach both stable-named assets (`OffBridgeSetup.exe` + `OffBridge-android.apk`
 once the APK ships) so the `/latest/` links never break.
 
 The installer is **unsigned**, so a new publisher trips SmartScreen ("unknown publisher"). Until you
-buy an Authenticode cert (see the commented `SignTool` block in `ClipboardShare.iss`): publish the
+buy an Authenticode cert (see the commented `SignTool` block in `OffBridge.iss`): publish the
 installer's **SHA-256** and tell testers to click *More info → Run anyway* (canned reply in
 `TESTER_REPLIES.md`). Get the hash:
 ```bash
-certutil -hashfile "Window Ver\build2\inno-setup\ClipboardShareSetup.exe" SHA256
+certutil -hashfile "Window Ver\build2\inno-setup\OffBridgeSetup.exe" SHA256
 ```
 
 ### Installer error: "IPersistFile::Save failed; code 0x80070005. Access is denied."
@@ -86,7 +86,7 @@ reinstall:
 
 ## 5. Publish a GitHub Release (Lane A)
 1. Create the release, tag `v3.4.0`.
-2. Attach `ClipboardShare-android.apk` and `ClipboardShare-windows-setup.exe` (keep names stable across
+2. Attach `OffBridge-android.apk` and `OffBridge-windows-setup.exe` (keep names stable across
    releases so the "latest" link never breaks).
 3. Edit `website/js/config.js`: set `repo.owner` / `repo.name`, the `version`, `size`, and `sha256` for
    each platform; set `meta.changelogUrl`. Deploy the site (GitHub Pages).

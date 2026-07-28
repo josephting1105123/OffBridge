@@ -1,6 +1,6 @@
 # Windows: Smart App Control block & code-signing plan
 
-**Symptom (v3.5.2+):** the Windows installer (`ClipboardShareSetup.exe`) is blocked by
+**Symptom (v3.5.2+):** the Windows installer (`OffBridgeSetup.exe`) is blocked by
 **Smart App Control (SAC)** with *"couldn't verify the publisher."* Older versions ran
 without a warning because SAC ships in a silent **evaluation mode** on clean Windows 11
 installs and later switches itself **on**; once on, every unsigned/unknown `.exe` is blocked,
@@ -27,7 +27,7 @@ fully satisfy SAC — signing is the real fix — but it costs nothing and is wo
 1. Go to **https://www.microsoft.com/en-us/wdsi/filesubmission**
 2. Submission type: **Software developer** (submitting software you develop). Sign in with any
    Microsoft account.
-3. Upload the **exact** `ClipboardShareSetup.exe` you publish on the release (same bytes users
+3. Upload the **exact** `OffBridgeSetup.exe` you publish on the release (same bytes users
    download — verify against the release's SHA-256).
 4. Reason: **incorrectly detected / request reputation review**. Fill in:
    - Company/developer: *EntropicSoftwareLab*
@@ -95,7 +95,7 @@ UCRT redist DLLs. Only three files need our signature:
 
 1. `OffBridge.exe` — the jpackage launcher
 2. `app\skiko-windows-x64.dll` — Compose's Skia binding
-3. `build2\inno-setup\ClipboardShareSetup.exe` — the installer
+3. `build2\inno-setup\OffBridgeSetup.exe` — the installer
 
 Re-run the sweep after any Compose or JDK upgrade; a new unsigned native dependency would slip
 through silently otherwise.
@@ -113,7 +113,7 @@ Sign **both** the inner app files *and* the installer — SAC checks the app on 
 signed installer around an unsigned app still gets the app blocked.
 
 1. Sign files 1 and 2 above **before** Inno Setup packages them, and file 3 after ISCC produces it.
-2. In `Window Ver/ClipboardShare.iss`, define a sign tool and reference it in `[Setup]`:
+2. In `Window Ver/OffBridge.iss`, define a sign tool and reference it in `[Setup]`:
    ```
    ; Inno Setup IDE: Tools → Configure Sign Tools… → add "signclipboard" mapping to your signtool cmd
    [Setup]
@@ -123,12 +123,12 @@ signed installer around an unsigned app still gets the app blocked.
    With Azure Trusted Signing the sign command is `azuresigntool sign` with your endpoint/account/
    profile and `/tr` timestamp URL, `/fd sha256 /td sha256`.
 3. Always **timestamp** (`/tr`) so signatures stay valid after the cert expires.
-4. Re-verify the build (`signtool verify /pa /v ClipboardShareSetup.exe`) before publishing.
+4. Re-verify the build (`signtool verify /pa /v OffBridgeSetup.exe`) before publishing.
 
 ---
 
 ## Status
-- [ ] Submit current `ClipboardShareSetup.exe` to WDSI (free route)
+- [ ] Submit current `OffBridgeSetup.exe` to WDSI (free route)
 - [x] Azure Trusted Signing ruled out — individual sign-up is USA/Canada only (2026-07-28)
 - [ ] Choose between Option B (free, open source + CI), C (~$50/yr, open source) and D (~$150–400/yr)
 - [ ] Install the Windows SDK signing tools so `signtool` exists

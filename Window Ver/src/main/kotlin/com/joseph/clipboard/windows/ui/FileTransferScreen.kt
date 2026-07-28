@@ -578,7 +578,7 @@ fun FileTransferScreen(
                             onClick = { 
                                 // Create a temp .txt file and add it to chosenFiles
                                 try {
-                                    val tempDir = File(System.getProperty("java.io.tmpdir"), "ClipboardShareTexts")
+                                    val tempDir = File(System.getProperty("java.io.tmpdir"), "OffBridgeTexts")
                                     if (!tempDir.exists()) tempDir.mkdirs()
                                     val textFileName = "Text ${textCounter}.txt"
                                     val textFile = File(tempDir, textFileName)

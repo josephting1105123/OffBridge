@@ -22,7 +22,7 @@
   Optional "owner/repo" - fills in the README's badge placeholders.
 
 .EXAMPLE
-  .\release\seed-public-repo.ps1 -Destination C:\Users\josep\AndroidStudioProjects\ClipboardShare-OSS -RepoSlug josephting1105123/clipboard-share
+  .\release\seed-public-repo.ps1 -Destination C:\Users\josep\AndroidStudioProjects\OffBridge-OSS -RepoSlug josephting1105123/clipboard-share
 #>
 [CmdletBinding()]
 param(

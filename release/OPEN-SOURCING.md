@@ -33,7 +33,7 @@ the full 131-commit history, `release/`, `.claude/`, `CLAUDE.md`, `PRODUCT.md` a
 ## Publishing
 
 ```powershell
-.\release\seed-public-repo.ps1 -Destination C:\Users\josep\AndroidStudioProjects\ClipboardShare-OSS -RepoSlug <owner>/<repo>
+.\release\seed-public-repo.ps1 -Destination C:\Users\josep\AndroidStudioProjects\OffBridge-OSS -RepoSlug <owner>/<repo>
 ```
 
 Read the UNCLASSIFIED list it prints. Anything at the repo root that is in neither the include
@@ -45,7 +45,7 @@ instead of being published by accident. The first run flagged `.impeccable`,
 Then review the tree, and only then:
 
 ```powershell
-cd C:\Users\josep\AndroidStudioProjects\ClipboardShare-OSS
+cd C:\Users\josep\AndroidStudioProjects\OffBridge-OSS
 git remote add origin https://github.com/<owner>/<repo>.git
 git push -u origin main
 ```

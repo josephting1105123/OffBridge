@@ -1,4 +1,4 @@
-# ClipboardShare — Comprehensive App Report
+# OffBridge — Comprehensive App Report
 
 **For:** Stakeholders and the CTO
 **Date:** 2026-07-11
@@ -10,7 +10,7 @@ The report is layered: the Executive Summary is written for a non-technical read
 
 ## 1. Executive summary
 
-ClipboardShare is a cross-platform app that moves files and syncs the clipboard between an Android phone and a Windows PC. Its distinguishing feature is that it works **off-grid** — with no shared Wi-Fi and no internet — by standing up a direct radio link (Wi-Fi Direct / hotspot) that the two devices join via a scanned QR code or an NFC tap. It also does the ordinary thing (fast transfers over a shared LAN) and keeps the clipboard in sync both ways.
+OffBridge is a cross-platform app that moves files and syncs the clipboard between an Android phone and a Windows PC. Its distinguishing feature is that it works **off-grid** — with no shared Wi-Fi and no internet — by standing up a direct radio link (Wi-Fi Direct / hotspot) that the two devices join via a scanned QR code or an NFC tap. It also does the ordinary thing (fast transfers over a shared LAN) and keeps the clipboard in sync both ways.
 
 **Where it stands: a technically mature product held at the doorstep of launch by distribution logistics, not by code quality.** The engine is complete, the two clients are at feature parity on the things that matter, the cryptography is done properly, and both platforms build clean with all unit tests passing. What stops a normal person from installing it today is entirely outside the code: there is no release signing key generated yet for Android, the Windows installer is unsigned (so Windows warns or blocks it), and the store assets aren't produced. Separately, a small number of confirmed file-handling bugs should be fixed before a wide release because one of them can delete a user's existing file.
 

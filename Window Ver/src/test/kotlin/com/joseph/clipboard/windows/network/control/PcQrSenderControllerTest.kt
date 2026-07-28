@@ -113,11 +113,11 @@ class PcQrSenderControllerTest {
         val channel = FakeChannel()
         val pcEcdh = EcdhSession()
         val controller = PcQrSenderController(
-            channel, token, pcEcdh, "192.168.49.1", "ClipboardShare-1234", "pass12345678"
+            channel, token, pcEcdh, "192.168.49.1", "OffBridge-1234", "pass12345678"
         )
         val phone = link(channel, controller, pcEcdh)
-        expectTry(channel, phone, "ClipboardShare-1234")
-        assertEquals(QrControlState.Joining(1, "ClipboardShare-1234"), controller.state.value)
+        expectTry(channel, phone, "OffBridge-1234")
+        assertEquals(QrControlState.Joining(1, "OffBridge-1234"), controller.state.value)
 
         channel.deliver(phone.result(ok = true))
         awaitState(controller) { it == QrControlState.AwaitingDial }

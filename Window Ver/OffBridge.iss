@@ -26,11 +26,11 @@ RestartApplications=no
 ; app's mutex exactly. NOTE: this only catches instances of a build that already creates the mutex —
 ; upgrading FROM a pre-mutex version still relies on CloseApplications + the restartreplace fallback on
 ; [Files] + the user quitting from the tray.
-AppMutex=ClipboardShareInstanceMutex
+AppMutex=OffBridgeInstanceMutex
 OutputDir=build2\inno-setup
 ; No spaces: GitHub Releases sanitizes spaces in asset filenames, which would break the
-; clean ClipboardShareSetup.exe download link published on the website / downloads repo.
-OutputBaseFilename=ClipboardShareSetup
+; clean OffBridgeSetup.exe download link published on the website / downloads repo.
+OutputBaseFilename=OffBridgeSetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -69,7 +69,7 @@ DisableDirPage=auto
 ;   SignTool=signtool
 ;   SignedUninstaller=yes
 ; Define the helper when invoking the compiler (PowerShell, one line):
-;   & ISCC.exe /Ssigntool="signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f $qC:\path\to\cert.pfx$q /p $qPFX_PASSWORD$q $f" "ClipboardShare.iss"
+;   & ISCC.exe /Ssigntool="signtool sign /fd sha256 /tr http://timestamp.digicert.com /td sha256 /f $qC:\path\to\cert.pfx$q /p $qPFX_PASSWORD$q $f" "OffBridge.iss"
 ; -----------------------------------------------------------------------------
 
 [Messages]

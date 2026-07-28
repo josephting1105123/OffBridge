@@ -21,7 +21,7 @@ import java.nio.file.StandardCopyOption
  */
 object TransferHistoryManager {
     private val historyFile: File by lazy {
-        val dir = File(System.getProperty("user.home"), ".ClipboardShare")
+        val dir = File(System.getProperty("user.home"), ".OffBridge")
         if (!dir.exists()) dir.mkdirs()
         File(dir, "transfer_history.json")
     }

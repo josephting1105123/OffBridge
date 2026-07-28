@@ -64,7 +64,7 @@ object HotspotController {
         killProcess() // clear any stale handle before a fresh attempt
         cancelRequested = false // fresh attempt — arm cancellation for THIS start()
 
-        val ssid = "ClipboardShare-" + (1000 + SecureRandom().nextInt(9000))
+        val ssid = "OffBridge-" + (1000 + SecureRandom().nextInt(9000))
         val psk = randomPassphrase()
         val script = try {
             File.createTempFile("cs_hotspot", ".ps1").apply { writeText(PS_SCRIPT) }

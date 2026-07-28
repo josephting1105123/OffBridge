@@ -38,10 +38,10 @@ object ApkUpdateInstaller {
             connectTimeout = CONNECT_TIMEOUT_MS
             readTimeout = READ_TIMEOUT_MS
             instanceFollowRedirects = true // GitHub 302-redirects release assets to its CDN
-            setRequestProperty("User-Agent", "ClipboardShare-Android")
+            setRequestProperty("User-Agent", "OffBridge-Android")
         }
         val dir = File(context.cacheDir, "updates").apply { mkdirs() }
-        val target = File(dir, "ClipboardShare-update.apk")
+        val target = File(dir, "OffBridge-update.apk")
         try {
             val code = conn.responseCode
             if (code !in 200..299) throw IOException("HTTP $code")
