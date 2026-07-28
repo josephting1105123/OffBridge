@@ -80,6 +80,14 @@ class BleControlClient(context: Context) : ControlChannel {
          *  onReady never resolves and the ladder hangs on "connecting" (AND-10). */
         private const val SETUP_BUDGET_MS = 10_000L
 
+        /**
+         * How long to wait for a GATT write completion before assuming the callback is not coming.
+         * Comfortably longer than a healthy connection interval round-trip, and far short of the 5s
+         * HELLO_ACK budget the receiver is running against, so a wedged queue still has room to
+         * drain several chunks before that deadline.
+         */
+        private const val WRITE_WATCHDOG_MS = 400L
+
         /** Central-mode availability — gates the whole control-channel attempt. */
         fun canScan(context: Context): Boolean {
             val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -191,6 +199,7 @@ class BleControlClient(context: Context) : ControlChannel {
         }
 
         override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
             writeInFlight = false
             pumpQueue()
         }
@@ -235,6 +244,9 @@ class BleControlClient(context: Context) : ControlChannel {
     }
 
     private val SETUP_TIMEOUT_TOKEN = Any()
+
+    /** Guards the send queue against a write whose completion callback never arrives. */
+    private val WRITE_WATCHDOG_TOKEN = Any()
 
     /** Opens (or re-opens) the GATT client to [dev]; counts the attempt so the retry stays bounded. */
     private fun attemptConnect(dev: BluetoothDevice) {
@@ -291,7 +303,16 @@ class BleControlClient(context: Context) : ControlChannel {
         val chunk = synchronized(sendQueue) { sendQueue.poll() } ?: return
         writeInFlight = true
         try {
-            rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+            // WRITE_TYPE_DEFAULT (ATT Write Request), not NO_RESPONSE. A Write Command is
+            // unacknowledged: a congested or slow peripheral drops it silently and nothing
+            // retransmits, which on a handshake means the frame never arrives and both sides sit
+            // there until their timeouts — observed as "receiver linked over BLE but HELLO never
+            // completed" on the sender while the receiver reported HELLO_RX sent. A request is
+            // acknowledged, retried by the link layer, and its completion callback is part of the
+            // ATT flow rather than a best-effort courtesy. The server declares PROPERTY_WRITE and
+            // answers with sendResponse when responseNeeded, so this is already supported. Control
+            // frames are a few hundred bytes at most; throughput is irrelevant next to arriving.
+            rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
             rx.value = chunk
             if (!g.writeCharacteristic(rx)) {
                 // Write didn't dispatch, so onCharacteristicWrite will never fire.
@@ -300,6 +321,19 @@ class BleControlClient(context: Context) : ControlChannel {
                 writeInFlight = false
                 synchronized(sendQueue) { sendQueue.addFirst(chunk) }
                 mainHandler.post { pumpQueue() }
+            } else {
+                // The pump advances only when onCharacteristicWrite fires. Several vendor stacks
+                // accept the write, return true, and then never call back — one silent miss and the
+                // queue is wedged for the life of the link, so every chunk after the first is lost
+                // and the peer waits on an END that will never be sent. Time it out and carry on:
+                // a duplicate chunk is harmless (reassembly is accumulate-until-END, and a repeated
+                // frame is re-parsed idempotently), a stalled handshake is not.
+                mainHandler.postDelayed({
+                    if (closed || !writeInFlight) return@postDelayed
+                    Log.i(TAG, "GATT write callback never arrived — unblocking the send queue")
+                    writeInFlight = false
+                    pumpQueue()
+                }, WRITE_WATCHDOG_TOKEN, WRITE_WATCHDOG_MS)
             }
         } catch (_: Exception) {
             // Same recovery on throw: no callback will arrive to resume the pump.
@@ -320,6 +354,7 @@ class BleControlClient(context: Context) : ControlChannel {
         mainHandler.removeCallbacksAndMessages(SCAN_TIMEOUT_TOKEN)
         mainHandler.removeCallbacksAndMessages(GATT_RETRY_TOKEN)
         mainHandler.removeCallbacksAndMessages(SETUP_TIMEOUT_TOKEN)
+        mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
         stopScan()
         try { gatt?.disconnect() } catch (_: Exception) {}
         try { gatt?.close() } catch (_: Exception) {}
