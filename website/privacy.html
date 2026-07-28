@@ -60,7 +60,7 @@
       <section class="policy" lang="en" data-lang="en">
         <div class="policy__body"><h1 class="policy__title">Privacy Policy for Clipboard Share</h1>
         
-        Effective Date: 22/6/2026<br><br>
+        Effective Date: 28/7/2026<br><br>
         Thank you for using Clipboard Share ("the App"). This Privacy Policy explains our principles regarding the collection, use, and disclosure of information. Our core philosophy is simple: your data is yours, and we do not want it.<br><br>
         <h2>THE CORE PRINCIPLE: WE DO NOT COLLECT YOUR DATA</h2>
         
@@ -75,16 +75,19 @@
         <h2>INFORMATION THE APP STORES LOCALLY ON YOUR DEVICE</h2>
         
         To function correctly, Clipboard Share stores a small amount of data exclusively on your device's local storage. This data is under your control and never leaves your device to be sent to us. This includes:<br><br>
-        • <b>Cryptographic Keys:</b> After you explicitly pair two devices, a unique AES-256 encryption key is generated and stored securely on each device. This key is used to encrypt all communication between those two paired devices and is essential for the App's security.<br><br>
+        • <b>Cryptographic Keys:</b> After you explicitly pair two devices, the two devices establish a unique AES-256 encryption key between themselves, and that key is stored securely on each device. It is used to encrypt the clipboard content and files exchanged between those two paired devices and is essential for the App's security. Device-discovery broadcasts are not encrypted, as described below.<br><br>
         • <b>Paired Device Information:</b> The App stores the local IP address and user-chosen device name of devices you have paired with. This is used to identify and connect to them on your local network.<br><br>
         • <b>Clipboard History:</b> The App maintains a local history of clipboard items you have copied for your convenience. This history is stored only on your device and can be cleared by you at any time from within the App.<br><br>
         • <b>Device Name:</b> The name you choose for your device in the App's settings is stored locally to identify it to other devices on your network.<br><br>
         <h2>HOW YOUR DATA IS TRANSFERRED</h2>
         
-        All data transfers (both clipboard and files) occur directly between your paired devices over your local Wi-Fi network. Your data does not pass through our servers or any third-party servers. All transfers are protected with strong, end-to-end AES-256 encryption using the keys generated during the pairing process.<br><br>
+        All data transfers (both clipboard and files) occur directly between your devices, either over your local Wi-Fi network or over a direct device-to-device radio link when no network is available. Your data does not pass through our servers or any third-party servers, and no transfer is carried over the internet.<br><br>
+        <b>Clipboard content is always encrypted.</b> It is protected with authenticated AES-256-GCM encryption, and since version 3.5.0 the App rejects any clipboard payload that arrives unencrypted rather than accepting it.<br><br>
+        <b>Files sent over your local Wi-Fi network are encrypted</b> with the same authenticated AES-256-GCM protection whenever both devices support it, which covers every version from 3.4.0 onward. If a device that previously used encryption stops offering it, the App refuses the transfer rather than falling back to sending your files unencrypted.<br><br>
+        <b>Files sent off-grid</b> (over Wi-Fi Direct or a hotspot, with no router involved) <b>are encrypted from Android version 3.7.3 and Windows version 3.7.7 onward.</b> In earlier versions the file contents travelled unencrypted across that direct link between the two devices. If you use off-grid transfers, please update both devices.<br><br>
         <h2>DEVICE DISCOVERY ON YOUR LOCAL NETWORK</h2>
         
-        To let your devices find each other automatically, the App periodically broadcasts a small discovery message on your local Wi-Fi or hotspot network. This message contains only your chosen device name, your device's local IP address, and its operating system type (for example, "Android"). These broadcasts are sent only on your local network so that nearby devices can offer to pair or connect. They are never sent to us, to the internet, or to any third party, and no internet connection is used for discovery. Unlike your clipboard and file transfers, which are encrypted end-to-end and exchanged only between paired devices, these discovery messages are not encrypted and are visible to other devices on the same local network. For this reason, we recommend using the App on trusted, private networks. You can stop these broadcasts at any time by turning off "Discoverable to other devices" in Settings.<br><br>
+        To let your devices find each other automatically, the App periodically broadcasts a small discovery message on your local Wi-Fi or hotspot network. This message contains only your chosen device name, your device's local IP address, and its operating system type (for example, "Android"). These broadcasts are sent only on your local network so that nearby devices can offer to pair or connect. They are never sent to us, to the internet, or to any third party, and no internet connection is used for discovery. Unlike your clipboard and file transfers, which are encrypted as described above and exchanged only between your own devices, these discovery messages are not encrypted and are visible to other devices on the same local network. For this reason, we recommend using the App on trusted, private networks. You can stop these broadcasts at any time by turning off "Discoverable to other devices" in Settings.<br><br>
         <h2>WHICH FEATURES USE WHICH PERMISSIONS</h2>
         
         So it is clear what each feature does, here is how the App uses your network and permissions:<br><br>
@@ -126,7 +129,7 @@
       <section class="policy" lang="es" data-lang="es" hidden>
         <div class="policy__body"><h1 class="policy__title">Política de Privacidad de Clipboard Share</h1>
         
-        Fecha de vigencia: 22/6/2026<br><br>
+        Fecha de vigencia: 28/7/2026<br><br>
         Gracias por usar Clipboard Share ("la Aplicación"). Esta Política de Privacidad explica nuestros principios con respecto a la recopilación, uso y divulgación de información. Nuestra filosofía principal es simple: sus datos son suyos y no los queremos.<br><br>
         <h2>EL PRINCIPIO BÁSICO: NO RECOPILAMOS SUS DATOS</h2>
         
@@ -141,16 +144,19 @@
         <h2>INFORMACIÓN QUE LA APLICACIÓN ALMACENA LOCALMENTE EN SU DISPOSITIVO</h2>
         
         Para funcionar correctamente, Clipboard Share almacena una pequeña cantidad de datos exclusivamente en el almacenamiento local de su dispositivo. Estos datos están bajo su control y nunca salen de su dispositivo para ser enviados a nosotros. Esto incluye:<br><br>
-        • <b>Claves Criptográficas:</b> Después de emparejar explícitamente dos dispositivos, se genera una clave de cifrado AES-256 única y se almacena de forma segura en cada dispositivo. Esta clave se utiliza para cifrar toda la comunicación entre esos dos dispositivos emparejados y es esencial para la seguridad de la Aplicación.<br><br>
+        • <b>Claves Criptográficas:</b> Después de emparejar explícitamente dos dispositivos, ambos establecen entre sí una clave de cifrado AES-256 única, que se almacena de forma segura en cada dispositivo. Se utiliza para cifrar el contenido del portapapeles y los archivos intercambiados entre esos dos dispositivos emparejados y es esencial para la seguridad de la Aplicación. Los mensajes de detección de dispositivos no están cifrados, como se describe más abajo.<br><br>
         • <b>Información del Dispositivo Emparejado:</b> La Aplicación almacena la dirección IP local y el nombre del dispositivo elegido por el usuario de los dispositivos con los que se ha emparejado. Esto se utiliza para identificarlos y conectarse a ellos en su red local.<br><br>
         • <b>Historial del Portapapeles:</b> La Aplicación mantiene un historial local de los elementos del portapapeles que ha copiado para su comodidad. Este historial se almacena solo en su dispositivo y puede ser borrado por usted en cualquier momento desde dentro de la Aplicación.<br><br>
         • <b>Nombre del Dispositivo:</b> El nombre que elija para su dispositivo en la configuración de la Aplicación se almacena localmente para identificarlo ante otros dispositivos en su red.<br><br>
         <h2>CÓMO SE TRANSFIEREN SUS DATOS</h2>
         
-        Todas las transferencias de datos (tanto del portapapeles como de archivos) ocurren directamente entre sus dispositivos emparejados a través de su red Wi-Fi local. Sus datos no pasan a través de nuestros servidores ni de servidores de terceros. Todas las transferencias están protegidas con un fuerte cifrado de extremo a extremo AES-256 utilizando las claves generadas durante el proceso de emparejamiento.<br><br>
+        Todas las transferencias de datos (tanto del portapapeles como de archivos) ocurren directamente entre sus dispositivos, ya sea a través de su red Wi-Fi local o mediante un enlace de radio directo entre dispositivos cuando no hay ninguna red disponible. Sus datos no pasan a través de nuestros servidores ni de servidores de terceros, y ninguna transferencia se realiza a través de internet.<br><br>
+        <b>El contenido del portapapeles siempre está cifrado.</b> Está protegido con cifrado autenticado AES-256-GCM y, desde la versión 3.5.0, la Aplicación rechaza cualquier contenido del portapapeles que llegue sin cifrar en lugar de aceptarlo.<br><br>
+        <b>Los archivos enviados a través de su red Wi-Fi local están cifrados</b> con la misma protección autenticada AES-256-GCM siempre que ambos dispositivos la admitan, lo que cubre todas las versiones a partir de la 3.4.0. Si un dispositivo que antes usaba cifrado deja de ofrecerlo, la Aplicación rechaza la transferencia en lugar de recurrir al envío de sus archivos sin cifrar.<br><br>
+        <b>Los archivos enviados sin conexión</b> (mediante Wi-Fi Direct o un punto de acceso, sin ningún router) <b>están cifrados a partir de la versión 3.7.3 de Android y la versión 3.7.7 de Windows.</b> En versiones anteriores, el contenido de los archivos viajaba sin cifrar por ese enlace directo entre los dos dispositivos. Si utiliza transferencias sin conexión, actualice ambos dispositivos.<br><br>
         <h2>DESCUBRIMIENTO DE DISPOSITIVOS EN SU RED LOCAL</h2>
         
-        Para que sus dispositivos se encuentren automáticamente, la Aplicación difunde periódicamente un pequeño mensaje de descubrimiento en su red Wi-Fi o de punto de acceso local. Este mensaje contiene únicamente el nombre de dispositivo que usted eligió, la dirección IP local de su dispositivo y su tipo de sistema operativo (por ejemplo, "Android"). Estas difusiones se envían solo en su red local para que los dispositivos cercanos puedan ofrecerse a emparejarse o conectarse. Nunca se nos envían a nosotros, a internet ni a ningún tercero, y no se utiliza ninguna conexión a internet para el descubrimiento. A diferencia de sus transferencias de portapapeles y archivos, que están cifradas de extremo a extremo y se intercambian solo entre dispositivos emparejados, estos mensajes de descubrimiento no están cifrados y son visibles para otros dispositivos en la misma red local. Por esta razón, recomendamos usar la Aplicación en redes privadas y de confianza. Puede detener estas difusiones en cualquier momento desactivando "Visible para otros dispositivos" en Configuración.<br><br>
+        Para que sus dispositivos se encuentren automáticamente, la Aplicación difunde periódicamente un pequeño mensaje de descubrimiento en su red Wi-Fi o de punto de acceso local. Este mensaje contiene únicamente el nombre de dispositivo que usted eligió, la dirección IP local de su dispositivo y su tipo de sistema operativo (por ejemplo, "Android"). Estas difusiones se envían solo en su red local para que los dispositivos cercanos puedan ofrecerse a emparejarse o conectarse. Nunca se nos envían a nosotros, a internet ni a ningún tercero, y no se utiliza ninguna conexión a internet para el descubrimiento. A diferencia de sus transferencias de portapapeles y archivos, que están cifradas como se describe más arriba y se intercambian solo entre sus propios dispositivos, estos mensajes de descubrimiento no están cifrados y son visibles para otros dispositivos en la misma red local. Por esta razón, recomendamos usar la Aplicación en redes privadas y de confianza. Puede detener estas difusiones en cualquier momento desactivando "Visible para otros dispositivos" en Configuración.<br><br>
         <h2>QUÉ FUNCIONES USAN QUÉ PERMISOS</h2>
         
         Para que quede claro lo que hace cada función, así es como la Aplicación usa su red y sus permisos:<br><br>
@@ -192,7 +198,7 @@
       <section class="policy" lang="fr" data-lang="fr" hidden>
         <div class="policy__body"><h1 class="policy__title">Politique de confidentialité de Clipboard Share</h1>
         
-        Date d'entrée en vigueur : 22/06/2026<br><br>
+        Date d'entrée en vigueur : 28/07/2026<br><br>
         Merci d'utiliser Clipboard Share (« l'Application »). Cette politique de confidentialité explique nos principes concernant la collecte, l'utilisation et la divulgation d'informations. Notre philosophie fondamentale est simple : vos données vous appartiennent et nous n'en voulons pas.<br><br>
         <h2>LE PRINCIPE FONDAMENTAL : NOUS NE COLLECTONS PAS VOS DONNÉES</h2>
         
@@ -207,16 +213,19 @@
         <h2>INFORMATIONS QUE L'APPLICATION STOCKE LOCALEMENT SUR VOTRE APPAREIL</h2>
         
         Pour fonctionner correctement, Clipboard Share stocke une petite quantité de données exclusivement sur le stockage local de votre appareil. Ces données sont sous votre contrôle et ne quittent jamais votre appareil pour nous être envoyées. Cela comprend :<br><br>
-        • <b>Clés cryptographiques :</b> Après avoir explicitement couplé deux appareils, une clé de cryptage AES-256 unique est générée et stockée en toute sécurité sur chaque appareil. Cette clé est utilisée pour crypter toutes les communications entre ces deux appareils couplés et est essentielle à la sécurité de l'Application.<br><br>
+        • <b>Clés cryptographiques :</b> Après avoir explicitement couplé deux appareils, les deux appareils établissent entre eux une clé de chiffrement AES-256 unique, qui est stockée en toute sécurité sur chaque appareil. Elle sert à chiffrer le contenu du presse-papiers et les fichiers échangés entre ces deux appareils couplés et est essentielle à la sécurité de l'Application. Les messages de détection d'appareils ne sont pas chiffrés, comme décrit ci-dessous.<br><br>
         • <b>Informations sur les appareils couplés :</b> L'Application stocke l'adresse IP locale et le nom d'appareil choisi par l'utilisateur des appareils avec lesquels vous vous êtes couplé. Cela sert à les identifier et à s'y connecter sur votre réseau local.<br><br>
         • <b>Historique du presse-papiers :</b> L'Application conserve un historique local des éléments du presse-papiers que vous avez copiés pour votre commodité. Cet historique est stocké uniquement sur votre appareil et peut être effacé par vous à tout moment depuis l'Application.<br><br>
         • <b>Nom de l'appareil :</b> Le nom que vous choisissez pour votre appareil dans les paramètres de l'Application est stocké localement pour l'identifier auprès des autres appareils de votre réseau.<br><br>
         <h2>COMMENT VOS DONNÉES SONT TRANSFÉRÉES</h2>
         
-        Tous les transferts de données (presse-papiers et fichiers) s'effectuent directement entre vos appareils couplés sur votre réseau Wi-Fi local. Vos données ne transitent pas par nos serveurs ou par des serveurs tiers. Tous les transferts sont protégés par un cryptage fort AES-256 de bout en bout à l'aide des clés générées pendant le processus de couplage.<br><br>
+        Tous les transferts de données (presse-papiers et fichiers) s'effectuent directement entre vos appareils, soit sur votre réseau Wi-Fi local, soit via une liaison radio directe entre appareils lorsque aucun réseau n'est disponible. Vos données ne transitent pas par nos serveurs ou par des serveurs tiers, et aucun transfert n'emprunte internet.<br><br>
+        <b>Le contenu du presse-papiers est toujours chiffré.</b> Il est protégé par un chiffrement authentifié AES-256-GCM et, depuis la version 3.5.0, l'Application rejette tout contenu de presse-papiers reçu non chiffré au lieu de l'accepter.<br><br>
+        <b>Les fichiers envoyés sur votre réseau Wi-Fi local sont chiffrés</b> avec la même protection authentifiée AES-256-GCM dès lors que les deux appareils la prennent en charge, ce qui couvre toutes les versions à partir de la 3.4.0. Si un appareil qui utilisait auparavant le chiffrement cesse de le proposer, l'Application refuse le transfert plutôt que d'envoyer vos fichiers en clair.<br><br>
+        <b>Les fichiers envoyés hors réseau</b> (via Wi-Fi Direct ou un point d'accès, sans aucun routeur) <b>sont chiffrés à partir de la version 3.7.3 sur Android et de la version 3.7.7 sur Windows.</b> Dans les versions antérieures, le contenu des fichiers circulait en clair sur cette liaison directe entre les deux appareils. Si vous utilisez les transferts hors réseau, veuillez mettre à jour les deux appareils.<br><br>
         <h2>DÉTECTION DES APPAREILS SUR VOTRE RÉSEAU LOCAL</h2>
         
-        Pour permettre à vos appareils de se trouver automatiquement, l'Application diffuse périodiquement un petit message de détection sur votre réseau Wi-Fi ou point d'accès local. Ce message contient uniquement le nom d'appareil que vous avez choisi, l'adresse IP locale de votre appareil et son type de système d'exploitation (par exemple, "Android"). Ces diffusions ne sont envoyées que sur votre réseau local afin que les appareils à proximité puissent proposer de s'appairer ou de se connecter. Elles ne nous sont jamais envoyées, ni à internet, ni à un tiers, et aucune connexion internet n'est utilisée pour la détection. Contrairement à vos transferts de presse-papiers et de fichiers, qui sont chiffrés de bout en bout et échangés uniquement entre appareils appairés, ces messages de détection ne sont pas chiffrés et sont visibles par les autres appareils du même réseau local. Pour cette raison, nous recommandons d'utiliser l'Application sur des réseaux privés et de confiance. Vous pouvez arrêter ces diffusions à tout moment en désactivant "Visible par les autres appareils" dans les Paramètres.<br><br>
+        Pour permettre à vos appareils de se trouver automatiquement, l'Application diffuse périodiquement un petit message de détection sur votre réseau Wi-Fi ou point d'accès local. Ce message contient uniquement le nom d'appareil que vous avez choisi, l'adresse IP locale de votre appareil et son type de système d'exploitation (par exemple, "Android"). Ces diffusions ne sont envoyées que sur votre réseau local afin que les appareils à proximité puissent proposer de s'appairer ou de se connecter. Elles ne nous sont jamais envoyées, ni à internet, ni à un tiers, et aucune connexion internet n'est utilisée pour la détection. Contrairement à vos transferts de presse-papiers et de fichiers, qui sont chiffrés comme décrit ci-dessus et échangés uniquement entre vos propres appareils, ces messages de détection ne sont pas chiffrés et sont visibles par les autres appareils du même réseau local. Pour cette raison, nous recommandons d'utiliser l'Application sur des réseaux privés et de confiance. Vous pouvez arrêter ces diffusions à tout moment en désactivant "Visible par les autres appareils" dans les Paramètres.<br><br>
         <h2>QUELLES FONCTIONNALITÉS UTILISENT QUELLES AUTORISATIONS</h2>
         
         Pour que vous sachiez exactement ce que fait chaque fonctionnalité, voici comment l'Application utilise votre réseau et vos autorisations :<br><br>
@@ -258,7 +267,7 @@
       <section class="policy" lang="de" data-lang="de" hidden>
         <div class="policy__body"><h1 class="policy__title">Datenschutzerklärung für Clipboard Share</h1>
         
-        Gültigkeitsdatum: 22.6.2026<br><br>
+        Gültigkeitsdatum: 28.7.2026<br><br>
         Vielen Dank, dass Sie Clipboard Share („die App“) verwenden. Diese Datenschutzerklärung erläutert unsere Grundsätze zur Erfassung, Verwendung und Offenlegung von Informationen. Unsere Kernphilosophie ist einfach: Ihre Daten gehören Ihnen, und wir wollen sie nicht.<br><br>
         <h2>DAS GRUNDPRINZIP: WIR ERFASSEN IHRE DATEN NICHT</h2>
         
@@ -273,16 +282,19 @@
         <h2>INFORMATIONEN, DIE DIE APP LOKAL AUF IHREM GERÄT SPEICHERT</h2>
         
         Um ordnungsgemäß zu funktionieren, speichert Clipboard Share eine kleine Datenmenge ausschließlich auf dem lokalen Speicher Ihres Geräts. Diese Daten unterliegen Ihrer Kontrolle und verlassen Ihr Gerät niemals, um an uns gesendet zu werden. Dies umfasst:<br><br>
-        • <b>Kryptografische Schlüssel:</b> Nachdem Sie zwei Geräte explizit gekoppelt haben, wird ein einzigartiger AES-256-Verschlüsselungsschlüssel generiert und sicher auf jedem Gerät gespeichert. Dieser Schlüssel wird verwendet, um die gesamte Kommunikation zwischen diesen beiden gekoppelten Geräten zu verschlüsseln, und ist für die Sicherheit der App unerlässlich.<br><br>
+        • <b>Kryptografische Schlüssel:</b> Nachdem Sie zwei Geräte explizit gekoppelt haben, handeln die beiden Geräte untereinander einen einzigartigen AES-256-Verschlüsselungsschlüssel aus, der sicher auf jedem Gerät gespeichert wird. Er verschlüsselt die Zwischenablage-Inhalte und die Dateien, die zwischen diesen beiden gekoppelten Geräten ausgetauscht werden, und ist für die Sicherheit der App unerlässlich. Nachrichten zur Geräteerkennung sind nicht verschlüsselt, wie unten beschrieben.<br><br>
         • <b>Informationen zu gekoppelten Geräten:</b> Die App speichert die lokale IP-Adresse und den vom Benutzer gewählten Gerätenamen von Geräten, mit denen Sie gekoppelt haben. Dies wird verwendet, um sie in Ihrem lokalen Netzwerk zu identifizieren und eine Verbindung zu ihnen herzustellen.<br><br>
         • <b>Verlauf der Zwischenablage:</b> Die App führt einen lokalen Verlauf der Zwischenablage-Elemente, die Sie für Ihre Bequemlichkeit kopiert haben. Dieser Verlauf wird nur auf Ihrem Gerät gespeichert und kann von Ihnen jederzeit innerhalb der App gelöscht werden.<br><br>
         • <b>Gerätename:</b> Der Name, den Sie in den Einstellungen der App für Ihr Gerät auswählen, wird lokal gespeichert, um ihn anderen Geräten in Ihrem Netzwerk gegenüber zu identifizieren.<br><br>
         <h2>WIE IHRE DATEN ÜBERTRAGEN WERDEN</h2>
         
-        Alle Datenübertragungen (sowohl Zwischenablage als auch Dateien) erfolgen direkt zwischen Ihren gekoppelten Geräten über Ihr lokales WLAN-Netzwerk. Ihre Daten werden weder über unsere Server noch über Server von Drittanbietern geleitet. Alle Übertragungen sind mit einer starken End-to-End-AES-256-Verschlüsselung mithilfe der während des Kopplungsprozesses generierten Schlüssel geschützt.<br><br>
+        Alle Datenübertragungen (sowohl Zwischenablage als auch Dateien) erfolgen direkt zwischen Ihren Geräten, entweder über Ihr lokales WLAN-Netzwerk oder über eine direkte Funkverbindung zwischen den Geräten, wenn kein Netzwerk verfügbar ist. Ihre Daten werden weder über unsere Server noch über Server von Drittanbietern geleitet, und keine Übertragung läuft über das Internet.<br><br>
+        <b>Zwischenablage-Inhalte sind immer verschlüsselt.</b> Sie werden mit authentifizierter AES-256-GCM-Verschlüsselung geschützt, und seit Version 3.5.0 weist die App unverschlüsselt eintreffende Zwischenablage-Inhalte zurück, anstatt sie anzunehmen.<br><br>
+        <b>Über Ihr lokales WLAN gesendete Dateien sind verschlüsselt</b> mit demselben authentifizierten AES-256-GCM-Schutz, sofern beide Geräte ihn unterstützen, was alle Versionen ab 3.4.0 einschließt. Wenn ein Gerät, das zuvor Verschlüsselung verwendet hat, diese nicht mehr anbietet, verweigert die App die Übertragung, anstatt Ihre Dateien unverschlüsselt zu senden.<br><br>
+        <b>Offline gesendete Dateien</b> (über Wi-Fi Direct oder einen Hotspot, ganz ohne Router) <b>sind ab Android-Version 3.7.3 und Windows-Version 3.7.7 verschlüsselt.</b> In früheren Versionen wurden die Dateiinhalte unverschlüsselt über diese direkte Verbindung zwischen den beiden Geräten übertragen. Wenn Sie Offline-Übertragungen nutzen, aktualisieren Sie bitte beide Geräte.<br><br>
         <h2>GERÄTEERKENNUNG IN IHREM LOKALEN NETZWERK</h2>
         
-        Damit sich Ihre Geräte automatisch finden können, sendet die App in regelmäßigen Abständen eine kleine Erkennungsnachricht über Ihr lokales WLAN- oder Hotspot-Netzwerk. Diese Nachricht enthält nur den von Ihnen gewählten Gerätenamen, die lokale IP-Adresse Ihres Geräts und dessen Betriebssystemtyp (zum Beispiel "Android"). Diese Sendungen werden nur in Ihrem lokalen Netzwerk verbreitet, damit Geräte in der Nähe eine Kopplung oder Verbindung anbieten können. Sie werden niemals an uns, an das Internet oder an Dritte gesendet, und für die Erkennung wird keine Internetverbindung verwendet. Anders als Ihre Zwischenablage- und Dateiübertragungen, die Ende-zu-Ende verschlüsselt sind und nur zwischen gekoppelten Geräten ausgetauscht werden, sind diese Erkennungsnachrichten nicht verschlüsselt und für andere Geräte im selben lokalen Netzwerk sichtbar. Aus diesem Grund empfehlen wir, die App in vertrauenswürdigen, privaten Netzwerken zu verwenden. Sie können diese Sendungen jederzeit stoppen, indem Sie "Für andere Geräte sichtbar" in den Einstellungen deaktivieren.<br><br>
+        Damit sich Ihre Geräte automatisch finden können, sendet die App in regelmäßigen Abständen eine kleine Erkennungsnachricht über Ihr lokales WLAN- oder Hotspot-Netzwerk. Diese Nachricht enthält nur den von Ihnen gewählten Gerätenamen, die lokale IP-Adresse Ihres Geräts und dessen Betriebssystemtyp (zum Beispiel "Android"). Diese Sendungen werden nur in Ihrem lokalen Netzwerk verbreitet, damit Geräte in der Nähe eine Kopplung oder Verbindung anbieten können. Sie werden niemals an uns, an das Internet oder an Dritte gesendet, und für die Erkennung wird keine Internetverbindung verwendet. Anders als Ihre Zwischenablage- und Dateiübertragungen, die wie oben beschrieben verschlüsselt sind und nur zwischen Ihren eigenen Geräten ausgetauscht werden, sind diese Erkennungsnachrichten nicht verschlüsselt und für andere Geräte im selben lokalen Netzwerk sichtbar. Aus diesem Grund empfehlen wir, die App in vertrauenswürdigen, privaten Netzwerken zu verwenden. Sie können diese Sendungen jederzeit stoppen, indem Sie "Für andere Geräte sichtbar" in den Einstellungen deaktivieren.<br><br>
         <h2>WELCHE FUNKTIONEN WELCHE BERECHTIGUNGEN NUTZEN</h2>
         
         Damit klar ist, was jede Funktion tut, erfahren Sie hier, wie die App Ihr Netzwerk und Ihre Berechtigungen nutzt:<br><br>
@@ -324,7 +336,7 @@
       <section class="policy" lang="pt" data-lang="pt" hidden>
         <div class="policy__body"><h1 class="policy__title">Política de Privacidade do Clipboard Share</h1>
         
-        Data de Vigência: 22/6/2026<br><br>
+        Data de Vigência: 28/7/2026<br><br>
         Obrigado por usar o Clipboard Share ("o Aplicativo"). Esta Política de Privacidade explica nossos princípios em relação à coleta, uso e divulgação de informações. Nossa filosofia central é simples: seus dados são seus, e nós não os queremos.<br><br>
         <h2>O PRINCÍPIO CENTRAL: NÃO COLETAMOS SEUS DADOS</h2>
         
@@ -339,16 +351,19 @@
         <h2>INFORMAÇÕES QUE O APLICATIVO ARMAZENA LOCALMENTE EM SEU DISPOSITIVO</h2>
         
         Para funcionar corretamente, o Clipboard Share armazena uma pequena quantidade de dados exclusivamente no armazenamento local do seu dispositivo. Esses dados estão sob seu controle e nunca saem do seu dispositivo para serem enviados a nós. Isso inclui:<br><br>
-        • <b>Chaves Criptográficas:</b> Após você emparelhar explicitamente dois dispositivos, uma chave de criptografia AES-256 única é gerada e armazenada de forma segura em cada dispositivo. Esta chave é usada para criptografar toda a comunicação entre esses dois dispositivos emparelhados e é essencial para a segurança do Aplicativo.<br><br>
+        • <b>Chaves Criptográficas:</b> Após você emparelhar explicitamente dois dispositivos, ambos estabelecem entre si uma chave de criptografia AES-256 única, que é armazenada de forma segura em cada dispositivo. Ela é usada para criptografar o conteúdo da área de transferência e os arquivos trocados entre esses dois dispositivos emparelhados e é essencial para a segurança do Aplicativo. As mensagens de descoberta de dispositivos não são criptografadas, conforme descrito abaixo.<br><br>
         • <b>Informações de Dispositivos Emparelhados:</b> O Aplicativo armazena o endereço IP local e o nome do dispositivo escolhido pelo usuário com o qual você foi emparelhado. Isso é usado para identificá-los e conectar-se a eles na sua rede local.<br><br>
         • <b>Histórico da Área de Transferência:</b> O Aplicativo mantém um histórico local dos itens da área de transferência que você copiou para sua conveniência. Este histórico é armazenado apenas no seu dispositivo e pode ser limpo por você a qualquer momento dentro do Aplicativo.<br><br>
         • <b>Nome do Dispositivo:</b> O nome que você escolhe para o seu dispositivo nas configurações do Aplicativo é armazenado localmente para identificá-lo para outros dispositivos na sua rede.<br><br>
         <h2>COMO SEUS DADOS SÃO TRANSFERIDOS</h2>
         
-        Todas as transferências de dados (tanto da área de transferência quanto de arquivos) ocorrem diretamente entre seus dispositivos emparelhados através da sua rede Wi-Fi local. Seus dados não passam por nossos servidores ou quaisquer servidores de terceiros. Todas as transferências são protegidas com forte criptografia de ponta a ponta AES-256 usando as chaves geradas durante o processo de emparelhamento.<br><br>
+        Todas as transferências de dados (tanto da área de transferência quanto de arquivos) ocorrem diretamente entre seus dispositivos, seja através da sua rede Wi-Fi local ou por um link de rádio direto entre dispositivos quando nenhuma rede está disponível. Seus dados não passam por nossos servidores ou quaisquer servidores de terceiros, e nenhuma transferência trafega pela internet.<br><br>
+        <b>O conteúdo da área de transferência é sempre criptografado.</b> Ele é protegido com criptografia autenticada AES-256-GCM e, desde a versão 3.5.0, o Aplicativo rejeita qualquer conteúdo da área de transferência que chegue sem criptografia em vez de aceitá-lo.<br><br>
+        <b>Os arquivos enviados pela sua rede Wi-Fi local são criptografados</b> com a mesma proteção autenticada AES-256-GCM sempre que ambos os dispositivos a suportarem, o que abrange todas as versões a partir da 3.4.0. Se um dispositivo que antes usava criptografia deixar de oferecê-la, o Aplicativo recusa a transferência em vez de enviar seus arquivos sem criptografia.<br><br>
+        <b>Os arquivos enviados off-grid</b> (por Wi-Fi Direct ou um ponto de acesso, sem nenhum roteador) <b>são criptografados a partir da versão 3.7.3 do Android e da versão 3.7.7 do Windows.</b> Em versões anteriores, o conteúdo dos arquivos trafegava sem criptografia por esse link direto entre os dois dispositivos. Se você usa transferências off-grid, atualize ambos os dispositivos.<br><br>
         <h2>DESCOBERTA DE DISPOSITIVOS NA SUA REDE LOCAL</h2>
         
-        Para permitir que seus dispositivos se encontrem automaticamente, o Aplicativo transmite periodicamente uma pequena mensagem de descoberta na sua rede Wi-Fi ou de ponto de acesso local. Essa mensagem contém apenas o nome de dispositivo que você escolheu, o endereço IP local do seu dispositivo e o tipo de sistema operacional dele (por exemplo, "Android"). Essas transmissões são enviadas somente na sua rede local para que dispositivos próximos possam se oferecer para emparelhar ou conectar. Elas nunca são enviadas para nós, para a internet ou para terceiros, e nenhuma conexão com a internet é usada para a descoberta. Ao contrário das suas transferências de área de transferência e de arquivos, que são criptografadas de ponta a ponta e trocadas apenas entre dispositivos emparelhados, essas mensagens de descoberta não são criptografadas e ficam visíveis para outros dispositivos na mesma rede local. Por esse motivo, recomendamos usar o Aplicativo em redes privadas e confiáveis. Você pode interromper essas transmissões a qualquer momento desativando "Visível para outros dispositivos" nas Configurações.<br><br>
+        Para permitir que seus dispositivos se encontrem automaticamente, o Aplicativo transmite periodicamente uma pequena mensagem de descoberta na sua rede Wi-Fi ou de ponto de acesso local. Essa mensagem contém apenas o nome de dispositivo que você escolheu, o endereço IP local do seu dispositivo e o tipo de sistema operacional dele (por exemplo, "Android"). Essas transmissões são enviadas somente na sua rede local para que dispositivos próximos possam se oferecer para emparelhar ou conectar. Elas nunca são enviadas para nós, para a internet ou para terceiros, e nenhuma conexão com a internet é usada para a descoberta. Ao contrário das suas transferências de área de transferência e de arquivos, que são criptografadas conforme descrito acima e trocadas apenas entre os seus próprios dispositivos, essas mensagens de descoberta não são criptografadas e ficam visíveis para outros dispositivos na mesma rede local. Por esse motivo, recomendamos usar o Aplicativo em redes privadas e confiáveis. Você pode interromper essas transmissões a qualquer momento desativando "Visível para outros dispositivos" nas Configurações.<br><br>
         <h2>QUAIS RECURSOS USAM QUAIS PERMISSÕES</h2>
         
         Para que fique claro o que cada recurso faz, veja como o Aplicativo usa sua rede e suas permissões:<br><br>
@@ -390,7 +405,7 @@
       <section class="policy" lang="id" data-lang="id" hidden>
         <div class="policy__body"><h1 class="policy__title">Kebijakan Privasi untuk Clipboard Share</h1>
         
-        Tanggal Efektif: 22/6/2026<br><br>
+        Tanggal Efektif: 28/7/2026<br><br>
         Terima kasih telah menggunakan Clipboard Share ("Aplikasi"). Kebijakan Privasi ini menjelaskan prinsip kami terkait pengumpulan, penggunaan, dan pengungkapan informasi. Filosofi inti kami sederhana: data Anda adalah milik Anda, dan kami tidak menginginkannya.<br><br>
         <h2>PRINSIP INTI: KAMI TIDAK MENGUMPULKAN DATA ANDA</h2>
         
@@ -405,16 +420,19 @@
         <h2>INFORMASI YANG DISIMPAN APLIKASI SECARA LOKAL DI PERANGKAT ANDA</h2>
         
         Agar berfungsi dengan benar, Clipboard Share menyimpan sejumlah kecil data secara eksklusif di penyimpanan lokal perangkat Anda. Data ini berada di bawah kendali Anda dan tidak pernah meninggalkan perangkat Anda untuk dikirim kepada kami. Ini termasuk:<br><br>
-        • <b>Kunci Kriptografi:</b> Setelah Anda menyandingkan dua perangkat secara eksplisit, kunci enkripsi AES-256 unik dibuat dan disimpan dengan aman di setiap perangkat. Kunci ini digunakan untuk mengenkripsi semua komunikasi antara dua perangkat yang disandingkan tersebut dan sangat penting untuk keamanan Aplikasi.<br><br>
+        • <b>Kunci Kriptografi:</b> Setelah Anda menyandingkan dua perangkat secara eksplisit, kedua perangkat tersebut membentuk kunci enkripsi AES-256 unik di antara mereka, yang disimpan dengan aman di setiap perangkat. Kunci ini digunakan untuk mengenkripsi isi papan klip dan file yang dipertukarkan antara dua perangkat yang disandingkan tersebut dan sangat penting untuk keamanan Aplikasi. Pesan penemuan perangkat tidak dienkripsi, seperti dijelaskan di bawah ini.<br><br>
         • <b>Informasi Perangkat Tersanding:</b> Aplikasi menyimpan alamat IP lokal dan nama perangkat pilihan pengguna dari perangkat yang telah Anda sandingkan. Hal ini digunakan untuk mengidentifikasi dan terhubung dengan mereka di jaringan lokal Anda.<br><br>
         • <b>Riwayat Papan Klip:</b> Aplikasi menyimpan riwayat lokal item papan klip yang telah Anda salin untuk kenyamanan Anda. Riwayat ini hanya disimpan di perangkat Anda dan dapat dihapus oleh Anda kapan saja dari dalam Aplikasi.<br><br>
         • <b>Nama Perangkat:</b> Nama yang Anda pilih untuk perangkat Anda di pengaturan Aplikasi disimpan secara lokal untuk mengidentifikasinya ke perangkat lain di jaringan Anda.<br><br>
         <h2>BAGAIMANA DATA ANDA DITRANSFER</h2>
         
-        Semua transfer data (baik papan klip maupun file) terjadi secara langsung antara perangkat Anda yang disandingkan melalui jaringan Wi-Fi lokal Anda. Data Anda tidak melewati server kami atau server pihak ketiga mana pun. Semua transfer dilindungi dengan enkripsi AES-256 ujung-ke-ujung (end-to-end) yang kuat menggunakan kunci yang dihasilkan selama proses penyandingan.<br><br>
+        Semua transfer data (baik papan klip maupun file) terjadi secara langsung antara perangkat Anda, baik melalui jaringan Wi-Fi lokal Anda maupun melalui koneksi radio langsung antar perangkat ketika tidak ada jaringan yang tersedia. Data Anda tidak melewati server kami atau server pihak ketiga mana pun, dan tidak ada transfer yang melalui internet.<br><br>
+        <b>Isi papan klip selalu dienkripsi.</b> Isinya dilindungi dengan enkripsi terautentikasi AES-256-GCM, dan sejak versi 3.5.0 Aplikasi menolak setiap isi papan klip yang tiba tanpa enkripsi alih-alih menerimanya.<br><br>
+        <b>File yang dikirim melalui jaringan Wi-Fi lokal Anda dienkripsi</b> dengan perlindungan terautentikasi AES-256-GCM yang sama selama kedua perangkat mendukungnya, yang mencakup semua versi mulai dari 3.4.0. Jika sebuah perangkat yang sebelumnya menggunakan enkripsi berhenti menawarkannya, Aplikasi menolak transfer tersebut alih-alih mengirim file Anda tanpa enkripsi.<br><br>
+        <b>File yang dikirim secara off-grid</b> (melalui Wi-Fi Direct atau hotspot, tanpa router sama sekali) <b>dienkripsi mulai dari Android versi 3.7.3 dan Windows versi 3.7.7.</b> Pada versi sebelumnya, isi file dikirim tanpa enkripsi melalui koneksi langsung antara kedua perangkat tersebut. Jika Anda menggunakan transfer off-grid, harap perbarui kedua perangkat.<br><br>
         <h2>PENEMUAN PERANGKAT DI JARINGAN LOKAL ANDA</h2>
         
-        Agar perangkat Anda dapat saling menemukan secara otomatis, Aplikasi secara berkala menyiarkan pesan penemuan kecil di jaringan Wi-Fi atau hotspot lokal Anda. Pesan ini hanya berisi nama perangkat yang Anda pilih, alamat IP lokal perangkat Anda, dan jenis sistem operasinya (misalnya, "Android"). Siaran ini hanya dikirim di jaringan lokal Anda agar perangkat di sekitar dapat menawarkan untuk menyandingkan atau terhubung. Siaran ini tidak pernah dikirim kepada kami, ke internet, atau ke pihak ketiga mana pun, dan tidak ada koneksi internet yang digunakan untuk penemuan. Tidak seperti transfer papan klip dan file Anda, yang dienkripsi ujung-ke-ujung dan hanya dipertukarkan antara perangkat yang disandingkan, pesan penemuan ini tidak dienkripsi dan terlihat oleh perangkat lain di jaringan lokal yang sama. Karena itu, kami menyarankan untuk menggunakan Aplikasi di jaringan pribadi yang tepercaya. Anda dapat menghentikan siaran ini kapan saja dengan menonaktifkan "Dapat ditemukan perangkat lain" di Pengaturan.<br><br>
+        Agar perangkat Anda dapat saling menemukan secara otomatis, Aplikasi secara berkala menyiarkan pesan penemuan kecil di jaringan Wi-Fi atau hotspot lokal Anda. Pesan ini hanya berisi nama perangkat yang Anda pilih, alamat IP lokal perangkat Anda, dan jenis sistem operasinya (misalnya, "Android"). Siaran ini hanya dikirim di jaringan lokal Anda agar perangkat di sekitar dapat menawarkan untuk menyandingkan atau terhubung. Siaran ini tidak pernah dikirim kepada kami, ke internet, atau ke pihak ketiga mana pun, dan tidak ada koneksi internet yang digunakan untuk penemuan. Tidak seperti transfer papan klip dan file Anda, yang dienkripsi seperti dijelaskan di atas dan hanya dipertukarkan antara perangkat Anda sendiri, pesan penemuan ini tidak dienkripsi dan terlihat oleh perangkat lain di jaringan lokal yang sama. Karena itu, kami menyarankan untuk menggunakan Aplikasi di jaringan pribadi yang tepercaya. Anda dapat menghentikan siaran ini kapan saja dengan menonaktifkan "Dapat ditemukan perangkat lain" di Pengaturan.<br><br>
         <h2>FITUR MANA MENGGUNAKAN IZIN MANA</h2>
         
         Agar jelas apa yang dilakukan setiap fitur, berikut cara Aplikasi menggunakan jaringan dan izin Anda:<br><br>
@@ -456,7 +474,7 @@
       <section class="policy" lang="ru" data-lang="ru" hidden>
         <div class="policy__body"><h1 class="policy__title">Политика конфиденциальности Clipboard Share</h1>
         
-        Дата вступления в силу: 22/6/2026<br><br>
+        Дата вступления в силу: 28/7/2026<br><br>
         Благодарим вас за использование Clipboard Share («Приложение»). Настоящая Политика конфиденциальности объясняет наши принципы в отношении сбора, использования и раскрытия информации. Наша основная философия проста: ваши данные принадлежат вам, и они нам не нужны.<br><br>
         <h2>ОСНОВНОЙ ПРИНЦИП: МЫ НЕ СОБИРАЕМ ВАШИ ДАННЫЕ</h2>
         
@@ -471,16 +489,19 @@
         <h2>ИНФОРМАЦИЯ, КОТОРУЮ ПРИЛОЖЕНИЕ ХРАНИТ ЛОКАЛЬНО НА ВАШЕМ УСТРОЙСТВЕ</h2>
         
         Для правильной работы Clipboard Share хранит небольшой объем данных исключительно в локальном хранилище вашего устройства. Эти данные находятся под вашим контролем и никогда не покидают ваше устройство для отправки нам. К ним относятся:<br><br>
-        • <b>Криптографические ключи:</b> После явного сопряжения двух устройств генерируется уникальный ключ шифрования AES-256, который надежно сохраняется на каждом устройстве. Этот ключ используется для шифрования всех сообщений между этими двумя сопряженными устройствами и необходим для безопасности Приложения.<br><br>
+        • <b>Криптографические ключи:</b> После явного сопряжения двух устройств они согласуют между собой уникальный ключ шифрования AES-256, который надежно сохраняется на каждом устройстве. Он используется для шифрования содержимого буфера обмена и файлов, передаваемых между этими двумя сопряженными устройствами, и необходим для безопасности Приложения. Сообщения обнаружения устройств не шифруются, как описано ниже.<br><br>
         • <b>Информация о сопряженном устройстве:</b> Приложение хранит локальный IP-адрес и выбранное пользователем имя устройств, с которыми вы выполнили сопряжение. Это используется для их идентификации и подключения к ним в вашей локальной сети.<br><br>
         • <b>История буфера обмена:</b> Для вашего удобства Приложение хранит локальную историю элементов буфера обмена, которые вы скопировали. Эта история хранится только на вашем устройстве и может быть удалена вами в любое время из Приложения.<br><br>
         • <b>Имя устройства:</b> Имя, которое вы выбираете для своего устройства в настройках Приложения, сохраняется локально для идентификации его другим устройствам в вашей сети.<br><br>
         <h2>КАК ПЕРЕДАЮТСЯ ВАШИ ДАННЫЕ</h2>
         
-        Все передачи данных (как буфера обмена, так и файлов) происходят непосредственно между вашими сопряженными устройствами по локальной сети Wi-Fi. Ваши данные не проходят через наши серверы или какие-либо сторонние серверы. Все передачи защищены надежным сквозным шифрованием AES-256 с использованием ключей, сгенерированных в процессе сопряжения.<br><br>
+        Все передачи данных (как буфера обмена, так и файлов) происходят непосредственно между вашими устройствами: либо по локальной сети Wi-Fi, либо по прямому радиоканалу между устройствами, когда сеть недоступна. Ваши данные не проходят через наши серверы или какие-либо сторонние серверы, и ни одна передача не идет через интернет.<br><br>
+        <b>Содержимое буфера обмена шифруется всегда.</b> Оно защищено аутентифицированным шифрованием AES-256-GCM, и начиная с версии 3.5.0 Приложение отклоняет любое содержимое буфера обмена, поступившее без шифрования, вместо того чтобы принять его.<br><br>
+        <b>Файлы, отправленные по вашей локальной сети Wi-Fi, шифруются</b> той же аутентифицированной защитой AES-256-GCM, если оба устройства ее поддерживают, что охватывает все версии начиная с 3.4.0. Если устройство, ранее использовавшее шифрование, перестает его предлагать, Приложение отклоняет передачу, а не отправляет ваши файлы в открытом виде.<br><br>
+        <b>Файлы, отправленные автономно</b> (через Wi-Fi Direct или точку доступа, без какого-либо роутера), <b>шифруются начиная с версии 3.7.3 для Android и версии 3.7.7 для Windows.</b> В более ранних версиях содержимое файлов передавалось по этому прямому каналу между двумя устройствами без шифрования. Если вы пользуетесь автономными передачами, пожалуйста, обновите оба устройства.<br><br>
         <h2>ОБНАРУЖЕНИЕ УСТРОЙСТВ В ВАШЕЙ ЛОКАЛЬНОЙ СЕТИ</h2>
         
-        Чтобы ваши устройства могли автоматически находить друг друга, Приложение периодически рассылает небольшое сообщение обнаружения в вашей локальной сети Wi-Fi или точки доступа. Это сообщение содержит только выбранное вами имя устройства, локальный IP-адрес вашего устройства и тип его операционной системы (например, "Android"). Эти рассылки отправляются только в вашей локальной сети, чтобы находящиеся рядом устройства могли предложить сопряжение или подключение. Они никогда не отправляются нам, в интернет или каким-либо третьим лицам, и для обнаружения не используется интернет-соединение. В отличие от передач буфера обмена и файлов, которые защищены сквозным шифрованием и передаются только между сопряжёнными устройствами, эти сообщения обнаружения не шифруются и видны другим устройствам в той же локальной сети. По этой причине мы рекомендуем использовать Приложение в доверенных частных сетях. Вы можете в любой момент остановить эти рассылки, отключив "Видимо для других устройств" в Настройках.<br><br>
+        Чтобы ваши устройства могли автоматически находить друг друга, Приложение периодически рассылает небольшое сообщение обнаружения в вашей локальной сети Wi-Fi или точки доступа. Это сообщение содержит только выбранное вами имя устройства, локальный IP-адрес вашего устройства и тип его операционной системы (например, "Android"). Эти рассылки отправляются только в вашей локальной сети, чтобы находящиеся рядом устройства могли предложить сопряжение или подключение. Они никогда не отправляются нам, в интернет или каким-либо третьим лицам, и для обнаружения не используется интернет-соединение. В отличие от передач буфера обмена и файлов, которые шифруются, как описано выше, и передаются только между вашими собственными устройствами, эти сообщения обнаружения не шифруются и видны другим устройствам в той же локальной сети. По этой причине мы рекомендуем использовать Приложение в доверенных частных сетях. Вы можете в любой момент остановить эти рассылки, отключив "Видимо для других устройств" в Настройках.<br><br>
         <h2>КАКИЕ ФУНКЦИИ ИСПОЛЬЗУЮТ КАКИЕ РАЗРЕШЕНИЯ</h2>
         
         Чтобы было понятно, что делает каждая функция, вот как Приложение использует вашу сеть и разрешения:<br><br>
@@ -522,7 +543,7 @@
       <section class="policy" lang="ja" data-lang="ja" hidden>
         <div class="policy__body"><h1 class="policy__title">Clipboard Shareのプライバシーポリシー</h1>
         
-        発効日：2026年6月22日<br><br>
+        発効日：2026年7月28日<br><br>
         Clipboard Share（以下「本アプリ」）をご利用いただきありがとうございます。このプライバシーポリシーは、情報の収集、使用、開示に関する当社の原則を説明するものです。当社の基本理念はシンプルです：あなたのデータはあなたのものであり、私たちはそれを必要としません。<br><br>
         <h2>基本原則：当社はあなたのデータを収集しません</h2>
         
@@ -537,16 +558,19 @@
         <h2>本アプリがデバイスにローカルで保存する情報</h2>
         
         正しく機能するために、Clipboard Shareは少量のデータをデバイスのローカルストレージに排他的に保存します。このデータはあなたの管理下にあり、デバイスを離れて当社に送信されることは決してありません。これには以下が含まれます：<br><br>
-        • <b>暗号化キー：</b> 2つのデバイスを明示的にペアリングした後、固有のAES-256暗号化キーが生成され、各デバイスに安全に保存されます。このキーは、ペアリングされた2つのデバイス間のすべての通信を暗号化するために使用され、本アプリのセキュリティに不可欠です。<br><br>
+        • <b>暗号化キー：</b> 2つのデバイスを明示的にペアリングすると、両デバイスの間で固有のAES-256暗号化キーが確立され、各デバイスに安全に保存されます。このキーは、ペアリングされた2つのデバイス間でやり取りされるクリップボードの内容とファイルを暗号化するために使用され、本アプリのセキュリティに不可欠です。デバイス検出のブロードキャストは、以下に説明するとおり暗号化されません。<br><br>
         • <b>ペアリングされたデバイス情報：</b> 本アプリは、ペアリングしたデバイスのローカルIPアドレスとユーザーが選択したデバイス名を保存します。これは、ローカルネットワーク上でそれらを識別して接続するために使用されます。<br><br>
         • <b>クリップボード履歴：</b> 本アプリは、利便性のためにコピーしたクリップボードアイテムのローカル履歴を保持します。この履歴はデバイスにのみ保存され、アプリ内からいつでも消去できます。<br><br>
         • <b>デバイス名：</b> アプリの設定でデバイスに選択した名前は、ネットワーク上の他のデバイスに識別させるためにローカルに保存されます。<br><br>
         <h2>データの転送方法</h2>
         
-        すべてのデータ転送（クリップボードとファイルの両方）は、ローカルWi-Fiネットワークを介してペアリングされたデバイス間で直接行われます。データは当社のサーバーやサードパーティのサーバーを通過しません。すべての転送は、ペアリングプロセス中に生成されたキーを使用して、強力なエンドツーエンドのAES-256暗号化で保護されます。<br><br>
+        すべてのデータ転送（クリップボードとファイルの両方）は、ローカルWi-Fiネットワーク経由、またはネットワークが利用できない場合はデバイス間の直接無線接続経由で、お使いのデバイス間で直接行われます。データは当社のサーバーやサードパーティのサーバーを通過せず、インターネットを経由する転送はありません。<br><br>
+        <b>クリップボードの内容は常に暗号化されます。</b> 認証付きAES-256-GCM暗号化で保護されており、バージョン3.5.0以降、本アプリは暗号化されていないクリップボードデータを受け入れずに拒否します。<br><br>
+        <b>ローカルWi-Fiネットワーク経由で送信されるファイルは暗号化されます。</b> 両方のデバイスが対応している場合、同じ認証付きAES-256-GCM保護が適用され、これはバージョン3.4.0以降のすべてのバージョンが該当します。以前は暗号化を使用していたデバイスがそれを提供しなくなった場合、本アプリはファイルを平文で送信する代わりに転送を拒否します。<br><br>
+        <b>オフグリッドで送信されるファイル</b>（ルーターを介さない、Wi-Fi Directまたはホットスポット経由）<b>は、Androidバージョン3.7.3およびWindowsバージョン3.7.7以降で暗号化されます。</b> それ以前のバージョンでは、ファイルの内容は2つのデバイス間のその直接接続を暗号化されずに転送されていました。オフグリッド転送をご利用の場合は、両方のデバイスを更新してください。<br><br>
         <h2>ローカルネットワークでのデバイス検出</h2>
         
-        お使いのデバイスが自動的に互いを見つけられるように、アプリはローカルのWi-Fiまたはホットスポットネットワーク上で、小さな検出メッセージを定期的にブロードキャストします。このメッセージには、あなたが選んだデバイス名、デバイスのローカルIPアドレス、およびオペレーティングシステムの種類（例："Android"）のみが含まれます。これらのブロードキャストは、近くのデバイスがペアリングや接続を提案できるようにするためだけに、ローカルネットワーク上にのみ送信されます。当社、インターネット、または第三者に送信されることは一切なく、検出にインターネット接続は使用されません。エンドツーエンドで暗号化され、ペアリングされたデバイス間でのみやり取りされるクリップボードおよびファイルの転送とは異なり、これらの検出メッセージは暗号化されておらず、同じローカルネットワーク上の他のデバイスから見える状態になります。このため、信頼できるプライベートなネットワークでアプリを使用することをお勧めします。設定で「他のデバイスから検出可能」をオフにすることで、いつでもこれらのブロードキャストを停止できます。<br><br>
+        お使いのデバイスが自動的に互いを見つけられるように、アプリはローカルのWi-Fiまたはホットスポットネットワーク上で、小さな検出メッセージを定期的にブロードキャストします。このメッセージには、あなたが選んだデバイス名、デバイスのローカルIPアドレス、およびオペレーティングシステムの種類（例："Android"）のみが含まれます。これらのブロードキャストは、近くのデバイスがペアリングや接続を提案できるようにするためだけに、ローカルネットワーク上にのみ送信されます。当社、インターネット、または第三者に送信されることは一切なく、検出にインターネット接続は使用されません。上記のとおり暗号化され、ご自身のデバイス間でのみやり取りされるクリップボードおよびファイルの転送とは異なり、これらの検出メッセージは暗号化されておらず、同じローカルネットワーク上の他のデバイスから見える状態になります。このため、信頼できるプライベートなネットワークでアプリを使用することをお勧めします。設定で「他のデバイスから検出可能」をオフにすることで、いつでもこれらのブロードキャストを停止できます。<br><br>
         <h2>どの機能がどの権限を使用するか</h2>
         
         各機能が何を行うかを明確にするため、本アプリがあなたのネットワークと権限をどのように使用するかを以下に示します：<br><br>
@@ -588,7 +612,7 @@
       <section class="policy" lang="zh-Hans" data-lang="zh-CN" hidden>
         <div class="policy__body"><h1 class="policy__title">Clipboard Share 隐私政策</h1>
         
-        生效日期：22/6/2026<br><br>
+        生效日期：28/7/2026<br><br>
         感谢您使用 Clipboard Share（以下简称“本应用”）。本隐私政策阐明了我们在收集、使用和披露信息方面的原则。我们的核心理念很简单：您的数据属于您，我们不需要它。<br><br>
         <h2>核心原则：我们不收集您的数据</h2>
         
@@ -603,16 +627,19 @@
         <h2>应用程序在您设备上本地存储的信息</h2>
         
         为了正常运行，Clipboard Share 仅在您设备的本地存储中保存少量数据。这些数据由您控制，绝不会离开您的设备发送给我们。这包括：<br><br>
-        • <b>加密密钥：</b>在您明确配对两台设备后，每台设备上会生成并安全存储一个唯一的 AES-256 加密密钥。此密钥用于加密这两台配对设备之间的所有通信，对本应用的安全性至关重要。<br><br>
+        • <b>加密密钥：</b>在您明确配对两台设备后，两台设备之间会协商出一个唯一的 AES-256 加密密钥，并安全存储在每台设备上。此密钥用于加密这两台配对设备之间交换的剪贴板内容和文件，对本应用的安全性至关重要。设备发现广播不加密，详见下文。<br><br>
         • <b>配对设备信息：</b>本应用会存储您配对设备的本地 IP 地址和用户选择的设备名称。这用于在本地网络上识别并连接它们。<br><br>
         • <b>剪贴板历史记录：</b>本应用会保留您复制的剪贴板项目的本地历史记录以方便您使用。此历史记录仅存储在您的设备上，您可随时在应用内将其清除。<br><br>
         • <b>设备名称：</b>您在本应用设置中为设备选择的名称会存储在本地，以便网络上的其他设备识别。<br><br>
         <h2>您的数据如何传输</h2>
         
-        所有数据传输（剪贴板和文件）都直接通过本地 Wi-Fi 网络在配对设备之间进行。您的数据不会经过我们的服务器或任何第三方服务器。所有传输都使用配对过程中生成的密钥进行强大的端到端 AES-256 加密保护。<br><br>
+        所有数据传输（剪贴板和文件）都直接在您的设备之间进行，可通过本地 Wi-Fi 网络，或在没有可用网络时通过设备间的直接无线连接。您的数据不会经过我们的服务器或任何第三方服务器，也没有任何传输经由互联网。<br><br>
+        <b>剪贴板内容始终加密。</b>它采用经过认证的 AES-256-GCM 加密保护；自 3.5.0 版起，本应用会拒绝任何未加密送达的剪贴板内容，而不是接受它。<br><br>
+        <b>通过本地 Wi-Fi 网络发送的文件已加密</b>，只要两台设备都支持，即采用同样经过认证的 AES-256-GCM 保护，涵盖 3.4.0 及以后的所有版本。如果先前使用加密的设备不再提供加密，本应用将拒绝该次传输，而不会退回到以明文发送您的文件。<br><br>
+        <b>离线发送的文件</b>（通过 Wi-Fi Direct 或热点，完全不经过路由器）<b>自 Android 3.7.3 版和 Windows 3.7.7 版起已加密。</b>在更早的版本中，文件内容在两台设备之间的该直接连接上以未加密方式传输。如果您使用离线传输，请更新两台设备。<br><br>
         <h2>在您本地网络上的设备发现</h2>
         
-        为了让您的设备能够自动相互发现，本应用会定期在您的本地 Wi-Fi 或热点网络上广播一条小的发现消息。该消息仅包含您所选择的设备名称、设备的本地 IP 地址及其操作系统类型（例如"Android"）。这些广播仅在您的本地网络上发送，以便附近的设备可以提出配对或连接。它们绝不会发送给我们、发送到互联网或任何第三方，并且发现过程不使用任何互联网连接。与您的剪贴板和文件传输（采用端到端加密，且仅在已配对的设备之间交换）不同，这些发现消息未经加密，同一本地网络上的其他设备均可看到。因此，我们建议在受信任的专用网络中使用本应用。您可以随时在设置中关闭"可被其他设备发现"来停止这些广播。<br><br>
+        为了让您的设备能够自动相互发现，本应用会定期在您的本地 Wi-Fi 或热点网络上广播一条小的发现消息。该消息仅包含您所选择的设备名称、设备的本地 IP 地址及其操作系统类型（例如"Android"）。这些广播仅在您的本地网络上发送，以便附近的设备可以提出配对或连接。它们绝不会发送给我们、发送到互联网或任何第三方，并且发现过程不使用任何互联网连接。与您的剪贴板和文件传输（按上文所述加密，且仅在您自己的设备之间交换）不同，这些发现消息未经加密，同一本地网络上的其他设备均可看到。因此，我们建议在受信任的专用网络中使用本应用。您可以随时在设置中关闭"可被其他设备发现"来停止这些广播。<br><br>
         <h2>哪些功能使用哪些权限</h2>
         
         为了让您清楚每项功能的作用，以下说明本应用如何使用您的网络和权限：<br><br>
@@ -654,7 +681,7 @@
       <section class="policy" lang="zh-Hant" data-lang="zh-TW" hidden>
         <div class="policy__body"><h1 class="policy__title">Clipboard Share 隱私權政策</h1>
         
-        生效日期：22/6/2026<br><br>
+        生效日期：28/7/2026<br><br>
         感謝您使用 Clipboard Share（以下簡稱「本應用程式」）。本隱私權政策闡明了我們在收集、使用和披露資訊方面的原則。我們的核心理念很簡單：您的資料屬於您，我們不需要它。<br><br>
         <h2>核心原則：我們不收集您的資料</h2>
         
@@ -669,16 +696,19 @@
         <h2>應用程式在您裝置上本機儲存的資訊</h2>
         
         為了正常運作，Clipboard Share 僅在您裝置的本機儲存空間中儲存少量資料。這些資料由您控制，絕不會離開您的裝置傳送給我們。這包括：<br><br>
-        • <b>加密金鑰：</b>在您明確配對兩部裝置後，每部裝置上會產生並安全地儲存一個唯一的 AES-256 加密金鑰。此金鑰用於加密這兩部配對裝置之間的所有通訊，對本應用程式的安全性至關重要。<br><br>
+        • <b>加密金鑰：</b>在您明確配對兩部裝置後，兩部裝置之間會協商出一個唯一的 AES-256 加密金鑰，並安全地儲存在每部裝置上。此金鑰用於加密這兩部配對裝置之間交換的剪貼簿內容和檔案，對本應用程式的安全性至關重要。裝置探索廣播不加密，詳見下文。<br><br>
         • <b>配對裝置資訊：</b>本應用程式會儲存您配對裝置的區域 IP 位址和使用者選擇的裝置名稱。這用於在區域網路上識別並連接它們。<br><br>
         • <b>剪貼簿歷史記錄：</b>本應用程式會保留您複製的剪貼簿項目的本機歷史記錄以方便您使用。此歷史記錄僅儲存在您的裝置上，您可隨時在應用程式內將其清除。<br><br>
         • <b>裝置名稱：</b>您在本應用程式設定中為裝置選擇的名稱會儲存在本機，以便網路上的其他裝置識別。<br><br>
         <h2>您的資料如何傳輸</h2>
         
-        所有資料傳輸（剪貼簿和檔案）都直接透過區域 Wi-Fi 網路上在配對裝置之間進行。您的資料不會經過我們的伺服器或任何第三方伺服器。所有傳輸都使用配對過程中產生的金鑰進行強大的端對端 AES-256 加密保護。<br><br>
+        所有資料傳輸（剪貼簿和檔案）都直接在您的裝置之間進行，可透過區域 Wi-Fi 網路，或在沒有可用網路時透過裝置間的直接無線連線。您的資料不會經過我們的伺服器或任何第三方伺服器，也沒有任何傳輸經由網際網路。<br><br>
+        <b>剪貼簿內容一律加密。</b>它採用經過認證的 AES-256-GCM 加密保護；自 3.5.0 版起，本應用程式會拒絕任何未加密送達的剪貼簿內容，而不是接受它。<br><br>
+        <b>透過區域 Wi-Fi 網路傳送的檔案已加密</b>，只要兩部裝置都支援，即採用同樣經過認證的 AES-256-GCM 保護，涵蓋 3.4.0 及以後的所有版本。如果先前使用加密的裝置不再提供加密，本應用程式將拒絕該次傳輸，而不會退回到以明文傳送您的檔案。<br><br>
+        <b>離線傳送的檔案</b>（透過 Wi-Fi Direct 或熱點，完全不經過路由器）<b>自 Android 3.7.3 版和 Windows 3.7.7 版起已加密。</b>在更早的版本中，檔案內容在兩部裝置之間的該直接連線上以未加密方式傳輸。如果您使用離線傳輸，請更新兩部裝置。<br><br>
         <h2>在您區域網路上的裝置探索</h2>
         
-        為了讓您的裝置能夠自動互相尋找，本應用程式會定期在您的區域 Wi-Fi 或熱點網路上廣播一則小型的探索訊息。此訊息僅包含您所選擇的裝置名稱、裝置的本機 IP 位址及其作業系統類型（例如"Android"）。這些廣播僅在您的區域網路上傳送，以便附近的裝置可以提出配對或連線。它們絕不會傳送給我們、傳送至網際網路或任何第三方，且探索過程不使用任何網際網路連線。與您的剪貼簿和檔案傳輸（採用端對端加密，且僅在已配對的裝置之間交換）不同，這些探索訊息未經加密，同一區域網路上的其他裝置皆可看到。因此，我們建議在受信任的私人網路中使用本應用程式。您可以隨時在設定中關閉"可被其他裝置發現"來停止這些廣播。<br><br>
+        為了讓您的裝置能夠自動互相尋找，本應用程式會定期在您的區域 Wi-Fi 或熱點網路上廣播一則小型的探索訊息。此訊息僅包含您所選擇的裝置名稱、裝置的本機 IP 位址及其作業系統類型（例如"Android"）。這些廣播僅在您的區域網路上傳送，以便附近的裝置可以提出配對或連線。它們絕不會傳送給我們、傳送至網際網路或任何第三方，且探索過程不使用任何網際網路連線。與您的剪貼簿和檔案傳輸（按上文所述加密，且僅在您自己的裝置之間交換）不同，這些探索訊息未經加密，同一區域網路上的其他裝置皆可看到。因此，我們建議在受信任的私人網路中使用本應用程式。您可以隨時在設定中關閉"可被其他裝置發現"來停止這些廣播。<br><br>
         <h2>哪些功能使用哪些權限</h2>
         
         為了讓您清楚每項功能的作用，以下說明本應用程式如何使用您的網路和權限：<br><br>
