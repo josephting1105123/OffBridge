@@ -13,7 +13,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Wifi
@@ -155,7 +154,7 @@ fun SystemStatusScreen(appController: ClipboardAppController, onTutorialChainNex
                 BentoTile(
                     value = tr("bento_qr_pair_value", "Pair"),
                     label = tr("bento_qr_pair", "with QR"),
-                    icon = Icons.Filled.QrCode2,
+                    icon = QrFrameIcon,
                     onClick = { showQrPairDialog = true },
                     modifier = Modifier.weight(1f)
                 )

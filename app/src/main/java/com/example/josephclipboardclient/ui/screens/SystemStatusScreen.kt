@@ -140,7 +140,7 @@ fun SystemStatusScreen(
                 BentoTile(
                     label = stringResource(R.string.bento_qr_pair),
                     value = stringResource(R.string.bento_qr_pair_value),
-                    icon = ImageVector.vectorResource(R.drawable.ic_qr_code),
+                    icon = ImageVector.vectorResource(R.drawable.ic_qr_frame),
                     onClick = onQrPair,
                     modifier = Modifier.weight(1f),
                 )
