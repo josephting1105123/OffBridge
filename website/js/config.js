@@ -59,11 +59,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.7.7",
-    size: "83 MB",
+    version: "3.7.8",
+    size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
-    sha256: "358eaceb4f0584ec8638a034b0b429a58ad39b3be44fb9de18367e2e7d1b9086",
+    sha256: "ecfb4b171de5950367c7220c5653a1ca24076716c3d753e4cfc41ecea7c98d53",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
