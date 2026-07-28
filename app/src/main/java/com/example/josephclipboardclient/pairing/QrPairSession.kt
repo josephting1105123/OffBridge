@@ -6,28 +6,23 @@ import com.EntropicSoftwareLab.ClipboardShare.Net
 import com.EntropicSoftwareLab.ClipboardShare.Ports
 import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
-import com.EntropicSoftwareLab.ClipboardShare.transport.FailureCode
-import com.EntropicSoftwareLab.ClipboardShare.transport.hotspot.LocalOnlyHotspotHost
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
 /**
  * Host side of QR pairing on Android: opens the window in [QrPairHost] and produces the code to
  * render. Mirror of Windows `QrPairCoordinator`.
  *
- * A local-only hotspot is raised only on request. Doing it automatically would drop the phone off
- * its own Wi-Fi for the overwhelmingly common case where both devices are already on the same
- * network and the LAN address is all the scanner needs.
+ * QR pairing is same-network only. Both devices must already be on one Wi-Fi; the code carries this
+ * device's LAN address and nothing else. Raising a local-only hotspot to pair off-grid was tried and
+ * removed: it drops the phone off its own Wi-Fi, takes up to 14s to come up or refuse, and is a
+ * second radio path to get wrong in the one flow that has to be reliable, since a failed pairing
+ * leaves nothing usable behind. Off-grid transfer does not need it either — the send flow raises its
+ * own group and carries the key in the QR, so it never depends on a pairing record.
  */
 object QrPairSession {
 
     /** What the QR screen renders. */
     data class PairQrInfo(
         val qrText: String,
-        val ssid: String?,
-        val passphrase: String?,
-        val hotspotActive: Boolean,
         val expiresAtMs: Long,
     )
 
@@ -35,84 +30,19 @@ object QrPairSession {
     sealed class OpenResult {
         data class Ready(val info: PairQrInfo) : OpenResult()
 
-        /** Neither a LAN address nor a hotspot — nothing a scanner could connect to. */
+        /** No LAN address — this device is not on a network a scanner could reach it on. */
         object NoRoute : OpenResult()
-
-        /** The hotspot was asked for and refused (permission, OEM limits, tethering already on). */
-        object HotspotUnavailable : OpenResult()
     }
 
-    private const val LOHS_BUDGET_MS = 12_000L
-
-    @Volatile private var hotspot: LocalOnlyHotspotHost? = null
-
     /**
-     * Opens a fresh window, retiring any previous one. Suspends for up to [LOHS_BUDGET_MS] when
-     * [withHotspot] is set, so callers run it off the main dispatcher.
-     *
-     * The device SHOWING a code is the one that hosts an AP; the device scanning joins it. Two APs
-     * would be nonsense, which is why the scan mode retires this window on the way in rather than
-     * opening its own. Same split as the off-grid send flow, where the sender creates the group and
-     * the scanner joins.
-     *
-     * [hotspotRequired] separates the two ways the AP gets asked for. The window opens with an attempt
-     * every time, matching the send screen, which calls createGroup unconditionally — but an attempt
-     * that fails must not cost a user a pairing that would have worked over the LAN. When the user
-     * taps "start a hotspot" by name, silence would be the confusing outcome, so that path still
-     * reports the failure.
+     * Opens a fresh window, retiring any previous one. Returns [OpenResult.NoRoute] when this device
+     * has no LAN address, since the code would then name an address nobody can dial.
      */
-    suspend fun open(
-        context: Context,
-        withHotspot: Boolean,
-        hotspotRequired: Boolean = true,
-    ): OpenResult {
+    fun open(context: Context): OpenResult {
         close()
 
-        // Read before the AP only to decide whether a failed AP is fatal. The address actually
-        // advertised is re-read afterwards — see below.
-        val lanBefore = Net.localLanIpv4()
-        var apSsid: String? = null
-        var apPsk: String? = null
-        var apHostIp: String? = null
-
-        if (withHotspot) {
-            val host = LocalOnlyHotspotHost(context)
-            val started = withTimeoutOrNull(LOHS_BUDGET_MS + 2_000L) {
-                suspendCancellableCoroutine<Triple<String, String, String>?> { cont ->
-                    host.start(LOHS_BUDGET_MS, object : LocalOnlyHotspotHost.Listener {
-                        override fun onStarted(ssid: String, psk: String, hostIp: String) {
-                            if (cont.isActive) cont.resume(Triple(ssid, psk, hostIp))
-                        }
-
-                        override fun onFailed(code: FailureCode) {
-                            if (cont.isActive) cont.resume(null)
-                        }
-                    })
-                    cont.invokeOnCancellation { host.stop() }
-                }
-            }
-            if (started == null) {
-                host.stop()
-                // Only fatal when the user asked for the AP outright, or when there is no LAN address
-                // to fall back to and the AP was therefore the only possible route.
-                if (hotspotRequired || lanBefore == null) return OpenResult.HotspotUnavailable
-            } else {
-                hotspot = host
-                apSsid = started.first
-                apPsk = started.second
-                apHostIp = started.third
-            }
-        }
-
-        // Re-read AFTER the AP attempt rather than reusing lanBefore. LocalOnlyHotspot commonly drops
-        // the phone off the Wi-Fi it was on, so the address captured a moment ago may already be dead,
-        // and publishing it would send a scanner at a route that no longer exists. Same ordering as
-        // QrPairCoordinator on Windows.
-        val lanIp = Net.localLanIpv4()
-
-        // Dial address: the AP interface when we raised one (a scanner that joins the group can only
-        // reach us there), else our address on the shared network.
-        val advertisedIp = apHostIp ?: lanIp ?: return OpenResult.NoRoute
+        val lanIp = Net.localLanIpv4() ?: return OpenResult.NoRoute
+        val advertisedIp = lanIp
         val now = System.currentTimeMillis()
         val session = QrPairHost.open(
             ecdh = EcdhSession(),
@@ -133,30 +63,24 @@ object QrPairSession {
             publicKey = session.ecdh.getPublicKey(),
             token = session.token,
             nowMs = now,
-            ssid = apSsid,
-            psk = apPsk,
-            // Only worth a separate route token when it isn't the address already published as the
-            // dial target.
-            lanIp = lanIp?.takeIf { it != advertisedIp },
+            // No AP is ever raised for pairing, so there are no credentials to carry and the LAN
+            // address is already the dial target. The wire fields stay in PairQrPayload: an older
+            // peer still populates them, and a scanner that meets one should keep understanding it.
+            ssid = null,
+            psk = null,
+            lanIp = null,
         )
 
         return OpenResult.Ready(
             PairQrInfo(
                 qrText = payload.encode(),
-                ssid = apSsid,
-                passphrase = apPsk,
-                hotspotActive = apHostIp != null,
                 expiresAtMs = session.expiresAtMs,
             )
         )
     }
 
-    /** Closes the window and drops a hotspot raised for it. Idempotent. */
+    /** Closes the window. Idempotent. */
     fun close() {
         QrPairHost.close()
-        hotspot?.let {
-            hotspot = null
-            it.stop()
-        }
     }
 }

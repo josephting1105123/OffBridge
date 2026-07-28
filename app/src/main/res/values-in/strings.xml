@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clipboard Share</string>
-    <string name="user_agreement_text">Selamat datang di Clipboard Share.
+    <string name="app_name">OffBridge</string>
+    <string name="user_agreement_text">Selamat datang di OffBridge.
 
 
         Aplikasi ini disediakan \"sebagaimana adanya\", tanpa jaminan apa pun, tersurat maupun
@@ -36,11 +36,11 @@
 
 
         Pastikan Anda memiliki hak yang diperlukan atas file apa pun yang Anda bagikan.</string>
-    <string name="privacy_policy_text">&lt;b&gt;Kebijakan Privasi untuk Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+    <string name="privacy_policy_text">&lt;b&gt;Kebijakan Privasi untuk OffBridge&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Tanggal Efektif: 22/6/2026&lt;br&gt;&lt;br&gt;
-        Terima kasih telah menggunakan Clipboard Share (\"Aplikasi\"). Kebijakan Privasi ini menjelaskan prinsip kami terkait pengumpulan, penggunaan, dan pengungkapan informasi. Filosofi inti kami sederhana: data Anda adalah milik Anda, dan kami tidak menginginkannya.&lt;br&gt;&lt;br&gt;
+        Terima kasih telah menggunakan OffBridge (\"Aplikasi\"). Kebijakan Privasi ini menjelaskan prinsip kami terkait pengumpulan, penggunaan, dan pengungkapan informasi. Filosofi inti kami sederhana: data Anda adalah milik Anda, dan kami tidak menginginkannya.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;PRINSIP INTI: KAMI TIDAK MENGUMPULKAN DATA ANDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share dirancang sejak awal dengan menjadikan privasi Anda sebagai prioritas utama. Aplikasi memfasilitasi komunikasi langsung, peer-to-peer (P2P) antar perangkat Anda melalui jaringan Wi-Fi lokal.&lt;br&gt;&lt;br&gt;
+        OffBridge dirancang sejak awal dengan menjadikan privasi Anda sebagai prioritas utama. Aplikasi memfasilitasi komunikasi langsung, peer-to-peer (P2P) antar perangkat Anda melalui jaringan Wi-Fi lokal.&lt;br&gt;&lt;br&gt;
         Kami tidak memiliki server yang mengumpulkan, menyimpan, atau memproses data pribadi Anda. Semua data Anda tetap berada di perangkat Anda dan di jaringan lokal Anda.&lt;br&gt;&lt;br&gt;
         Secara khusus, kami TIDAK mengumpulkan, menerima, atau membagikan:&lt;br&gt;
         • Konten papan klip Anda.&lt;br&gt;
@@ -49,7 +49,7 @@
         • Kontak, lokasi, atau informasi perangkat sensitif lainnya.&lt;br&gt;&lt;br&gt;
         Aplikasi berfungsi tanpa mengharuskan Anda membuat akun atau masuk.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;INFORMASI YANG DISIMPAN APLIKASI SECARA LOKAL DI PERANGKAT ANDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Agar berfungsi dengan benar, Clipboard Share menyimpan sejumlah kecil data secara eksklusif di penyimpanan lokal perangkat Anda. Data ini berada di bawah kendali Anda dan tidak pernah meninggalkan perangkat Anda untuk dikirim kepada kami. Ini termasuk:&lt;br&gt;&lt;br&gt;
+        Agar berfungsi dengan benar, OffBridge menyimpan sejumlah kecil data secara eksklusif di penyimpanan lokal perangkat Anda. Data ini berada di bawah kendali Anda dan tidak pernah meninggalkan perangkat Anda untuk dikirim kepada kami. Ini termasuk:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Kunci Kriptografi:&lt;/b&gt; Setelah Anda menyandingkan dua perangkat secara eksplisit, kedua perangkat tersebut membentuk kunci enkripsi AES-256 unik di antara mereka, yang disimpan dengan aman di setiap perangkat. Kunci ini digunakan untuk mengenkripsi isi papan klip dan file yang dipertukarkan antara dua perangkat yang disandingkan tersebut dan sangat penting untuk keamanan Aplikasi. Pesan penemuan perangkat tidak dienkripsi, seperti dijelaskan di bawah ini.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Informasi Perangkat Tersanding:&lt;/b&gt; Aplikasi menyimpan alamat IP lokal dan nama perangkat pilihan pengguna dari perangkat yang telah Anda sandingkan. Hal ini digunakan untuk mengidentifikasi dan terhubung dengan mereka di jaringan lokal Anda.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Riwayat Papan Klip:&lt;/b&gt; Aplikasi menyimpan riwayat lokal item papan klip yang telah Anda salin untuk kenyamanan Anda. Riwayat ini hanya disimpan di perangkat Anda dan dapat dihapus oleh Anda kapan saja dari dalam Aplikasi.&lt;br&gt;&lt;br&gt;
@@ -72,7 +72,7 @@
         • &lt;b&gt;Tetap siap di latar belakang:&lt;/b&gt; Menggunakan layanan latar depan dan notifikasi untuk terus mendengarkan item papan klip dan transfer masuk.&lt;br&gt;&lt;br&gt;
         Singkatnya, Aplikasi menggunakan Wi-Fi lokal, hotspot, atau koneksi langsung antar perangkat untuk semuanya. Aplikasi tidak menggunakan data seluler Anda untuk penemuan atau transfer, dan tidak terhubung ke internet.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;IZIN YANG DIMINTA DALAM APLIKASI&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share meminta izin tertentu untuk mengaktifkan fitur-fiturnya. Inilah alasan mengapa kami membutuhkannya:&lt;br&gt;&lt;br&gt;
+        OffBridge meminta izin tertentu untuk mengaktifkan fitur-fiturnya. Inilah alasan mengapa kami membutuhkannya:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Akses Jaringan&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Diperlukan untuk menemukan perangkat lain dan mentransfer data melalui jaringan Wi-Fi lokal Anda.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Lokasi dan Perangkat Terdekat&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Beberapa versi Android memerlukan izin ini agar aplikasi dapat memindai dan terhubung ke perangkat terdekat melalui Wi-Fi Direct, yang digunakan Aplikasi untuk transfer luar jaringan. Kami tidak mengumpulkannya, tetapi fitur ini tidak dapat menemukan perangkat terdekat tanpanya. Aplikasi tidak membaca, menyimpan, atau membagikan lokasi fisik Anda.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Digunakan untuk membantu menyiapkan koneksi langsung luar jaringan dengan perangkat terdekat. Kami tidak mengumpulkan data apa pun melaluinya dan tidak pernah digunakan untuk melacak Anda.&lt;br&gt;&lt;br&gt;
@@ -84,7 +84,7 @@
         • &lt;b&gt;Abaikan Pengoptimalan Baterai&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Sangat disarankan untuk mencegah sistem operasi Android mematikan layanan latar belakang Aplikasi, yang akan mengganggu sinkronisasi papan klip dan transfer file.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Penyimpanan Eksternal&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): Pada versi Android yang lebih lama (SDK 28 ke bawah), ini diperlukan untuk menyimpan file yang diterima ke penyimpanan perangkat Anda.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;LAYANAN PIHAK KETIGA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share tidak menggunakan layanan pihak ketiga mana pun untuk analitik, iklan, atau tujuan lain apa pun yang melibatkan berbagi data Anda.&lt;br&gt;&lt;br&gt;
+        OffBridge tidak menggunakan layanan pihak ketiga mana pun untuk analitik, iklan, atau tujuan lain apa pun yang melibatkan berbagi data Anda.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;PRIVASI ANAK-ANAK&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Aplikasi tidak ditujukan untuk digunakan oleh anak-anak di bawah usia 13 tahun. Kami tidak dengan sengaja mengumpulkan informasi apa pun dari anak-anak. Karena pada dasarnya kami tidak mengumpulkan data pribadi apa pun, kami tidak memiliki mekanisme untuk memverifikasi usia pengguna kami.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;PERUBAHAN PADA KEBIJAKAN PRIVASI INI&lt;/b&gt;&lt;br&gt;&lt;br&gt;
@@ -109,7 +109,7 @@
     <string name="initiating_cryptographic_handshake">Memulai jabat tangan kriptografi...</string>
     <string name="pairing_request_title">Permintaan Penyandingan</string>
     <string name="action_accept">Terima</string>
-    <string name="download_windows_heading">Unduh Clipboard Share untuk Windows</string>
+    <string name="download_windows_heading">Unduh OffBridge untuk Windows</string>
     <string name="download_windows_blurb">Dapatkan aplikasi desktop untuk PC Anda. Sinkronkan papan klip dan kirim file antara ponsel ini dan komputer Anda.</string>
     <string name="download_open_website">Buka halaman unduhan</string>
     <string name="menu_title">Menu</string>
@@ -133,7 +133,7 @@
     <string name="recent_copies_hint">Salinan Terbaru (Ketuk untuk melihat)</string>
     <string name="required_permissions_title">Izin yang Diperlukan</string>
     <string name="battery_optimization_title">Pengoptimalan Baterai</string>
-    <string name="battery_optimization_desc">Clipboard Share berjalan di latar belakang. Harap nonaktifkan pengoptimalan baterai untuk memastikan transfer dan sinkronisasi papan klip tidak terganggu.</string>
+    <string name="battery_optimization_desc">OffBridge berjalan di latar belakang. Harap nonaktifkan pengoptimalan baterai untuk memastikan transfer dan sinkronisasi papan klip tidak terganggu.</string>
     <string name="action_go_to_settings">Buka Pengaturan</string>
     <string name="notifications_title">Notifikasi</string>
     <string name="notifications_desc">Ini diperlukan untuk menampilkan status layanan persisten dan memperingatkan Anda tentang permintaan penyandingan atau file masuk.</string>
@@ -172,7 +172,7 @@
     <string name="action_open">Buka</string>
     <string name="default_file_name_zip">nama_file.zip</string>
     <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
-    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_clipboard_share_prefix">OffBridge -</string>
     <string name="notification_mesh_active">Jaringan Mesh Aktif</string>
     <string name="unknown">Tidak diketahui</string>
     <string name="unknown_file">File Tidak Diketahui</string>
@@ -183,7 +183,7 @@
     <string name="notification_successfully_pushed_title">Berhasil Didorong</string>
     <string name="notification_clipboard_received_title">Papan Klip Diterima</string>
     <string name="notification_mesh_network_active">Jaringan Mesh Aktif</string>
-    <string name="notification_channel_clipboard_share_service">Layanan Clipboard Share</string>
+    <string name="notification_channel_clipboard_share_service">Layanan OffBridge</string>
     <string name="notification_channel_clipboard_alerts">Peringatan Papan Klip</string>
     <string name="notification_channel_pairing_requests">Permintaan Penyandingan</string>
     <string name="notification_from_sender">Dari: %s</string>
@@ -217,15 +217,15 @@
     <string name="toast_transfer_interrupted">Transfer terganggu. Penerima dapat melanjutkan saat tersambung kembali.</string>
     <string name="toast_batch_transfer_complete">Transfer Batch Selesai!</string>
     <string name="shortcut_send_to_device">Kirim ke %s</string>
-    <string name="shortcut_transfer_via_clipboard_share">Transfer lewat Clipboard Share</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transfer lewat OffBridge</string>
     <string name="toast_pushing_clipboard_to_mesh">Mendorong papan klip ke mesh...</string>
     <string name="no_clipboard_history_yet">Belum ada riwayat papan klip.</string>
     <string name="toast_copied_to_clipboard">Disalin ke papan klip</string>
     <string name="toast_notifications_permission_required">Izin notifikasi diperlukan untuk layanan latar depan.</string>
     <string name="toast_storage_permission_required">Transfer file mungkin gagal tanpa izin penyimpanan pada versi Android ini.</string>
     <string name="default_android_device_name">Perangkat Android</string>
-    <string name="toast_rebooting_engine">Memulai Ulang Mesin Clipboard Share...</string>
-    <string name="toast_shutting_down_engine">Mematikan Clipboard Share...</string>
+    <string name="toast_rebooting_engine">Memulai Ulang Mesin OffBridge...</string>
+    <string name="toast_shutting_down_engine">Mematikan OffBridge...</string>
     <string name="toast_notification_permission_granted">Izin notifikasi diberikan!</string>
     <string name="toast_notifications_recommended">Notifikasi sangat disarankan untuk pengalaman terbaik.</string>
     <string name="toast_notification_permission_already_granted">Izin notifikasi sudah diberikan pada versi Android ini.</string>
@@ -343,7 +343,7 @@
     <string name="offgrid_error_wifi_off">Wi-Fi nonaktif. Aktifkan untuk menggunakan pengiriman luar jaringan.</string>
     <string name="offgrid_error_wifi_off_receiver">Wi-Fi nonaktif. Aktifkan untuk menerima — tidak diperlukan koneksi internet.</string>
     <string name="offgrid_fallback_permission_rationale">Izinkan akses perangkat di sekitar agar aplikasi dapat terhubung langsung saat gabung standar tidak berfungsi.</string>
-    <string name="offgrid_hce_description">Kredensial transfer luar jaringan Clipboard Share</string>
+    <string name="offgrid_hce_description">Kredensial transfer luar jaringan OffBridge</string>
     <string name="offgrid_join_failed_closer">Tidak dapat menjangkau pengirim. Dekatkan kedua ponsel dan minta mereka menampilkan kode lagi, lalu coba lagi.</string>
     <string name="offgrid_nfc_off">NFC nonaktif — ketuk untuk mengaktifkan</string>
     <string name="offgrid_nfc_ready">NFC siap — ketuk untuk melihat posisi memegang ponsel</string>
@@ -406,7 +406,7 @@
     <string name="clip_read_failed">Gagal membaca papan klip</string>
     <string name="status_push_success_title">Berhasil Didorong</string>
     <string name="status_clipboard_received_title">Papan Klip Diterima</string>
-    <string name="status_channel_service">Layanan Clipboard Share</string>
+    <string name="status_channel_service">Layanan OffBridge</string>
     <string name="status_channel_alerts">Peringatan Papan Klip</string>
     <string name="status_channel_pairing">Permintaan Penyandingan</string>
     <string name="status_channel_transfer_progress">Kemajuan Transfer File</string>
@@ -432,7 +432,7 @@
     <string name="transfer_tut_history">Ketuk di sini untuk melihat riwayat transfer Anda dan melacak kemajuan.</string>
     <string name="transfer_tut_next">Berikutnya</string>
     <string name="transfer_shortcut_short_label">Kirim ke %1$s</string>
-    <string name="transfer_shortcut_long_label">Transfer lewat Clipboard Share</string>
+    <string name="transfer_shortcut_long_label">Transfer lewat OffBridge</string>
     <string name="transfer_unknown_file">File Tidak Diketahui</string>
     <string name="history_tutorial_push">Ketuk di sini untuk langsung mendorong teks papan klip Anda saat ini ke semua perangkat tersanding.</string>
     <string name="history_tutorial_accept_switch">Nonaktifkan ini jika Anda tidak ingin menerima konten papan klip dari perangkat lain.</string>
@@ -445,8 +445,8 @@
     <string name="perm_notifications_required">Izin notifikasi diperlukan untuk layanan latar depan.</string>
     <string name="perm_storage_required">Transfer file mungkin gagal tanpa izin penyimpanan pada versi Android ini.</string>
     <string name="status_default_device_name">Perangkat Android</string>
-    <string name="menu_restart_toast">Memulai Ulang Mesin Clipboard Share...</string>
-    <string name="menu_power_off_toast">Mematikan Clipboard Share...</string>
+    <string name="menu_restart_toast">Memulai Ulang Mesin OffBridge...</string>
+    <string name="menu_power_off_toast">Mematikan OffBridge...</string>
     <string name="pairing_requesting_title">Meminta Penyandingan</string>
     <string name="pairing_waiting_subtitle">Menunggu %1$s untuk menerima...</string>
     <string name="pairing_success">Berhasil Disandingkan dengan %1$s!</string>
@@ -467,7 +467,7 @@
     <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">Tidak dapat membuka browser</string>
     <string name="settings_dialog_choose_language">Pilih Bahasa</string>
-    <string name="settings_toast_rebooting_engine">Memulai Ulang Mesin Clipboard Share...</string>
+    <string name="settings_toast_rebooting_engine">Memulai Ulang Mesin OffBridge...</string>
     <string name="settings_dialog_privacy_policy">Kebijakan Privasi</string>
     <string name="settings_action_close">Tutup</string>
     <string name="settings_save_location_selected_folder">Folder Terpilih</string>
@@ -515,7 +515,7 @@
 
     <string name="pairing_request_expired">Permintaan penyandingan ini telah kedaluwarsa — mulai penyandingan baru dari perangkat lain.</string>
     <string name="share_text_sending">Mengirim teks ke perangkat Anda…</string>
-    <string name="history_share_sheet_hint">Tips: untuk mengirim teks dari aplikasi lain, ketuk tombol Bagikan-nya dan pilih Clipboard Share.</string>
+    <string name="history_share_sheet_hint">Tips: untuk mengirim teks dari aplikasi lain, ketuk tombol Bagikan-nya dan pilih OffBridge.</string>
     <string name="selected_files_empty_hint">File yang dipilih akan ditampilkan di sini</string>
     <string name="copy_detail_title">Salin Detail</string>
     <string name="copy_detail_button">Salin</string>
@@ -535,11 +535,12 @@
     <string name="qr_pair_code_desc">Kode QR pemasangan</string>
     <string name="qr_pair_expired">Kode kedaluwarsa</string>
     <string name="qr_pair_refresh">Tampilkan kode baru</string>
-    <string name="qr_pair_scan_prompt">Pindai ini dengan Clipboard Share di perangkat lainnya.</string>
+    <string name="qr_pair_scan_prompt">Pindai ini dengan OffBridge di perangkat lainnya.</string>
     <string name="qr_pair_expires_in">Kedaluwarsa dalam %1$s</string>
     <string name="qr_pair_hotspot_hint">Tidak perlu jaringan bersama — perangkat lainnya bergabung ke Wi-Fi ini.</string>
     <string name="qr_pair_start_hotspot">Tidak ada jaringan bersama? Mulai hotspot</string>
-    <string name="qr_pair_no_route">Perangkat ini tidak punya jaringan untuk memasangkan, dan tidak bisa memulai hotspot.</string>
+    <string name="qr_pair_same_network_hint">Kedua perangkat harus berada di jaringan Wi-Fi yang sama.</string>
+    <string name="qr_pair_no_route">Perangkat ini tidak terhubung ke jaringan Wi-Fi, jadi tidak ada yang bisa dihubungi oleh perangkat lain.</string>
     <string name="qr_pair_connecting">Memasangkan…</string>
     <string name="qr_pair_try_again">Coba lagi</string>
     <string name="qr_pair_scan_action">Pindai kode</string>
@@ -552,8 +553,8 @@
     <string name="qr_pair_denied">Kode itu sudah dipakai atau kedaluwarsa. Minta kode baru.</string>
     <string name="qr_pair_scanned_expired">Kode itu sudah kedaluwarsa. Minta kode baru.</string>
     <string name="qr_pair_unsupported_version">Kode itu berasal dari versi aplikasi yang lebih baru. Perbarui untuk memasangkan.</string>
-    <string name="qr_pair_invalid_code">Itu bukan kode pemasangan Clipboard Share.</string>
-    <string name="qr_pair_unreachable">Tidak bisa menjangkau perangkat itu. Pastikan keduanya di Wi-Fi yang sama, atau gunakan opsi hotspot.</string>
+    <string name="qr_pair_invalid_code">Itu bukan kode pemasangan OffBridge.</string>
+    <string name="qr_pair_unreachable">Tidak dapat menjangkau perangkat itu. Pastikan keduanya berada di jaringan Wi-Fi yang sama.</string>
     <string name="qr_pair_join_refused">Permintaan bergabung ke Wi-Fi ditolak, jadi perangkat tidak bisa terhubung.</string>
     <string name="qr_pair_confirmation_failed">Perangkat lainnya tidak bisa membuktikan memiliki kunci pemasangan, jadi tidak ada yang dipasangkan. Coba lagi dengan kode baru.</string>
     <string name="qr_pair_failed">Pemasangan gagal. Coba lagi dengan kode baru.</string>

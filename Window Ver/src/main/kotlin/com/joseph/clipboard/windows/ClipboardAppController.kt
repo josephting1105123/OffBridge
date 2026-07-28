@@ -216,7 +216,7 @@ class ClipboardAppController {
     )
     // "Pair with QR" window. Separate from qrHost (that one advertises files); this one only ever
     // hands out a pairing credential, and defers to qrHost for the shared AP's lifetime.
-    private val qrPair = QrPairCoordinator(releaseHotspot = { qrHost.stopHotspotIfIdle() })
+    private val qrPair = QrPairCoordinator()
     // Name of the device that just paired by scanning our code — the QR dialog turns this into its
     // success state. Declared ahead of pairingDaemon so the daemon's callback never sees it unset.
     private val _qrPairedDevice = MutableStateFlow<String?>(null)

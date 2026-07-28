@@ -692,12 +692,14 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
             // Fall back to the gallery/Download locations whenever the SAF lookup missed — not only
             // when no custom folder is set. Under "Save media to: Gallery" (the default), received
             // photos/videos bypass the SAF tree entirely: they are published into
-            // Pictures|Movies/"Clipboard Share" and staged in Download. Without this fallback a
+            // Pictures|Movies/"OffBridge" and staged in Download. Without this fallback a
             // custom-folder user would get "file not found" for every received photo. Older receives
-            // and any publish fallback that stayed put are still in Download.
+            // and any publish fallback that stayed put are still in Download. The probe covers the
+            // pre-rename album too, for receives MediaFolderMigration could not move.
             if (!fileExists) {
                 val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val mediaFile = TransferUtils.publicMediaDir(category)?.let { java.io.File(it, name) }?.takeIf { it.exists() }
+                val mediaFile = TransferUtils.publicMediaDirs(category)
+                    .map { java.io.File(it, name) }.firstOrNull { it.exists() }
                 val file = mediaFile ?: java.io.File(downloadsDir, name)
                 if (file.exists()) {
                     fileUri = appFileProviderUri(requireContext(), file)

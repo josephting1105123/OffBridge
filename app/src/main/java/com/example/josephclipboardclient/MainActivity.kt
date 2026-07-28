@@ -553,7 +553,7 @@ class MainActivity : AppCompatActivity() {
                 bottomNavView.selectedItemId = R.id.nav_send_files
             }
         } else {
-            // No file streams — a plain-text share ("Share → Clipboard Share" from any app). Push it
+            // No file streams — a plain-text share ("Share → OffBridge" from any app). Push it
             // to paired devices through the clipboard pipeline (the reliable, permission-free
             // Android→peer text path) and surface it on the Clipboard History tab.
             val sharedText = intent?.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()?.trim()

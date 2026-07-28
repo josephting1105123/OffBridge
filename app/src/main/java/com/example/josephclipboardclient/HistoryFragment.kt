@@ -189,7 +189,7 @@ class HistoryFragment : Fragment() {
 
     private fun copyToClipboard(item: String) {
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("Clipboard Share", item))
+        clipboard.setPrimaryClip(ClipData.newPlainText("OffBridge", item))
         Toast.makeText(requireContext(), getString(R.string.history_toast_copied), Toast.LENGTH_SHORT).show()
     }
 

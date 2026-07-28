@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clipboard Share</string>
-    <string name="user_agreement_text">Добро пожаловать в Clipboard Share.
+    <string name="app_name">OffBridge</string>
+    <string name="user_agreement_text">Добро пожаловать в OffBridge.
 
 
         Данное приложение предоставляется «как есть», без каких-либо гарантий, явных или
@@ -36,11 +36,11 @@
 
 
         Убедитесь, что у вас есть необходимые права на любые файлы, которыми вы делитесь.</string>
-    <string name="privacy_policy_text">&lt;b&gt;Политика конфиденциальности Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+    <string name="privacy_policy_text">&lt;b&gt;Политика конфиденциальности OffBridge&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Дата вступления в силу: 22/6/2026&lt;br&gt;&lt;br&gt;
-        Благодарим вас за использование Clipboard Share («Приложение»). Настоящая Политика конфиденциальности объясняет наши принципы в отношении сбора, использования и раскрытия информации. Наша основная философия проста: ваши данные принадлежат вам, и они нам не нужны.&lt;br&gt;&lt;br&gt;
+        Благодарим вас за использование OffBridge («Приложение»). Настоящая Политика конфиденциальности объясняет наши принципы в отношении сбора, использования и раскрытия информации. Наша основная философия проста: ваши данные принадлежат вам, и они нам не нужны.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;ОСНОВНОЙ ПРИНЦИП: МЫ НЕ СОБИРАЕМ ВАШИ ДАННЫЕ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share с самого начала разрабатывалось так, чтобы ваша конфиденциальность была главным приоритетом. Приложение обеспечивает прямую одноранговую (P2P) связь между вашими устройствами в локальной сети Wi-Fi.&lt;br&gt;&lt;br&gt;
+        OffBridge с самого начала разрабатывалось так, чтобы ваша конфиденциальность была главным приоритетом. Приложение обеспечивает прямую одноранговую (P2P) связь между вашими устройствами в локальной сети Wi-Fi.&lt;br&gt;&lt;br&gt;
         У нас нет серверов, которые собирают, хранят или обрабатывают ваши личные данные. Все ваши данные остаются на ваших устройствах и в вашей локальной сети.&lt;br&gt;&lt;br&gt;
         В частности, мы НЕ собираем, НЕ получаем и НЕ передаём третьим лицам:&lt;br&gt;
         • Содержимому вашего буфера обмена.&lt;br&gt;
@@ -49,7 +49,7 @@
         • Вашим контактам, местоположению или любой другой конфиденциальной информации об устройстве.&lt;br&gt;&lt;br&gt;
         Приложение работает без необходимости создания учетной записи или входа в систему.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;ИНФОРМАЦИЯ, КОТОРУЮ ПРИЛОЖЕНИЕ ХРАНИТ ЛОКАЛЬНО НА ВАШЕМ УСТРОЙСТВЕ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Для правильной работы Clipboard Share хранит небольшой объем данных исключительно в локальном хранилище вашего устройства. Эти данные находятся под вашим контролем и никогда не покидают ваше устройство для отправки нам. К ним относятся:&lt;br&gt;&lt;br&gt;
+        Для правильной работы OffBridge хранит небольшой объем данных исключительно в локальном хранилище вашего устройства. Эти данные находятся под вашим контролем и никогда не покидают ваше устройство для отправки нам. К ним относятся:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Криптографические ключи:&lt;/b&gt; После явного сопряжения двух устройств они согласуют между собой уникальный ключ шифрования AES-256, который надежно сохраняется на каждом устройстве. Он используется для шифрования содержимого буфера обмена и файлов, передаваемых между этими двумя сопряженными устройствами, и необходим для безопасности Приложения. Сообщения обнаружения устройств не шифруются, как описано ниже.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Информация о сопряженном устройстве:&lt;/b&gt; Приложение хранит локальный IP-адрес и выбранное пользователем имя устройств, с которыми вы выполнили сопряжение. Это используется для их идентификации и подключения к ним в вашей локальной сети.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;История буфера обмена:&lt;/b&gt; Для вашего удобства Приложение хранит локальную историю элементов буфера обмена, которые вы скопировали. Эта история хранится только на вашем устройстве и может быть удалена вами в любое время из Приложения.&lt;br&gt;&lt;br&gt;
@@ -72,7 +72,7 @@
         • &lt;b&gt;Готовность в фоновом режиме:&lt;/b&gt; Использует службу переднего плана и уведомление, чтобы продолжать принимать входящие элементы буфера обмена и передачи.&lt;br&gt;&lt;br&gt;
         Коротко: для всего Приложение использует вашу локальную сеть Wi-Fi, точку доступа или прямое соединение между устройствами. Оно не использует мобильный интернет для обнаружения или передач и не подключается к интернету.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;РАЗРЕШЕНИЯ, ЗАПРАШИВАЕМЫЕ В ПРИЛОЖЕНИИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share запрашивает определенные разрешения для работы своих функций. Вот почему они нам нужны:&lt;br&gt;&lt;br&gt;
+        OffBridge запрашивает определенные разрешения для работы своих функций. Вот почему они нам нужны:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Доступ к сети&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Требуется для обнаружения других устройств и передачи данных по локальной сети Wi-Fi.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Местоположение и устройства поблизости&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Некоторые версии Android требуют это разрешение, чтобы приложение могло искать и подключаться к ближайшим устройствам через Wi-Fi Direct, что Приложение использует для автономных передач. Мы его не собираем, но без него функция не может находить устройства поблизости. Приложение не считывает, не хранит и не передаёт ваше физическое местоположение.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Используется для установки прямого автономного соединения с ближайшим устройством. Мы не собираем через него никаких данных, и оно никогда не используется для отслеживания.&lt;br&gt;&lt;br&gt;
@@ -84,7 +84,7 @@
         • &lt;b&gt;Игнорировать оптимизацию батареи&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Настоятельно рекомендуется, чтобы операционная система Android не завершала работу фоновой службы Приложения, что привело бы к прерыванию синхронизации буфера обмена и передачи файлов.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Внешнее хранилище&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): В старых версиях Android (SDK 28 и ниже) это требуется для сохранения полученных файлов в хранилище вашего устройства.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;СТОРОННИЕ СЕРВИСЫ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share не использует никакие сторонние сервисы для аналитики, рекламы или любых других целей, связанных с обменом вашими данными.&lt;br&gt;&lt;br&gt;
+        OffBridge не использует никакие сторонние сервисы для аналитики, рекламы или любых других целей, связанных с обменом вашими данными.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;КОНФИДЕНЦИАЛЬНОСТЬ ДЕТЕЙ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Приложение не предназначено для использования детьми младше 13 лет. Мы сознательно не собираем информацию о детях. Поскольку мы изначально не собираем никаких личных данных, у нас нет механизма проверки возраста наших пользователей.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;ИЗМЕНЕНИЯ В ДАННОЙ ПОЛИТИКЕ КОНФИДЕНЦИАЛЬНОСТИ&lt;/b&gt;&lt;br&gt;&lt;br&gt;
@@ -109,7 +109,7 @@
     <string name="initiating_cryptographic_handshake">Инициализация криптографического квитирования...</string>
     <string name="pairing_request_title">Запрос на сопряжение</string>
     <string name="action_accept">Принять</string>
-    <string name="download_windows_heading">Скачайте Clipboard Share для Windows</string>
+    <string name="download_windows_heading">Скачайте OffBridge для Windows</string>
     <string name="download_windows_blurb">Установите настольную версию для ПК. Синхронизируйте буфер обмена и отправляйте файлы между этим телефоном и компьютером.</string>
     <string name="download_open_website">Перейти на страницу загрузки</string>
     <string name="menu_title">Меню</string>
@@ -133,7 +133,7 @@
     <string name="recent_copies_hint">Недавние копии (нажмите, чтобы просмотреть)</string>
     <string name="required_permissions_title">Необходимые разрешения</string>
     <string name="battery_optimization_title">Оптимизация батареи</string>
-    <string name="battery_optimization_desc">Clipboard Share работает в фоновом режиме. Пожалуйста, отключите оптимизацию батареи, чтобы передача и синхронизация буфера обмена не прерывались.</string>
+    <string name="battery_optimization_desc">OffBridge работает в фоновом режиме. Пожалуйста, отключите оптимизацию батареи, чтобы передача и синхронизация буфера обмена не прерывались.</string>
     <string name="action_go_to_settings">Перейти в настройки</string>
     <string name="notifications_title">Уведомления</string>
     <string name="notifications_desc">Это необходимо для отображения постоянного статуса службы и предупреждения о входящих запросах на сопряжение или файлы.</string>
@@ -172,7 +172,7 @@
     <string name="action_open">Открыть</string>
     <string name="default_file_name_zip">имя_файла.zip</string>
     <string name="default_file_progress">50% (5.0 МБ / 10.0 МБ)</string>
-    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_clipboard_share_prefix">OffBridge -</string>
     <string name="notification_mesh_active">Сеть Mesh активна</string>
     <string name="unknown">Неизвестно</string>
     <string name="unknown_file">Неизвестный файл</string>
@@ -183,7 +183,7 @@
     <string name="notification_successfully_pushed_title">Успешно отправлено</string>
     <string name="notification_clipboard_received_title">Буфер обмена получен</string>
     <string name="notification_mesh_network_active">Сеть Mesh активна</string>
-    <string name="notification_channel_clipboard_share_service">Служба Clipboard Share</string>
+    <string name="notification_channel_clipboard_share_service">Служба OffBridge</string>
     <string name="notification_channel_clipboard_alerts">Оповещения буфера обмена</string>
     <string name="notification_channel_pairing_requests">Запросы на сопряжение</string>
     <string name="notification_from_sender">От: %s</string>
@@ -217,15 +217,15 @@
     <string name="toast_transfer_interrupted">Передача прервана. Получатель может возобновить при переподключении.</string>
     <string name="toast_batch_transfer_complete">Пакетная передача завершена!</string>
     <string name="shortcut_send_to_device">Отправить на %s</string>
-    <string name="shortcut_transfer_via_clipboard_share">Передать через Clipboard Share</string>
+    <string name="shortcut_transfer_via_clipboard_share">Передать через OffBridge</string>
     <string name="toast_pushing_clipboard_to_mesh">Отправка буфера обмена в сеть...</string>
     <string name="no_clipboard_history_yet">Истории буфера обмена пока нет.</string>
     <string name="toast_copied_to_clipboard">Скопировано в буфер обмена</string>
     <string name="toast_notifications_permission_required">Для службы переднего плана требуется разрешение на уведомления.</string>
     <string name="toast_storage_permission_required">На этой версии Android передача файлов может не удаться без разрешения на доступ к хранилищу.</string>
     <string name="default_android_device_name">Устройство Android</string>
-    <string name="toast_rebooting_engine">Перезагрузка движка Clipboard Share...</string>
-    <string name="toast_shutting_down_engine">Завершение работы Clipboard Share...</string>
+    <string name="toast_rebooting_engine">Перезагрузка движка OffBridge...</string>
+    <string name="toast_shutting_down_engine">Завершение работы OffBridge...</string>
     <string name="toast_notification_permission_granted">Разрешение на уведомления предоставлено!</string>
     <string name="toast_notifications_recommended">Уведомления рекомендуются для лучшего опыта.</string>
     <string name="toast_notification_permission_already_granted">Разрешение на уведомления уже предоставлено в этой версии Android.</string>
@@ -341,7 +341,7 @@
     <string name="offgrid_error_wifi_off">Wi-Fi отключён. Включите его для автономной отправки.</string>
     <string name="offgrid_error_wifi_off_receiver">Wi-Fi отключён. Включите его для получения — подключение к интернету не требуется.</string>
     <string name="offgrid_fallback_permission_rationale">Разрешите доступ к устройствам поблизости, чтобы приложение могло подключаться напрямую, когда стандартное подключение не работает.</string>
-    <string name="offgrid_hce_description">Учётные данные автономной передачи Clipboard Share</string>
+    <string name="offgrid_hce_description">Учётные данные автономной передачи OffBridge</string>
     <string name="offgrid_join_failed_closer">Не удалось связаться с отправителем. Поднесите телефоны ближе и попросите снова показать код, затем повторите.</string>
     <string name="offgrid_nfc_off">NFC отключён — нажмите, чтобы включить</string>
     <string name="offgrid_nfc_ready">NFC готов — нажмите, чтобы увидеть, как держать телефоны</string>
@@ -404,7 +404,7 @@
     <string name="clip_read_failed">Не удалось прочитать буфер обмена</string>
     <string name="status_push_success_title">Успешно отправлено</string>
     <string name="status_clipboard_received_title">Буфер обмена получен</string>
-    <string name="status_channel_service">Служба Clipboard Share</string>
+    <string name="status_channel_service">Служба OffBridge</string>
     <string name="status_channel_alerts">Оповещения буфера обмена</string>
     <string name="status_channel_pairing">Запросы на сопряжение</string>
     <string name="status_channel_transfer_progress">Прогресс передачи файлов</string>
@@ -430,7 +430,7 @@
     <string name="transfer_tut_history">Нажмите здесь, чтобы просмотреть историю передач и отслеживать прогресс.</string>
     <string name="transfer_tut_next">Далее</string>
     <string name="transfer_shortcut_short_label">Отправить на %1$s</string>
-    <string name="transfer_shortcut_long_label">Передать через Clipboard Share</string>
+    <string name="transfer_shortcut_long_label">Передать через OffBridge</string>
     <string name="transfer_unknown_file">Неизвестный файл</string>
     <string name="history_tutorial_push">Нажмите здесь, чтобы мгновенно отправить текущий текст буфера обмена на все сопряжённые устройства.</string>
     <string name="history_tutorial_accept_switch">Отключите это, если не хотите получать содержимое буфера обмена с других устройств.</string>
@@ -443,8 +443,8 @@
     <string name="perm_notifications_required">Для службы переднего плана требуется разрешение на уведомления.</string>
     <string name="perm_storage_required">На этой версии Android передача файлов может не удаться без разрешения на доступ к хранилищу.</string>
     <string name="status_default_device_name">Устройство Android</string>
-    <string name="menu_restart_toast">Перезагрузка движка Clipboard Share…</string>
-    <string name="menu_power_off_toast">Завершение работы Clipboard Share…</string>
+    <string name="menu_restart_toast">Перезагрузка движка OffBridge…</string>
+    <string name="menu_power_off_toast">Завершение работы OffBridge…</string>
     <string name="pairing_requesting_title">Запрос на сопряжение</string>
     <string name="pairing_waiting_subtitle">Ожидание принятия от %1$s…</string>
     <string name="pairing_success">Успешное сопряжение с %1$s!</string>
@@ -465,7 +465,7 @@
     <string name="settings_save_location_downloads">Загрузки (Downloads)</string>
     <string name="settings_toast_could_not_open_browser">Не удалось открыть браузер</string>
     <string name="settings_dialog_choose_language">Выбрать язык</string>
-    <string name="settings_toast_rebooting_engine">Перезагрузка движка Clipboard Share…</string>
+    <string name="settings_toast_rebooting_engine">Перезагрузка движка OffBridge…</string>
     <string name="settings_dialog_privacy_policy">Политика конфиденциальности</string>
     <string name="settings_action_close">Закрыть</string>
     <string name="settings_save_location_selected_folder">Выбранная папка</string>
@@ -512,7 +512,7 @@
     <string name="pairing_declined_simple">Сопряжение отклонено</string>
     <string name="pairing_request_expired">Срок действия этого запроса на сопряжение истёк — начните новое сопряжение с другого устройства.</string>
     <string name="share_text_sending">Отправка текста на ваши устройства…</string>
-    <string name="history_share_sheet_hint">Совет: чтобы отправить текст из другого приложения, нажмите кнопку «Поделиться» и выберите Clipboard Share.</string>
+    <string name="history_share_sheet_hint">Совет: чтобы отправить текст из другого приложения, нажмите кнопку «Поделиться» и выберите OffBridge.</string>
     <string name="selected_files_empty_hint">Выбранные файлы будут показаны здесь</string>
     <string name="copy_detail_title">Сведения о копии</string>
     <string name="copy_detail_button">Копировать</string>
@@ -532,11 +532,12 @@
     <string name="qr_pair_code_desc">QR-код для связи</string>
     <string name="qr_pair_expired">Код истёк</string>
     <string name="qr_pair_refresh">Показать новый код</string>
-    <string name="qr_pair_scan_prompt">Отсканируйте это в Clipboard Share на другом устройстве.</string>
+    <string name="qr_pair_scan_prompt">Отсканируйте это в OffBridge на другом устройстве.</string>
     <string name="qr_pair_expires_in">Истекает через %1$s</string>
     <string name="qr_pair_hotspot_hint">Общая сеть не нужна — другое устройство подключится к этому Wi-Fi.</string>
     <string name="qr_pair_start_hotspot">Нет общей сети? Включить точку доступа</string>
-    <string name="qr_pair_no_route">У этого устройства нет сети для связи, и точку доступа включить не удалось.</string>
+    <string name="qr_pair_same_network_hint">Оба устройства должны быть в одной сети Wi-Fi.</string>
+    <string name="qr_pair_no_route">Это устройство не подключено к Wi-Fi, поэтому другому устройству не к чему подключаться.</string>
     <string name="qr_pair_connecting">Связывание…</string>
     <string name="qr_pair_try_again">Повторить</string>
     <string name="qr_pair_scan_action">Сканировать код</string>
@@ -549,8 +550,8 @@
     <string name="qr_pair_denied">Этот код уже использован или истёк. Попросите новый.</string>
     <string name="qr_pair_scanned_expired">Этот код истёк. Попросите новый.</string>
     <string name="qr_pair_unsupported_version">Этот код создан более новой версией приложения. Обновите её, чтобы связать устройства.</string>
-    <string name="qr_pair_invalid_code">Это не код связи Clipboard Share.</string>
-    <string name="qr_pair_unreachable">Не удалось связаться с этим устройством. Убедитесь, что оба в одной сети Wi-Fi, или включите точку доступа.</string>
+    <string name="qr_pair_invalid_code">Это не код связи OffBridge.</string>
+    <string name="qr_pair_unreachable">Не удалось связаться с этим устройством. Убедитесь, что оба в одной сети Wi-Fi.</string>
     <string name="qr_pair_join_refused">Подключение к Wi-Fi отклонено, устройства не смогли соединиться.</string>
     <string name="qr_pair_confirmation_failed">Другое устройство не подтвердило наличие ключа связи, поэтому связь не создана. Повторите с новым кодом.</string>
     <string name="qr_pair_failed">Не удалось связать устройства. Повторите с новым кодом.</string>

@@ -113,7 +113,7 @@ private fun AppThemePreview() {
         Surface(color = AppThemeTokens.colors.background) {
             Column(Modifier.padding(AppThemeTokens.dimens.spaceLg)) {
                 Text(
-                    text = "Clipboard Share",
+                    text = "OffBridge",
                     style = MaterialTheme.typography.headlineSmall,
                     color = AppThemeTokens.colors.textPrimary,
                 )

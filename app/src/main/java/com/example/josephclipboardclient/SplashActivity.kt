@@ -32,6 +32,11 @@ class SplashActivity : AppCompatActivity() {
         // ~2s splash window covers the small read before MainActivity binds the history UI.
         HistoryBackupManager.maybeRestoreOnLaunch(applicationContext)
 
+        // First launch after the rename: move already-received photos/videos out of the old
+        // Pictures|Movies/"Clipboard Share" album into "OffBridge" so they aren't split in two.
+        // Own background thread, no-op after it has run once, never fails launch.
+        MediaFolderMigration.runOnce(applicationContext)
+
         // Pre-warm the update check in the background at launch, so opening the Updates page shows the
         // result after the loader's 1s floor instead of waiting on a fresh GitHub round-trip. Silent —
         // no popup/badge; the Updates page reads UpdateRepository.status.

@@ -47,7 +47,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 
-/** UI state for the pairing-code window (opening it can block on raising an AP). */
+/** UI state for the pairing-code window. */
 private sealed interface PairQrUiState {
     object Loading : PairQrUiState
     data class Ready(val info: QrPairCoordinator.PairQrInfo, val bitmap: ImageBitmap) : PairQrUiState
@@ -69,7 +69,7 @@ fun QrPairDialog(
 ) {
     val colors = LocalExtraColors.current
     var uiState by remember { mutableStateOf<PairQrUiState>(PairQrUiState.Loading) }
-    // Bumped by the hotspot retry and by refreshing an expired code; each change re-opens the window.
+    // Bumped by refreshing an expired code; each change re-opens the window.
     var openEpoch by remember { mutableStateOf(0) }
     val pairedWith by appController.qrPairedDevice.collectAsState()
 
@@ -77,7 +77,7 @@ fun QrPairDialog(
         uiState = PairQrUiState.Loading
         val info = withContext(Dispatchers.IO) { appController.startQrPairSession() }
         uiState = if (info == null) {
-            PairQrUiState.Error(str("qr_pair_no_route", "This device has no network to pair over, and couldn't start a hotspot."))
+            PairQrUiState.Error(str("qr_pair_no_route", "This PC isn't on a Wi-Fi network, so there's nothing for the phone to connect to."))
         } else {
             val bmp = try { encodePairQr(info.qrText, 660) } catch (e: Exception) {
                 DiagLog.w("QR pair encode failed: ${e.message}")
@@ -119,10 +119,6 @@ fun QrPairDialog(
                         else PairCodeBlock(
                             state = s,
                             onRefresh = { openEpoch++ },
-                            // The AP is now attempted on every open, so this button is only reachable
-                            // when starting it failed (no Wi-Fi Direct adapter, radio off). Re-opening
-                            // retries it, which is the only useful action left at that point.
-                            onStartHotspot = { openEpoch++ },
                         )
                 }
 
@@ -207,7 +203,6 @@ private fun PairedBlock(deviceName: String) {
 private fun PairCodeBlock(
     state: PairQrUiState.Ready,
     onRefresh: () -> Unit,
-    onStartHotspot: () -> Unit,
 ) {
     val colors = LocalExtraColors.current
 
@@ -271,34 +266,15 @@ private fun PairCodeBlock(
     }
 
     Spacer(Modifier.height(Dimens.spaceMd))
-    if (state.info.hotspotActive && state.info.ssid != null && state.info.passphrase != null) {
-        Text(
-            str("qr_pair_hotspot_hint", "No shared network needed — the other device joins this Wi-Fi."),
-            style = MaterialTheme.typography.caption,
-            color = colors.textSecondary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(Dimens.spaceXs))
-        Text(
-            "${state.info.ssid}  /  ${state.info.passphrase}",
-            style = MaterialTheme.typography.body2,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colors.onBackground,
-            textAlign = TextAlign.Center
-        )
-    } else if (!expired) {
+    // Pairing is same-network only: no AP is raised, so there are no credentials to print and no
+    // hotspot to offer. Stating the requirement is what replaces both — "nothing happens when I scan"
+    // is the failure this dialog exists to prevent.
+    if (!expired) {
         Text(
             str("qr_pair_same_network", "Both devices must be on the same Wi-Fi."),
             style = MaterialTheme.typography.caption,
             color = colors.textSecondary,
             textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(Dimens.spaceSm))
-        AppSecondaryButton(
-            text = str("qr_pair_start_hotspot", "No shared network? Start a hotspot"),
-            onClick = onStartHotspot,
-            modifier = Modifier.fillMaxWidth()
         )
     }
 

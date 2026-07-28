@@ -482,7 +482,7 @@ class ClipboardService : Service() {
                             showReceivedNotification(text)
 
                             withContext(Dispatchers.Main) {
-                                val clipData = ClipData.newPlainText("Clipboard Share", text)
+                                val clipData = ClipData.newPlainText("OffBridge", text)
                                 val extras = PersistableBundle()
                                 extras.putBoolean(CLIPBOARD_SOURCE_TAG, true)
                                 clipData.description.extras = extras

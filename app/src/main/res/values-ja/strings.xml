@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clipboard Share</string>
-    <string name="user_agreement_text">Clipboard Shareへようこそ。
+    <string name="app_name">OffBridge</string>
+    <string name="user_agreement_text">OffBridgeへようこそ。
 
 
         本アプリケーションは「現状有姿」で提供され、商品性、特定目的への適合性、および非侵害の保証を含むがこれらに限定されない、明示的または黙示的なあらゆる種類の保証なしで提供されます。いかなる場合も、
@@ -33,11 +33,11 @@
 
 
         共有するファイルについて、必要な権利を有していることを確認してください。</string>
-    <string name="privacy_policy_text">&lt;b&gt;Clipboard Shareのプライバシーポリシー&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+    <string name="privacy_policy_text">&lt;b&gt;OffBridgeのプライバシーポリシー&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         発効日：2026年6月22日&lt;br&gt;&lt;br&gt;
-        Clipboard Share（以下「本アプリ」）をご利用いただきありがとうございます。このプライバシーポリシーは、情報の収集、使用、開示に関する当社の原則を説明するものです。当社の基本理念はシンプルです：あなたのデータはあなたのものであり、私たちはそれを必要としません。&lt;br&gt;&lt;br&gt;
+        OffBridge（以下「本アプリ」）をご利用いただきありがとうございます。このプライバシーポリシーは、情報の収集、使用、開示に関する当社の原則を説明するものです。当社の基本理念はシンプルです：あなたのデータはあなたのものであり、私たちはそれを必要としません。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;基本原則：当社はあなたのデータを収集しません&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Shareは、あなたのプライバシーを最優先事項としてゼロから設計されています。本アプリは、ローカルWi-Fiネットワーク上のデバイス間の直接のピアツーピア（P2P）通信を容易にします。&lt;br&gt;&lt;br&gt;
+        OffBridgeは、あなたのプライバシーを最優先事項としてゼロから設計されています。本アプリは、ローカルWi-Fiネットワーク上のデバイス間の直接のピアツーピア（P2P）通信を容易にします。&lt;br&gt;&lt;br&gt;
         当社には、あなたの個人データを収集、保存、または処理するサーバーはありません。すべてのデータはあなたのデバイスおよびローカルネットワーク上に残ります。&lt;br&gt;&lt;br&gt;
         具体的には、当社が以下のものを収集、受信、または共有することはありません：&lt;br&gt;
         • クリップボードの内容。&lt;br&gt;
@@ -46,7 +46,7 @@
         • 連絡先、位置情報、その他の機密性の高いデバイス情報。&lt;br&gt;&lt;br&gt;
         本アプリは、アカウントの作成やサインインを必要とせずに機能します。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;本アプリがデバイスにローカルで保存する情報&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        正しく機能するために、Clipboard Shareは少量のデータをデバイスのローカルストレージに排他的に保存します。このデータはあなたの管理下にあり、デバイスを離れて当社に送信されることは決してありません。これには以下が含まれます：&lt;br&gt;&lt;br&gt;
+        正しく機能するために、OffBridgeは少量のデータをデバイスのローカルストレージに排他的に保存します。このデータはあなたの管理下にあり、デバイスを離れて当社に送信されることは決してありません。これには以下が含まれます：&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;暗号化キー：&lt;/b&gt; 2つのデバイスを明示的にペアリングすると、両デバイスの間で固有のAES-256暗号化キーが確立され、各デバイスに安全に保存されます。このキーは、ペアリングされた2つのデバイス間でやり取りされるクリップボードの内容とファイルを暗号化するために使用され、本アプリのセキュリティに不可欠です。デバイス検出のブロードキャストは、以下に説明するとおり暗号化されません。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;ペアリングされたデバイス情報：&lt;/b&gt; 本アプリは、ペアリングしたデバイスのローカルIPアドレスとユーザーが選択したデバイス名を保存します。これは、ローカルネットワーク上でそれらを識別して接続するために使用されます。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;クリップボード履歴：&lt;/b&gt; 本アプリは、利便性のためにコピーしたクリップボードアイテムのローカル履歴を保持します。この履歴はデバイスにのみ保存され、アプリ内からいつでも消去できます。&lt;br&gt;&lt;br&gt;
@@ -69,7 +69,7 @@
         • &lt;b&gt;バックグラウンドで待機する：&lt;/b&gt; フォアグラウンドサービスと通知を使用して、受信するクリップボード項目や転送を待ち受けます。&lt;br&gt;&lt;br&gt;
         要するに、本アプリはすべてにローカルのWi-Fi、ホットスポット、またはデバイス間の直接接続を使用します。検出や転送にモバイルデータを使用することはなく、インターネットに接続することもありません。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;アプリでリクエストされる権限&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Shareは、機能を有効にするために特定の権限をリクエストします。その理由は以下の通りです：&lt;br&gt;&lt;br&gt;
+        OffBridgeは、機能を有効にするために特定の権限をリクエストします。その理由は以下の通りです：&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;ネットワークアクセス&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：他のデバイスを検出し、ローカルWi-Fiネットワークを介してデータを転送するために必要です。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;位置情報と付近のデバイス&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：一部のAndroidバージョンでは、アプリがWi-Fi Direct経由で付近のデバイスを検索して接続するためにこの権限が必要であり、本アプリはこれをオフライン転送に使用します。当社はこれを収集しませんが、この権限がないと付近のデバイスを見つけられません。本アプリがあなたの物理的な位置情報を読み取ったり、保存したり、共有したりすることはありません。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：付近のデバイスとの直接的なオフライン接続を確立するために使用されます。これを通じてデータを収集することはなく、あなたを追跡するために使用されることもありません。&lt;br&gt;&lt;br&gt;
@@ -81,7 +81,7 @@
         • &lt;b&gt;バッテリー最適化の無視&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：Androidオペレーティングシステムがアプリのバックグラウンドサービスをシャットダウンしてクリップボードの同期やファイル転送を中断するのを防ぐために、強く推奨されます。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;外部ストレージ&lt;/b&gt; (WRITE_EXTERNAL_STORAGE)：古いAndroidバージョン（SDK 28以下）では、受信したファイルをデバイスのストレージに保存するために必要です。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;サードパーティサービス&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Shareは、分析、広告、またはデータの共有を伴うその他の目的でサードパーティのサービスを使用しません。&lt;br&gt;&lt;br&gt;
+        OffBridgeは、分析、広告、またはデータの共有を伴うその他の目的でサードパーティのサービスを使用しません。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;子供のプライバシー&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         本アプリは13歳未満の子供による使用を意図していません。子供から意図的に情報を収集することはありません。そもそも個人データを収集しないため、ユーザーの年齢を確認するメカニズムはありません。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;このプライバシーポリシーの変更&lt;/b&gt;&lt;br&gt;&lt;br&gt;
@@ -106,7 +106,7 @@
     <string name="initiating_cryptographic_handshake">暗号化ハンドシェイクを開始しています...</string>
     <string name="pairing_request_title">ペアリングリクエスト</string>
     <string name="action_accept">承認</string>
-    <string name="download_windows_heading">Windows版 Clipboard Share をダウンロード</string>
+    <string name="download_windows_heading">Windows版 OffBridge をダウンロード</string>
     <string name="download_windows_blurb">パソコン用のデスクトップ版を入手して、この電話とパソコンの間でクリップボードを同期し、ファイルを送信できます。</string>
     <string name="download_open_website">ダウンロードページへ</string>
     <string name="menu_title">メニュー</string>
@@ -130,7 +130,7 @@
     <string name="recent_copies_hint">最近のコピー（タップして表示）</string>
     <string name="required_permissions_title">必要な権限</string>
     <string name="battery_optimization_title">バッテリー最適化</string>
-    <string name="battery_optimization_desc">Clipboard Shareはバックグラウンドで実行されます。転送と同期が中断されないように、バッテリー最適化を無効にしてください。</string>
+    <string name="battery_optimization_desc">OffBridgeはバックグラウンドで実行されます。転送と同期が中断されないように、バッテリー最適化を無効にしてください。</string>
     <string name="action_go_to_settings">設定へ進む</string>
     <string name="notifications_title">通知</string>
     <string name="notifications_desc">永続的なサービス状態を表示し、着信ペアリングやファイルリクエストを警告するために必要です。</string>
@@ -169,7 +169,7 @@
     <string name="action_open">開く</string>
     <string name="default_file_name_zip">filename.zip</string>
     <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
-    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_clipboard_share_prefix">OffBridge -</string>
     <string name="notification_mesh_active">メッシュ有効</string>
     <string name="unknown">不明</string>
     <string name="unknown_file">不明なファイル</string>
@@ -180,7 +180,7 @@
     <string name="notification_successfully_pushed_title">プッシュに成功しました</string>
     <string name="notification_clipboard_received_title">クリップボードを受信しました</string>
     <string name="notification_mesh_network_active">メッシュネットワークが有効です</string>
-    <string name="notification_channel_clipboard_share_service">Clipboard Share サービス</string>
+    <string name="notification_channel_clipboard_share_service">OffBridge サービス</string>
     <string name="notification_channel_clipboard_alerts">クリップボードアラート</string>
     <string name="notification_channel_pairing_requests">ペアリングリクエスト</string>
     <string name="notification_from_sender">送信元: %s</string>
@@ -214,15 +214,15 @@
     <string name="toast_transfer_interrupted">転送が中断されました。再接続時に再開できます。</string>
     <string name="toast_batch_transfer_complete">一括転送が完了しました！</string>
     <string name="shortcut_send_to_device">%sに送信</string>
-    <string name="shortcut_transfer_via_clipboard_share">Clipboard Shareで転送</string>
+    <string name="shortcut_transfer_via_clipboard_share">OffBridgeで転送</string>
     <string name="toast_pushing_clipboard_to_mesh">クリップボードをメッシュにプッシュしています...</string>
     <string name="no_clipboard_history_yet">クリップボードの履歴はまだありません。</string>
     <string name="toast_copied_to_clipboard">クリップボードにコピーしました</string>
     <string name="toast_notifications_permission_required">フォアグラウンドサービスには通知権限が必要です。</string>
     <string name="toast_storage_permission_required">このAndroidバージョンでは、ストレージ権限がないとファイル転送が失敗する可能性があります。</string>
     <string name="default_android_device_name">Androidデバイス</string>
-    <string name="toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>
-    <string name="toast_shutting_down_engine">Clipboard Share をシャットダウンしています...</string>
+    <string name="toast_rebooting_engine">OffBridge エンジンを再起動しています...</string>
+    <string name="toast_shutting_down_engine">OffBridge をシャットダウンしています...</string>
     <string name="toast_notification_permission_granted">通知権限が許可されました！</string>
     <string name="toast_notifications_recommended">最高のエクスペリエンスを得るために通知を推奨します。</string>
     <string name="toast_notification_permission_already_granted">このバージョンでは通知権限は既に許可されています。</string>
@@ -338,7 +338,7 @@
     <string name="offgrid_error_wifi_off">Wi-Fiがオフです。オフグリッド送信を使うにはオンにしてください。</string>
     <string name="offgrid_error_wifi_off_receiver">Wi-Fiがオフです。受信するにはオンにしてください。インターネット接続は不要です。</string>
     <string name="offgrid_fallback_permission_rationale">標準の接続がうまくいかないときにアプリが直接接続できるよう、近くのデバイスへのアクセスを許可してください。</string>
-    <string name="offgrid_hce_description">Clipboard Share オフグリッド転送の認証情報</string>
+    <string name="offgrid_hce_description">OffBridge オフグリッド転送の認証情報</string>
     <string name="offgrid_join_failed_closer">送信側に到達できませんでした。スマホを近づけ、もう一度コードを表示してもらってから、再試行してください。</string>
     <string name="offgrid_nfc_off">NFCがオフです。タップして有効にしてください</string>
     <string name="offgrid_nfc_ready">NFCの準備ができました。タップしてスマホを合わせる位置を確認してください</string>
@@ -401,7 +401,7 @@
     <string name="clip_read_failed">クリップボードの読み取りに失敗しました</string>
     <string name="status_push_success_title">プッシュに成功しました</string>
     <string name="status_clipboard_received_title">クリップボードを受信しました</string>
-    <string name="status_channel_service">Clipboard Share サービス</string>
+    <string name="status_channel_service">OffBridge サービス</string>
     <string name="status_channel_alerts">クリップボードアラート</string>
     <string name="status_channel_pairing">ペアリングリクエスト</string>
     <string name="status_channel_transfer_progress">ファイル転送の進捗状況</string>
@@ -427,7 +427,7 @@
     <string name="transfer_tut_history">ここをタップすると転送履歴を表示し、進捗を確認できます。</string>
     <string name="transfer_tut_next">次へ</string>
     <string name="transfer_shortcut_short_label">%1$sに送信</string>
-    <string name="transfer_shortcut_long_label">Clipboard Shareで転送</string>
+    <string name="transfer_shortcut_long_label">OffBridgeで転送</string>
     <string name="transfer_unknown_file">不明なファイル</string>
     <string name="history_tutorial_push">ここをタップすると、現在のクリップボードのテキストをすべてのペアリング済みデバイスに即座にプッシュできます。</string>
     <string name="history_tutorial_accept_switch">他のデバイスからクリップボードの内容を受信したくない場合は、これをオフにしてください。</string>
@@ -440,8 +440,8 @@
     <string name="perm_notifications_required">フォアグラウンドサービスには通知権限が必要です。</string>
     <string name="perm_storage_required">このAndroidバージョンでは、ストレージ権限がないとファイル転送が失敗する可能性があります。</string>
     <string name="status_default_device_name">Androidデバイス</string>
-    <string name="menu_restart_toast">Clipboard Share エンジンを再起動しています...</string>
-    <string name="menu_power_off_toast">Clipboard Share をシャットダウンしています...</string>
+    <string name="menu_restart_toast">OffBridge エンジンを再起動しています...</string>
+    <string name="menu_power_off_toast">OffBridge をシャットダウンしています...</string>
     <string name="pairing_requesting_title">ペアリングをリクエスト中</string>
     <string name="pairing_waiting_subtitle">%1$sの承認を待っています...</string>
     <string name="pairing_success">%1$sと正常にペアリングしました！</string>
@@ -462,7 +462,7 @@
     <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">ブラウザを開けませんでした</string>
     <string name="settings_dialog_choose_language">言語の選択</string>
-    <string name="settings_toast_rebooting_engine">Clipboard Share エンジンを再起動しています...</string>
+    <string name="settings_toast_rebooting_engine">OffBridge エンジンを再起動しています...</string>
     <string name="settings_dialog_privacy_policy">プライバシーポリシー</string>
     <string name="settings_action_close">閉じる</string>
     <string name="settings_save_location_selected_folder">選択したフォルダ</string>
@@ -509,7 +509,7 @@
     <string name="pairing_declined_simple">ペアリングが拒否されました</string>
     <string name="pairing_request_expired">このペアリング リクエストは期限切れです。相手のデバイスから新しいペアリングを開始してください。</string>
     <string name="share_text_sending">デバイスにテキストを送信中…</string>
-    <string name="history_share_sheet_hint">ヒント：他のアプリからテキストを送るには、そのアプリの共有ボタンをタップして Clipboard Share を選んでください。</string>
+    <string name="history_share_sheet_hint">ヒント：他のアプリからテキストを送るには、そのアプリの共有ボタンをタップして OffBridge を選んでください。</string>
     <string name="selected_files_empty_hint">選択したファイルがここに表示されます</string>
     <string name="copy_detail_title">詳細をコピー</string>
     <string name="copy_detail_button">コピー</string>
@@ -529,11 +529,12 @@
     <string name="qr_pair_code_desc">ペアリング用QRコード</string>
     <string name="qr_pair_expired">コードの有効期限切れ</string>
     <string name="qr_pair_refresh">新しいコードを表示</string>
-    <string name="qr_pair_scan_prompt">もう一方の端末の Clipboard Share でこれを読み取ってください。</string>
+    <string name="qr_pair_scan_prompt">もう一方の端末の OffBridge でこれを読み取ってください。</string>
     <string name="qr_pair_expires_in">残り %1$s</string>
     <string name="qr_pair_hotspot_hint">共有ネットワークは不要です。もう一方の端末がこの Wi-Fi に接続します。</string>
     <string name="qr_pair_start_hotspot">共有ネットワークがない場合はテザリングを開始</string>
-    <string name="qr_pair_no_route">この端末にはペアリングできるネットワークがなく、テザリングも開始できませんでした。</string>
+    <string name="qr_pair_same_network_hint">両方のデバイスが同じWi-Fiネットワークにある必要があります。</string>
+    <string name="qr_pair_no_route">このデバイスはWi-Fiに接続されていないため、相手のデバイスが接続する先がありません。</string>
     <string name="qr_pair_connecting">ペアリング中…</string>
     <string name="qr_pair_try_again">再試行</string>
     <string name="qr_pair_scan_action">コードを読み取る</string>
@@ -546,8 +547,8 @@
     <string name="qr_pair_denied">そのコードは使用済みか有効期限切れです。新しいコードを表示してもらってください。</string>
     <string name="qr_pair_scanned_expired">そのコードは有効期限切れです。新しいコードを表示してもらってください。</string>
     <string name="qr_pair_unsupported_version">そのコードは新しいバージョンのアプリのものです。更新してからペアリングしてください。</string>
-    <string name="qr_pair_invalid_code">これは Clipboard Share のペアリングコードではありません。</string>
-    <string name="qr_pair_unreachable">その端末に接続できませんでした。両方が同じ Wi-Fi に接続しているか確認するか、テザリングを使ってください。</string>
+    <string name="qr_pair_invalid_code">これは OffBridge のペアリングコードではありません。</string>
+    <string name="qr_pair_unreachable">そのデバイスに到達できませんでした。両方が同じWi-Fiネットワークにあることを確認してください。</string>
     <string name="qr_pair_join_refused">Wi-Fi への接続が拒否されたため、端末同士を接続できませんでした。</string>
     <string name="qr_pair_confirmation_failed">相手の端末がペアリング鍵の所持を証明できなかったため、ペアリングは行われませんでした。新しいコードでやり直してください。</string>
     <string name="qr_pair_failed">ペアリングに失敗しました。新しいコードでやり直してください。</string>

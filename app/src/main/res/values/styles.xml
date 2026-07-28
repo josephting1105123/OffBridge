@@ -24,11 +24,11 @@
         <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
 
-    <!-- Control voice stays Geist (matches the Compose label* slots); content styles use Plex. -->
+    <!-- Controls use the platform serif, matching the Compose label* slots; content styles use Plex. -->
     <style name="TextAppearance.App.Label" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textSize">14sp</item>        <item name="android:textColor">?attr/appTextSecondaryColor</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">serif</item>
+        <item name="fontFamily">serif</item>
     </style>
 
     <style name="TextAppearance.App.Caption" parent="TextAppearance.Material3.BodySmall">
@@ -46,7 +46,7 @@
         <item name="android:text">@string/action_how_to_use</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:fontFamily">@font/geist_variable</item>
+        <item name="android:fontFamily">serif</item>
         <item name="android:textColor">?attr/appGreenText</item>
         <item name="android:drawableStart">@drawable/ic_help_outline</item>
         <item name="android:drawablePadding">@dimen/space_xs</item>

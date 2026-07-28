@@ -12,22 +12,15 @@ import androidx.compose.ui.unit.sp
 import com.EntropicSoftwareLab.ClipboardShare.R
 
 /*
- * Two-voice type system, mirrored on the Windows client (theme/Type.kt):
- *  - Content voice: IBM Plex Sans (headings, titles, body, captions) — humanist letterforms with
- *    Latin + Cyrillic coverage, bundled as a variable font in res/font.
- *  - Control voice: Geist (buttons, labels, chips — the label* slots) so controls keep their
- *    tighter, tracked look.
- * Both are variable fonts; Inter (res/font/inter_variable) stays bundled as a one-line swap if ever
- * preferred. Numeric/data fields additionally merge [TabularFigures] (tnum) so live values don't
- * reflow as digits change width.
+ * Type system, mirrored on the Windows client (theme/Type.kt):
+ *  - Voice: the platform serif (FontFamily.Serif) on every slot. It resolves to the device's own
+ *    serif on Android and through DirectWrite on Windows, so the shared decision is the serif
+ *    voice, not identical glyphs. Nothing about it is bundled.
+ *  - Numerals: IBM Plex Sans, bundled as a variable font in res/font and merged into numeric/data
+ *    text via [TabularFigures] (tnum) so live values don't reflow as digits change width. The
+ *    View-layer styles (res/values/styles.xml) also use Plex for their content text.
+ * Geist and Inter were dropped when the ramp moved to serif; neither ships any more.
  */
-val Geist = FontFamily(
-    Font(R.font.geist_variable, FontWeight.Normal),
-    Font(R.font.geist_variable, FontWeight.Medium),
-    Font(R.font.geist_variable, FontWeight.SemiBold),
-    Font(R.font.geist_variable, FontWeight.Bold),
-)
-
 val PlexSans = FontFamily(
     Font(R.font.ibm_plex_sans_variable, FontWeight.Normal),
     Font(R.font.ibm_plex_sans_variable, FontWeight.Medium),
@@ -38,8 +31,8 @@ val PlexSans = FontFamily(
 /**
  * Type scale mirroring res/values/styles.xml (TextAppearance.App.*): Bold headings/titles, Medium
  * labels, Normal body. Starts from the M3 default scale (so every slot a screen might touch is covered),
- * puts Plex on the content slots (display/headline/title/body) and Geist on the control slots (label*,
- * which M3 buttons/chips draw from), then overrides the five app styles with their sizes/weights.
+ * puts the serif voice on every slot — content and controls alike — then overrides the five app
+ * styles with their sizes/weights.
  */
 private val Base = Typography()
 val AppTypography = Base.copy(
@@ -55,7 +48,7 @@ val AppTypography = Base.copy(
     bodyLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 15.sp),   // App.Body
     bodyMedium = Base.bodyMedium.copy(fontFamily = FontFamily.Serif),
     bodySmall = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Normal, fontSize = 12.sp),   // App.Caption
-    labelLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, fontSize = 14.sp),     // App.Label (Switched from Geist to Serif)
+    labelLarge = TextStyle(fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, fontSize = 14.sp),     // App.Label
     labelMedium = Base.labelMedium.copy(fontFamily = FontFamily.Serif),
     labelSmall = Base.labelSmall.copy(fontFamily = FontFamily.Serif),
 )

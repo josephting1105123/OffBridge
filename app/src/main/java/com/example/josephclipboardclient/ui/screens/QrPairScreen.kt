@@ -50,7 +50,6 @@ import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import kotlinx.coroutines.delay
 
-/** Which half of the pairing screen is on show. */
 /**
  * Ceilings for the two big square-ish blocks on this screen.
  *
@@ -67,11 +66,12 @@ import kotlinx.coroutines.delay
 private val QR_MAX_SIZE = 280.dp
 private val SCAN_PREVIEW_MAX_WIDTH = 420.dp
 
+/** Which half of the pairing screen is on show. */
 enum class QrPairMode { SHOW, SCAN }
 
 /** What the screen is doing right now; the activity owns every transition between these. */
 sealed class QrPairStatus {
-    /** Opening the window (and possibly raising a hotspot). */
+    /** Opening the window. */
     object Preparing : QrPairStatus()
 
     /** A code is on screen / the camera is live — the normal resting state. */
@@ -92,9 +92,6 @@ data class QrPairUi(
     val status: QrPairStatus,
     val qr: ImageBitmap? = null,
     val expiresAtMs: Long = 0L,
-    val ssid: String? = null,
-    val passphrase: String? = null,
-    val hotspotActive: Boolean = false,
     val cameraGranted: Boolean = false,
 )
 
@@ -109,7 +106,6 @@ fun QrPairScreen(
     onBack: () -> Unit,
     onModeChange: (QrPairMode) -> Unit,
     onRefreshCode: () -> Unit,
-    onStartHotspot: () -> Unit,
     onRequestCamera: () -> Unit,
     onPreviewReady: (PreviewView) -> Unit,
     onRetry: () -> Unit,
@@ -213,7 +209,7 @@ fun QrPairScreen(
             }
 
             is QrPairStatus.Ready -> when (ui.mode) {
-                QrPairMode.SHOW -> ShowCodeBlock(ui, onModeChange, onRefreshCode, onStartHotspot)
+                QrPairMode.SHOW -> ShowCodeBlock(ui, onModeChange, onRefreshCode)
                 QrPairMode.SCAN -> ScanBlock(ui, onModeChange, onRequestCamera, onPreviewReady)
             }
         }
@@ -235,7 +231,6 @@ private fun ShowCodeBlock(
     ui: QrPairUi,
     onModeChange: (QrPairMode) -> Unit,
     onRefreshCode: () -> Unit,
-    onStartHotspot: () -> Unit,
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -312,28 +307,16 @@ private fun ShowCodeBlock(
             )
         }
 
-        if (ui.hotspotActive && ui.ssid != null && ui.passphrase != null) {
-            Text(
-                stringResource(R.string.qr_pair_hotspot_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = dimens.spaceLg),
-            )
-            Text(
-                "${ui.ssid}  /  ${ui.passphrase}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                color = colors.textPrimary,
-                modifier = Modifier.padding(top = dimens.spaceXs),
-            )
-        } else if (!expired) {
-            OutlinedButton(
-                onClick = onStartHotspot,
-                modifier = Modifier.fillMaxWidth().padding(top = dimens.spaceLg).height(dimens.buttonHeight),
-            ) { Text(stringResource(R.string.qr_pair_start_hotspot), color = colors.green) }
-        }
+        // Pairing is same-network only, so there are no AP credentials to print and no hotspot to
+        // offer. What replaces both is saying the requirement up front, since "nothing happens when I
+        // scan" is the failure this screen has to prevent.
+        Text(
+            stringResource(R.string.qr_pair_same_network_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = dimens.spaceLg),
+        )
 
         Button(
             onClick = { onModeChange(QrPairMode.SCAN) },

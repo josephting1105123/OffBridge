@@ -4,7 +4,8 @@
         <!-- Smooth, responsive screen "pop" transitions app-wide. -->
         <item name="android:windowAnimationStyle">@style/WindowAnimation.App</item>
         <!-- IBM Plex Sans (res/font) as the content font instead of the Roboto platform default.
-             Controls keep Geist: Widget.App.Button, TextAppearance.App.Label, Widget.App.HowToUse. -->
+             Controls use the platform serif: Widget.App.Button, TextAppearance.App.Label,
+             Widget.App.HowToUse. -->
         <item name="android:fontFamily">@font/ibm_plex_sans_variable</item>
         <item name="fontFamily">@font/ibm_plex_sans_variable</item>
     </style>
@@ -68,9 +69,9 @@
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.Button</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">16sp</item>
-        <!-- Buttons keep Geist (control voice) while the theme default font is Plex. -->
-        <item name="android:fontFamily">@font/geist_variable</item>
-        <item name="fontFamily">@font/geist_variable</item>
+        <!-- Buttons use the platform serif (control voice) while the theme default font is Plex. -->
+        <item name="android:fontFamily">serif</item>
+        <item name="fontFamily">serif</item>
         <!-- Hairline outline so tonal/white buttons stay visible on the near-white light background. -->
         <item name="strokeColor">?attr/appDividerColor</item>
         <item name="strokeWidth">1dp</item>

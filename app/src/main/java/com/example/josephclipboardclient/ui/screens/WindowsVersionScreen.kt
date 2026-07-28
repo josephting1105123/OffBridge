@@ -48,7 +48,7 @@ private val HERO_CHIP = 76.dp
 private val HERO_ICON = 40.dp
 
 /**
- * "Download Clipboard Share for Windows" screen — points the user at the website to get the
+ * "Download OffBridge for Windows" screen — points the user at the website to get the
  * desktop companion. Reached from the power-menu "Windows Version" item.
  *
  * Composed like the Updates page: an accent hero above a glass card holding the copy and the single

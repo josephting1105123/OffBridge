@@ -121,8 +121,6 @@ class QrPairActivity : AppCompatActivity() {
                         onBack = { finish() },
                         onModeChange = ::switchMode,
                         onRefreshCode = { openWindow() },
-                        // Asked for by name, so a failure is reported instead of falling back quietly.
-                        onStartHotspot = { openWindow(hotspotRequired = true) },
                         onRequestCamera = { cameraPermission.launch(Manifest.permission.CAMERA) },
                         onPreviewReady = ::bindCamera,
                         onRetry = ::retry,
@@ -170,21 +168,11 @@ class QrPairActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Opens (or re-opens) the displayed pairing window. Hotspot setup blocks, so it runs off-thread.
-     *
-     * Every open attempts the AP. This side is the one that HOSTS a route, so denying it a hotspot
-     * only shrank the set of phones that could pair — a scanner on another network had nothing to
-     * connect to. The scan mode is the side that must not raise one, and doesn't: [switchMode] closes
-     * this window on the way in. With [hotspotRequired] left false, an AP that refuses to start is not
-     * an error as long as a LAN address remains.
-     */
-    private fun openWindow(hotspotRequired: Boolean = false) {
+    /** Opens (or re-opens) the displayed pairing window. Pairing is same-network only. */
+    private fun openWindow() {
         ui = ui.copy(mode = QrPairMode.SHOW, status = QrPairStatus.Preparing)
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                QrPairSession.open(applicationContext, withHotspot = true, hotspotRequired = hotspotRequired)
-            }
+            val result = withContext(Dispatchers.IO) { QrPairSession.open(applicationContext) }
             ui = when (result) {
                 is QrPairSession.OpenResult.Ready -> {
                     val bitmap = withContext(Dispatchers.Default) { encodeQr(result.info.qrText) }
@@ -192,17 +180,11 @@ class QrPairActivity : AppCompatActivity() {
                         status = QrPairStatus.Ready,
                         qr = bitmap?.asImageBitmap(),
                         expiresAtMs = result.info.expiresAtMs,
-                        ssid = result.info.ssid,
-                        passphrase = result.info.passphrase,
-                        hotspotActive = result.info.hotspotActive,
                     )
                 }
 
                 is QrPairSession.OpenResult.NoRoute ->
                     ui.copy(status = QrPairStatus.Error(getString(R.string.qr_pair_no_route)))
-
-                is QrPairSession.OpenResult.HotspotUnavailable ->
-                    ui.copy(status = QrPairStatus.Error(getString(R.string.qr_pair_hotspot_failed)))
             }
         }
     }

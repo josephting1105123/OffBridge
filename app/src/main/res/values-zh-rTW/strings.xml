@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clipboard Share</string>
-    <string name="user_agreement_text">歡迎使用 Clipboard Share。
+    <string name="app_name">OffBridge</string>
+    <string name="user_agreement_text">歡迎使用 OffBridge。
 
 
         本應用程式按「原樣」提供，不提供任何明示或暗示的擔保，包括但不限於對適銷性、特定用途適用性和非侵權性的擔保。在任何情況下，作者或版權持有人均不對因軟體或軟體的使用或其他交易而產生的、引起的或與軟體有關的任何索賠、損害或其他責任負責，無論是在合約、侵權或其他訴訟中。
@@ -23,11 +23,11 @@
 
 
         請確保您對共享的任何檔案擁有必要的權利。</string>
-    <string name="privacy_policy_text">&lt;b&gt;Clipboard Share 隱私權政策&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+    <string name="privacy_policy_text">&lt;b&gt;OffBridge 隱私權政策&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         生效日期：22/6/2026&lt;br&gt;&lt;br&gt;
-        感謝您使用 Clipboard Share（以下簡稱「本應用程式」）。本隱私權政策闡明了我們在收集、使用和披露資訊方面的原則。我們的核心理念很簡單：您的資料屬於您，我們不需要它。&lt;br&gt;&lt;br&gt;
+        感謝您使用 OffBridge（以下簡稱「本應用程式」）。本隱私權政策闡明了我們在收集、使用和披露資訊方面的原則。我們的核心理念很簡單：您的資料屬於您，我們不需要它。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;核心原則：我們不收集您的資料&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share 從設計之初就將您的隱私放在首位。本應用程式可促進您的裝置在區域 Wi-Fi 網路上進行直接的點對點 (P2P) 通訊。&lt;br&gt;&lt;br&gt;
+        OffBridge 從設計之初就將您的隱私放在首位。本應用程式可促進您的裝置在區域 Wi-Fi 網路上進行直接的點對點 (P2P) 通訊。&lt;br&gt;&lt;br&gt;
         我們沒有收集、儲存或處理您個人資料的伺服器。您的所有資料都保留在您的裝置和區域網路上。&lt;br&gt;&lt;br&gt;
         具體而言，我們不會收集、接收或共享：&lt;br&gt;
         • 您的剪貼簿內容。&lt;br&gt;
@@ -36,7 +36,7 @@
         • 您的聯絡人、位置或任何其他敏感的裝置資訊。&lt;br&gt;&lt;br&gt;
         本應用程式無需您建立帳戶或登入即可使用。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;應用程式在您裝置上本機儲存的資訊&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        為了正常運作，Clipboard Share 僅在您裝置的本機儲存空間中儲存少量資料。這些資料由您控制，絕不會離開您的裝置傳送給我們。這包括：&lt;br&gt;&lt;br&gt;
+        為了正常運作，OffBridge 僅在您裝置的本機儲存空間中儲存少量資料。這些資料由您控制，絕不會離開您的裝置傳送給我們。這包括：&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;加密金鑰：&lt;/b&gt;在您明確配對兩部裝置後，兩部裝置之間會協商出一個唯一的 AES-256 加密金鑰，並安全地儲存在每部裝置上。此金鑰用於加密這兩部配對裝置之間交換的剪貼簿內容和檔案，對本應用程式的安全性至關重要。裝置探索廣播不加密，詳見下文。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;配對裝置資訊：&lt;/b&gt;本應用程式會儲存您配對裝置的區域 IP 位址和使用者選擇的裝置名稱。這用於在區域網路上識別並連接它們。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;剪貼簿歷史記錄：&lt;/b&gt;本應用程式會保留您複製的剪貼簿項目的本機歷史記錄以方便您使用。此歷史記錄僅儲存在您的裝置上，您可隨時在應用程式內將其清除。&lt;br&gt;&lt;br&gt;
@@ -59,7 +59,7 @@
         • &lt;b&gt;在背景保持就緒：&lt;/b&gt; 使用前景服務和通知，以持續監聽傳入的剪貼簿項目和傳輸。&lt;br&gt;&lt;br&gt;
         簡而言之，本應用程式的所有功能都使用您的區域 Wi-Fi、熱點或裝置間的直接連線。它不會使用您的行動數據進行探索或傳輸，也不會連線到網際網路。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;應用程式請求的權限&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share 請求某些權限以啟用其功能。原因如下：&lt;br&gt;&lt;br&gt;
+        OffBridge 請求某些權限以啟用其功能。原因如下：&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;網路存取權限&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE)：需要透過區域 Wi-Fi 網路尋找其他裝置並傳輸資料。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;位置和附近裝置&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES)：某些 Android 版本要求應用程式取得此權限，才能透過 Wi-Fi Direct 掃描並連線至附近的裝置，本應用程式將其用於離網傳輸。我們不會收集它，但若沒有它，此功能就無法找到附近的裝置。本應用程式不會讀取、儲存或共享您的實際位置。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;藍牙&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT)：用於協助與附近裝置建立直接的離網連線。我們不會透過它收集任何資料，也絕不會用它來追蹤您。&lt;br&gt;&lt;br&gt;
@@ -71,7 +71,7 @@
         • &lt;b&gt;忽略電池最佳化&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)：強烈建議使用，以防止 Android 作業系統關閉應用程式的背景服務，否則會中斷剪貼簿同步和檔案傳輸。&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;外部儲存空間&lt;/b&gt; (WRITE_EXTERNAL_STORAGE)：在舊版 Android（SDK 28 及更低版本）上，需要此權限才能將接收到的檔案儲存到裝置儲存空間中。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;第三方服務&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share 不使用任何第三方服務進行分析、廣告或任何其他涉及共享您資料的目的。&lt;br&gt;&lt;br&gt;
+        OffBridge 不使用任何第三方服務進行分析、廣告或任何其他涉及共享您資料的目的。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;兒童隱私&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         本應用程式不適合 13 歲以下兒童使用。我們不會有意收集兒童的任何資訊。由於我們先不收集任何個人資料，因此我們沒有機制來驗證使用者的年齡。&lt;br&gt;&lt;br&gt;
         &lt;b&gt;本隱私權政策的變更&lt;/b&gt;&lt;br&gt;&lt;br&gt;
@@ -96,7 +96,7 @@
     <string name="initiating_cryptographic_handshake">正在啟動密碼交握...</string>
     <string name="pairing_request_title">配對請求</string>
     <string name="action_accept">接受</string>
-    <string name="download_windows_heading">下載 Windows 版 Clipboard Share</string>
+    <string name="download_windows_heading">下載 Windows 版 OffBridge</string>
     <string name="download_windows_blurb">取得適用於電腦的桌面版應用程式，在手機與電腦之間同步剪貼簿並傳輸檔案。</string>
     <string name="download_open_website">前往下載頁面</string>
     <string name="menu_title">選單</string>
@@ -120,7 +120,7 @@
     <string name="recent_copies_hint">最近複製內容（點擊以查看）</string>
     <string name="required_permissions_title">所需權限</string>
     <string name="battery_optimization_title">電池最佳化</string>
-    <string name="battery_optimization_desc">Clipboard Share 在背景執行。請停用電池最佳化以確保傳輸和剪貼簿同步不被中斷。</string>
+    <string name="battery_optimization_desc">OffBridge 在背景執行。請停用電池最佳化以確保傳輸和剪貼簿同步不被中斷。</string>
     <string name="action_go_to_settings">前往設定</string>
     <string name="notifications_title">通知</string>
     <string name="notifications_desc">需要此權限以顯示持續的服務狀態，並提醒您有傳入的配對或檔案請求。</string>
@@ -159,7 +159,7 @@
     <string name="action_open">開啟</string>
     <string name="default_file_name_zip">filename.zip</string>
     <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
-    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_clipboard_share_prefix">OffBridge -</string>
     <string name="notification_mesh_active">Mesh 活躍中</string>
     <string name="unknown">未知</string>
     <string name="unknown_file">未知檔案</string>
@@ -170,7 +170,7 @@
     <string name="notification_successfully_pushed_title">推送成功</string>
     <string name="notification_clipboard_received_title">已收到剪貼簿</string>
     <string name="notification_mesh_network_active">Mesh 網路活躍中</string>
-    <string name="notification_channel_clipboard_share_service">Clipboard Share 服務</string>
+    <string name="notification_channel_clipboard_share_service">OffBridge 服務</string>
     <string name="notification_channel_clipboard_alerts">剪貼簿警報</string>
     <string name="notification_channel_pairing_requests">配對請求</string>
     <string name="notification_from_sender">來自：%s</string>
@@ -204,15 +204,15 @@
     <string name="toast_transfer_interrupted">傳輸中斷。接收方可以在重新連線時恢復。</string>
     <string name="toast_batch_transfer_complete">批次傳輸完成！</string>
     <string name="shortcut_send_to_device">傳送到 %s</string>
-    <string name="shortcut_transfer_via_clipboard_share">透過 Clipboard Share 傳輸</string>
+    <string name="shortcut_transfer_via_clipboard_share">透過 OffBridge 傳輸</string>
     <string name="toast_pushing_clipboard_to_mesh">正在將剪貼簿推送到網路...</string>
     <string name="no_clipboard_history_yet">暫無剪貼簿歷史記錄。</string>
     <string name="toast_copied_to_clipboard">已複製到剪貼簿</string>
     <string name="toast_notifications_permission_required">前景服務需要通知權限。</string>
     <string name="toast_storage_permission_required">在此 Android 版本上，如果沒有儲存空間權限，檔案傳輸可能會失敗。</string>
     <string name="default_android_device_name">Android 裝置</string>
-    <string name="toast_rebooting_engine">正在重啟 Clipboard Share 引擎...</string>
-    <string name="toast_shutting_down_engine">正在關閉 Clipboard Share...</string>
+    <string name="toast_rebooting_engine">正在重啟 OffBridge 引擎...</string>
+    <string name="toast_shutting_down_engine">正在關閉 OffBridge...</string>
     <string name="toast_notification_permission_granted">已授予通知權限！</string>
     <string name="toast_notifications_recommended">建議開啟通知以獲得最佳體驗。</string>
     <string name="toast_notification_permission_already_granted">在此 Android 版本上已預設授予通知權限。</string>
@@ -328,7 +328,7 @@
     <string name="offgrid_error_wifi_off">Wi-Fi 已關閉。請將其開啟以使用離線傳送。</string>
     <string name="offgrid_error_wifi_off_receiver">Wi-Fi 已關閉。請將其開啟以接收——無需網際網路連線。</string>
     <string name="offgrid_fallback_permission_rationale">請允許存取附近裝置，讓應用程式在標準加入方式無效時可直接連線。</string>
-    <string name="offgrid_hce_description">Clipboard Share 離網傳輸憑證</string>
+    <string name="offgrid_hce_description">OffBridge 離網傳輸憑證</string>
     <string name="offgrid_join_failed_closer">無法連上傳送方。請將手機靠近一些並請對方再次顯示代碼，然後重試。</string>
     <string name="offgrid_nfc_off">NFC 已關閉——點擊以啟用</string>
     <string name="offgrid_nfc_ready">NFC 已就緒——點擊以查看手機的握持位置</string>
@@ -391,7 +391,7 @@
     <string name="clip_read_failed">無法讀取剪貼簿</string>
     <string name="status_push_success_title">推送成功</string>
     <string name="status_clipboard_received_title">已收到剪貼簿</string>
-    <string name="status_channel_service">Clipboard Share 服務</string>
+    <string name="status_channel_service">OffBridge 服務</string>
     <string name="status_channel_alerts">剪貼簿警報</string>
     <string name="status_channel_pairing">配對請求</string>
     <string name="status_channel_transfer_progress">檔案傳輸進度</string>
@@ -417,7 +417,7 @@
     <string name="transfer_tut_history">點擊這裡以查看您的傳輸歷史記錄並追蹤進度。</string>
     <string name="transfer_tut_next">下一步</string>
     <string name="transfer_shortcut_short_label">傳送到 %1$s</string>
-    <string name="transfer_shortcut_long_label">透過 Clipboard Share 傳輸</string>
+    <string name="transfer_shortcut_long_label">透過 OffBridge 傳輸</string>
     <string name="transfer_unknown_file">未知檔案</string>
     <string name="history_tutorial_push">點擊這裡可立即將您目前的剪貼簿文字推送到所有配對裝置。</string>
     <string name="history_tutorial_accept_switch">如果您不想從其他裝置接收剪貼簿內容，請關閉此項。</string>
@@ -430,8 +430,8 @@
     <string name="perm_notifications_required">前景服務需要通知權限。</string>
     <string name="perm_storage_required">在此 Android 版本上，如果沒有儲存空間權限，檔案傳輸可能會失敗。</string>
     <string name="status_default_device_name">Android 裝置</string>
-    <string name="menu_restart_toast">正在重啟 Clipboard Share 引擎…</string>
-    <string name="menu_power_off_toast">正在關閉 Clipboard Share…</string>
+    <string name="menu_restart_toast">正在重啟 OffBridge 引擎…</string>
+    <string name="menu_power_off_toast">正在關閉 OffBridge…</string>
     <string name="pairing_requesting_title">正在請求配對</string>
     <string name="pairing_waiting_subtitle">等待 %1$s 接受…</string>
     <string name="pairing_success">已成功與 %1$s 配對！</string>
@@ -452,7 +452,7 @@
     <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">無法開啟瀏覽器</string>
     <string name="settings_dialog_choose_language">選擇語言</string>
-    <string name="settings_toast_rebooting_engine">正在重啟 Clipboard Share 引擎…</string>
+    <string name="settings_toast_rebooting_engine">正在重啟 OffBridge 引擎…</string>
     <string name="settings_dialog_privacy_policy">隱私權政策</string>
     <string name="settings_action_close">關閉</string>
     <string name="settings_save_location_selected_folder">選定資料夾</string>
@@ -499,7 +499,7 @@
     <string name="pairing_declined_simple">配對被拒絕</string>
     <string name="pairing_request_expired">此配對請求已過期——請從另一台裝置重新發起配對。</string>
     <string name="share_text_sending">正在將文字傳送到您的裝置…</string>
-    <string name="history_share_sheet_hint">提示：若要從其他應用程式傳送文字，請點擊其分享按鈕並選擇 Clipboard Share。</string>
+    <string name="history_share_sheet_hint">提示：若要從其他應用程式傳送文字，請點擊其分享按鈕並選擇 OffBridge。</string>
     <string name="selected_files_empty_hint">所選的檔案會顯示在這裡</string>
     <string name="copy_detail_title">複製詳情</string>
     <string name="copy_detail_button">複製</string>
@@ -519,11 +519,12 @@
     <string name="qr_pair_code_desc">配對 QR 碼</string>
     <string name="qr_pair_expired">配對碼已過期</string>
     <string name="qr_pair_refresh">顯示新的配對碼</string>
-    <string name="qr_pair_scan_prompt">在另一台裝置上用 Clipboard Share 掃描此碼。</string>
+    <string name="qr_pair_scan_prompt">在另一台裝置上用 OffBridge 掃描此碼。</string>
     <string name="qr_pair_expires_in">%1$s 後過期</string>
     <string name="qr_pair_hotspot_hint">無需共用網路 — 另一台裝置直接加入此 Wi-Fi。</string>
     <string name="qr_pair_start_hotspot">沒有共用網路？啟動熱點</string>
-    <string name="qr_pair_no_route">此裝置沒有可用於配對的網路，也無法啟動熱點。</string>
+    <string name="qr_pair_same_network_hint">兩台裝置必須在同一 Wi-Fi 網路上。</string>
+    <string name="qr_pair_no_route">本裝置未連接 Wi-Fi，對方裝置無處可連。</string>
     <string name="qr_pair_connecting">正在配對…</string>
     <string name="qr_pair_try_again">重試</string>
     <string name="qr_pair_scan_action">掃描配對碼</string>
@@ -536,8 +537,8 @@
     <string name="qr_pair_denied">該配對碼已被使用或已過期。請對方重新產生一個。</string>
     <string name="qr_pair_scanned_expired">該配對碼已過期。請對方重新產生一個。</string>
     <string name="qr_pair_unsupported_version">該配對碼來自更新版本的應用程式。請更新後再配對。</string>
-    <string name="qr_pair_invalid_code">這不是 Clipboard Share 的配對碼。</string>
-    <string name="qr_pair_unreachable">無法連接該裝置。請確認兩台裝置在同一 Wi-Fi 上，或改用熱點方式。</string>
+    <string name="qr_pair_invalid_code">這不是 OffBridge 的配對碼。</string>
+    <string name="qr_pair_unreachable">無法連接該裝置。請確認兩台裝置在同一 Wi-Fi 網路上。</string>
     <string name="qr_pair_join_refused">Wi-Fi 加入請求被拒絕，兩台裝置無法連接。</string>
     <string name="qr_pair_confirmation_failed">對方裝置未能證明持有配對金鑰，因此未建立配對。請用新的配對碼重試。</string>
     <string name="qr_pair_failed">配對失敗。請用新的配對碼重試。</string>

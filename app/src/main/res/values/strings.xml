@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Clipboard Share</string>
+    <string name="app_name">OffBridge</string>
 
     <!-- Share-sheet text send (reliable Android→peer path) -->
     <string name="share_text_sending">Sending text to your devices…</string>
-    <string name="history_share_sheet_hint">Tip: to send text from another app, tap its Share button and choose Clipboard Share.</string>
-    <string name="user_agreement_text">Welcome to Clipboard Share.\n\nThis application is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.\n\nBy using this application, you agree to the following:\n\n1. You are responsible for the data you transfer. Do not use this application to transfer illegal, malicious, or copyrighted content for which you do not have the rights.\n\n2. This application is designed for use on trusted, private Wi-Fi networks. While the connection is encrypted, using it on public or untrusted networks is at your own risk.\n\n3. The application requires certain permissions to function correctly, including network access, notification access, and the ability to run in the background. Disabling these permissions may cause the application to malfunction.\n\n4. The developer is not responsible for any data loss or corruption that may occur during a transfer.\n\nPlease ensure you have the necessary rights to any files you share.</string>
-    <string name="privacy_policy_text">&lt;b&gt;Privacy Policy for Clipboard Share&lt;/b&gt;&lt;br&gt;&lt;br&gt;
+    <string name="history_share_sheet_hint">Tip: to send text from another app, tap its Share button and choose OffBridge.</string>
+    <string name="user_agreement_text">Welcome to OffBridge.\n\nThis application is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the software or the use or other dealings in the software.\n\nBy using this application, you agree to the following:\n\n1. You are responsible for the data you transfer. Do not use this application to transfer illegal, malicious, or copyrighted content for which you do not have the rights.\n\n2. This application is designed for use on trusted, private Wi-Fi networks. While the connection is encrypted, using it on public or untrusted networks is at your own risk.\n\n3. The application requires certain permissions to function correctly, including network access, notification access, and the ability to run in the background. Disabling these permissions may cause the application to malfunction.\n\n4. The developer is not responsible for any data loss or corruption that may occur during a transfer.\n\nPlease ensure you have the necessary rights to any files you share.</string>
+    <string name="privacy_policy_text">&lt;b&gt;Privacy Policy for OffBridge&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         Effective Date: 22/6/2026&lt;br&gt;&lt;br&gt;
-        Thank you for using Clipboard Share (\"the App\"). This Privacy Policy explains our principles regarding the collection, use, and disclosure of information. Our core philosophy is simple: your data is yours, and we do not want it.&lt;br&gt;&lt;br&gt;
+        Thank you for using OffBridge (\"the App\"). This Privacy Policy explains our principles regarding the collection, use, and disclosure of information. Our core philosophy is simple: your data is yours, and we do not want it.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;THE CORE PRINCIPLE: WE DO NOT COLLECT YOUR DATA&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share is designed from the ground up with your privacy as the highest priority. The App facilitates direct, peer-to-peer (P2P) communication between your devices over your local Wi-Fi network.&lt;br&gt;&lt;br&gt;
+        OffBridge is designed from the ground up with your privacy as the highest priority. The App facilitates direct, peer-to-peer (P2P) communication between your devices over your local Wi-Fi network.&lt;br&gt;&lt;br&gt;
         We do not have servers that collect, store, or process your personal data. All of your data remains on your devices and on your local network.&lt;br&gt;&lt;br&gt;
         Specifically, we DO NOT collect, receive, or share:&lt;br&gt;
         • The content of your clipboard.&lt;br&gt;
@@ -19,7 +19,7 @@
         • Your contacts, location, or any other sensitive device information.&lt;br&gt;&lt;br&gt;
         The App functions without requiring you to create an account or sign in.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;INFORMATION THE APP STORES LOCALLY ON YOUR DEVICE&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        To function correctly, Clipboard Share stores a small amount of data exclusively on your device\'s local storage. This data is under your control and never leaves your device to be sent to us. This includes:&lt;br&gt;&lt;br&gt;
+        To function correctly, OffBridge stores a small amount of data exclusively on your device\'s local storage. This data is under your control and never leaves your device to be sent to us. This includes:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Cryptographic Keys:&lt;/b&gt; After you explicitly pair two devices, the two devices establish a unique AES-256 encryption key between themselves, and that key is stored securely on each device. It is used to encrypt the clipboard content and files exchanged between those two paired devices and is essential for the App\'s security. Device-discovery broadcasts are not encrypted, as described below.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Paired Device Information:&lt;/b&gt; The App stores the local IP address and user-chosen device name of devices you have paired with. This is used to identify and connect to them on your local network.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Clipboard History:&lt;/b&gt; The App maintains a local history of clipboard items you have copied for your convenience. This history is stored only on your device and can be cleared by you at any time from within the App.&lt;br&gt;&lt;br&gt;
@@ -42,7 +42,7 @@
         • &lt;b&gt;Staying ready in the background:&lt;/b&gt; Uses a foreground service and notification to keep listening for incoming clipboard items and transfers.&lt;br&gt;&lt;br&gt;
         In short, the App uses your local Wi-Fi, a hotspot, or a direct device-to-device connection for everything. It does not use your mobile (cellular) data for discovery or transfers, and it does not connect to the internet.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;PERMISSIONS REQUESTED IN THE APP&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share requests certain permissions to enable its features. Here is why we need them:&lt;br&gt;&lt;br&gt;
+        OffBridge requests certain permissions to enable its features. Here is why we need them:&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Network Access&lt;/b&gt; (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE): Required to discover other devices and transfer data over your local Wi-Fi network.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Location and Nearby Devices&lt;/b&gt; (ACCESS_FINE_LOCATION, NEARBY_WIFI_DEVICES): Some Android versions require this permission before an app can scan for and connect to nearby devices over Wi-Fi Direct, which the App uses for off-grid transfers. We do not collect it, but the feature cannot find nearby devices without it. The App does not read, store, or share your physical location.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;Bluetooth&lt;/b&gt; (BLUETOOTH_ADVERTISE, BLUETOOTH_CONNECT): Used to help set up a direct, off-grid connection with a nearby device. We do not collect any data through it, and it is never used to track you.&lt;br&gt;&lt;br&gt;
@@ -54,7 +54,7 @@
         • &lt;b&gt;Ignore Battery Optimizations&lt;/b&gt; (REQUEST_IGNORE_BATTERY_OPTIMIZATIONS): Strongly recommended to prevent the Android operating system from shutting down the App\'s background service, which would interrupt clipboard syncing and file transfers.&lt;br&gt;&lt;br&gt;
         • &lt;b&gt;External Storage&lt;/b&gt; (WRITE_EXTERNAL_STORAGE): On older Android versions (SDK 28 and below), this is required to save received files to your device\'s storage.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;THIRD-PARTY SERVICES&lt;/b&gt;&lt;br&gt;&lt;br&gt;
-        Clipboard Share does not use any third-party services for analytics, advertising, or any other purpose that would involve sharing your data.&lt;br&gt;&lt;br&gt;
+        OffBridge does not use any third-party services for analytics, advertising, or any other purpose that would involve sharing your data.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;CHILDREN\'S PRIVACY&lt;/b&gt;&lt;br&gt;&lt;br&gt;
         The App is not intended for use by children under the age of 13. We do not knowingly collect any information from children. As we do not collect any personal data in the first place, we do not have a mechanism to verify the age of our users.&lt;br&gt;&lt;br&gt;
         &lt;b&gt;CHANGES TO THIS PRIVACY POLICY&lt;/b&gt;&lt;br&gt;&lt;br&gt;
@@ -83,7 +83,7 @@
     <string name="initiating_cryptographic_handshake">Initiating cryptographic handshake...</string>
     <string name="pairing_request_title">Pairing Request</string>
     <string name="action_accept">Accept</string>
-    <string name="download_windows_heading">Download Clipboard Share for Windows</string>
+    <string name="download_windows_heading">Download OffBridge for Windows</string>
     <string name="download_windows_blurb">Get the desktop companion for your PC. Sync your clipboard and send files between this phone and your computer.</string>
     <string name="download_open_website">Go to download page</string>
     <string name="menu_title">Menu</string>
@@ -114,7 +114,7 @@
     <string name="copy_detail_button">Copy</string>
     <string name="required_permissions_title">Required Permissions</string>
     <string name="battery_optimization_title">Battery Optimization</string>
-    <string name="battery_optimization_desc">Clipboard Share runs in the background. Please disable battery optimization to ensure transfers and clipboard sync are not interrupted.</string>
+    <string name="battery_optimization_desc">OffBridge runs in the background. Please disable battery optimization to ensure transfers and clipboard sync are not interrupted.</string>
     <string name="action_go_to_settings">Go to Settings</string>
     <string name="action_open_wifi">Open Wi-Fi</string>
     <string name="notifications_title">Notifications</string>
@@ -162,11 +162,12 @@
     <string name="qr_pair_code_desc">Pairing QR code</string>
     <string name="qr_pair_expired">Code expired</string>
     <string name="qr_pair_refresh">Show a new code</string>
-    <string name="qr_pair_scan_prompt">Scan this with Clipboard Share on the other device.</string>
+    <string name="qr_pair_scan_prompt">Scan this with OffBridge on the other device.</string>
     <string name="qr_pair_expires_in">Expires in %1$s</string>
     <string name="qr_pair_hotspot_hint">No shared network needed — the other device joins this Wi-Fi.</string>
     <string name="qr_pair_start_hotspot">No shared network? Start a hotspot</string>
-    <string name="qr_pair_no_route">This device has no network to pair over, and couldn’t start a hotspot.</string>
+    <string name="qr_pair_same_network_hint">Both devices must be on the same Wi-Fi network.</string>
+    <string name="qr_pair_no_route">This device isn’t on a Wi-Fi network, so there’s nothing for the other device to connect to.</string>
     <string name="qr_pair_connecting">Pairing…</string>
     <string name="qr_pair_try_again">Try again</string>
     <string name="qr_pair_scan_action">Scan a code</string>
@@ -179,8 +180,8 @@
     <string name="qr_pair_denied">That code has already been used or has expired. Ask for a fresh one.</string>
     <string name="qr_pair_scanned_expired">That code has expired. Ask for a fresh one.</string>
     <string name="qr_pair_unsupported_version">That code comes from a newer version of the app. Update to pair.</string>
-    <string name="qr_pair_invalid_code">That isn’t a Clipboard Share pairing code.</string>
-    <string name="qr_pair_unreachable">Couldn’t reach that device. Make sure both are on the same Wi-Fi, or use the hotspot option.</string>
+    <string name="qr_pair_invalid_code">That isn’t an OffBridge pairing code.</string>
+    <string name="qr_pair_unreachable">Couldn’t reach that device. Make sure both are on the same Wi-Fi network.</string>
     <string name="qr_pair_join_refused">The Wi-Fi join was refused, so the devices couldn’t connect.</string>
     <string name="qr_pair_confirmation_failed">The other device couldn’t prove it holds the pairing key, so nothing was paired. Try again with a fresh code.</string>
     <string name="qr_pair_failed">Pairing failed. Try again with a fresh code.</string>
@@ -203,7 +204,7 @@
     <string name="action_open">Open</string>
     <string name="default_file_name_zip">filename.zip</string>
     <string name="default_file_progress">50% (5.0 MB / 10.0 MB)</string>
-    <string name="notification_clipboard_share_prefix">Clipboard Share -</string>
+    <string name="notification_clipboard_share_prefix">OffBridge -</string>
     <string name="notification_mesh_active">Mesh Active</string>
     <string name="unknown">Unknown</string>
     <string name="unknown_file">Unknown File</string>
@@ -214,7 +215,7 @@
     <string name="notification_successfully_pushed_title">Successfully Pushed</string>
     <string name="notification_clipboard_received_title">Clipboard Received</string>
     <string name="notification_mesh_network_active">Mesh Network Active</string>
-    <string name="notification_channel_clipboard_share_service">Clipboard Share Service</string>
+    <string name="notification_channel_clipboard_share_service">OffBridge Service</string>
     <string name="notification_channel_clipboard_alerts">Clipboard Alerts</string>
     <string name="notification_channel_pairing_requests">Pairing Requests</string>
     <string name="notification_from_sender">From: %s</string>
@@ -248,15 +249,15 @@
     <string name="toast_transfer_interrupted">Transfer interrupted. Receiver can resume when reconnected.</string>
     <string name="toast_batch_transfer_complete">Batch Transfer Complete!</string>
     <string name="shortcut_send_to_device">Send to %s</string>
-    <string name="shortcut_transfer_via_clipboard_share">Transfer via Clipboard Share</string>
+    <string name="shortcut_transfer_via_clipboard_share">Transfer via OffBridge</string>
     <string name="toast_pushing_clipboard_to_mesh">Pushing clipboard to mesh...</string>
     <string name="no_clipboard_history_yet">No clipboard history yet.</string>
     <string name="toast_copied_to_clipboard">Copied to clipboard</string>
     <string name="toast_notifications_permission_required">Notifications permission is required for the foreground service.</string>
     <string name="toast_storage_permission_required">File transfers may fail without storage permission on this Android version.</string>
     <string name="default_android_device_name">Android Device</string>
-    <string name="toast_rebooting_engine">Rebooting Clipboard Share Engine...</string>
-    <string name="toast_shutting_down_engine">Shutting down Clipboard Share...</string>
+    <string name="toast_rebooting_engine">Rebooting OffBridge Engine...</string>
+    <string name="toast_shutting_down_engine">Shutting down OffBridge...</string>
     <string name="toast_notification_permission_granted">Notification permission granted!</string>
     <string name="toast_notifications_recommended">Notifications are recommended for the best experience.</string>
     <string name="toast_notification_permission_already_granted">Notification permission is already granted on this Android version.</string>
@@ -327,7 +328,7 @@
     <!-- V3.0: Off-grid transport -->
     <string name="offgrid_send_title">Send via NFC / QR</string>
     <string name="offgrid_receive_title">Receive via QR / NFC</string>
-    <string name="offgrid_hce_description">Clipboard Share off-grid transfer credentials</string>
+    <string name="offgrid_hce_description">OffBridge off-grid transfer credentials</string>
     <string name="offgrid_session_notification_title">Off-grid transfer active</string>
     <string name="offgrid_session_notification_text">Keeping the direct connection alive.</string>
     <string name="offgrid_status_creating_group">Setting up the direct connection…</string>
@@ -503,7 +504,7 @@
     <string name="clip_read_failed">Failed to read clipboard</string>
     <string name="status_push_success_title">Successfully Pushed</string>
     <string name="status_clipboard_received_title">Clipboard Received</string>
-    <string name="status_channel_service">Clipboard Share Service</string>
+    <string name="status_channel_service">OffBridge Service</string>
     <string name="status_channel_alerts">Clipboard Alerts</string>
     <string name="status_channel_pairing">Pairing Requests</string>
     <string name="status_channel_transfer_progress">File Transfer Progress</string>
@@ -530,7 +531,7 @@
     <string name="transfer_tut_history">Tap here to view your transfer history and track progress.</string>
     <string name="transfer_tut_next">Next</string>
     <string name="transfer_shortcut_short_label">Send to %1$s</string>
-    <string name="transfer_shortcut_long_label">Transfer via Clipboard Share</string>
+    <string name="transfer_shortcut_long_label">Transfer via OffBridge</string>
     <string name="transfer_unknown_file">Unknown File</string>
     <string name="history_tutorial_push">Tap here to instantly push your current clipboard text to all paired devices.</string>
     <string name="history_tutorial_accept_switch">Turn this off if you don\'t want to receive clipboard content from other devices.</string>
@@ -555,8 +556,8 @@
     <string name="perm_notifications_required">Notifications permission is required for the foreground service.</string>
     <string name="perm_storage_required">File transfers may fail without storage permission on this Android version.</string>
     <string name="status_default_device_name">Android Device</string>
-    <string name="menu_restart_toast">Rebooting Clipboard Share Engine...</string>
-    <string name="menu_power_off_toast">Shutting down Clipboard Share...</string>
+    <string name="menu_restart_toast">Rebooting OffBridge Engine...</string>
+    <string name="menu_power_off_toast">Shutting down OffBridge...</string>
     <string name="pairing_requesting_title">Requesting Pair</string>
     <string name="pairing_waiting_subtitle">Waiting for %1$s to accept...</string>
     <string name="pairing_success">Successfully Paired with %1$s!</string>
@@ -586,7 +587,7 @@
     <string name="settings_save_location_downloads">Downloads</string>
     <string name="settings_toast_could_not_open_browser">Could not open browser</string>
     <string name="settings_dialog_choose_language">Choose Language</string>
-    <string name="settings_toast_rebooting_engine">Rebooting Clipboard Share Engine...</string>
+    <string name="settings_toast_rebooting_engine">Rebooting OffBridge Engine...</string>
     <string name="settings_dialog_privacy_policy">Privacy Policy</string>
     <string name="settings_action_close">Close</string>
     <string name="settings_save_location_selected_folder">Selected Folder</string>
