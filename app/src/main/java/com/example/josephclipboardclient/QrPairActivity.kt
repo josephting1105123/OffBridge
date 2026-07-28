@@ -111,7 +111,7 @@ class QrPairActivity : AppCompatActivity() {
         )
 
         ui = ui.copy(cameraGranted = hasCameraPermission())
-        openWindow(withHotspot = false)
+        openWindow()
 
         setContentView(ComposeView(this).apply {
             setContent {
@@ -120,8 +120,9 @@ class QrPairActivity : AppCompatActivity() {
                         ui = ui,
                         onBack = { finish() },
                         onModeChange = ::switchMode,
-                        onRefreshCode = { openWindow(withHotspot = ui.hotspotActive) },
-                        onStartHotspot = { openWindow(withHotspot = true) },
+                        onRefreshCode = { openWindow() },
+                        // Asked for by name, so a failure is reported instead of falling back quietly.
+                        onStartHotspot = { openWindow(hotspotRequired = true) },
                         onRequestCamera = { cameraPermission.launch(Manifest.permission.CAMERA) },
                         onPreviewReady = ::bindCamera,
                         onRetry = ::retry,
@@ -156,7 +157,7 @@ class QrPairActivity : AppCompatActivity() {
         } else {
             cameraProvider?.unbindAll()
             ui = ui.copy(mode = mode)
-            openWindow(withHotspot = false)
+            openWindow()
         }
     }
 
@@ -165,15 +166,25 @@ class QrPairActivity : AppCompatActivity() {
         if (ui.mode == QrPairMode.SCAN) {
             ui = ui.copy(status = QrPairStatus.Ready, cameraGranted = hasCameraPermission())
         } else {
-            openWindow(withHotspot = false)
+            openWindow()
         }
     }
 
-    /** Opens (or re-opens) the displayed pairing window. Hotspot setup blocks, so it runs off-thread. */
-    private fun openWindow(withHotspot: Boolean) {
+    /**
+     * Opens (or re-opens) the displayed pairing window. Hotspot setup blocks, so it runs off-thread.
+     *
+     * Every open attempts the AP. This side is the one that HOSTS a route, so denying it a hotspot
+     * only shrank the set of phones that could pair — a scanner on another network had nothing to
+     * connect to. The scan mode is the side that must not raise one, and doesn't: [switchMode] closes
+     * this window on the way in. With [hotspotRequired] left false, an AP that refuses to start is not
+     * an error as long as a LAN address remains.
+     */
+    private fun openWindow(hotspotRequired: Boolean = false) {
         ui = ui.copy(mode = QrPairMode.SHOW, status = QrPairStatus.Preparing)
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) { QrPairSession.open(applicationContext, withHotspot) }
+            val result = withContext(Dispatchers.IO) {
+                QrPairSession.open(applicationContext, withHotspot = true, hotspotRequired = hotspotRequired)
+            }
             ui = when (result) {
                 is QrPairSession.OpenResult.Ready -> {
                     val bitmap = withContext(Dispatchers.Default) { encodeQr(result.info.qrText) }

@@ -49,11 +49,28 @@ object QrPairSession {
     /**
      * Opens a fresh window, retiring any previous one. Suspends for up to [LOHS_BUDGET_MS] when
      * [withHotspot] is set, so callers run it off the main dispatcher.
+     *
+     * The device SHOWING a code is the one that hosts an AP; the device scanning joins it. Two APs
+     * would be nonsense, which is why the scan mode retires this window on the way in rather than
+     * opening its own. Same split as the off-grid send flow, where the sender creates the group and
+     * the scanner joins.
+     *
+     * [hotspotRequired] separates the two ways the AP gets asked for. The window opens with an attempt
+     * every time, matching the send screen, which calls createGroup unconditionally — but an attempt
+     * that fails must not cost a user a pairing that would have worked over the LAN. When the user
+     * taps "start a hotspot" by name, silence would be the confusing outcome, so that path still
+     * reports the failure.
      */
-    suspend fun open(context: Context, withHotspot: Boolean): OpenResult {
+    suspend fun open(
+        context: Context,
+        withHotspot: Boolean,
+        hotspotRequired: Boolean = true,
+    ): OpenResult {
         close()
 
-        val lanIp = Net.localLanIpv4()
+        // Read before the AP only to decide whether a failed AP is fatal. The address actually
+        // advertised is re-read afterwards — see below.
+        val lanBefore = Net.localLanIpv4()
         var apSsid: String? = null
         var apPsk: String? = null
         var apHostIp: String? = null
@@ -76,13 +93,22 @@ object QrPairSession {
             }
             if (started == null) {
                 host.stop()
-                return OpenResult.HotspotUnavailable
+                // Only fatal when the user asked for the AP outright, or when there is no LAN address
+                // to fall back to and the AP was therefore the only possible route.
+                if (hotspotRequired || lanBefore == null) return OpenResult.HotspotUnavailable
+            } else {
+                hotspot = host
+                apSsid = started.first
+                apPsk = started.second
+                apHostIp = started.third
             }
-            hotspot = host
-            apSsid = started.first
-            apPsk = started.second
-            apHostIp = started.third
         }
+
+        // Re-read AFTER the AP attempt rather than reusing lanBefore. LocalOnlyHotspot commonly drops
+        // the phone off the Wi-Fi it was on, so the address captured a moment ago may already be dead,
+        // and publishing it would send a scanner at a route that no longer exists. Same ordering as
+        // QrPairCoordinator on Windows.
+        val lanIp = Net.localLanIpv4()
 
         // Dial address: the AP interface when we raised one (a scanner that joins the group can only
         // reach us there), else our address on the shared network.
