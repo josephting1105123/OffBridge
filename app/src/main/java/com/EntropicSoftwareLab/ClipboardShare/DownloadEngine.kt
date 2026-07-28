@@ -192,7 +192,12 @@ object DownloadEngine {
                     val reservedNonSaf = HashSet<String>()
                     try { stagingDir.list()?.let { reservedNonSaf.addAll(it) } } catch (_: Exception) {}
                     for (cat in arrayOf(TransferUtils.MediaCategory.IMAGE, TransferUtils.MediaCategory.VIDEO)) {
-                        try { TransferUtils.publicMediaDir(cat)?.list()?.let { reservedNonSaf.addAll(it) } } catch (_: Exception) {}
+                        // Current album AND the pre-rename one: a name still held by a file
+                        // MediaFolderMigration couldn't move must stay claimed, or history "open"
+                        // would resolve the older record to the newly received file instead.
+                        for (dir in TransferUtils.publicMediaDirs(cat)) {
+                            try { dir.list()?.let { reservedNonSaf.addAll(it) } } catch (_: Exception) {}
+                        }
                     }
                     // Also reserve the names other LIVE incoming sessions have already claimed: their
                     // sidecar may not exist on disk yet (they name at stream start, write later), so
@@ -242,7 +247,7 @@ object DownloadEngine {
                     val partName = "$finalName.part"
                     val append = session.currentOffset > 0
                     // Media under "Save media to: Gallery" is staged in Download and then published into
-                    // Pictures|Movies/"Clipboard Share" — even when a custom file folder is set, so it
+                    // Pictures|Movies/"OffBridge" — even when a custom file folder is set, so it
                     // bypasses the SAF folder. Everything else (all files, plus media under "Same as
                     // files") goes to the file folder: the SAF tree if chosen, otherwise Download.
                     val routeToGallery = TransferUtils.routeMediaToGallery(finalName, saveMediaTo)
@@ -363,7 +368,7 @@ object DownloadEngine {
                             if (renamed) {
                                 if (promoteName != finalName) recordLocalName(context, session, i, promoteName)
                                 if (routeToGallery) {
-                                    // Images/videos move on into Pictures|Movies/"Clipboard Share" so
+                                    // Images/videos move on into Pictures|Movies/"OffBridge" so
                                     // gallery apps actually list them (scanning them inside Download
                                     // never surfaces them in a gallery's photo view).
                                     publishPromotedFileAsync(context, session, i, finalFile, TransferUtils::publishReceivedMedia)

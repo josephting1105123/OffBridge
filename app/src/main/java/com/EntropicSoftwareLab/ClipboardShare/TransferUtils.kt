@@ -32,7 +32,12 @@ object TransferUtils {
 
     /** Subfolder inside Pictures/ and Movies/ where received media is published. Not localized:
      *  it is an on-disk path that must stay stable across locale changes. */
-    private const val MEDIA_SUBDIR = "Clipboard Share"
+    const val MEDIA_SUBDIR = "OffBridge"
+
+    /** What [MEDIA_SUBDIR] was called before the app was renamed. [MediaFolderMigration] empties it
+     *  on the first launch after the update, but a move can fail (a MediaStore row we don't own, a
+     *  FUSE denial), so every lookup path still probes it: a file left behind must stay openable. */
+    const val LEGACY_MEDIA_SUBDIR = "Clipboard Share"
 
     private val IMAGE_EXTS = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "heic")
     private val VIDEO_EXTS = setOf("mp4", "mkv", "avi", "mov", "webm", "ts")
@@ -72,18 +77,33 @@ object TransferUtils {
     /** Environment collection name (Pictures/Movies) for [category]; null for OTHER. The single
      *  place that names the collections — the publish fast path, the MediaStore RELATIVE_PATH and
      *  the history lookup must all agree or published files become unfindable. */
-    private fun collectionFor(category: MediaCategory): String? = when (category) {
+    fun collectionFor(category: MediaCategory): String? = when (category) {
         MediaCategory.IMAGE -> Environment.DIRECTORY_PICTURES
         MediaCategory.VIDEO -> Environment.DIRECTORY_MOVIES
         MediaCategory.OTHER -> null
     }
 
-    /** Public collection folder where [publishReceivedMedia] lands media of [category];
-     *  null for OTHER (those stay in Download). */
-    fun publicMediaDir(category: MediaCategory): java.io.File? {
-        val collection = collectionFor(category) ?: return null
-        return java.io.File(Environment.getExternalStoragePublicDirectory(collection), MEDIA_SUBDIR)
+    /** MediaStore content URI of the collection holding [category]; null for OTHER. Companion to
+     *  [collectionFor] so the publish, lookup and migration paths can't name different collections. */
+    fun mediaContentUri(category: MediaCategory): Uri? = when (category) {
+        MediaCategory.IMAGE -> MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        MediaCategory.VIDEO -> MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        MediaCategory.OTHER -> null
     }
+
+    /** Public collection folder where [publishReceivedMedia] lands media of [category];
+     *  null for OTHER (those stay in Download). [subdir] defaults to the current folder name —
+     *  pass [LEGACY_MEDIA_SUBDIR] to address the pre-rename one. */
+    fun publicMediaDir(category: MediaCategory, subdir: String = MEDIA_SUBDIR): java.io.File? {
+        val collection = collectionFor(category) ?: return null
+        return java.io.File(Environment.getExternalStoragePublicDirectory(collection), subdir)
+    }
+
+    /** Every folder a received [category] file may physically sit in, current one first. The probe
+     *  order for any lookup that has to find an already-received file, since the rename migration is
+     *  best-effort and may have left files in [LEGACY_MEDIA_SUBDIR]. Empty for OTHER. */
+    fun publicMediaDirs(category: MediaCategory): List<java.io.File> =
+        listOfNotNull(publicMediaDir(category), publicMediaDir(category, LEGACY_MEDIA_SUBDIR))
 
     /** First name derived from [name] that doesn't exist in [dir] yet, using the same
      *  "name (N).ext" counter the receive path has always used for Download collisions. */
@@ -135,21 +155,21 @@ object TransferUtils {
 
     /** MediaStore content URI of a published receive by its history leaf name — needed for history
      *  "open" on API 29, where raw File(...).exists() can't see even our own published rows (owner
-     *  FUSE passthrough is Android 11+). Media is scoped to our RELATIVE_PATH (Pictures|Movies/"Clipboard
-     *  Share") so a same-named camera photo elsewhere can't shadow it; non-media matches the Downloads
-     *  collection by name. Newest row wins; null on miss/error. */
+     *  FUSE passthrough is Android 11+). Media is scoped to our RELATIVE_PATH (Pictures|Movies/"OffBridge",
+     *  then the pre-rename "Clipboard Share" for anything the migration couldn't move) so a same-named
+     *  camera photo elsewhere can't shadow it; non-media matches the Downloads collection by name.
+     *  Newest row wins; null on miss/error. */
     fun findPublishedFileUri(context: Context, name: String): Uri? {
         val category = mediaCategory(name)
         val nameCol = MediaStore.MediaColumns.DISPLAY_NAME
         val pathCol = MediaStore.MediaColumns.RELATIVE_PATH
         val collection = collectionFor(category)
-        if (collection != null) {
-            val mediaUri = if (category == MediaCategory.IMAGE)
-                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            else
-                MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            queryNewestId(context, mediaUri, "$nameCol = ? AND $pathCol LIKE ?", arrayOf(name, "$collection/$MEDIA_SUBDIR%"))
-                ?.let { return it }
+        val mediaUri = mediaContentUri(category)
+        if (collection != null && mediaUri != null) {
+            for (subdir in listOf(MEDIA_SUBDIR, LEGACY_MEDIA_SUBDIR)) {
+                queryNewestId(context, mediaUri, "$nameCol = ? AND $pathCol LIKE ?", arrayOf(name, "$collection/$subdir%"))
+                    ?.let { return it }
+            }
         }
         // Non-media receives — and media the user routed "Same as files" with no custom folder,
         // which [publishToPublicDownloads] lands in the Downloads collection on API 29, NOT
@@ -177,7 +197,7 @@ object TransferUtils {
 
     /**
      * Makes a fully received file visible where users expect it. Images/videos move out of
-     * Download into Pictures|Movies/"Clipboard Share" — a bare Download scan never surfaces
+     * Download into Pictures|Movies/"OffBridge" — a bare Download scan never surfaces
      * them in a gallery's photo/video view — while every other type stays in Download and is
      * just handed to the media scanner. Returns the leaf name the file ends up with (deduped
      * when the destination already held one; never overwrites — a same-name file there may be
@@ -215,16 +235,12 @@ object TransferUtils {
     }
 
     /** Streams [file] into a pending MediaStore Images/Video row under RELATIVE_PATH
-     *  Pictures|Movies/"Clipboard Share". Returns the row's actual display name (MediaProvider
+     *  Pictures|Movies/"OffBridge". Returns the row's actual display name (MediaProvider
      *  silently dedupes collisions), or null on failure — the pending row is deleted so no
      *  half-written ghost survives. */
     private fun copyIntoMediaStore(context: Context, file: java.io.File, category: MediaCategory): String? {
         val mime = mimeForMediaExt(file.name.substringAfterLast('.', "")) ?: return null
-        val isImage = category == MediaCategory.IMAGE
-        val contentUri = if (isImage)
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        else
-            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val contentUri = mediaContentUri(category) ?: return null
         val relativePath = (collectionFor(category) ?: return null) + "/" + MEDIA_SUBDIR
         return copyIntoCollection(context, file, contentUri, relativePath, mime)
     }
