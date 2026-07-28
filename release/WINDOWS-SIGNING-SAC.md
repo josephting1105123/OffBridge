@@ -31,7 +31,7 @@ fully satisfy SAC — signing is the real fix — but it costs nothing and is wo
    download — verify against the release's SHA-256).
 4. Reason: **incorrectly detected / request reputation review**. Fill in:
    - Company/developer: *EntropicSoftwareLab*
-   - Product: *Clipboard Share* (off-grid peer-to-peer clipboard sync + file transfer)
+   - Product: *OffBridge* (off-grid peer-to-peer clipboard sync + file transfer)
    - Note: *Unsigned indie build, no telemetry/network callout except to the user's paired
      device; requesting reputation so Smart App Control / SmartScreen stop blocking it.*
 5. Submit and keep the submission ID. Turnaround is typically **1–3 business days**.
@@ -89,11 +89,11 @@ testers it will.
 
 ### What actually needs signing (measured, not assumed)
 `Get-AuthenticodeSignature` over every PE file in
-`build2\compose\binaries\main-release\app\Clipboard Share` on 2026-07-28: **69 files, 67 already
+`build2\compose\binaries\main-release\app\OffBridge` on 2026-07-28: **69 files, 67 already
 signed** — the whole bundled Temurin runtime (`CN="Eclipse.org Foundation, Inc."`) and the Microsoft
 UCRT redist DLLs. Only three files need our signature:
 
-1. `Clipboard Share.exe` — the jpackage launcher
+1. `OffBridge.exe` — the jpackage launcher
 2. `app\skiko-windows-x64.dll` — Compose's Skia binding
 3. `build2\inno-setup\ClipboardShareSetup.exe` — the installer
 

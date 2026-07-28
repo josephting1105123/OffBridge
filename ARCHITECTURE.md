@@ -1,6 +1,6 @@
 # Architecture
 
-How Clipboard Share moves bytes between an Android phone and a Windows PC, how those bytes are encrypted, and what an attacker on the same air can and can't do.
+How OffBridge moves bytes between an Android phone and a Windows PC, how those bytes are encrypted, and what an attacker on the same air can and can't do.
 
 Two native clients — Android (Kotlin / Jetpack Compose) and Windows (Kotlin / Compose Multiplatform) — implement the **same wire protocol**. They don't share a networking module; each re-implements the frames and crypto natively, and a set of golden-vector unit tests on both platforms keeps them byte-identical.
 

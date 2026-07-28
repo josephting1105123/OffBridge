@@ -4,7 +4,7 @@ Copy-paste responses so post-expiry tester correspondence needs zero thinking. K
 short. The point of the "known behavior" ones is so expected quirks don't get logged as bugs.
 
 ## Acknowledge a report
-> Thanks for trying Clipboard Share and for the report — really helpful. I've logged it and I'll look
+> Thanks for trying OffBridge and for the report — really helpful. I've logged it and I'll look
 > at it in the next update cycle. If you hit it again, a screenshot or the rough steps would help a lot.
 
 ## Ask for a repro
@@ -14,14 +14,14 @@ short. The point of the "known behavior" ones is so expected quirks don't get lo
 
 ## Known behavior — doesn't auto-start after a reboot (Android)
 > That's expected, not a bug. On Android 14 and newer, the system no longer lets apps start their
-> background service straight from boot, so Clipboard Share starts its sync the first time you open the
+> background service straight from boot, so OffBridge starts its sync the first time you open the
 > app after a restart. Open it once after rebooting and it stays running.
 
 ## Known behavior — Windows "unknown publisher" / SmartScreen warning
 > That warning is expected for now — the Windows installer isn't code-signed yet, so Windows shows the
 > "unknown publisher" screen for any new app. It's safe to proceed: click **More info → Run anyway**.
 > If you want to verify the download first, the SHA-256 checksum is on the download page — it should
-> match `certutil -hashfile "Clipboard Share Setup.exe" SHA256`.
+> match `certutil -hashfile "OffBridge Setup.exe" SHA256`.
 
 ## Windows install stops at "Creating shortcuts" (Access is denied / 0x80070005)
 > That error is your security software — Windows "Ransomware protection" (Controlled Folder Access) or

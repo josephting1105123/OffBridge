@@ -162,7 +162,7 @@ fun UpdateScreen(appController: ClipboardAppController) {
         val themeModeState = LocalThemeMode.current
         DialogWindow(
             onCloseRequest = { showConfirm = false },
-            title = tr("update_confirm_title", "Update Clipboard Share"),
+            title = tr("update_confirm_title", "Update OffBridge"),
             resizable = false,
             state = rememberDialogState(width = 380.dp, height = 220.dp)
         ) {
@@ -175,7 +175,7 @@ fun UpdateScreen(appController: ClipboardAppController) {
                         Text(
                             tr(
                                 "update_confirm_body",
-                                "This will close Clipboard Share and launch the installer. Continue?"
+                                "This will close OffBridge and launch the installer. Continue?"
                             ),
                             color = MaterialTheme.colors.onSurface,
                             fontSize = 15.sp

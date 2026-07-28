@@ -233,7 +233,7 @@ private fun ReadyBlock(
     }
     Spacer(Modifier.height(16.dp))
     Text(
-        "Scan with the Clipboard Share Android app to receive $fileCount file(s) • $sizeStr",
+        "Scan with the OffBridge Android app to receive $fileCount file(s) • $sizeStr",
         fontSize = 14.sp,
         color = MaterialTheme.colors.onBackground,
         textAlign = TextAlign.Center
@@ -303,7 +303,7 @@ private fun ControlStatusLine(control: QrControlState) {
                 MaterialTheme.colors.onBackground.copy(alpha = 0.6f)
         is QrControlState.Failed -> {
             val msg = if (control.firewallSuspected)
-                "The phone joined the Wi-Fi but couldn't reach this PC. Allow Clipboard Share through Windows Defender Firewall, then try again."
+                "The phone joined the Wi-Fi but couldn't reach this PC. Allow OffBridge through Windows Defender Firewall, then try again."
             else
                 "The phone couldn't join this PC's Wi-Fi. Keep the phone close with Wi-Fi on, then try again."
             msg to MaterialTheme.colors.error

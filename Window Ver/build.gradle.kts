@@ -74,14 +74,14 @@ compose.desktop {
         System.getenv("JAVA_HOME")?.let { javaHome = it }
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
-            packageName = "Clipboard Share"
+            packageName = "OffBridge"
             packageVersion = "3.7.8"
             description = "Off-grid file transfer and clipboard sync between Windows and Android"
             vendor = "EntropicSoftwareLab" // must match the Inno installer's MyAppPublisher
             windows {
                 menu = true
                 shortcut = true
-                menuGroup = "Clipboard Share"
+                menuGroup = "OffBridge"
                 perUserInstall = true
                 dirChooser = true
                 upgradeUuid = "12255bbe-e53b-408b-8866-27ab965d1394"

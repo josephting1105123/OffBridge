@@ -721,7 +721,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = "Clipboard Share",
+        title = "OffBridge",
         undecorated = true,
         // The four corner handles below are the only way to resize the floating window — disabling
         // native resize here guarantees there's exactly one resize mechanism, not a native one

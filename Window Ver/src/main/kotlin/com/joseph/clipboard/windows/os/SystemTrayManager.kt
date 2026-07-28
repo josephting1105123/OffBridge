@@ -48,7 +48,7 @@ object SystemTrayManager {
         popup.addSeparator()
         popup.add(quitItem)
 
-        trayIcon = TrayIcon(image, "Clipboard Share", popup).apply {
+        trayIcon = TrayIcon(image, "OffBridge", popup).apply {
             isImageAutoSize = true
             addActionListener { onOpenApp() } // double click action
         }

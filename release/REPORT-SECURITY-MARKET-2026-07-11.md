@@ -133,7 +133,7 @@ A differentiator isn't a moat. Three things work against it:
 
 - **Android:** the release keystore exists (`clipboardshare_key.jks`) but isn't wired into the build — create `keystore.properties` at the repo root (per `release/keystore/KEYSTORE_BACKUP.md`) and back the key up to 2+ offline places; its certificate doesn't match the Play upload key on record, so the Play lane additionally needs the original keystore or a Play upload-key reset. Produce the Play store graphics (hard block).
 - **Windows:** code-sign the installer (Azure Trusted Signing is the durable, low-cost individual route) to clear SmartScreen and Smart App Control.
-- **Website:** fix the download link (it points at repo `ClipboardShare-Showcase`; the actual origin is `Clipboard-Share` — a dead-link risk) and fill the `REPLACE_SITE_URL` placeholders.
+- **Website:** fix the download link (it points at repo `OffBridge-Showcase`; the actual origin is `OffBridge` — a dead-link risk) and fill the `REPLACE_SITE_URL` placeholders.
 - **Product:** fix the confirmed same-name data-loss bug and the Android 10 media-write bug before inviting a wide audience — a data-loss review on day one is very hard to recover from.
 
 ## B.5 Verdict — can it plausibly compete?

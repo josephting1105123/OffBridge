@@ -1,6 +1,6 @@
 {
-  "name": "Clipboard Share",
-  "short_name": "Clipboard Share",
+  "name": "OffBridge",
+  "short_name": "OffBridge",
   "description": "Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, AES-256 encrypted.",
   "start_url": "./",
   "scope": "./",

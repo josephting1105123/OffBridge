@@ -1,6 +1,6 @@
 # Release kit
 
-Everything needed to take Clipboard Share 3.4.0 to open testing, prepared so the AI-heavy work is
+Everything needed to take OffBridge 3.4.0 to open testing, prepared so the AI-heavy work is
 already done and what's left is mostly account/hardware steps only you can do. Start with the checklist.
 
 ## Contents

@@ -6,7 +6,7 @@ Two separate App-content items, both of which HARD-BLOCK publishing if left inco
 
 ## 1. IARC content-rating questionnaire
 Category: **Utility / Productivity / Communication** (not a game). Answer the questionnaire honestly;
-for Clipboard Share every sensitive question is "No":
+for OffBridge every sensitive question is "No":
 
 - Violence, scary content, sexual content, nudity: **No**
 - Profanity / crude humor: **No**

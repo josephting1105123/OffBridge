@@ -251,7 +251,7 @@ private fun PairCodeBlock(
         )
     } else {
         Text(
-            str("qr_pair_scan_prompt", "Scan this with Clipboard Share on the other device."),
+            str("qr_pair_scan_prompt", "Scan this with OffBridge on the other device."),
             style = MaterialTheme.typography.body2,
             color = MaterialTheme.colors.onBackground,
             textAlign = TextAlign.Center

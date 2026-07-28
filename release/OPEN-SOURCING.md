@@ -1,4 +1,4 @@
-# Open-sourcing Clipboard Share
+# Open-sourcing OffBridge
 
 Goal: publish the app source under Apache-2.0 without publishing internal notes, and qualify
 for a Certum Open Source code-signing certificate (~US$50/yr), which is the route left open
@@ -11,7 +11,7 @@ the full 131-commit history, `release/`, `.claude/`, `CLAUDE.md`, `PRODUCT.md` a
 ## Done already
 
 - [x] Licence chosen: **Apache-2.0** — patent grant, and clause 6 withholds trademark rights,
-      so the "Clipboard Share" name is not licensed along with the code.
+      so the "OffBridge" name is not licensed along with the code.
 - [x] `LICENSE` downloaded verbatim from apache.org (sha256 `cfc7749b…3d30`, 169 lines).
 - [x] `NOTICE` written: copyright, the four bundled fonts and their SIL OFL attribution, and
       the third-party dependency licences.
@@ -74,7 +74,7 @@ keep this one for internal docs only. More upheaval now, no ongoing sync tax.
 
 ## Things a licence does not do
 
-- The name and branding stay unprotected — anyone can fork, rebuild and list "Clipboard Share"
+- The name and branding stay unprotected — anyone can fork, rebuild and list "OffBridge"
   on Play. Apache-2.0 clause 6 helps but is not a trademark registration.
 - Your Android signing key was never committed and stays private, so nobody can push updates
   to the existing Play listing. That is the one that would have been unrecoverable.

@@ -153,7 +153,7 @@ that.
 Two timing traps:
 
 - **The clipboard toast.** The app reads the clipboard on launch and Android
-  shows "Clipboard Share pasted from your clipboard" across the bottom nav.
+  shows "OffBridge pasted from your clipboard" across the bottom nav.
   Wait ~4 seconds after any navigation before capturing. Verified: it covers
   the bottom nav bar completely.
 - **Transfer progress.** For `android-transfer` you need a live transfer, which
@@ -171,7 +171,7 @@ about 80% of monitor height at a locked 9:19.5. The site's desktop card is
 landscape, so you must widen it first.
 
 1. Launch: `./gradlew :window-ver:run`, or the built exe at
-   `Window Ver/build2/compose/binaries/main-release/app/Clipboard Share/Clipboard Share.exe`.
+   `Window Ver/build2/compose/binaries/main-release/app/OffBridge/OffBridge.exe`.
 2. Drag a corner handle out to roughly **16:8.5** — the committed shots are
    1600×848. Maximizing also works and gives ~16:8.7 on a 1920×1080 display.
 3. Capture the window only: **Alt + PrtScn**, or Snipping Tool → Window mode.

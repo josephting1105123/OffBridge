@@ -9,7 +9,7 @@ import java.net.http.HttpResponse
 import java.time.Duration
 
 /**
- * Checks the ClipboardShare-Showcase GitHub repo's latest release for a newer Windows build.
+ * Checks the OffBridge-Showcase GitHub repo's latest release for a newer Windows build.
  * Reads directly off the release the existing manual RUNBOOK process already publishes — no
  * separate manifest file, no extra release-day step. See release/RUNBOOK.md for the publish flow
  * (tag vX.Y.Z, attach a stably-named ClipboardShareSetup.exe asset).
@@ -19,7 +19,7 @@ object UpdateChecker {
     // website/js/config.js. The two are independent copies with nothing enforcing agreement; if the
     // releases repo is ever renamed, update both.
     private const val OWNER = "josephting1105123"
-    private const val REPO = "ClipboardShare-Showcase"
+    private const val REPO = "OffBridge-Showcase"
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
     private const val INSTALLER_ASSET_NAME = "ClipboardShareSetup.exe"
 

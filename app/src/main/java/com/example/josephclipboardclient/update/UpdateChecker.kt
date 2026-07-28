@@ -7,7 +7,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Checks the ClipboardShare-Showcase GitHub repo's latest release for a newer Android build, then the
+ * Checks the OffBridge-Showcase GitHub repo's latest release for a newer Android build, then the
  * Updates screen sends the user to Google Play to install it (a Play-distributed app can't
  * self-install). Same repo the Windows checker and the website target.
  *
@@ -18,7 +18,7 @@ import java.net.URL
  */
 object UpdateChecker {
     private const val OWNER = "josephting1105123"
-    private const val REPO = "ClipboardShare-Showcase"
+    private const val REPO = "OffBridge-Showcase"
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
 
     // Connect fails fast at 2s (unreachable/offline network); reads may stall at most 4s each.

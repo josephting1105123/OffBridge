@@ -174,7 +174,7 @@ internal fun TutorialReplicaQr() {
                 }
                 Spacer(Modifier.height(Dimens.spaceLg))
                 Text(
-                    "Scan with the Clipboard Share Android app to receive your files over the local network.",
+                    "Scan with the OffBridge Android app to receive your files over the local network.",
                     fontSize = 14.sp,
                     color = MaterialTheme.colors.onBackground,
                     textAlign = TextAlign.Center,

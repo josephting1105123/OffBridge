@@ -14,7 +14,7 @@ shared**. Paste these into Play Console → App content → Data safety.
 ## Does your app collect or share any of the required user data types?
 **No.** (This unlocks a short form.)
 
-Rationale you can give if review asks: Clipboard Share is a peer-to-peer utility. Clipboard contents
+Rationale you can give if review asks: OffBridge is a peer-to-peer utility. Clipboard contents
 and transferred files are sent **directly between the user's own paired devices** over local Wi-Fi or
 an off-grid link (Wi-Fi Direct / QR / NFC), encrypted end-to-end with AES-256-GCM. None of it reaches
 the developer or any third party. The app requires no account and has no backend.

@@ -1,5 +1,5 @@
 <#
-  make-brand-assets.ps1 — regenerate the Clipboard Share installer artwork.
+  make-brand-assets.ps1 — regenerate the OffBridge installer artwork.
 
   Renders the brand mark (emerald clipboard + check, from website/assets/favicon.svg)
   into the assets the Inno installer and the packaged app reference:
@@ -156,7 +156,7 @@ function Draw-Banner($W, $H, $path) {
     $fmt.LineAlignment = [System.Drawing.StringAlignment]::Near
     $wy = $chipY + $chip + [int][math]::Round(22 * $scale)
     $wrect = New-Object System.Drawing.RectangleF(0, $wy, $W, [single](40 * $scale))
-    $g.DrawString("Clipboard Share", $font, $tb, $wrect, $fmt)
+    $g.DrawString("OffBridge", $font, $tb, $wrect, $fmt)
 
     $uw = [int][math]::Round(28 * $scale); $uh = [int][math]::Round(3 * $scale); if ($uh -lt 2) { $uh = 2 }
     $ux = [int](($W - $uw) / 2); $uy = $wy + [int][math]::Round(30 * $scale)

@@ -1,6 +1,6 @@
-# Clipboard Share — marketing website
+# OffBridge — marketing website
 
-A single-page marketing site for **Clipboard Share** (Android + Windows off-grid
+A single-page marketing site for **OffBridge** (Android + Windows off-grid
 clipboard sync & file transfer). Plain HTML/CSS/JS — **no build step, no
 dependencies**. It opens by double-clicking `index.html` and deploys to GitHub
 Pages (or any static host) as-is.

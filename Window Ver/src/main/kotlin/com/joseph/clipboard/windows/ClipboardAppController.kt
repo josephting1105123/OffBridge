@@ -190,7 +190,7 @@ class ClipboardAppController {
         onResumeRequested = { _, _ ->
             SystemTrayManager.showNotification(
                 "Resume Request",
-                "A peer is requesting to resume a transfer. Open Clipboard Share to continue."
+                "A peer is requesting to resume a transfer. Open OffBridge to continue."
             )
         }
     )
@@ -461,11 +461,11 @@ class ClipboardAppController {
      */
     private fun notifyPushResult(successCount: Int, totalCount: Int) {
         if (totalCount == 0) {
-            SystemTrayManager.showNotification("Clipboard Share", "Push failed: no paired devices online.", TrayIcon.MessageType.WARNING)
+            SystemTrayManager.showNotification("OffBridge", "Push failed: no paired devices online.", TrayIcon.MessageType.WARNING)
         } else if (successCount > 0) {
-            SystemTrayManager.showNotification("Clipboard Share", "Clipboard pushed to $successCount device${if (successCount == 1) "" else "s"}.")
+            SystemTrayManager.showNotification("OffBridge", "Clipboard pushed to $successCount device${if (successCount == 1) "" else "s"}.")
         } else {
-            SystemTrayManager.showNotification("Clipboard Share", "Clipboard push failed — no device reachable.", TrayIcon.MessageType.WARNING)
+            SystemTrayManager.showNotification("OffBridge", "Clipboard push failed — no device reachable.", TrayIcon.MessageType.WARNING)
         }
     }
 
@@ -1126,13 +1126,13 @@ class ClipboardAppController {
     fun requestPeerResumeOutgoing(sessionId: String) {
         val targetIp = activeOutgoingFileSessions[sessionId]?.targetIp
         if (targetIp == null) {
-            SystemTrayManager.showNotification("Clipboard Share", "Can't resume: the receiving device is no longer known.", TrayIcon.MessageType.WARNING)
+            SystemTrayManager.showNotification("OffBridge", "Can't resume: the receiving device is no longer known.", TrayIcon.MessageType.WARNING)
             return
         }
         scope.launch {
             val sent = Net.sendUdp(targetIp, Ports.DISCOVERY, "FILEBRIDGE_RESUME_REQUEST|$sessionId")
             SystemTrayManager.showNotification(
-                "Clipboard Share",
+                "OffBridge",
                 if (sent) "Resume request sent." else "Failed to send resume request.",
                 if (sent) TrayIcon.MessageType.INFO else TrayIcon.MessageType.WARNING
             )

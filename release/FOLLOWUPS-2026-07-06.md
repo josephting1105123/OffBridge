@@ -25,7 +25,7 @@ environment-specific fix. Seed these as GitHub issues when the repo goes public.
 
 - **Where:** `DownloadEngine.kt` resume-offset probe (~L281) checks `Download/<name>` to detect
   "already fully received", but completed media is moved out of Download into
-  `Pictures|Movies/Clipboard Share` by `TransferUtils.publishReceivedMedia`.
+  `Pictures|Movies/OffBridge` by `TransferUtils.publishReceivedMedia`.
 - **Scenario:** File finishes, gets published (moved), completion-ack is lost, sender re-drives
   resume. The probe finds nothing in Download, re-downloads the whole file, publishes a second copy
   as `photo (1).jpg`. New for custom-folder users; pre-existing for no-SAF users.

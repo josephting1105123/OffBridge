@@ -142,7 +142,7 @@ In priority order:
 
 **Needed for the store, not blocking a GitHub release**
 5. Produce the Play graphics (icon, feature graphic, ≥4 screenshots) — Play hard-blocks publish without them.
-6. Fix the website download repo mismatch (the download button points at `ClipboardShare-Showcase`; the actual repo origin is `Clipboard-Share`) and fill the `REPLACE_SITE_URL` placeholders in `sitemap.xml`/`robots.txt`.
+6. Fix the website download repo mismatch (the download button points at `OffBridge-Showcase`; the actual repo origin is `OffBridge`) and fill the `REPLACE_SITE_URL` placeholders in `sitemap.xml`/`robots.txt`.
 7. Reconcile the stale version strings across RUNBOOK / store listing / website.
 
 **Worth doing, not blocking**

@@ -48,7 +48,7 @@ separate app id and they coexist).
 ## 4. Windows build & signing
 ```bash
 # IMPORTANT: `:window-ver:assemble` only builds a jar — it does NOT produce the app image the
-# installer packages. The .iss copies from build2\compose\binaries\main-release\app\Clipboard Share\*,
+# installer packages. The .iss copies from build2\compose\binaries\main-release\app\OffBridge\*,
 # which comes from createReleaseDistributable. Delete the stale app image FIRST so a leftover build
 # from a previous version can't be repackaged into a mislabeled installer:
 rm -rf "Window Ver/build2/compose/binaries/main-release"

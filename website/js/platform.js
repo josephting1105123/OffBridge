@@ -20,7 +20,7 @@
     // Developer reminder — console only, never shown to visitors.
     if (!aReady || !apkReady || !wReady) {
       console.info(
-        "[Clipboard Share] Download links not wired yet — set repo or url/size in js/config.js (see website/README.md)."
+        "[OffBridge] Download links not wired yet — set repo or url/size in js/config.js (see website/README.md)."
       );
     }
 

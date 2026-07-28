@@ -175,7 +175,7 @@ release.
 ### Added
 - **Updates page in the power menu.** Mirrors the Windows Updates screen: the same animated
   liquid-capsule loader, and checking / up-to-date / update-available / failed states. Checks the
-  latest ClipboardShare-Showcase GitHub release for a newer Android build; a silent check also runs
+  latest OffBridge-Showcase GitHub release for a newer Android build; a silent check also runs
   at app launch so opening the page shows the answer right away instead of waiting on a fresh
   network round-trip.
 - **Install-source-aware update action.** A Play-installed build sends the user to the Google Play
@@ -210,7 +210,7 @@ release.
 ## 3.6.5 — Android (build 27) — download page, scrollable send-text
 
 ### Changed
-- **"Windows Version" screen redesigned** as a "Download Clipboard Share for Windows" page with
+- **"Windows Version" screen redesigned** as a "Download OffBridge for Windows" page with
   a button that opens the website download section in the browser.
 - **Send-text dialog** capped at 6 visible lines and scrolls internally instead of growing
   the dialog off-screen.
@@ -225,7 +225,7 @@ release.
 - **Floating window is portrait** (9:19.5, ~80% of monitor height) instead of landscape,
   mirroring the Android app's shape. Corner-drag preserves the ratio; minimum width
   guardrail keeps the nav rail usable.
-- **"Android Version" screen redesigned** as a "Download Clipboard Share for Android" page
+- **"Android Version" screen redesigned** as a "Download OffBridge for Android" page
   with a button that opens the website download section in the browser.
 - **Add-Text dialog** fixed at 140 dp height and scrolls internally.
 - New `download_android_heading`, `download_android_blurb`, `download_open_website`

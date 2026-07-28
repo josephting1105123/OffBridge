@@ -4,7 +4,7 @@
   public, or delete those two lines. Add a LICENSE file at the repo root and set the license badge to match.
 -->
 
-# Clipboard Share
+# OffBridge
 
 **Send files and sync your clipboard between Android and Windows — with no router, no internet, and no account.** End-to-end encrypted, open source.
 
@@ -15,7 +15,7 @@
 <!-- [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml) -->
 <!-- ![Downloads](https://img.shields.io/github/downloads/OWNER/REPO/total) -->
 
-Most cross-device transfer tools need you to be on the same Wi-Fi network. Clipboard Share doesn't. When there's no router — a car, a plane, a field, a locked-down corporate network — it bootstraps a direct link between the two devices over a Bluetooth control channel and Wi-Fi Direct, and moves your files and clipboard across it. When a network *is* available, it uses it. Everything is sealed with AES-256-GCM under a key the two devices agree on when you pair them by QR code.
+Most cross-device transfer tools need you to be on the same Wi-Fi network. OffBridge doesn't. When there's no router — a car, a plane, a field, a locked-down corporate network — it bootstraps a direct link between the two devices over a Bluetooth control channel and Wi-Fi Direct, and moves your files and clipboard across it. When a network *is* available, it uses it. Everything is sealed with AES-256-GCM under a key the two devices agree on when you pair them by QR code.
 
 > Native clients for **both** Android and Windows, speaking one byte-identical wire protocol.
 

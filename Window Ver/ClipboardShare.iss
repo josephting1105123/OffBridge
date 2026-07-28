@@ -1,7 +1,7 @@
-#define MyAppName "Clipboard Share"
+#define MyAppName "OffBridge"
 #define MyAppVersion "3.7.8"
 #define MyAppPublisher "EntropicSoftwareLab"
-#define MyAppExeName "Clipboard Share.exe"
+#define MyAppExeName "OffBridge.exe"
 
 [Setup]
 ; AppId uniquely identifies this application. Do not change this in future versions so upgrades work seamlessly.
@@ -73,10 +73,10 @@ DisableDirPage=auto
 ; -----------------------------------------------------------------------------
 
 [Messages]
-; Make the AppMutex "please close the app" prompt explicit that Clipboard Share hides in the tray —
+; Make the AppMutex "please close the app" prompt explicit that OffBridge hides in the tray —
 ; users routinely think it's closed when it's only minimized there, which is what leaves the bundled
 ; runtime DLL locked during an upgrade (the code-5 rename failure this whole guard exists to prevent).
-SetupAppRunningError=Clipboard Share is still running.%n%nPlease close it completely — including the icon in the system tray (right-click it and choose Quit) — then click OK to continue, or Cancel to exit Setup.
+SetupAppRunningError=OffBridge is still running.%n%nPlease close it completely — including the icon in the system tray (right-click it and choose Quit) — then click OK to continue, or Cancel to exit Setup.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -93,7 +93,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; (e.g. an AV scanner holding it, or upgrading from a pre-mutex build the user didn't quit), schedule
 ; its replacement on next reboot (MoveFileEx delay-until-reboot) instead of hard-failing with the
 ; Retry/Skip/Cancel "code 5" box. No-op per file unless that file is actually locked.
-Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
+Source: "build2\compose\binaries\main-release\app\OffBridge\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 
 ; [Icons] intentionally omitted. Shortcuts are created in [Code] (CreateAppShortcuts, called on
 ; ssPostInstall) wrapped in try/except so a Controlled Folder Access / AV block on the Start Menu
@@ -104,7 +104,7 @@ Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "
 ; track shortcuts created via CreateShellLink the way it auto-removes [Icons] entries).
 
 [Run]
-; Allow inbound LAN traffic to ALL of Clipboard Share's listening ports through Windows Defender
+; Allow inbound LAN traffic to ALL of OffBridge's listening ports through Windows Defender
 ; Firewall. Windows blocks unsolicited inbound by default on every interface, and the app never opens
 ; these itself — so without these rules any PEER that DIALS this PC (phone-initiated pairing, clipboard
 ; push, or a file OFFER) is silently dropped and times out, while this PC dialing the phone still works
@@ -118,24 +118,24 @@ Source: "build2\compose\binaries\main-release\app\Clipboard Share\*"; DestDir: "
 ; a PUBLIC network by default, so narrowing to profile=private would leave the off-grid hotspot inbound
 ; blocked and break the core use case. Runs elevated. Keep profile=any until the AP interface is
 ; provably Private-classified.
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN TCP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 profile=any"; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN UDP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""Clipboard Share (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (TCP 65433)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN TCP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN UDP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 profile=any"; Flags: runhidden
 ; Auto-launch at the end
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 
 [UninstallRun]
 ; Remove the firewall rules when the app is uninstalled (including the legacy single-65433 rule name).
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (TCP 65433)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN TCP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""Clipboard Share (LAN UDP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (TCP 65433)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN TCP)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN UDP)"""; Flags: runhidden
 
 [Code]
 // ---------------------------------------------------------------------------
 // Previous-version detection.
-// If Clipboard Share is already installed, confirm its version and update in
+// If OffBridge is already installed, confirm its version and update in
 // place (never a second copy). If nothing is installed, do a normal fresh install.
 //
 // UninstKey is "<AppId>_is1" and the GUID MUST stay in sync with [Setup] AppId
@@ -229,13 +229,13 @@ begin
   Cmp := CompareVersions(gInstalledVer, '{#MyAppVersion}');
   if Cmp = 0 then
   begin
-    if MsgBox('Clipboard Share {#MyAppVersion} is already installed.' + NL + NL +
+    if MsgBox('OffBridge {#MyAppVersion} is already installed.' + NL + NL +
         'Do you want to reinstall (repair) it?', mbConfirmation, MB_YESNO) = IDNO then
       Result := False;
   end
   else if Cmp > 0 then
   begin
-    if MsgBox('A newer version of Clipboard Share (' + gInstalledVer + ') is already installed.' + NL + NL +
+    if MsgBox('A newer version of OffBridge (' + gInstalledVer + ') is already installed.' + NL + NL +
         'Do you want to replace it with the older version {#MyAppVersion}? ' +
         'This is not recommended.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDNO then
       Result := False;
@@ -410,7 +410,7 @@ begin
     // Neutral wording: correct whether the installed version is older (upgrade), the
     // same (repair), or newer (user-confirmed downgrade) than {#MyAppVersion}.
     WizardForm.WelcomeLabel2.Caption :=
-      'Clipboard Share ' + gInstalledVer + ' is already installed on this computer.' + NL + NL +
+      'OffBridge ' + gInstalledVer + ' is already installed on this computer.' + NL + NL +
       'Setup will replace it with version {#MyAppVersion} in the existing location, so you will ' +
       'not end up with a second copy of the app.' + NL + NL +
       'Click Next to continue, or Cancel to exit.';
@@ -468,7 +468,7 @@ begin
     Log('Start Menu shortcut could not be created (likely Controlled Folder Access / AV): ' + GetExceptionMessage);
     // Don't pop a modal during a /SILENT or /VERYSILENT run — it would hang an unattended install.
     if not WizardSilent then
-      MsgBox('Clipboard Share was installed successfully, but its Start Menu shortcut could not be created.' + NL + NL +
+      MsgBox('OffBridge was installed successfully, but its Start Menu shortcut could not be created.' + NL + NL +
         'This is usually security software (Controlled Folder Access / "Ransomware protection", or antivirus) '
         + 'blocking writes to the Start Menu folder.' + NL + NL +
         'You can still launch the app from its install folder, or allow this installer through Controlled '

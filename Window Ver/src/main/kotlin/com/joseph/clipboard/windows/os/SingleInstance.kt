@@ -5,7 +5,7 @@ import com.sun.jna.platform.win32.WinNT.HANDLE
 
 /**
  * Holds a named Windows mutex for the whole process lifetime so the Inno Setup installer's
- * `AppMutex=ClipboardShareInstanceMutex` can detect that Clipboard Share is running — even when the
+ * `AppMutex=ClipboardShareInstanceMutex` can detect that OffBridge is running — even when the
  * window is only minimized to the system tray — and prompt the user to close it BEFORE an upgrade
  * tries to replace an in-use bundled runtime file (e.g. runtime\bin\ucrtbase.dll, which otherwise
  * fails with "MoveFile failed; code 5. Access is denied.").

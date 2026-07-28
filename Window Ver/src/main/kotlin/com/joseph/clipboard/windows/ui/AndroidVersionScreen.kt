@@ -40,7 +40,7 @@ private fun tr(key: String, fallback: String): String =
     TranslationManager.getString(key).takeIf { it != key } ?: fallback
 
 /**
- * "Download Clipboard Share for Android" screen — points the user at the website to get the
+ * "Download OffBridge for Android" screen — points the user at the website to get the
  * mobile app. Reached from the nav-rail Android item.
  *
  * Composed like the Updates page next door: an accent hero above a glass card holding the copy and
@@ -95,7 +95,7 @@ fun AndroidVersionScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = tr("download_android_heading", "Download Clipboard Share for Android"),
+                    text = tr("download_android_heading", "Download OffBridge for Android"),
                     style = MaterialTheme.typography.h5,
                     color = MaterialTheme.colors.onSurface,
                     textAlign = TextAlign.Center

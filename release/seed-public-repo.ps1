@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Assembles the public open-source tree for Clipboard Share into a fresh directory.
+  Assembles the public open-source tree for OffBridge into a fresh directory.
 
 .DESCRIPTION
   Copies only the paths the app needs to build, leaving behind internal notes
@@ -119,7 +119,7 @@ try {
     & git add -A
     & git -c user.name="Joseph Ting" -c user.email="josephting1105123@gmail.com" commit -q -m "Initial public release
 
-Clipboard Share - off-grid file transfer and clipboard sync between Android and
+OffBridge - off-grid file transfer and clipboard sync between Android and
 Windows. Published under Apache-2.0; see LICENSE and NOTICE."
     $count = (& git ls-files).Count
     Write-Host ""
