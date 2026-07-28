@@ -14,7 +14,9 @@ object TransferKeys {
      * Receiver-side FileSeal TOFU trust gate (LAN only). Resolves the AES-GCM pairing key to seal
      * the plaintext stream. The receiver calls this to decide whether to request "fgcm" on
      * ACCEPT_OFFER / RESUME_REQUEST. (Off-grid never reaches here — it uses an ECDH token key, not a
-     * stored pairing key, so it stays plaintext by construction.)
+     * stored pairing key. That no longer means off-grid is plaintext: since 3.7.3 it is sealed on its
+     * own path via OffGridHandshake's SEALED_STREAM negotiation, which carries the ECDH secret in
+     * TransferSession.p2pSealKey instead of going through this TOFU gate.)
      */
     fun fileKeyIfAead(context: Context, ip: String): ByteArray? {
         val key = SecurityVault.getKeyForNode(context, ip) ?: return null
