@@ -1,0 +1,13 @@
+{
+  "name": "clipboardshare-website-tools",
+  "private": true,
+  "type": "module",
+  "description": "Capture-time helpers for website imagery. Not part of the site build — the site itself stays plain HTML/CSS/JS with no build step.",
+  "scripts": {
+    "shots": "node shots.mjs",
+    "shots:check": "node shots.mjs --check"
+  },
+  "dependencies": {
+    "sharp": "^0.34.0"
+  }
+}
