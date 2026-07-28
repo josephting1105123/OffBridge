@@ -1,46 +1,58 @@
 # Play Console — Store listing copy
 
-App: **Clipboard Share** · package `com.EntropicSoftwareLab.ClipboardShare` · v3.7.2 (versionCode 30)
+App: **OffBridge** · package `com.EntropicSoftwareLab.ClipboardShare` · v3.7.2 (live) → 3.7.3 (pending signing)
 Category: **Tools** (alt: Productivity) · Free · No ads · No in-app purchases
 Contact email: `entropic.software.lab@gmail.com`
 
+> The package name stays `com.EntropicSoftwareLab.ClipboardShare` forever — Play identity is
+> permanent and unrelated to the display name. Renaming the listing is safe; renaming the
+> package is impossible.
+
 ## App name (max 30 chars)
 ```
-Clipboard Share
+OffBridge: Clipboard & Files
 ```
+(28 chars.) A bare `OffBridge` is cleaner, but the name is brand-new and carries no recognition —
+nobody searches for it. The descriptor is what makes the listing findable at all in the first months.
+Drop it once the name means something.
 
 ## Short description (max 80 chars)
 ```
-Off-grid clipboard sync & file transfer. No cloud, no account. AES-256 encrypted.
+Off-grid file transfer & clipboard sync. No cloud, no account, no telemetry.
 ```
-(79 chars.)
+(75 chars.) The previous version ended "AES-256 encrypted." — removed, because it read as a blanket
+claim that did not hold for off-grid transfers. Encryption is now described precisely below instead
+of being compressed into a slogan that overstates it.
 
 ## Full description (max 4000 chars)
 ```
-Clipboard Share moves your clipboard and your files between Android and Windows — directly, privately, with no cloud in the middle.
+OffBridge moves your clipboard and your files between Android and Windows — directly, privately, with no cloud in the middle.
 
-Copy on your phone, paste on your PC. Send a file across the room without uploading it to anyone's server. Everything travels straight between your own paired devices and is encrypted end-to-end with AES-256.
+Copy on your phone, paste on your PC. Send a file across the room without uploading it to anyone's server. Everything travels straight between your own devices, over your local network or over a direct device-to-device radio link.
 
 NO CLOUD. NO ACCOUNT. NO TELEMETRY.
-There are no servers behind Clipboard Share. We never see your clipboard, your files, or who you are. You don't sign in. Your data stays on your devices and on your local network.
+There are no servers behind OffBridge. We never see your clipboard, your files, or who you are. You don't sign in. Your data stays on your devices and on your local network.
 
 WORKS EVEN WITH NO INTERNET
-Clipboard Share finds the fastest link between your devices and steps down gracefully when there's no router:
+OffBridge finds the fastest link between your devices and steps down gracefully when there's no router:
 • LAN — same Wi-Fi, fastest path
 • Wi-Fi Direct / hotspot bridge — no router needed
 • QR code — scan to connect with no shared network
-• NFC tap — tap two phones to start an off-grid transfer (Android)
+• NFC tap — tap two phones to start an off-grid transfer
 • Bluetooth control channel — used to set up the link when nothing else is available
 
-SECURE BY DESIGN
-• AES-256-GCM authenticated encryption on every clipboard item and file
-• Pairing uses an ephemeral ECDH key exchange with a 6-digit verification code — confirm the codes match and impostors are locked out
-• Anti-downgrade protection: once a device proves it supports encryption, Clipboard Share refuses to silently fall back to plaintext
+ENCRYPTION, STATED PRECISELY
+• Clipboard content is always protected with authenticated AES-256-GCM. Since version 3.5.0 the app rejects any clipboard item that arrives unencrypted rather than accepting it.
+• Files sent over your local network get the same authenticated AES-256-GCM protection whenever both devices support it — every version from 3.4.0 onward.
+• Anti-downgrade protection: once a device has proved it supports encryption, OffBridge refuses the transfer rather than quietly falling back to plaintext.
+• Files sent off-grid (Wi-Fi Direct or hotspot, no router) are encrypted from Android 3.7.3 and Windows 3.7.7 onward. Earlier versions sent those file contents unencrypted across the direct link between the two devices.
+• Pairing uses an ephemeral ECDH key exchange with a 6-digit verification code — confirm the codes match on both screens and impostors are locked out.
 
 BUILT FOR REAL USE
 • Send single files or batches, with live progress and cancel
+• Resume interrupted transfers instead of starting over
 • Filtered transfer history — browse what you've sent and received
-• Quick-settings tile and share-sheet integration on Android — push to your PC without opening the app
+• Quick-settings tile and share-sheet integration — push to your PC without opening the app
 • Light and dark themes
 • Available in 10 languages
 
@@ -54,25 +66,32 @@ PERMISSIONS — AND WHY
 • Notifications & foreground service: keep the connection alive and show transfer status
 • Battery-optimization exemption (optional): stop Android from killing the background sync
 
-Clipboard Share is for people who'd rather not put their clipboard and their files in the cloud. Your data is yours — and we'd like to keep it that way.
+OffBridge is for people who'd rather not put their clipboard and their files in the cloud. Your data is yours — and we'd like to keep it that way.
 ```
 
-## What's new (release notes — max 500 chars, for v3.4.0)
+## What's new (release notes — max 500 chars)
 ```
-• Downgrade-resistant encryption: once a peer proves it supports AES-256, Clipboard Share won't fall back to plaintext
-• Encrypted LAN file transfer end to end
-• Full localization in 10 languages
-• Smaller, faster build (R8) and hardened security
+• Off-grid transfers over Wi-Fi Direct and hotspot are now encrypted with AES-256-GCM (needs Windows 3.7.7 on the other end)
+• The app is now OffBridge — same app, same devices, new name
+• Clipboard tab switched to Auto-Sync; the manual push button is gone
+• Privacy policy rewritten to state exactly which channels are encrypted
+• Fixes to transfer resume and pairing reliability
 ```
 
 ## Graphics to produce (Play HARD-BLOCKS publish without these)
 Source material exists in `website/assets/screenshots/` (light + dark, Android + Windows).
 - **App icon:** 512×512 PNG, 32-bit, no alpha rounding — export from `app/src/main/res/mipmap-*`.
-- **Feature graphic:** 1024×500 PNG/JPG (shown at the top of the listing). Make one from the brand + a screenshot.
+- **Feature graphic:** 1024×500 PNG/JPG (top of the listing). Must show the new name.
 - **Phone screenshots:** ≥4, 16:9 or 9:16, min 320px side — crop from `website/assets/screenshots/android-*`.
 - (Optional) 7"/10" tablet screenshots if you declare tablet support.
 
+⚠️ **Screenshots are stale.** `android-clipboard-{dark,light}.webp` date from 45c0913 (22 Jul), which
+predates the removal of the manual push button in 83f7317 — they show a button the app no longer has.
+Re-capture on a device before uploading. Any screenshot showing the old app name also needs re-shooting.
+
 ## Other listing fields
 - **Languages:** add store-listing translations for the 9 non-English locales if you want localized listings (optional; the app itself is already localized).
-- **Privacy policy URL:** `https://<pages-domain>/privacy.html` (deploy `website/privacy.html` first).
+- **Privacy policy URL:** `https://clipboard-share-a8e.pages.dev/privacy.html` — switch to
+  `https://offbridge.app/privacy.html` once the Cloudflare zone is Active. The pages.dev URL must keep
+  resolving regardless: it is compiled into every shipped build.
 - **Tags / category:** Tools; tags like "file transfer", "clipboard", "privacy".
