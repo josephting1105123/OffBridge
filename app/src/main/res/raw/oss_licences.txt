@@ -93,10 +93,11 @@ redistributed in this source tree. Notable licences:
       project takes it under the Apache-2.0 option. No LGPL obligation
       therefore attaches to this distribution.
 
-Every dependency above is open source. Google ML Kit Barcode Scanning, a
-closed-source SDK, was removed on 30 Jul 2026 and its QR decoding replaced with
-ZXing, which the project already used to generate the same codes. The dependency
-tree carries no proprietary component.
+  Google ML Kit Barcode Scanning                                Proprietary
+      Google's ML Kit is a closed-source SDK distributed under the Google APIs
+      Terms of Service. It is redistributable as part of an application but is
+      not open source, which matters for any programme requiring a fully
+      open-source dependency tree.
 
 
 ==============================================================================
@@ -114,6 +115,10 @@ License, Version 2.0, reproduced in full below.
   - Gson
   - Java Native Access (JNA) — dual-licensed, taken under the Apache-2.0 option
   - Google Android Material Components
+
+Google ML Kit Barcode Scanning is NOT open source. It is a proprietary Google
+SDK used under the Google APIs Terms of Service, redistributable as part of an
+application. No source or licence text is available to reproduce here.
 
 
                                  Apache License

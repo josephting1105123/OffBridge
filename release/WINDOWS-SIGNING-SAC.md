@@ -55,26 +55,48 @@ in the EU and UK). The publisher is an individual in **Malaysia**, so this route
 Microsoft widens eligibility. Re-check before paying for anything else — it is by far the cheapest
 option if it ever opens up.
 
-### Option B — SignPath Foundation (free, requires going open source) — NOW THE ACTIVE PLAN
-Free OV-level signing for qualifying open-source projects. The repo went public under Apache-2.0 in
-July 2026, so this is live rather than hypothetical. Criteria re-read from signpath.org/terms on
-2026-07-30; status of each against this project:
+### Option B — SignPath Foundation (free, requires going open source) — ACTIVE PLAN, needs a repo split
+Free OV-level signing for qualifying open-source projects. Criteria re-read from signpath.org/terms
+on 2026-07-30.
+
+**The unit SignPath judges is the repository, not the artifact.** Their terms tie the subscription to
+"ownership of the source code repository", and each signature asserts the binary is "a valid,
+automated build resulting from the source code at the noted source code repository". So "we only want
+the Windows installer signed" does not by itself narrow what they assess — whatever lives in the repo
+they are pointed at is the project.
+
+That matters because of one rule: **no proprietary components**. ML Kit (Google, closed source) is an
+Android-only dependency; the Windows client has none. In today's single repo the Android app drags
+ML Kit into the same project as the Windows client, so the monorepo cannot qualify.
+
+Two ways out:
+1. **Split the Windows client into its own public repo** and apply with that. The signed project then
+   genuinely contains no proprietary code, Android keeps ML Kit and its better scanner, and the two
+   applications are separated for signing as well as in name. Cost: the shared wire protocol and the
+   10-language string set now span two repos, and the parity discipline in CLAUDE.md has to be
+   enforced across them rather than inside one tree.
+2. **Drop ML Kit from Android** so the monorepo qualifies whole. Tried on 2026-07-30 (commit 80c7b5a,
+   QR decoding moved to ZXing) and reverted the same day: it cut 22.5 MB from the APK but traded away
+   ML Kit's much better tolerance of low light, motion blur and screen glare, which is the core
+   scanning path.
+
+Status of the remaining criteria, assuming route 1:
 - **OSI licence, no dual-licensing** — met (Apache-2.0).
-- **No proprietary components** — met as of 2026-07-30. ML Kit was the only one; QR decoding moved
-  to ZXing (`QrFrameDecoder`), which already generated the codes. Also cut 22.5 MB from the APK.
 - **Maintained / released / documented** — met (active, 3.7.8 shipped, website + README).
 - **Reputation** — *the open risk.* They state plainly that they "cannot sign binaries based on
-  source code that nobody knows" and require "a certain verifiable reputation". The public repo is
-  days old with a single star. This is discretionary, there is no appeal, and it is the most likely
-  rejection reason. Nothing to do but apply and see.
-- **CI-built artifacts** — not met yet. Signing runs from a pipeline and SignPath verifies the
-  binary came from the repo. `.github/workflows/ci.yml` runs on `ubuntu-latest` and never builds the
-  installer; jpackage and ISCC need a Windows runner. Do this *after* they accept in principle —
-  the SignPath project setup happens during onboarding.
-- **Code signing policy page** — not written yet. Required wording: the heading "Code signing
-  policy", the line "Free code signing provided by SignPath.io, certificate by SignPath Foundation",
-  team roles (author/reviewer/approver), and a privacy statement.
-- **MFA on GitHub** — required for all team members; confirm before applying.
+  source code that nobody knows" and require "a certain verifiable reputation". A freshly split
+  Windows repo starts from zero, which is worse on this axis than the existing one. Discretionary,
+  no appeal, and the most likely rejection reason.
+- **CI-built artifacts** — not met. Signing runs from a pipeline and SignPath verifies the binary came
+  from the repo. `ci.yml` runs on `ubuntu-latest` and never builds the installer; jpackage and ISCC
+  need a Windows runner. Do this after they accept in principle.
+- **Code signing policy page** — not written. Required: the heading "Code signing policy", the line
+  "Free code signing provided by SignPath.io, certificate by SignPath Foundation", team roles, and a
+  privacy statement.
+- **MFA on GitHub** — required; confirm before applying.
+
+- Original condition list: OSI-approved licence with no commercial dual-licensing, **no proprietary
+  components**, actively maintained, already released, functionality documented on the download page.
 - The certificate belongs to SignPath Foundation, not to us: Windows shows the publisher as
   **"SignPath Foundation"**, not EntropicSoftwareLab.
 - Signing happens server-side from a **CI pipeline** (GitHub Actions / Azure DevOps / Jenkins). The

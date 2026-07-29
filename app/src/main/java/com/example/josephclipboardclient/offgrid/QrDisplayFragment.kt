@@ -607,10 +607,7 @@ class QrDisplayFragment : Fragment() {
         val hints = mapOf(
             EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
             EncodeHintType.CHARACTER_SET to "UTF-8",
-            // 4 modules, the quiet zone the QR spec requires. Was 1: ML Kit tolerated a thin
-            // border, but ZXing (which now does the scanning) locates codes by their finder
-            // patterns and needs the real margin to separate them from whatever is behind.
-            EncodeHintType.MARGIN to 4
+            EncodeHintType.MARGIN to 1
         )
         val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, QR_SIZE_PX, QR_SIZE_PX, hints)
         val pixels = IntArray(QR_SIZE_PX * QR_SIZE_PX)
