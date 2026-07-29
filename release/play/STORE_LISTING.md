@@ -85,9 +85,14 @@ Source material exists in `website/assets/screenshots/` (light + dark, Android +
 - **Phone screenshots:** ≥4, 16:9 or 9:16, min 320px side — crop from `website/assets/screenshots/android-*`.
 - (Optional) 7"/10" tablet screenshots if you declare tablet support.
 
-⚠️ **Screenshots are stale.** `android-clipboard-{dark,light}.webp` date from 45c0913 (22 Jul), which
-predates the removal of the manual push button in 83f7317 — they show a button the app no longer has.
-Re-capture on a device before uploading. Any screenshot showing the old app name also needs re-shooting.
+Screenshot freshness, as of 29 Jul 2026:
+- `android-clipboard-{dark,light}` — **current.** Re-captured 29 Jul (b1606c4) on the shipping build:
+  serif heading, "Clipboard (Auto-Sync)", no manual push button, no old app name. Usable as-is, but
+  they came through WhatsApp and so are 591px wide rather than the 1280px the others are; Play's
+  minimum is 320px, so they clear it. Re-shoot straight off the device if you want full resolution.
+- `android-transfer-*`, `android-sas-verify-*`, `windows-*` — captured 23 Jun, still show the older
+  sans-serif type. No old app name is visible in any of them, so they are usable but off-brand next
+  to the refreshed pair. Re-capture before upload if you want one consistent set.
 
 ## Other listing fields
 - **Languages:** add store-listing translations for the 9 non-English locales if you want localized listings (optional; the app itself is already localized).
