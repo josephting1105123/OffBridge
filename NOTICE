@@ -46,6 +46,12 @@ package time and lives under runtime/ inside the installed application.
       alongside an Apache-2.0 application without the GPL reaching this code.
       Full text: https://openjdk.org/legal/gplv2+ce.html
 
+jpackage carries the JDK's own legal/ tree into the runtime image, and the
+installer copies the application directory recursively, so the licence texts
+ship inside the install at runtime\legal\ (44 files). That is what satisfies
+the GPL's requirement to accompany the binary — do not prune that folder to
+save space.
+
 This applies to the installer artifact, not to the source distribution.
 
 
@@ -59,8 +65,15 @@ redistributed in this source tree. Notable licences:
   AndroidX, Jetpack Compose, Room, Kotlin, kotlinx.coroutines   Apache-2.0
   ZXing (barcode decoding)                                      Apache-2.0
   Gson                                                          Apache-2.0
-  Facebook Shimmer                                              BSD
   JUnit 4 (test scope only, not redistributed)                  EPL-1.0
+
+  Facebook Shimmer for Android 0.5.0                            BSD-2-Clause
+      Copyright (c) 2015, Facebook, Inc. Two clauses, not three — verified
+      against the LICENSE file at the 0.5.0 tag, which also carries a separate
+      PATENTS grant. Both texts are reproduced in
+      licenses/BSD-2-Clause-shimmer.txt, because clause 2 requires binary
+      redistributions to reproduce the copyright notice and disclaimer, and the
+      Android app ships Shimmer compiled in.
 
   Java Native Access (JNA / jna-platform)      LGPL-2.1-or-later OR Apache-2.0
       JNA is dual-licensed and its POM states that either may be chosen. This

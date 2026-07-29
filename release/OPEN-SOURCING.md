@@ -28,11 +28,10 @@ the full 131-commit history, `release/`, `.claude/`, `CLAUDE.md`, `PRODUCT.md` a
    Geist and Inter files. `find . -iname "*.ttf"` now returns only `ibm_plex_sans_variable.ttf`
    (one copy per client) plus `website/fonts/geist_variable.ttf`, and the website is excluded
    from the public tree.
-2. **Confirm Facebook Shimmer's licence.** `NOTICE` claims BSD for `com.facebook.shimmer:shimmer:0.5.0`.
-   No POM or embedded licence file is in the Gradle cache to check it against, and Meta relicensed
-   several Android libraries from BSD to MIT. Read the `LICENSE` file in `facebook/shimmer-android`
-   at the 0.5.0 tag and correct the `NOTICE` line if it says MIT. This is the one dependency claim
-   that is currently unverified.
+2. ~~**Confirm Facebook Shimmer's licence.**~~ Done 29 Jul. The LICENSE at the 0.5.0 tag is
+   BSD-**2**-Clause, Copyright (c) 2015 Facebook, Inc., with a separate PATENTS grant beside it.
+   Both texts are now in `licenses/BSD-2-Clause-shimmer.txt` and the NOTICE line says 2-Clause
+   rather than a bare "BSD".
 3. **Commit the groundwork here** — `LICENSE`, `NOTICE`, `licenses/`, the `.gitignore`
    change and the 20 untracked agent files.
 4. **Create the GitHub repo**: public, **empty** — no README, no .gitignore, no licence, or
@@ -79,6 +78,30 @@ needs a step for it.
 
 Alternative worth weighing: make the **public** repo the source of truth for app code and
 keep this one for internal docs only. More upheaval now, no ongoing sync tax.
+
+## Open gap: the shipped apps show no licence texts
+
+Independent of open-sourcing, and unaffected by it. Neither client has an
+"open-source licences" screen — grepping both `src/main` trees for one returns nothing.
+Several licences on components we redistribute in *binary* form ask for more than an
+entry in a repo file a user never sees:
+
+- **BSD-2-Clause (Shimmer)** — clause 2: binary redistributions must reproduce the
+  copyright notice and disclaimer "in the documentation and/or other materials provided
+  with the distribution". The APK ships Shimmer compiled in.
+- **Apache-2.0 (AndroidX, Compose, Room, Kotlin, coroutines, ZXing, Gson, JNA)** — §4(1)
+  give recipients a copy of the licence; §4(4) propagate any upstream NOTICE.
+- **OFL-1.1 (IBM Plex Sans)** — the licence travels with the font, and the font is inside
+  both binaries.
+
+Already handled: the Windows installer carries the JDK's `runtime\legal\` tree, so the
+GPLv2+CE obligation is covered there, and the same install could host a `licenses\` folder
+for the rest by adding one line to `[Files]` in `OffBridge.iss`. Android has no such
+escape hatch — an APK needs a screen. The usual route is Google's
+`play-services-oss-licenses` Gradle plugin, which generates the list at build time, though
+it pulls in Play Services; a hand-written scrollable screen backed by the text files in
+`licenses/` avoids that and is maybe an afternoon's work across both clients plus the
+10-locale string for the menu entry.
 
 ## Things a licence does not do
 
