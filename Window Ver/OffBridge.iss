@@ -95,6 +95,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 ; Retry/Skip/Cancel "code 5" box. No-op per file unless that file is actually locked.
 Source: "build2\compose\binaries\main-release\app\OffBridge\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs restartreplace
 
+; Licence texts on disk, beside the app. The in-app Settings -> Open-source licences dialog reads
+; the same document from inside the jar, but several licences ask for the text to accompany the
+; DISTRIBUTION, which a file the user can open is the least arguable way to satisfy. The bundled
+; JDK's own texts already arrive under runtime\legal\ via the recursive copy above.
+Source: "..\LICENSE"; DestDir: "{app}\licenses"; DestName: "LICENSE-Apache-2.0.txt"; Flags: ignoreversion
+Source: "..\NOTICE"; DestDir: "{app}\licenses"; DestName: "NOTICE.txt"; Flags: ignoreversion
+Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
+
 ; [Icons] intentionally omitted. Shortcuts are created in [Code] (CreateAppShortcuts, called on
 ; ssPostInstall) wrapped in try/except so a Controlled Folder Access / AV block on the Start Menu
 ; folder ("IPersistFile::Save failed; code 0x80070005. Access is denied.") can't abort the whole

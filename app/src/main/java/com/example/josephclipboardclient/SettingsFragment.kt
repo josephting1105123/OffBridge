@@ -97,6 +97,7 @@ class SettingsFragment : Fragment() {
                         },
                         onDonate = ::onDonate,
                         onPrivacyPolicy = { showPrivacyPolicyDialog() },
+                        onOpenSourceLicences = { showOssLicencesDialog() },
                         onConnectionDiagnosis = { startActivity(Intent(requireContext(), DiagnosticsActivity::class.java)) },
                     )
                 }
@@ -237,6 +238,47 @@ class SettingsFragment : Fragment() {
     }
 
     // ==================== Privacy Policy ====================
+
+    /**
+     * The open-source licence texts, verbatim from res/raw/oss_licences.txt (built by
+     * tools/build-oss-licences.mjs from LICENSE, NOTICE and licenses/). Deliberately not
+     * translated and deliberately not run through HtmlCompat: these are legal texts, and the
+     * Apache and BSD bodies contain bare angle brackets that an HTML parser would eat.
+     *
+     * ~26KB read straight off the APK's resource table, which is memory-mapped — cheap enough
+     * that keeping it on the main thread beats the complexity of a background load here.
+     */
+    private fun showOssLicencesDialog() {
+        val licences = try {
+            resources.openRawResource(R.raw.oss_licences).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            // Never let a missing/corrupt resource crash Settings; the row is informational.
+            Toast.makeText(requireContext(), getString(R.string.settings_toast_could_not_open_browser), Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val scrollView = ScrollView(requireContext())
+        val textView = TextView(requireContext()).apply {
+            text = licences
+            textSize = 11f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setHorizontallyScrolling(false)
+            setPadding(40, 32, 40, 32)
+            setTextIsSelectable(true)
+            val tv = TypedValue()
+            requireContext().theme.resolveAttribute(R.attr.appTextPrimaryColor, tv, true)
+            setTextColor(tv.data)
+        }
+        scrollView.addView(textView)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle(getString(R.string.settings_oss_licences))
+            .setView(scrollView)
+            .setPositiveButton(getString(R.string.settings_action_close), null)
+            .create()
+            .also { it.applyModalPolish() }
+            .show()
+    }
 
     private fun showPrivacyPolicyDialog() {
         val policyText = getString(R.string.privacy_policy_text)

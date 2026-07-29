@@ -236,6 +236,7 @@
     <string name="dialog_title_choose_theme">テーマの選択</string>
     <string name="dialog_title_choose_language">言語の選択</string>
     <string name="dialog_title_privacy_policy">プライバシーポリシー</string>
+    <string name="settings_oss_licences">オープンソースライセンス</string>
     <string name="action_close">閉じる</string>
     <string name="selected_folder_fallback">選択したフォルダ</string>
     <string name="toast_failed_to_load_file_ui">ファイルUIの読み込みに失敗しました</string>

@@ -271,6 +271,7 @@
     <string name="dialog_title_choose_theme">Choose Theme</string>
     <string name="dialog_title_choose_language">Choose Language</string>
     <string name="dialog_title_privacy_policy">Privacy Policy</string>
+    <string name="settings_oss_licences">Open-source licences</string>
     <string name="action_close">Close</string>
     <string name="selected_folder_fallback">Selected Folder</string>
     <string name="toast_failed_to_load_file_ui">Failed to load File UI</string>

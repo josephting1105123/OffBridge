@@ -239,6 +239,7 @@
     <string name="dialog_title_choose_theme">Design auswählen</string>
     <string name="dialog_title_choose_language">Sprache auswählen</string>
     <string name="dialog_title_privacy_policy">Datenschutzerklärung</string>
+    <string name="settings_oss_licences">Open-Source-Lizenzen</string>
     <string name="action_close">Schließen</string>
     <string name="selected_folder_fallback">Ausgewählter Ordner</string>
     <string name="toast_failed_to_load_file_ui">Datei-UI konnte nicht geladen werden</string>

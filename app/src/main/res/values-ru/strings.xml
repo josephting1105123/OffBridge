@@ -239,6 +239,7 @@
     <string name="dialog_title_choose_theme">Выбрать тему</string>
     <string name="dialog_title_choose_language">Выбрать язык</string>
     <string name="dialog_title_privacy_policy">Политика конфиденциальности</string>
+    <string name="settings_oss_licences">Лицензии открытого ПО</string>
     <string name="action_close">Закрыть</string>
     <string name="selected_folder_fallback">Выбранная папка</string>
     <string name="toast_failed_to_load_file_ui">Не удалось загрузить интерфейс файлов</string>

@@ -239,6 +239,7 @@
     <string name="dialog_title_choose_theme">Pilih Tema</string>
     <string name="dialog_title_choose_language">Pilih Bahasa</string>
     <string name="dialog_title_privacy_policy">Kebijakan Privasi</string>
+    <string name="settings_oss_licences">Lisensi sumber terbuka</string>
     <string name="action_close">Tutup</string>
     <string name="selected_folder_fallback">Folder Terpilih</string>
     <string name="toast_failed_to_load_file_ui">Gagal memuat UI File</string>

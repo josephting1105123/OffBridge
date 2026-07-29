@@ -35,7 +35,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
 # --- What ships -------------------------------------------------------------------
-$includeDirs  = @("app", "Window Ver", "gradle", ".github", "licenses")
+$includeDirs  = @("app", "Window Ver", "gradle", ".github", "licenses", "tools")
 $includeFiles = @(
     "gradlew", "gradlew.bat", "build.gradle.kts", "settings.gradle.kts", "gradle.properties",
     "README.md", "ARCHITECTURE.md", "CHANGELOG.md", "LICENSE", "NOTICE", ".gitignore"
@@ -48,8 +48,12 @@ $excluded = @(
     ".git", ".gitattributes", "local.properties", "build", "build2", ".gradle", ".kotlin"
 )
 
-# Build outputs never belong in a source tree, wherever they appear.
-$excludeDirNames = @("build", "build2", ".gradle", ".idea", ".kotlin", "generated")
+# Build outputs and local scratch never belong in a source tree, wherever they appear.
+# `release` covers app/release/, which holds the SIGNED Play bundle (app-release.aab) — robocopy
+# copies from the filesystem, so gitignoring it upstream does not stop the copy, only the commit.
+# `.impeccable` is local design-scratch. Both were previously caught by the copied .gitignore
+# alone; relying on one layer means any edit to that file starts publishing them.
+$excludeDirNames = @("build", "build2", ".gradle", ".idea", ".kotlin", "generated", "release", ".impeccable")
 
 # --- Safety: destination must be new or empty --------------------------------------
 if (Test-Path $Destination) {
@@ -103,13 +107,20 @@ if ($RepoSlug) {
 }
 
 # --- Verify no obvious secret slipped through ---------------------------------------
+# Three classes, all hard stops:
+#   key material  - the original check.
+#   signed builds - .aab/.apk are signed with the release key; they are distribution output,
+#                   never source, and the old regex waved them straight through.
+#   screen capture- an .mp4/.mov shows whatever was on the machine when it was recorded:
+#                   real filenames, window titles, C:\Users\<name> paths. No text scan can see
+#                   inside one, so the only defence is refusing to publish the format at all.
 $suspects = Get-ChildItem -Recurse -Force -File $Destination |
-    Where-Object { $_.Name -match '(?i)\.(jks|keystore|p12|pfx|pem)$|keystore\.properties$|settings\.local\.json$' }
+    Where-Object { $_.Name -match '(?i)\.(jks|keystore|p12|pfx|pem|aab|apk|mp4|mov|mkv|webm)$|keystore\.properties$|settings\.local\.json$' }
 if ($suspects) {
     Write-Host ""
-    Write-Host "STOP - key material found in the staged tree:" -ForegroundColor Red
+    Write-Host "STOP - key material, signed builds or screen recordings in the staged tree:" -ForegroundColor Red
     $suspects | ForEach-Object { Write-Host "    $($_.FullName)" -ForegroundColor Red }
-    throw "Refusing to commit a tree containing key material."
+    throw "Refusing to commit a tree containing key material, signed builds or screen recordings."
 }
 
 # --- One clean commit, no history, no push -------------------------------------------

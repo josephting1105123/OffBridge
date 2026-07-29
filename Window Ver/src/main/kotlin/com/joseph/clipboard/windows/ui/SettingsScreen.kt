@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.joseph.clipboard.windows.ClipboardAppController
@@ -59,6 +61,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
+    var showLicencesDialog by remember { mutableStateOf(false) }
     val currentLanguage by TranslationManager.currentLanguageState
     val extra = LocalExtraColors.current
     val scope = rememberCoroutineScope()
@@ -93,6 +96,8 @@ fun SettingsScreen(appController: ClipboardAppController) {
     val privacyText = TranslationManager.getString("privacy_policy_setting").takeIf { it != "privacy_policy_setting" } ?: "Privacy Policy"
     val donateText = TranslationManager.getString("action_donate").takeIf { it != "action_donate" } ?: "☕ Donate"
     val readPolicyText = TranslationManager.getString("action_read_privacy_policy").takeIf { it != "action_read_privacy_policy" } ?: "📄 Read"
+    val licencesText = TranslationManager.getString("settings_oss_licences").takeIf { it != "settings_oss_licences" } ?: "Open-source licences"
+    val openText = TranslationManager.getString("action_open").takeIf { it != "action_open" } ?: "Open"
 
     val chooseThemeText = TranslationManager.getString("dialog_title_choose_theme")
     val chooseLanguageText = TranslationManager.getString("dialog_title_choose_language")
@@ -209,6 +214,10 @@ fun SettingsScreen(appController: ClipboardAppController) {
                     )
                 }
                 SettingsRow(privacyText, readPolicyText, uniformButtonWidth) { showPrivacyDialog = true }
+                // The installer redistributes Shimmer (BSD-2-Clause), the Apache-2.0 stack, the OFL
+                // font and a GPL+CE Java runtime. Their texts have to reach whoever installs it, not
+                // just sit in the source repo — this row is how that obligation is met on Windows.
+                SettingsRow(licencesText, openText, uniformButtonWidth) { showLicencesDialog = true }
             }
         }
         
@@ -338,7 +347,69 @@ fun SettingsScreen(appController: ClipboardAppController) {
                 }
             }
         }
+
+        if (showLicencesDialog) {
+            BackdropEffect()
+            DialogWindow(
+                onCloseRequest = { showLicencesDialog = false },
+                title = licencesText,
+                resizable = true,
+                state = androidx.compose.ui.window.rememberDialogState(
+                    width = 720.dp, height = 620.dp
+                )
+            ) {
+                MaterialTheme(colors = if (themeModeState.value == ThemeMode.LIGHT) lightColors() else darkColors()) {
+                    Surface(color = MaterialTheme.colors.background) {
+                        // Verbatim from resources/oss_licences.txt, built by tools/build-oss-licences.mjs.
+                        // Never translated: these are the licences themselves, not a description of them.
+                        // Read once per open and split to lines so the ~640-line document renders lazily
+                        // rather than laying out 26KB in a single Text.
+                        val lines = remember { loadOssLicences() }
+                        val state = rememberLazyListState()
+                        Box(modifier = Modifier.fillMaxSize().padding(Dimens.spaceLg)) {
+                            LazyColumn(
+                                state = state,
+                                modifier = Modifier.fillMaxSize().padding(end = Dimens.spaceMd)
+                            ) {
+                                items(lines) { line ->
+                                    Text(
+                                        // Blank lines still need a glyph-height box or the paragraph
+                                        // spacing of the original document collapses.
+                                        text = line.ifBlank { " " },
+                                        style = MaterialTheme.typography.body2.copy(
+                                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                            fontSize = 11.sp
+                                        ),
+                                        color = MaterialTheme.colors.onSurface,
+                                        softWrap = true
+                                    )
+                                }
+                            }
+                            VerticalScrollbar(
+                                adapter = androidx.compose.foundation.rememberScrollbarAdapter(state),
+                                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
+}
+
+/**
+ * The bundled licence document, one entry per line. Returns a short error line rather than
+ * throwing: a packaging slip that drops the resource should not crash Settings, and an empty
+ * dialog would look like a bug rather than a missing file.
+ */
+private fun loadOssLicences(): List<String> = try {
+    object {}.javaClass.classLoader.getResourceAsStream("oss_licences.txt")
+        ?.bufferedReader()?.use { it.readText() }
+        ?.replace("\r\n", "\n")
+        ?.split("\n")
+        ?: listOf("Licence texts are missing from this build (oss_licences.txt).")
+} catch (e: Exception) {
+    listOf("Licence texts could not be read: ${e.message}")
 }
 
 @Composable

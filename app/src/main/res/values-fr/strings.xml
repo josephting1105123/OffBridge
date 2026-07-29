@@ -239,6 +239,7 @@
     <string name="dialog_title_choose_theme">Choisir le thème</string>
     <string name="dialog_title_choose_language">Choisir la langue</string>
     <string name="dialog_title_privacy_policy">Politique de confidentialité</string>
+    <string name="settings_oss_licences">Licences open source</string>
     <string name="action_close">Fermer</string>
     <string name="selected_folder_fallback">Dossier sélectionné</string>
     <string name="toast_failed_to_load_file_ui">Échec du chargement de l\'interface des fichiers</string>

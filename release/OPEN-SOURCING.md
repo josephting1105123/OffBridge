@@ -79,29 +79,29 @@ needs a step for it.
 Alternative worth weighing: make the **public** repo the source of truth for app code and
 keep this one for internal docs only. More upheaval now, no ongoing sync tax.
 
-## Open gap: the shipped apps show no licence texts
+## Licence texts reach users — done 29 Jul
 
-Independent of open-sourcing, and unaffected by it. Neither client has an
-"open-source licences" screen — grepping both `src/main` trees for one returns nothing.
-Several licences on components we redistribute in *binary* form ask for more than an
-entry in a repo file a user never sees:
+Several licences on components redistributed in *binary* form ask for more than an entry in
+a repo file the user never sees: **BSD-2-Clause** clause 2 (Shimmer, compiled into the APK)
+wants the notice and disclaimer carried with binary redistributions; **Apache-2.0** §4(1)
+wants recipients given a copy of the licence and §4(4) any upstream NOTICE; the **OFL**
+travels with the font, which is inside both binaries.
 
-- **BSD-2-Clause (Shimmer)** — clause 2: binary redistributions must reproduce the
-  copyright notice and disclaimer "in the documentation and/or other materials provided
-  with the distribution". The APK ships Shimmer compiled in.
-- **Apache-2.0 (AndroidX, Compose, Room, Kotlin, coroutines, ZXing, Gson, JNA)** — §4(1)
-  give recipients a copy of the licence; §4(4) propagate any upstream NOTICE.
-- **OFL-1.1 (IBM Plex Sans)** — the licence travels with the font, and the font is inside
-  both binaries.
+How it is met now:
 
-Already handled: the Windows installer carries the JDK's `runtime\legal\` tree, so the
-GPLv2+CE obligation is covered there, and the same install could host a `licenses\` folder
-for the rest by adding one line to `[Files]` in `OffBridge.iss`. Android has no such
-escape hatch — an APK needs a screen. The usual route is Google's
-`play-services-oss-licenses` Gradle plugin, which generates the list at build time, though
-it pulls in Play Services; a hand-written scrollable screen backed by the text files in
-`licenses/` avoids that and is maybe an afternoon's work across both clients plus the
-10-locale string for the menu entry.
+- `tools/build-oss-licences.mjs` concatenates `LICENSE`, `NOTICE` and `licenses/*.txt` into
+  one 26KB document, written to `app/src/main/res/raw/oss_licences.txt` and
+  `Window Ver/src/main/resources/oss_licences.txt`. Both are committed, so what ships is
+  visible in review. **Re-run it whenever a licence file or a dependency changes** — it is
+  not wired into either build.
+- **Settings → Open-source licences** on both clients opens that text. Verified present in
+  the built artifacts: `res/raw/oss_licences.txt` in the APK, `oss_licences.txt` at the jar
+  root beside `translation.json.txt`.
+- The Windows installer additionally drops the files on disk at `{app}\licenses\`, and the
+  bundled JDK's own texts already arrive at `{app}\runtime\legal\` through the recursive copy.
+- Deliberately **not translated**. These are the licences themselves, and a localised
+  paraphrase is not the licence. Only the menu label is localised
+  (`settings_oss_licences`, 10 locales per platform).
 
 ## Things a licence does not do
 

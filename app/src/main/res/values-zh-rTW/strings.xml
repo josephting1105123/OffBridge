@@ -226,6 +226,7 @@
     <string name="dialog_title_choose_theme">選擇主題</string>
     <string name="dialog_title_choose_language">選擇語言</string>
     <string name="dialog_title_privacy_policy">隱私權政策</string>
+    <string name="settings_oss_licences">開源授權</string>
     <string name="action_close">關閉</string>
     <string name="selected_folder_fallback">選定資料夾</string>
     <string name="toast_failed_to_load_file_ui">無法載入檔案 UI</string>

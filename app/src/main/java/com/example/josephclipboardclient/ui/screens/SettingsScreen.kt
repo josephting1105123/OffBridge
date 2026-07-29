@@ -63,6 +63,7 @@ fun SettingsScreen(
     onDiscoverableChange: (Boolean) -> Unit,
     onDonate: () -> Unit,
     onPrivacyPolicy: () -> Unit,
+    onOpenSourceLicences: () -> Unit,
     onConnectionDiagnosis: () -> Unit,
 ) {
     val colors = AppThemeTokens.colors
@@ -178,6 +179,18 @@ fun SettingsScreen(
                 colors = colors,
                 dimens = dimens,
                 onClick = onPrivacyPolicy,
+            )
+            // Several licences of components compiled into this APK (BSD-2-Clause for Shimmer,
+            // Apache-2.0 s4, the OFL for the bundled font) require their text to reach whoever
+            // receives the binary. A file in the repo does not; this row is how that is met.
+            SettingButtonRow(
+                label = stringResource(R.string.settings_oss_licences),
+                buttonText = stringResource(R.string.action_open),
+                buttonBackground = colors.card,
+                buttonTextColor = colors.textPrimary,
+                colors = colors,
+                dimens = dimens,
+                onClick = onOpenSourceLicences,
             )
 
             // ===================== DEBUGGING =====================
