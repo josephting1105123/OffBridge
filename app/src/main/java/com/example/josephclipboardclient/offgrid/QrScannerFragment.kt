@@ -55,10 +55,6 @@ import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDescriptor
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportRoute
 import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -70,7 +66,6 @@ import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import android.widget.ScrollView
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
 import com.EntropicSoftwareLab.ClipboardShare.TransferUtils
@@ -150,14 +145,7 @@ class QrScannerFragment : Fragment() {
     // rebuild them in startCamera after onDestroyView shut them down. Restricting
     // formats cuts per-frame work materially.
     private var analysisExecutor = Executors.newSingleThreadExecutor()
-    private var barcodeScanner = newBarcodeScanner()
-
-    private fun newBarcodeScanner() =
-        BarcodeScanning.getClient(
-            BarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-                .build()
-        )
+    private var qrDecoder = QrFrameDecoder()
 
     /** Owns the control channel + ladder; one per Receive attempt. */
     private var sessionController: ReceiverSessionController? = null
@@ -616,7 +604,7 @@ class QrScannerFragment : Fragment() {
         // setAnalyzer/process don't throw RejectedExecution/IllegalState (silent dead scan).
         if (analysisExecutor.isShutdown) {
             analysisExecutor = Executors.newSingleThreadExecutor()
-            barcodeScanner = newBarcodeScanner()
+            qrDecoder = QrFrameDecoder()
         }
         // Camera-bind is the worst perceived lag in the flow — mask it (~300–700 ms).
         SkeletonHelper.show(skeletonCameraContainer, R.layout.skeleton_device_card, 2, horizontal = false)
@@ -648,27 +636,26 @@ class QrScannerFragment : Fragment() {
         }, ContextCompat.getMainExecutor(requireContext()))
     }
 
-    @androidx.annotation.OptIn(ExperimentalGetImage::class)
+    /**
+     * Runs on [analysisExecutor], not the main thread — ZXing decodes synchronously where ML Kit
+     * called back on the main thread. So the hit is handed to [uiScope] exactly the way the NFC
+     * path already does, keeping onCandidatePayload single-threaded on main and leaving the
+     * non-atomic `receiveBlocked` read there rather than racing it from the camera thread.
+     *
+     * No rotation is applied: the frame arrives rotated by whatever the sensor orientation is, and
+     * a rotated QR is still a QR — the finder patterns ZXing looks for carry no up direction.
+     */
     private fun analyzeFrame(imageProxy: ImageProxy) {
         if (payloadConsumed.get()) {
             imageProxy.close()
             return
         }
-        val mediaImage = imageProxy.image
-        if (mediaImage == null) {
+        val raw = try {
+            qrDecoder.decode(imageProxy)
+        } finally {
             imageProxy.close()
-            return
         }
-        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-        barcodeScanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    val raw = barcode.rawValue ?: continue
-                    onCandidatePayload(raw)
-                    break
-                }
-            }
-            .addOnCompleteListener { imageProxy.close() }
+        if (raw != null) uiScope.launch { onCandidatePayload(raw) }
     }
 
     // ------------------------------------------------------------------ nfc
@@ -1410,7 +1397,9 @@ class QrScannerFragment : Fragment() {
         receiveNfcDiag = null
         nfcDiagLines.clear()
         analysisExecutor.shutdown()
-        try { barcodeScanner.close() } catch (_: Exception) {}
+        // No decoder teardown needed: QrFrameDecoder holds only a MultiFormatReader, where ML Kit's
+        // client wrapped a native detector that leaked if it was not closed. startCamera still
+        // rebuilds it alongside the executor when this fragment's view is recreated.
     }
 
     companion object {

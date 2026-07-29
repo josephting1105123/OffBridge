@@ -43,12 +43,7 @@
 }
 -dontwarn com.google.protobuf.**
 
-# --- ML Kit barcode scanning (bundled model) ---------------------------------------------------
--keep class com.google.mlkit.** { *; }
--keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
--dontwarn com.google.mlkit.**
-
-# --- ZXing (off-grid QR generation) ------------------------------------------------------------
+# --- ZXing (off-grid QR generation AND scanning) -----------------------------------------------
 -keep class com.google.zxing.** { *; }
 -dontwarn com.google.zxing.**
 

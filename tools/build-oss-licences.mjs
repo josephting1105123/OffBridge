@@ -60,9 +60,6 @@ async function main() {
     'OffBridge and the dependencies listed here are all licensed under the Apache\n' +
     'License, Version 2.0, reproduced in full below.\n\n' +
     APACHE_DEPS.map((d) => `  - ${d}`).join('\n') + '\n\n' +
-    'Google ML Kit Barcode Scanning is NOT open source. It is a proprietary Google\n' +
-    'SDK used under the Google APIs Terms of Service, redistributable as part of an\n' +
-    'application. No source or licence text is available to reproduce here.\n\n' +
     license.trimEnd() + '\n\n\n',
 
     rule('3. SIL OPEN FONT LICENSE 1.1 — IBM Plex Sans'),

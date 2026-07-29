@@ -109,6 +109,6 @@ How it is met now:
   on Play. Apache-2.0 clause 6 helps but is not a trademark registration.
 - Your Android signing key was never committed and stays private, so nobody can push updates
   to the existing Play listing. That is the one that would have been unrecoverable.
-- ML Kit barcode scanning is a proprietary Google SDK. It is fine to depend on under
-  Apache-2.0, but it is why SignPath Foundation's free signing (no proprietary components)
-  is likely closed to this project.
+- ~~ML Kit barcode scanning is a proprietary Google SDK.~~ Removed 30 Jul 2026 — QR decoding
+  moved to ZXing, which already generated the codes. The dependency tree is now fully open
+  source, which is what SignPath Foundation's "no proprietary code" rule requires.

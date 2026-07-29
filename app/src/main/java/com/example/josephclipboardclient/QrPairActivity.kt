@@ -14,7 +14,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
@@ -27,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.EntropicSoftwareLab.ClipboardShare.offgrid.QrFrameDecoder
 import com.EntropicSoftwareLab.ClipboardShare.pairing.PairQrPayload
 import com.EntropicSoftwareLab.ClipboardShare.pairing.QrPairClient
 import com.EntropicSoftwareLab.ClipboardShare.pairing.QrPairSession
@@ -35,10 +35,6 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.screens.QrPairScreen
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.QrPairStatus
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.QrPairUi
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.common.InputImage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -63,11 +59,7 @@ class QrPairActivity : AppCompatActivity() {
     private var ui by mutableStateOf(QrPairUi(mode = QrPairMode.SHOW, status = QrPairStatus.Preparing))
 
     private val analysisExecutor = Executors.newSingleThreadExecutor()
-    private val barcodeScanner by lazy {
-        BarcodeScanning.getClient(
-            BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
-        )
-    }
+    private val qrDecoder by lazy { QrFrameDecoder() }
 
     // One scan may start exactly one handshake. Without this every analyzed frame carrying the same
     // code would fire another pair() and burn the one-shot token on our own retries.
@@ -138,7 +130,8 @@ class QrPairActivity : AppCompatActivity() {
         runCatching { unregisterReceiver(qrPairedReceiver) }
         cameraProvider?.unbindAll()
         analysisExecutor.shutdown()
-        barcodeScanner.close()
+        // No decoder teardown: QrFrameDecoder holds only a MultiFormatReader, where ML Kit's
+        // client held a native detector that had to be closed.
     }
 
     private fun hasCameraPermission(): Boolean =
@@ -211,26 +204,25 @@ class QrPairActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    @OptIn(ExperimentalGetImage::class)
+    /**
+     * Runs on [analysisExecutor]: ZXing decodes synchronously, where ML Kit called back on the
+     * main thread. onCodeScanned drives Compose state and starts the handshake, so it is posted
+     * back to main rather than run here.
+     */
     private fun analyzeFrame(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image
-        if (mediaImage == null || scanClaimed.get()) {
+        if (scanClaimed.get()) {
             imageProxy.close()
             return
         }
-        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-        barcodeScanner.process(image)
-            .addOnSuccessListener { barcodes ->
-                for (barcode in barcodes) {
-                    val raw = barcode.rawValue ?: continue
-                    // Ignore anything that isn't one of our pairing codes — including our own
-                    // off-grid file-transfer QR, which the same camera will happily read.
-                    if (!PairQrPayload.looksLikePairCode(raw)) continue
-                    if (scanClaimed.compareAndSet(false, true)) onCodeScanned(raw)
-                    break
-                }
-            }
-            .addOnCompleteListener { imageProxy.close() }
+        val raw = try {
+            qrDecoder.decode(imageProxy)
+        } finally {
+            imageProxy.close()
+        }
+        // Ignore anything that isn't one of our pairing codes — including our own off-grid
+        // file-transfer QR, which the same camera will happily read.
+        if (raw == null || !PairQrPayload.looksLikePairCode(raw)) return
+        if (scanClaimed.compareAndSet(false, true)) runOnUiThread { onCodeScanned(raw) }
     }
 
     private fun onCodeScanned(raw: String) {
@@ -273,7 +265,10 @@ class QrPairActivity : AppCompatActivity() {
         val hints = mapOf(
             EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
             EncodeHintType.CHARACTER_SET to "UTF-8",
-            EncodeHintType.MARGIN to 1
+            // 4 modules, the quiet zone the QR spec requires. Was 1: ML Kit tolerated a thin
+            // border, but ZXing (which now does the scanning) locates codes by their finder
+            // patterns and needs the real margin to separate them from whatever is behind.
+            EncodeHintType.MARGIN to 4
         )
         val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, QR_SIZE_PX, QR_SIZE_PX, hints)
         val pixels = IntArray(QR_SIZE_PX * QR_SIZE_PX)

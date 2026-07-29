@@ -55,11 +55,26 @@ in the EU and UK). The publisher is an individual in **Malaysia**, so this route
 Microsoft widens eligibility. Re-check before paying for anything else — it is by far the cheapest
 option if it ever opens up.
 
-### Option B — SignPath Foundation (free, requires going open source)
-Free OV-level signing for qualifying open-source projects. Worth considering only if the repo goes
-public for its own reasons — the signing saving alone is a poor reason to relicense.
-- Conditions: OSI-approved licence with no commercial dual-licensing, **no proprietary components**,
-  actively maintained, already released, functionality documented on the download page.
+### Option B — SignPath Foundation (free, requires going open source) — NOW THE ACTIVE PLAN
+Free OV-level signing for qualifying open-source projects. The repo went public under Apache-2.0 in
+July 2026, so this is live rather than hypothetical. Criteria re-read from signpath.org/terms on
+2026-07-30; status of each against this project:
+- **OSI licence, no dual-licensing** — met (Apache-2.0).
+- **No proprietary components** — met as of 2026-07-30. ML Kit was the only one; QR decoding moved
+  to ZXing (`QrFrameDecoder`), which already generated the codes. Also cut 22.5 MB from the APK.
+- **Maintained / released / documented** — met (active, 3.7.8 shipped, website + README).
+- **Reputation** — *the open risk.* They state plainly that they "cannot sign binaries based on
+  source code that nobody knows" and require "a certain verifiable reputation". The public repo is
+  days old with a single star. This is discretionary, there is no appeal, and it is the most likely
+  rejection reason. Nothing to do but apply and see.
+- **CI-built artifacts** — not met yet. Signing runs from a pipeline and SignPath verifies the
+  binary came from the repo. `.github/workflows/ci.yml` runs on `ubuntu-latest` and never builds the
+  installer; jpackage and ISCC need a Windows runner. Do this *after* they accept in principle —
+  the SignPath project setup happens during onboarding.
+- **Code signing policy page** — not written yet. Required wording: the heading "Code signing
+  policy", the line "Free code signing provided by SignPath.io, certificate by SignPath Foundation",
+  team roles (author/reviewer/approver), and a privacy statement.
+- **MFA on GitHub** — required for all team members; confirm before applying.
 - The certificate belongs to SignPath Foundation, not to us: Windows shows the publisher as
   **"SignPath Foundation"**, not EntropicSoftwareLab.
 - Signing happens server-side from a **CI pipeline** (GitHub Actions / Azure DevOps / Jenkins). The
