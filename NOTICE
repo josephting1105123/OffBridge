@@ -1,4 +1,4 @@
-Clipboard Share
+OffBridge
 Copyright 2026 EntropicSoftwareLab
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
@@ -25,6 +25,22 @@ Android). No serif font is bundled or redistributed by this project.
 
 
 ================================================================================
+Bundled Java runtime (Windows installer only)
+================================================================================
+
+The Windows installer ships a trimmed Java runtime produced by jpackage from
+Eclipse Temurin 17 (OpenJDK). It is not in this source tree; it is assembled at
+package time and lives under runtime/ inside the installed application.
+
+  Eclipse Temurin / OpenJDK 17    GPLv2 with the Classpath Exception
+      The Classpath Exception is what permits linking and shipping the runtime
+      alongside an Apache-2.0 application without the GPL reaching this code.
+      Full text: https://openjdk.org/legal/gplv2+ce.html
+
+This applies to the installer artifact, not to the source distribution.
+
+
+================================================================================
 Third-party dependencies
 ================================================================================
 
@@ -33,7 +49,14 @@ redistributed in this source tree. Notable licences:
 
   AndroidX, Jetpack Compose, Room, Kotlin, kotlinx.coroutines   Apache-2.0
   ZXing (barcode decoding)                                      Apache-2.0
+  Gson                                                          Apache-2.0
   Facebook Shimmer                                              BSD
+  JUnit 4 (test scope only, not redistributed)                  EPL-1.0
+
+  Java Native Access (JNA / jna-platform)      LGPL-2.1-or-later OR Apache-2.0
+      JNA is dual-licensed and its POM states that either may be chosen. This
+      project takes it under the Apache-2.0 option. No LGPL obligation
+      therefore attaches to this distribution.
 
   Google ML Kit Barcode Scanning                                Proprietary
       Google's ML Kit is a closed-source SDK distributed under the Google APIs

@@ -12,9 +12,11 @@ the full 131-commit history, `release/`, `.claude/`, `CLAUDE.md`, `PRODUCT.md` a
 
 - [x] Licence chosen: **Apache-2.0** — patent grant, and clause 6 withholds trademark rights,
       so the "OffBridge" name is not licensed along with the code.
-- [x] `LICENSE` downloaded verbatim from apache.org (sha256 `cfc7749b…3d30`, 169 lines).
-- [x] `NOTICE` written: copyright, the four bundled fonts and their SIL OFL attribution, and
-      the third-party dependency licences.
+- [x] `LICENSE` downloaded verbatim from apache.org (sha256 `cfc7749b…3d30`, 202 lines).
+      Re-verified 29 Jul: the file still hashes to the canonical text, unmodified.
+- [x] `NOTICE` written: copyright, the one bundled font (IBM Plex Sans) and its SIL OFL
+      attribution, and the third-party dependency licences. The Geist/Inter/Roboto files were
+      deleted from both clients, so only Plex is redistributed now.
 - [x] `licenses/OFL-1.1.txt` — the OFL requires its text to ship alongside the font files.
 - [x] `CLAUDE.md`, `.claude/`, `skill-observations/` untracked and gitignored.
 - [x] `release/seed-public-repo.ps1` written and test-run: 501 files staged, nothing private.
@@ -22,12 +24,18 @@ the full 131-commit history, `release/`, `.claude/`, `CLAUDE.md`, `PRODUCT.md` a
 
 ## Before pushing
 
-1. **Confirm Roboto's licence.** `Window Ver/src/main/resources/font/roboto_variable.ttf` —
-   older Roboto is Apache-2.0, newer is OFL-1.1. Fix the `NOTICE` entry to match the file
-   actually bundled.
-2. **Commit the groundwork here** — `LICENSE`, `NOTICE`, `licenses/`, the `.gitignore`
+1. ~~**Confirm Roboto's licence.**~~ Moot — `roboto_variable.ttf` was deleted along with the
+   Geist and Inter files. `find . -iname "*.ttf"` now returns only `ibm_plex_sans_variable.ttf`
+   (one copy per client) plus `website/fonts/geist_variable.ttf`, and the website is excluded
+   from the public tree.
+2. **Confirm Facebook Shimmer's licence.** `NOTICE` claims BSD for `com.facebook.shimmer:shimmer:0.5.0`.
+   No POM or embedded licence file is in the Gradle cache to check it against, and Meta relicensed
+   several Android libraries from BSD to MIT. Read the `LICENSE` file in `facebook/shimmer-android`
+   at the 0.5.0 tag and correct the `NOTICE` line if it says MIT. This is the one dependency claim
+   that is currently unverified.
+3. **Commit the groundwork here** — `LICENSE`, `NOTICE`, `licenses/`, the `.gitignore`
    change and the 20 untracked agent files.
-3. **Create the GitHub repo**: public, **empty** — no README, no .gitignore, no licence, or
+4. **Create the GitHub repo**: public, **empty** — no README, no .gitignore, no licence, or
    the push will conflict.
 
 ## Publishing

@@ -1,7 +1,7 @@
 <!--
   Badge row: the Platforms / Version / Kotlin / License badges below are static and render as-is.
   The CI and release-download badges need your GitHub repo slug — replace OWNER/REPO once the repo is
-  public, or delete those two lines. Add a LICENSE file at the repo root and set the license badge to match.
+  public, or delete those two lines. The licence badge matches the LICENSE file at the repo root (Apache-2.0).
 -->
 
 # OffBridge
@@ -11,7 +11,7 @@
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20Windows-2ea44f)
 ![Version](https://img.shields.io/badge/version-Android_3.7.2_%7C_Windows_3.7.7-blue)
 ![Kotlin](https://img.shields.io/badge/Kotlin-100%25-7F52FF)
-![License](https://img.shields.io/badge/license-TBD-lightgrey)
+![License](https://img.shields.io/badge/license-Apache_2.0-blue)
 <!-- [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml) -->
 <!-- ![Downloads](https://img.shields.io/github/downloads/OWNER/REPO/total) -->
 
