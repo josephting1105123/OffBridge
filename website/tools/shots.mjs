@@ -59,7 +59,10 @@ async function encode(file) {
   // exactly. The CSS bezel masks to that ratio; anything else gets letterboxed.
   if (rule.ratio) {
     const target = Math.round(meta.width / rule.ratio);
-    if (target > meta.height) {
+    // Tolerate a 1px shortfall: a capture already AT 9:19.5 can still round up here
+    // (591/(9/19.5) = 1280.5 -> 1281 against a real height of 1280), and rejecting it
+    // as "too short" would be wrong. Anything beyond 1px is a genuinely mis-sized capture.
+    if (target - meta.height > 1) {
       throw new Error(
         `${file}: ${meta.width}x${meta.height} is shorter than the 9:19.5 crop needs ` +
         `(${meta.width}x${target}). Capture at full device resolution.`
@@ -72,7 +75,11 @@ async function encode(file) {
 
   const out = path.join(SHOTS, `${name}.webp`);
   const info = await pipe
-    .resize({ width: rule.width })
+    // withoutEnlargement: a capture narrower than the target ships at its own width rather
+    // than being upscaled. Invented pixels only soften the text; the phone bezel renders at
+    // 244px CSS at most, so even a 591px capture is past 2x DPR. Keep the <img> width/height
+    // attributes in index.html in step with whatever this prints.
+    .resize({ width: rule.width, withoutEnlargement: true })
     .webp({ quality: rule.quality })
     .toFile(out);
 
