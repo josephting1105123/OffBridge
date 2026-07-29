@@ -13,11 +13,20 @@ Bundled fonts
 ================================================================================
 
 One font file is redistributed, under the SIL Open Font License 1.1. The full
-licence text is in licenses/OFL-1.1.txt.
+licence text, carrying the copyright notice below, is in licenses/OFL-1.1.txt.
 
-  IBM Plex Sans    Copyright (c) 2019 IBM Corp.
+  IBM Plex Sans    Copyright 2019 IBM Corp. (https://github.com/IBM/plex)
                    app/src/main/res/font/ibm_plex_sans_variable.ttf
                    Window Ver/src/main/resources/font/ibm_plex_sans_variable.ttf
+
+  The copyright line is taken from the font's own name table (name ID 0), not
+  transcribed by hand. Neither this font nor Geist below declares a Reserved
+  Font Name, so the OFL's renaming clause does not bite.
+
+The marketing site separately serves Geist (Copyright 2024 The Geist Project
+Authors), also OFL-1.1, with its notice at website/fonts/OFL.txt. The website
+is not part of the public source tree, but it is a public redistribution of the
+font, which is what the OFL attaches to.
 
 Everything else is set in the platform's generic serif family, which resolves to
 a font already on the user's device (DirectWrite on Windows, the system serif on
