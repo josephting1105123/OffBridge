@@ -91,7 +91,7 @@ Re-capture on a device before uploading. Any screenshot showing the old app name
 
 ## Other listing fields
 - **Languages:** add store-listing translations for the 9 non-English locales if you want localized listings (optional; the app itself is already localized).
-- **Privacy policy URL:** `https://clipboard-share-a8e.pages.dev/privacy.html` — switch to
-  `https://offbridge.app/privacy.html` once the Cloudflare zone is Active. The pages.dev URL must keep
-  resolving regardless: it is compiled into every shipped build.
+- **Privacy policy URL:** `https://offbridge.app/privacy.html` (live since 29 Jul 2026). The old
+  `clipboard-share-a8e.pages.dev` URL still serves the same site and must keep resolving: it is
+  compiled into every shipped build.
 - **Tags / category:** Tools; tags like "file transfer", "clipboard", "privacy".

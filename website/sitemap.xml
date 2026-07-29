@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Deployed origin (Cloudflare Pages). Update if a custom domain is added later. -->
+<!-- Public origin (custom domain). The clipboard-share-a8e.pages.dev host still serves the
+     same site and stays alive for older app builds that link to it. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://clipboard-share-a8e.pages.dev/</loc>
+    <loc>https://offbridge.app/</loc>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://clipboard-share-a8e.pages.dev/privacy.html</loc>
+    <loc>https://offbridge.app/privacy.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

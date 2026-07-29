@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 
-# Deployed origin (Cloudflare Pages). Update if a custom domain is added later.
-Sitemap: https://clipboard-share-a8e.pages.dev/sitemap.xml
+# Public origin (custom domain). The clipboard-share-a8e.pages.dev host still serves the
+# same site for older app builds that link to it.
+Sitemap: https://offbridge.app/sitemap.xml
