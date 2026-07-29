@@ -111,8 +111,4 @@ How it is met now:
   to the existing Play listing. That is the one that would have been unrecoverable.
 - ML Kit barcode scanning is a proprietary Google SDK. It is fine to depend on under
   Apache-2.0, but it is why SignPath Foundation's free signing (no proprietary components)
-  is closed to **this repo as a whole**. Removing it was tried in 80c7b5a and reverted the
-  same day, 2026-07-30: ZXing decoding cost 22.5 MB less but scanned materially worse in
-  low light, at angles, and against screen glare. The plan instead is to split the Windows
-  client into its own repo, which contains no proprietary dependency, and sign that —
-  see [WINDOWS-SIGNING-SAC.md](WINDOWS-SIGNING-SAC.md) Option B.
+  is likely closed to this project.
