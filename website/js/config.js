@@ -48,7 +48,7 @@ window.CS_CONFIG = {
     label: "Download APK",
     os: "Android",
     fileType: "APK (direct)",
-    version: "3.7.5",
+    version: "3.7.2",
     size: "29 MB",
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
     sha256: "949d3d47622b0e50b23201cb3d3c76c8f74eb16897738211a3a33a0662ffa72e",
@@ -63,7 +63,7 @@ window.CS_CONFIG = {
     size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
-    sha256: "ecfb4b171de5950367c7220c5653a1ca24076716c3d753e4cfc41ecea7c98d53",
+    sha256: "c0f910855eff31ca716c70bd7b6f3e8444bf05cdd031dc7b064c30a49f941817",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
