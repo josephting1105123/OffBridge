@@ -4,6 +4,63 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.5 — Android (build 33) (off-grid handshake, hidden discovery, send-screen fixes)
+
+### Fixed
+- **Off-grid transfers between two phones could stall at "waiting for the sender".** The Bluetooth
+  control channel splits its handshake across several GATT writes and stamps each with a chunk
+  index — which the receiving side never read. Any chunk that arrived late, twice or out of order
+  was concatenated into the frame anyway, so the handshake failed its length check and was dropped
+  in silence: the sender waited for a reply that had already been thrown away. Three separate paths
+  fed that corruption (a failed write counted as delivered, two threads shared one send queue, and a
+  watchdog re-sent while a write was still outstanding); all four points are fixed.
+- **"Discoverable to other devices" off also stopped you seeing anyone.** It hid the device and
+  dropped every inbound announcement, so the device list stayed empty. Off now means only what it
+  says: strangers can't find you, you can still see the network, and devices you're already paired
+  with can still find you — and you them.
+- **A transfer could fail in one second with a connection timeout that was never going to work.**
+  When the Bluetooth link fails, the methods that depend on credentials carried over that link
+  can't succeed; they were still attempted. They're now skipped, the methods that don't need it are
+  still tried, and if nothing can run you get an explanation instead of a stopwatch.
+- **Two and a half seconds wasted before every off-grid fallback.** Scanning a code while on mobile
+  data with Wi-Fi off still made the phone try the sender's local address, which it had no route to.
+  It now checks for a route first, and a sender reachable only over the local network says so.
+- **"Disconnect from current Wi-Fi" was cut off mid-word** on the sheet that appears when your
+  hotspot is on and you're joined to another network. Shortened and size-capped in all 10 languages.
+
+### Changed
+- The **Send** button beside a device no longer throws you back to the main screen; it stays put and
+  reads **Sending** while the transfer sets up.
+- **Select** on the Selected Files card is now **Edit**, which is what it does.
+- The **Add Text** box starts one line tall and grows to seven before it scrolls, instead of opening
+  four lines tall whatever you're typing.
+- The hotspot password field uses the app's typeface instead of the system monospace it inherited
+  from being a password field, so it matches the name field above it.
+- The QR tile in **Send via** and the tutorial's code illustration now use the same QR mark as the
+  rest of both apps.
+- The final tutorial step no longer clips the Lite/Pro switch it's pointing at.
+
+## 3.7.9 — Windows (first-run tour, service restart, tray icon)
+
+### Fixed
+- **Restart Services left the app running but deaf.** Stopping a daemon only cleared a flag; the
+  thread sat in a blocking read holding its port, so the restart's attempt to re-open it failed and
+  every network service stayed dead until the app was quit and reopened. Sockets are now closed and
+  their threads joined on the way down, and a port that can't be re-opened says so in the
+  diagnostics log instead of failing silently.
+- **The update check reported a timeout for every kind of failure**, including ones that aren't
+  timeouts. Real causes are now told apart and named, a genuine timeout is retried once, and
+  repeated checks can no longer stack up and burn the rate limit the check then reports hitting.
+- **"Discoverable to other devices" off also stopped you seeing anyone** — same fix as Android,
+  same rules, so the two clients agree about who can see whom.
+- **The system-tray icon was a plain green square** — placeholder art from early development that
+  shipped. The tray and the taskbar now show the app's own mark, the same one the phone shows.
+
+### Changed
+- **First launch is now a six-step tour** of what the app does, one step per screen, instead of
+  walking every screen's full tutorial back to back. The complete tutorial is still there behind
+  **How to use** on each screen.
+
 ## 3.7.7 — Windows (off-grid encryption, QR pairing)
 
 ### Added

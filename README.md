@@ -9,7 +9,7 @@
 **Send files and sync your clipboard between Android and Windows — with no router, no internet, and no account.** End-to-end encrypted, open source.
 
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%7C%20Windows-2ea44f)
-![Version](https://img.shields.io/badge/version-Android_3.7.2_%7C_Windows_3.7.7-blue)
+![Version](https://img.shields.io/badge/version-Android_3.7.5_%7C_Windows_3.7.9-blue)
 ![Kotlin](https://img.shields.io/badge/Kotlin-100%25-7F52FF)
 ![License](https://img.shields.io/badge/license-Apache_2.0-blue)
 <!-- [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml) -->
@@ -86,4 +86,4 @@ CI builds both clients and runs the crypto/wire golden-vector tests on every pus
 
 ## Status
 
-Android 3.7.2 · Windows 3.7.7. Both clients are functional and distributed via GitHub. The off-grid transport ladder, resumable transfers, encryption, and 10-language localization are in place. See [CHANGELOG.md](CHANGELOG.md).
+Android 3.7.5 · Windows 3.7.9. Both clients are functional and distributed via GitHub. The off-grid transport ladder, resumable transfers, encryption, and 10-language localization are in place. See [CHANGELOG.md](CHANGELOG.md).
