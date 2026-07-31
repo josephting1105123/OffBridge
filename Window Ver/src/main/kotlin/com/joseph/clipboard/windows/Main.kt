@@ -775,7 +775,10 @@ fun main() = application {
         // fighting the ratio-locked one (undecorated windows are inconsistent across JDK/runtime
         // versions about whether they keep a native resize border at all).
         resizable = false,
-        icon = painterResource("icon.xml")
+        // The full launcher mark — white glyph ON its #1E1E1E squircle, exactly what the phone shows.
+        // icon.xml is only the adaptive icon's FOREGROUND layer, so the taskbar got a white glyph on
+        // nothing; against a light taskbar that is very nearly an empty slot.
+        icon = painterResource("windows/app-256.png")
     ) {
         // Undecorated windows maximize to the FULL screen (covering the Windows taskbar) unless we
         // constrain the maximized bounds to the monitor's work area. Recompute before each maximize so

@@ -96,6 +96,16 @@ $images = @{}
 # and no tool rejects, containing no image data at all.
 foreach ($s in $sizes) { $images[$s] = [byte[]](Render-Png $s) }
 
+# ---- plain PNGs beside the .ico, for the surfaces the JDK can't read an .ico for ----
+# The system tray (java.awt.TrayIcon) and the window/taskbar icon are AWT/Compose surfaces, and
+# ImageIO ships no .ico reader — so they load these. Same render, same source vector, same run:
+# the mark cannot drift between the exe icon and the running app the way it did when the tray drew
+# its own flat green square. SystemTrayManager picks the entry nearest the tray's requested size.
+$pngSizes = @(16, 24, 32, 48, 256)
+foreach ($s in $pngSizes) {
+  [System.IO.File]::WriteAllBytes((Join-Path (Split-Path $outIco) "app-$s.png"), $images[$s])
+}
+
 # ---- assemble the .ico container (ICONDIR + ICONDIRENTRY[] + PNG payloads) ----
 $ms = New-Object System.IO.MemoryStream
 $bw = New-Object System.IO.BinaryWriter($ms)
