@@ -1,6 +1,7 @@
 package com.joseph.clipboard.windows.network
 
 import com.joseph.clipboard.windows.storage.CryptoEngine
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.EcdhSession
 import com.joseph.clipboard.windows.storage.PairSeal
 import com.joseph.clipboard.windows.storage.SecurityVault
@@ -35,8 +36,17 @@ class PairingDaemon(
         const val PAIR_CONFIRM_WINDOW_MS = 120_000L
     }
     private val PAIRING_PORT = Ports.PAIRING
-    private var isRunning = false
-    private var serverSocket: ServerSocket? = null
+    // @Volatile: written by start()/stop() on the caller's thread, read by the accept loop.
+    @Volatile private var isRunning = false
+    @Volatile private var serverSocket: ServerSocket? = null
+    @Volatile private var listener: Thread? = null
+
+    /** Last bind failure, or null while the listener is up. */
+    @Volatile var lastBindError: String? = null
+        private set
+
+    /** True while the port is bound and the accept loop is live. */
+    val isAlive: Boolean get() = isRunning
 
     // Rate-limit incoming pairing handlers so a LAN peer can't spam threads and clobber the
     // dialog. Cap total pending handlers and throttle repeat connects from the same source IP.
@@ -45,21 +55,33 @@ class PairingDaemon(
     private val pendingHandlers = AtomicInteger(0)
     private val lastAcceptedAt = ConcurrentHashMap<String, Long>()
 
+    @Synchronized
     fun start() {
         if (isRunning) return
+
+        // Bind on the CALLER's thread so the outcome is known before start() returns. Binding inside
+        // the worker meant the "did it come back up?" answer arrived asynchronously, and the failure
+        // path relied on the worker's finally to un-set isRunning — correct, but only after a thread
+        // scheduling round-trip a caller could not observe.
+        val server = try {
+            ServerSocket().apply {
+                reuseAddress = true
+                bind(InetSocketAddress(PAIRING_PORT))
+            }
+        } catch (e: Exception) {
+            lastBindError = e.message ?: e.toString()
+            System.err.println("PairingDaemon failed to bind port $PAIRING_PORT: ${e.message}")
+            DiagLog.w("pairing: bind of TCP $PAIRING_PORT failed (${e.message}) — this device cannot accept new pairing requests until a later start succeeds.")
+            return
+        }
+        serverSocket = server
+        lastBindError = null
         isRunning = true
 
-        thread(isDaemon = true, name = "Pairing-Listener") {
-            // Capture the bound socket into a local so this thread's finally closes only the
-            // instance it created. A quick stop()/start() otherwise races: the old listener's
-            // finally would close/null the field the new listener just published.
-            var server: ServerSocket? = null
+        listener = thread(isDaemon = true, name = "Pairing-Listener") {
+            // The loop closes over the socket THIS run bound, so its finally closes only the
+            // instance it was given — never one a later start() has since published.
             try {
-                server = ServerSocket().apply {
-                    reuseAddress = true
-                    bind(InetSocketAddress(PAIRING_PORT))
-                }
-                serverSocket = server
                 println("PairingDaemon started on port $PAIRING_PORT")
 
                 while (isRunning) {
@@ -71,15 +93,22 @@ class PairingDaemon(
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {
-                // If bind() failed this instance never listened; clear the running flag so a
-                // later start() can rebind. Close only the local instance, not the field, so we
-                // never close a socket a concurrent start() has since published.
-                if (server == null) isRunning = false
-                try { server?.close() } catch (e: Exception) {}
+                try { server.close() } catch (e: Exception) {}
+                // Loop fell out while still flagged running => it died on its own, not via stop().
+                // Clear the flag so a later start() can rebind rather than no-op at its guard. The
+                // identity check means a normal stop() (which nulls the field first) never enters
+                // here, so this needs no lock and can't race a concurrent start().
+                if (serverSocket === server && isRunning) {
+                    isRunning = false
+                    serverSocket = null
+                    lastBindError = "listener exited unexpectedly"
+                    DiagLog.w("pairing: listener thread exited unexpectedly — new pairing requests are refused until the next start")
+                }
             }
         }
     }
 
+    @Synchronized
     fun stop() {
         isRunning = false
         try {
@@ -88,6 +117,11 @@ class PairingDaemon(
             // Ignore
         }
         serverSocket = null
+        // Wait for the accept loop to leave before returning, so a restart's rebind can't race an
+        // old listener that still holds the port.
+        val leaving = listener
+        listener = null
+        if (leaving != null) runCatching { leaving.join(WORKER_JOIN_TIMEOUT_MS) }
     }
 
     /**

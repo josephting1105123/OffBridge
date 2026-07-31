@@ -205,7 +205,20 @@ English (en)
   "action_minimize": "Minimize",
   "discoverable_to_other_devices": "Discoverable to other devices",
   "no_files_selected_hint": "No files selected. Browse to add files.",
-  "no_paired_devices_found_hint": "No paired devices found."
+  "no_paired_devices_found_hint": "No paired devices found.",
+  "tour_pairing": "Start by pairing your devices. Pairing unlocks a seamless workflow — clipboard sync and direct file transfer between them.",
+  "tour_clipboard": "Once your devices are paired, your clipboard syncs automatically — copy on one device, paste on another.",
+  "tour_send_lan": "Send files with no data charges and no quality loss. On the same Wi-Fi or hotspot, pick a Connected Device — fastest, no internet needed.",
+  "tour_send_qr": "On different networks? Choose QR when you send — a nearby Android phone scans the code and receives your files over the local network, no shared Wi-Fi required.",
+  "tour_receive": "Receiving needs no setup — a file sent to this PC pops up for you to accept, then lands in your save folder. The history button tracks its progress.",
+  "tour_how_to_use": "Want the details? Every screen has a \"How to use\" button (top-right) with a full step-by-step guide.",
+  "update_failed_unreachable": "Couldn't reach the update server",
+  "update_failed_unreachable_hint": "Check your network connection, then try again.",
+  "update_failed_rate_limited": "Too many update checks",
+  "update_failed_rate_limited_hint": "GitHub is limiting checks from this network. Try again in a few minutes.",
+  "update_failed_server": "The update server returned an error",
+  "update_failed_server_hint": "Nothing is wrong with this device. Try again shortly.",
+  "update_failed_release_hint": "The latest release couldn't be read. Download from the website instead."
 }
 
 Simplified Chinese (zh-CN)
@@ -408,7 +421,20 @@ Simplified Chinese (zh-CN)
   "action_minimize": "最小化",
   "discoverable_to_other_devices": "可被其他设备发现",
   "no_files_selected_hint": "未选择任何文件。请浏览以添加文件。",
-  "no_paired_devices_found_hint": "未找到已配对的设备。"
+  "no_paired_devices_found_hint": "未找到已配对的设备。",
+  "tour_pairing": "从配对您的设备开始。配对可解锁无缝的工作流程——设备间的剪贴板同步和直接文件传输。",
+  "tour_clipboard": "设备配对后，您的剪贴板会自动同步——在一台设备上复制，在另一台设备上粘贴。",
+  "tour_send_lan": "发送文件无需流量费用，且无质量损失。在同一 Wi-Fi 或热点下，选择一台已连接设备——最快，无需互联网。",
+  "tour_send_qr": "在不同网络上？发送时选择二维码——附近的安卓手机扫描后即可通过局域网接收你的文件，无需共享 Wi-Fi。",
+  "tour_receive": "接收无需任何设置——发送到这台电脑的文件会弹出提示供你接收，然后保存到你的保存文件夹。传输历史按钮可跟踪进度。",
+  "tour_how_to_use": "想了解详情？每个界面右上角都有“使用帮助”按钮，提供完整的分步指南。",
+  "update_failed_unreachable": "无法连接到更新服务器",
+  "update_failed_unreachable_hint": "请检查网络连接后重试。",
+  "update_failed_rate_limited": "更新检查过于频繁",
+  "update_failed_rate_limited_hint": "GitHub 正在限制来自此网络的检查请求。请几分钟后再试。",
+  "update_failed_server": "更新服务器返回了错误",
+  "update_failed_server_hint": "这不是本机的问题，请稍后重试。",
+  "update_failed_release_hint": "无法读取最新版本信息。请改从官网下载。"
 }
 
 Traditional Chinese (zh-TW)
@@ -611,7 +637,20 @@ Traditional Chinese (zh-TW)
   "action_minimize": "最小化",
   "discoverable_to_other_devices": "可被其他裝置發現",
   "no_files_selected_hint": "未選擇任何檔案。請瀏覽以新增檔案。",
-  "no_paired_devices_found_hint": "未找到已配對的裝置。"
+  "no_paired_devices_found_hint": "未找到已配對的裝置。",
+  "tour_pairing": "先從配對您的裝置開始。配對可解鎖無縫的工作流程——在裝置之間進行剪貼簿同步和直接檔案傳輸。",
+  "tour_clipboard": "裝置配對後，您的剪貼簿會自動同步——在一台裝置上複製，即可在另一台裝置上貼上。",
+  "tour_send_lan": "傳送檔案無需消耗數據，也不會降低品質。在同一 Wi-Fi 或熱點上，選擇一台已連接裝置——最快速，無需網際網路。",
+  "tour_send_qr": "在不同網路上嗎？傳送時選擇 QR code——附近的 Android 手機掃描後即可透過區域網路接收你的檔案，無需共用 Wi-Fi。",
+  "tour_receive": "接收不需要任何設定——傳送到這台電腦的檔案會跳出提示讓你接收，然後存到你的儲存資料夾。傳輸紀錄按鈕可追蹤進度。",
+  "tour_how_to_use": "想了解細節嗎？每個畫面都有「使用說明」按鈕（右上角），內含完整的逐步指南。",
+  "update_failed_unreachable": "無法連線到更新伺服器",
+  "update_failed_unreachable_hint": "請檢查網路連線後重試。",
+  "update_failed_rate_limited": "更新檢查過於頻繁",
+  "update_failed_rate_limited_hint": "GitHub 正在限制來自此網路的檢查要求。請幾分鐘後再試。",
+  "update_failed_server": "更新伺服器回傳了錯誤",
+  "update_failed_server_hint": "這不是本機的問題，請稍後重試。",
+  "update_failed_release_hint": "無法讀取最新版本資訊。請改從官網下載。"
 }
 
 Spanish (es)
@@ -824,7 +863,20 @@ Spanish (es)
   "action_minimize": "Minimizar",
   "discoverable_to_other_devices": "Visible para otros dispositivos",
   "no_files_selected_hint": "No hay archivos seleccionados. Explora para añadir archivos.",
-  "no_paired_devices_found_hint": "No se encontraron dispositivos emparejados."
+  "no_paired_devices_found_hint": "No se encontraron dispositivos emparejados.",
+  "tour_pairing": "Empieza emparejando tus dispositivos. El emparejamiento desbloquea un flujo de trabajo fluido: sincronización del portapapeles y transferencia directa de archivos entre ellos.",
+  "tour_clipboard": "Una vez que tus dispositivos estén emparejados, tu portapapeles se sincroniza automáticamente: copia en un dispositivo, pega en otro.",
+  "tour_send_lan": "Envía archivos sin cargos de datos ni pérdida de calidad. En la misma red Wi-Fi o punto de acceso, elige un Dispositivo Conectado: lo más rápido, sin necesidad de internet.",
+  "tour_send_qr": "¿En redes diferentes? Elige QR al enviar: un teléfono Android cercano escanea el código y recibe tus archivos por la red local, sin necesidad de una red Wi-Fi compartida.",
+  "tour_receive": "Recibir no requiere configuración: un archivo enviado a este PC aparece para que lo aceptes y luego se guarda en tu carpeta de destino. El botón de historial sigue su progreso.",
+  "tour_how_to_use": "¿Quieres los detalles? Cada pantalla tiene un botón \"Cómo usar\" (arriba a la derecha) con una guía completa paso a paso.",
+  "update_failed_unreachable": "No se pudo conectar con el servidor de actualizaciones",
+  "update_failed_unreachable_hint": "Comprueba tu conexión de red y vuelve a intentarlo.",
+  "update_failed_rate_limited": "Demasiadas comprobaciones de actualización",
+  "update_failed_rate_limited_hint": "GitHub está limitando las comprobaciones desde esta red. Inténtalo de nuevo en unos minutos.",
+  "update_failed_server": "El servidor de actualizaciones devolvió un error",
+  "update_failed_server_hint": "No hay ningún problema con este dispositivo. Vuelve a intentarlo en breve.",
+  "update_failed_release_hint": "No se pudo leer la última versión. Descárgala desde el sitio web."
 }
 
 French (fr)
@@ -1027,7 +1079,20 @@ French (fr)
   "action_minimize": "Réduire",
   "discoverable_to_other_devices": "Visible par les autres appareils",
   "no_files_selected_hint": "Aucun fichier sélectionné. Parcourez pour ajouter des fichiers.",
-  "no_paired_devices_found_hint": "Aucun appareil couplé trouvé."
+  "no_paired_devices_found_hint": "Aucun appareil couplé trouvé.",
+  "tour_pairing": "Commencez par coupler vos appareils. Le couplage débloque un flux de travail fluide — synchronisation du presse-papiers et transfert direct de fichiers entre eux.",
+  "tour_clipboard": "Une fois vos appareils couplés, votre presse-papiers se synchronise automatiquement — copiez sur un appareil, collez sur un autre.",
+  "tour_send_lan": "Envoyez des fichiers sans frais de données et sans perte de qualité. Sur le même Wi-Fi ou point d'accès, choisissez un appareil connecté — le plus rapide, aucune connexion Internet requise.",
+  "tour_send_qr": "Sur des réseaux différents ? Choisissez QR au moment d'envoyer — un téléphone Android proche scanne le code et reçoit vos fichiers via le réseau local, aucun Wi-Fi partagé requis.",
+  "tour_receive": "Recevoir ne demande aucune configuration — un fichier envoyé à ce PC s'affiche pour que vous l'acceptiez, puis arrive dans votre dossier de destination. Le bouton d'historique suit sa progression.",
+  "tour_how_to_use": "Vous voulez les détails ? Chaque écran dispose d'un bouton « Comment utiliser » (en haut à droite) avec un guide complet étape par étape.",
+  "update_failed_unreachable": "Impossible de joindre le serveur de mise à jour",
+  "update_failed_unreachable_hint": "Vérifiez votre connexion réseau, puis réessayez.",
+  "update_failed_rate_limited": "Trop de recherches de mises à jour",
+  "update_failed_rate_limited_hint": "GitHub limite les requêtes provenant de ce réseau. Réessayez dans quelques minutes.",
+  "update_failed_server": "Le serveur de mise à jour a renvoyé une erreur",
+  "update_failed_server_hint": "Cet appareil n'est pas en cause. Réessayez dans un instant.",
+  "update_failed_release_hint": "La dernière version n'a pas pu être lue. Téléchargez-la depuis le site web."
 }
 
 Japanese (ja)
@@ -1230,7 +1295,20 @@ Japanese (ja)
   "action_minimize": "最小化",
   "discoverable_to_other_devices": "他のデバイスから検出可能",
   "no_files_selected_hint": "ファイルが選択されていません。参照してファイルを追加してください。",
-  "no_paired_devices_found_hint": "ペアリングされたデバイスが見つかりません。"
+  "no_paired_devices_found_hint": "ペアリングされたデバイスが見つかりません。",
+  "tour_pairing": "まずはデバイスをペアリングしましょう。ペアリングすると、クリップボード同期やデバイス間の直接ファイル転送など、シームレスなワークフローが使えるようになります。",
+  "tour_clipboard": "デバイスをペアリングすると、クリップボードが自動的に同期されます。片方のデバイスでコピーし、もう片方で貼り付けられます。",
+  "tour_send_lan": "データ通信料も画質の劣化もなくファイルを送れます。同じ Wi-Fi またはホットスポットなら、接続済みのデバイスを選んでください。最速でインターネットも不要です。",
+  "tour_send_qr": "ネットワークが異なる場合は、送信時に QR を選んでください——近くの Android スマホがコードをスキャンし、ローカルネットワーク経由でファイルを受信します。共通の Wi-Fi は不要です。",
+  "tour_receive": "受信に設定は不要です——この PC に送られたファイルは受け入れ確認が表示され、保存先フォルダーに届きます。履歴ボタンで進捗を追跡できます。",
+  "tour_how_to_use": "詳しく知りたいですか？各画面の右上に「使い方」ボタンがあり、手順を一通り確認できます。",
+  "update_failed_unreachable": "アップデートサーバーに接続できませんでした",
+  "update_failed_unreachable_hint": "ネットワーク接続を確認してから、もう一度お試しください。",
+  "update_failed_rate_limited": "アップデートの確認が多すぎます",
+  "update_failed_rate_limited_hint": "GitHub がこのネットワークからの確認を制限しています。数分後にもう一度お試しください。",
+  "update_failed_server": "アップデートサーバーがエラーを返しました",
+  "update_failed_server_hint": "この端末に問題はありません。しばらくしてからお試しください。",
+  "update_failed_release_hint": "最新リリースを読み取れませんでした。ウェブサイトからダウンロードしてください。"
 }
 
 German (de)
@@ -1433,7 +1511,20 @@ German (de)
   "action_minimize": "Minimieren",
   "discoverable_to_other_devices": "Für andere Geräte sichtbar",
   "no_files_selected_hint": "Keine Dateien ausgewählt. Durchsuchen, um Dateien hinzuzufügen.",
-  "no_paired_devices_found_hint": "Keine gekoppelten Geräte gefunden."
+  "no_paired_devices_found_hint": "Keine gekoppelten Geräte gefunden.",
+  "tour_pairing": "Beginnen Sie damit, Ihre Geräte zu koppeln. Die Kopplung schaltet einen nahtlosen Arbeitsablauf frei — Zwischenablage-Synchronisierung und direkte Dateiübertragung zwischen ihnen.",
+  "tour_clipboard": "Sobald Ihre Geräte gekoppelt sind, wird Ihre Zwischenablage automatisch synchronisiert — auf einem Gerät kopieren, auf einem anderen einfügen.",
+  "tour_send_lan": "Senden Sie Dateien ohne Datengebühren und ohne Qualitätsverlust. Im selben Wi-Fi oder Hotspot wählen Sie ein verbundenes Gerät — am schnellsten, kein Internet erforderlich.",
+  "tour_send_qr": "In unterschiedlichen Netzwerken? Wählen Sie beim Senden QR — ein Android-Smartphone in der Nähe scannt den Code und empfängt Ihre Dateien über das lokale Netzwerk, kein gemeinsames Wi-Fi erforderlich.",
+  "tour_receive": "Empfangen erfordert keine Einrichtung — eine an diesen PC gesendete Datei erscheint zur Annahme und landet dann in Ihrem Speicherordner. Die Verlaufsschaltfläche verfolgt den Fortschritt.",
+  "tour_how_to_use": "Möchten Sie die Details? Jeder Bildschirm hat oben rechts eine \"Anleitung\"-Schaltfläche mit einer vollständigen Schritt-für-Schritt-Anleitung.",
+  "update_failed_unreachable": "Update-Server nicht erreichbar",
+  "update_failed_unreachable_hint": "Netzwerkverbindung prüfen und erneut versuchen.",
+  "update_failed_rate_limited": "Zu viele Update-Suchen",
+  "update_failed_rate_limited_hint": "GitHub begrenzt Anfragen aus diesem Netzwerk. In einigen Minuten erneut versuchen.",
+  "update_failed_server": "Der Update-Server hat einen Fehler zurückgegeben",
+  "update_failed_server_hint": "Es liegt nicht an diesem Gerät. In Kürze erneut versuchen.",
+  "update_failed_release_hint": "Die neueste Version konnte nicht gelesen werden. Bitte von der Website herunterladen."
 }
 
 Here are the translations for the final three requested languages: Portuguese,
@@ -1639,7 +1730,20 @@ Portuguese (pt)
   "action_minimize": "Minimizar",
   "discoverable_to_other_devices": "Visível para outros dispositivos",
   "no_files_selected_hint": "Nenhum arquivo selecionado. Navegue para adicionar arquivos.",
-  "no_paired_devices_found_hint": "Nenhum dispositivo emparelhado encontrado."
+  "no_paired_devices_found_hint": "Nenhum dispositivo emparelhado encontrado.",
+  "tour_pairing": "Comece emparelhando seus dispositivos. O emparelhamento desbloqueia um fluxo de trabalho contínuo — sincronização da área de transferência e transferência direta de arquivos entre eles.",
+  "tour_clipboard": "Depois que seus dispositivos estiverem emparelhados, sua área de transferência sincroniza automaticamente — copie em um dispositivo e cole em outro.",
+  "tour_send_lan": "Envie arquivos sem cobrança de dados e sem perda de qualidade. Na mesma rede Wi-Fi ou ponto de acesso, escolha um Dispositivo Conectado — o mais rápido, sem precisar de internet.",
+  "tour_send_qr": "Em redes diferentes? Escolha QR ao enviar — um celular Android próximo escaneia o código e recebe seus arquivos pela rede local, sem precisar de Wi-Fi compartilhado.",
+  "tour_receive": "Receber não exige configuração — um arquivo enviado a este PC aparece para você aceitar e depois vai para sua pasta de destino. O botão de histórico acompanha o progresso.",
+  "tour_how_to_use": "Quer os detalhes? Cada tela tem um botão \"Como usar\" (no canto superior direito) com um guia completo passo a passo.",
+  "update_failed_unreachable": "Não foi possível acessar o servidor de atualizações",
+  "update_failed_unreachable_hint": "Verifique sua conexão de rede e tente novamente.",
+  "update_failed_rate_limited": "Verificações de atualização em excesso",
+  "update_failed_rate_limited_hint": "O GitHub está limitando as verificações desta rede. Tente novamente em alguns minutos.",
+  "update_failed_server": "O servidor de atualizações retornou um erro",
+  "update_failed_server_hint": "Não há nada de errado com este dispositivo. Tente novamente em breve.",
+  "update_failed_release_hint": "Não foi possível ler a versão mais recente. Baixe pelo site."
 }
 
 Indonesian (id)
@@ -1842,7 +1946,20 @@ Indonesian (id)
   "action_minimize": "Minimalkan",
   "discoverable_to_other_devices": "Dapat ditemukan oleh perangkat lain",
   "no_files_selected_hint": "Tidak ada file yang dipilih. Telusuri untuk menambahkan file.",
-  "no_paired_devices_found_hint": "Tidak ada perangkat tersanding yang ditemukan."
+  "no_paired_devices_found_hint": "Tidak ada perangkat tersanding yang ditemukan.",
+  "tour_pairing": "Mulai dengan menyandingkan perangkat Anda. Penyandingan membuka alur kerja yang mulus — sinkronisasi papan klip dan transfer file langsung di antaranya.",
+  "tour_clipboard": "Setelah perangkat Anda disandingkan, papan klip Anda tersinkron otomatis — salin di satu perangkat, tempel di perangkat lain.",
+  "tour_send_lan": "Kirim file tanpa biaya data dan tanpa penurunan kualitas. Pada Wi-Fi atau hotspot yang sama, pilih Perangkat Terhubung — tercepat, tanpa perlu internet.",
+  "tour_send_qr": "Beda jaringan? Pilih QR saat mengirim — ponsel Android terdekat memindai kodenya dan menerima file Anda lewat jaringan lokal, tanpa perlu Wi-Fi bersama.",
+  "tour_receive": "Menerima tidak perlu pengaturan apa pun — file yang dikirim ke PC ini akan muncul untuk Anda terima, lalu masuk ke folder penyimpanan Anda. Tombol riwayat memantau progresnya.",
+  "tour_how_to_use": "Ingin detailnya? Setiap layar memiliki tombol \"Cara pakai\" (kanan atas) dengan panduan lengkap langkah demi langkah.",
+  "update_failed_unreachable": "Tidak dapat menghubungi server pembaruan",
+  "update_failed_unreachable_hint": "Periksa koneksi jaringan, lalu coba lagi.",
+  "update_failed_rate_limited": "Terlalu banyak pemeriksaan pembaruan",
+  "update_failed_rate_limited_hint": "GitHub sedang membatasi permintaan dari jaringan ini. Coba lagi beberapa menit lagi.",
+  "update_failed_server": "Server pembaruan mengembalikan kesalahan",
+  "update_failed_server_hint": "Tidak ada masalah dengan perangkat ini. Coba lagi sebentar lagi.",
+  "update_failed_release_hint": "Rilis terbaru tidak dapat dibaca. Unduh dari situs web saja."
 }
 
 Russian (ru)
@@ -2045,7 +2162,20 @@ Russian (ru)
   "action_minimize": "Свернуть",
   "discoverable_to_other_devices": "Доступно для обнаружения другими устройствами",
   "no_files_selected_hint": "Файлы не выбраны. Откройте обзор, чтобы добавить файлы.",
-  "no_paired_devices_found_hint": "Сопряженные устройства не найдены."
+  "no_paired_devices_found_hint": "Сопряженные устройства не найдены.",
+  "tour_pairing": "Начните с сопряжения устройств. Сопряжение открывает удобный рабочий процесс — синхронизацию буфера обмена и прямую передачу файлов между ними.",
+  "tour_clipboard": "После сопряжения устройств ваш буфер обмена синхронизируется автоматически — копируйте на одном устройстве, вставляйте на другом.",
+  "tour_send_lan": "Отправляйте файлы без расхода трафика и без потери качества. В одной сети Wi-Fi или точке доступа выберите подключённое устройство — самый быстрый способ, интернет не нужен.",
+  "tour_send_qr": "В разных сетях? При отправке выберите QR — ближайший Android-телефон отсканирует код и получит ваши файлы по локальной сети, общий Wi-Fi не требуется.",
+  "tour_receive": "Для приёма ничего настраивать не нужно — файл, отправленный на этот ПК, появится для подтверждения и попадёт в вашу папку сохранения. Кнопка истории отследит прогресс.",
+  "tour_how_to_use": "Нужны подробности? На каждом экране есть кнопка «Как использовать» (вверху справа) с полным пошаговым руководством.",
+  "update_failed_unreachable": "Не удалось подключиться к серверу обновлений",
+  "update_failed_unreachable_hint": "Проверьте подключение к сети и повторите попытку.",
+  "update_failed_rate_limited": "Слишком много проверок обновлений",
+  "update_failed_rate_limited_hint": "GitHub ограничивает запросы из этой сети. Повторите попытку через несколько минут.",
+  "update_failed_server": "Сервер обновлений вернул ошибку",
+  "update_failed_server_hint": "С этим устройством всё в порядке. Повторите попытку чуть позже.",
+  "update_failed_release_hint": "Не удалось прочитать сведения о последней версии. Скачайте её с сайта."
 }
 
 Here are the translations for the new strings in all the requested languages.

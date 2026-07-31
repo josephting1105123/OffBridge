@@ -26,9 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
@@ -54,11 +57,14 @@ import com.joseph.clipboard.windows.ui.BackdropController
 import com.joseph.clipboard.windows.ui.BackdropEffect
 import com.joseph.clipboard.windows.ui.BackdropScrim
 import com.joseph.clipboard.windows.ui.FileTransferScreen
+import com.joseph.clipboard.windows.ui.FirstRunTour
 import com.joseph.clipboard.windows.ui.HistoryScreen
 import com.joseph.clipboard.windows.ui.LocalBackdrop
 import com.joseph.clipboard.windows.ui.ReceivingPill
 import com.joseph.clipboard.windows.ui.SettingsScreen
 import com.joseph.clipboard.windows.ui.SystemStatusScreen
+import com.joseph.clipboard.windows.ui.TutorialOverlay
+import com.joseph.clipboard.windows.ui.TutorialStep
 import com.joseph.clipboard.windows.ui.UpdateScreen
 import com.joseph.clipboard.windows.ui.backdropBlur
 import com.joseph.clipboard.windows.ui.modalPopIn
@@ -133,17 +139,19 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
         tutorialChainCounter++
     }
 
-    // First-ever-launch guided tour: walks SEND_FILES -> (its own tutorial + the nested transfer-
-    // history tutorial) -> SYSTEM_STATUS -> HISTORY, chaining via onTutorialChainNext at each
-    // screen's genuine completion (see FileTransferScreen/SystemStatusScreen/HistoryScreen). Marked
-    // shown immediately (not on completion) so quitting or skipping mid-tour never re-offers it on a
-    // later launch — this infrastructure (tutorialChainTarget/Counter, per-screen tutorialTrigger)
-    // already existed for a manual "walk me through everything" flow but nothing auto-fired it,
-    // which was the actual gap (Android has an equivalent forced first-run tour; Windows had none).
+    // First-ever-launch guided tour — six conceptual steps, one per main interface plus a closer
+    // pointing at the "How to use" chip. See [FirstRunTour] for the copy and for why this replaced
+    // the old behaviour (chaining every full per-screen tutorial, ~18 steps, on first launch).
+    //
+    // Marked shown immediately rather than on completion, so quitting or closing the window mid-tour
+    // never re-offers it on a later launch. Window coordinates for the spotlight targets are
+    // published into tourBounds by the nav rail below and by FileTransferScreen's chip.
+    var tourActive by remember { mutableStateOf(false) }
+    val tourBounds = remember { mutableStateMapOf<String, Rect>() }
     LaunchedEffect(Unit) {
         if (!SecurityVault.isFirstRunTourShown()) {
             SecurityVault.markFirstRunTourShown()
-            onTutorialChainNext(Screen.SEND_FILES)
+            tourActive = true
         }
     }
 
@@ -177,19 +185,28 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                     icon = { Icon(Icons.Filled.Send, contentDescription = transferText) },
                     label = { Text(transferText, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible) },
                     selected = currentScreen == Screen.SEND_FILES,
-                    onClick = { currentScreen = Screen.SEND_FILES }
+                    onClick = { currentScreen = Screen.SEND_FILES },
+                    modifier = Modifier.onGloballyPositioned {
+                        tourBounds[FirstRunTour.TARGET_NAV_SEND] = it.boundsInWindow()
+                    }
                 )
                 NavigationRailItem(
                     icon = { Icon(Icons.Filled.Link, contentDescription = statusText) },
                     label = { Text(statusText, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible) },
                     selected = currentScreen == Screen.SYSTEM_STATUS,
-                    onClick = { currentScreen = Screen.SYSTEM_STATUS }
+                    onClick = { currentScreen = Screen.SYSTEM_STATUS },
+                    modifier = Modifier.onGloballyPositioned {
+                        tourBounds[FirstRunTour.TARGET_NAV_PAIRING] = it.boundsInWindow()
+                    }
                 )
                 NavigationRailItem(
                     icon = { Icon(Icons.Filled.ContentPaste, contentDescription = historyText) },
                     label = { Text(historyText, maxLines = 1, softWrap = false, overflow = TextOverflow.Visible) },
                     selected = currentScreen == Screen.HISTORY,
-                    onClick = { currentScreen = Screen.HISTORY }
+                    onClick = { currentScreen = Screen.HISTORY },
+                    modifier = Modifier.onGloballyPositioned {
+                        tourBounds[FirstRunTour.TARGET_NAV_CLIPBOARD] = it.boundsInWindow()
+                    }
                 )
                 NavigationRailItem(
                     icon = { Icon(Icons.Filled.Settings, contentDescription = settingsText) },
@@ -255,7 +272,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                             onTutorialChainNext = onTutorialChainNext,
                             tutorialTrigger = if (tutorialChainTarget == Screen.SEND_FILES) tutorialChainCounter else 0,
                             onNavigateToPairing = { currentScreen = Screen.SYSTEM_STATUS },
-                            onTransferHistoryVisibility = { transferHistoryDialogVisible = it }
+                            onTransferHistoryVisibility = { transferHistoryDialogVisible = it },
+                            onHowToUseChipBounds = { tourBounds[FirstRunTour.TARGET_HOW_TO_USE_CHIP] = it }
                         )
                         Screen.SYSTEM_STATUS -> SystemStatusScreen(
                             appController = appController,
@@ -395,6 +413,35 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
             }
         }
         } // Close Surface
+
+        // First-launch tour. Deliberately a sibling of the Surface rather than a child of the
+        // content Box: its spotlight has to reach the NAV RAIL, which every per-screen tutorial
+        // sits inside of and therefore never had to cover. Gated on the first step's target having
+        // reported bounds, so the overlay can't flash a hole-less scrim on the very first frame.
+        if (tourActive && tourBounds.containsKey(FirstRunTour.TARGET_NAV_PAIRING)) {
+            TutorialOverlay(
+                steps = FirstRunTour.steps.map { step ->
+                    val isChipStep = step.targetKey == FirstRunTour.TARGET_HOW_TO_USE_CHIP
+                    TutorialStep(
+                        targetKey = step.targetKey,
+                        text = FirstRunTour.textOf(step),
+                        // Forced tour: no way out but through, matching Android's hideSkipButton.
+                        hideSkipButton = true,
+                        // Nav items sit shoulder to shoulder; shrink the hole so it frames one item
+                        // instead of bleeding onto its neighbours (Android uses the same 0.95f).
+                        spotlightScale = if (isChipStep) 1f else 0.95f,
+                        // Only the chip needs to wait: it lives inside the Send screen, so its bounds
+                        // are only republished once the Crossfade back to that screen has settled.
+                        delayMs = if (isChipStep) FirstRunTour.SCREEN_SETTLE_MS else 0L,
+                        onShow = { currentScreen = step.screen },
+                    )
+                },
+                totalSteps = FirstRunTour.TOTAL_STEPS,
+                boundsMap = tourBounds,
+                onDismiss = { tourActive = false },
+                onComplete = { tourActive = false },
+            )
+        }
     } // Close Box
     } // Close CompositionLocalProvider
 } // Close AppContent

@@ -38,9 +38,10 @@ class FileTransferDaemon(
 ) {
     private val FILE_TRANSFER_PORT = Ports.FILE_TRANSFER
     @Volatile private var isRunning = false
-    // Written by the accept loop, read/closed by stop() from another thread — @Volatile so stop()
+    // Written by start(), read/closed by stop() from another thread — @Volatile so stop()
     // observes the bound socket and can actually close it (else the listener can stay bound).
     @Volatile private var serverSocket: ServerSocket? = null
+    @Volatile private var listener: Thread? = null
 
     // Surface the bind result so the controller/UI can tell a live listener from a silently dead one.
     // null = not started / stopped; true = bound & accepting; false = last start() failed to bind.
@@ -49,33 +50,37 @@ class FileTransferDaemon(
     @Volatile var lastBindError: String? = null
         private set
 
+    /** True while the port is bound and the accept loop is live. */
+    val isAlive: Boolean get() = isRunning
+
+    @Synchronized
     fun start() {
         if (isRunning) return
-        isRunning = true
 
-        thread(isDaemon = true, name = "FileTransfer-Listener") {
-            // Capture THIS thread's own ServerSocket so finally closes only what it bound. A delayed
-            // old thread (after restartServices' stop→delay→start) must not close the NEW socket via
-            // the shared field.
-            val boundSocket: ServerSocket
-            try {
-                boundSocket = ServerSocket().apply {
-                    reuseAddress = true
-                    bind(InetSocketAddress(FILE_TRANSFER_PORT))
-                }
-                serverSocket = boundSocket
-                lastBindError = null
-                _isBound.value = true
-                println("FileTransferDaemon started on port $FILE_TRANSFER_PORT")
-            } catch (e: Exception) {
-                // Bind failed: don't run a dead listener silently — surface it so the UI can show it.
-                isRunning = false
-                lastBindError = e.message ?: e.toString()
-                _isBound.value = false
-                System.err.println("FileTransferDaemon failed to bind port $FILE_TRANSFER_PORT: ${e.message}")
-                return@thread
+        // Bind on the CALLER's thread so start() returns having already settled isRunning/_isBound —
+        // Restart Services can then report the real outcome instead of guessing. The bound socket is
+        // still captured into a local for the loop below, so a delayed old thread (after
+        // restartServices' stop→delay→start) can never close the NEW socket via the shared field.
+        val boundSocket = try {
+            ServerSocket().apply {
+                reuseAddress = true
+                bind(InetSocketAddress(FILE_TRANSFER_PORT))
             }
+        } catch (e: Exception) {
+            // Bind failed: don't run a dead listener silently — surface it so the UI can show it.
+            lastBindError = e.message ?: e.toString()
+            _isBound.value = false
+            System.err.println("FileTransferDaemon failed to bind port $FILE_TRANSFER_PORT: ${e.message}")
+            DiagLog.w("file transfer: bind of TCP $FILE_TRANSFER_PORT failed (${e.message}) — this device cannot receive files until a later start succeeds.")
+            return
+        }
+        serverSocket = boundSocket
+        lastBindError = null
+        _isBound.value = true
+        isRunning = true
+        println("FileTransferDaemon started on port $FILE_TRANSFER_PORT")
 
+        listener = thread(isDaemon = true, name = "FileTransfer-Listener") {
             try {
                 while (isRunning) {
                     val clientSocket = boundSocket.accept()
@@ -90,13 +95,25 @@ class FileTransferDaemon(
                 // Only clear the shared field / bound flag if it still points at OUR socket, so a
                 // late-exiting old thread can't disturb a freshly restarted listener.
                 if (serverSocket === boundSocket) {
+                    // Reaching here with isRunning still set means the loop died on its own rather
+                    // than via stop() (which nulls the field first, so it never lands in this
+                    // branch). Clear the flag or a later start() no-ops at its guard and this device
+                    // silently stops receiving files for the rest of the process's life.
+                    if (isRunning) {
+                        isRunning = false
+                        lastBindError = "listener exited unexpectedly"
+                        DiagLog.w("file transfer: listener thread exited unexpectedly — this device cannot receive files until the next start")
+                        _isBound.value = false
+                    } else {
+                        _isBound.value = null
+                    }
                     serverSocket = null
-                    _isBound.value = null
                 }
             }
         }
     }
 
+    @Synchronized
     fun stop() {
         isRunning = false
         try {
@@ -106,6 +123,11 @@ class FileTransferDaemon(
         }
         serverSocket = null
         _isBound.value = null
+        // Wait for the accept loop to leave before returning, so a restart's rebind can't race an
+        // old listener that still holds the port.
+        val leaving = listener
+        listener = null
+        if (leaving != null) runCatching { leaving.join(WORKER_JOIN_TIMEOUT_MS) }
     }
 
     private fun handleIncomingConnection(clientSocket: Socket) {

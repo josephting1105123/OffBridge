@@ -3,9 +3,9 @@ package com.joseph.clipboard.windows.network
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
-import java.net.SocketException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.SecurityVault
 
 data class DiscoveredDevice(
@@ -90,67 +90,121 @@ class TransferDaemon(
     }
 
     private val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
-    private var isRunning = false
-    private var socket: DatagramSocket? = null
+    // @Volatile: written by stop()/start() on the caller's thread, read by three worker loops.
+    @Volatile private var isRunning = false
+    @Volatile private var socket: DatagramSocket? = null
+    // The workers this run owns. stop() interrupts and joins them, so a restart can't leave the old
+    // broadcaster/pruner asleep in their 3s/2s waits only to wake up into the NEXT run's socket.
+    private val workers = mutableListOf<Thread>()
 
+    /** Last bind failure, or null when the socket is up. Discovery dying is otherwise invisible in a
+     *  windowed (javaw) launch, which is exactly how a failed restart used to go unnoticed. */
+    @Volatile var lastBindError: String? = null
+        private set
+
+    /** True while the discovery socket is bound and the workers are live. */
+    val isAlive: Boolean get() = isRunning
+
+    @Synchronized
     fun start() {
         if (isRunning) return
-        isRunning = true
 
-        try {
-            socket = DatagramSocket(null).apply {
+        // Bind BEFORE arming isRunning: a failed bind used to leave the flag set, so every later
+        // start() (notably Restart Services) returned immediately and discovery stayed dead forever.
+        val bound = try {
+            DatagramSocket(null).apply {
                 reuseAddress = true
                 bind(java.net.InetSocketAddress(DISCOVERY_PORT))
                 broadcast = true
             }
-        } catch (e: SocketException) {
-            e.printStackTrace()
-            // Port already bound (likely another instance) — discovery stays offline this run.
+        } catch (e: Exception) {
+            lastBindError = e.message ?: e.toString()
+            System.err.println("TransferDaemon failed to bind discovery port $DISCOVERY_PORT: ${e.message}")
+            DiagLog.w("discovery: bind of UDP $DISCOVERY_PORT failed (${e.message}) — this device will neither see nor be seen. Another instance may still hold the port.")
             return
         }
+        socket = bound
+        lastBindError = null
+        isRunning = true
+
+        // Every worker closes over the socket IT was started with rather than reading the shared
+        // field, so a late-exiting worker can never touch a socket a later start() published.
 
         // Broadcaster Thread
-        thread(isDaemon = true, name = "Discovery-Broadcaster") {
-            while (isRunning) {
-                // Skip broadcasting while not discoverable, mirroring Android (which gates its send loop
-                // on SecurityVault.isDiscoverable). Keeps the daemon running so it can still receive.
+        workers += thread(isDaemon = true, name = "Discovery-Broadcaster") {
+            while (isRunning && !bound.isClosed) {
                 if (SecurityVault.isDiscoverable()) {
-                    broadcastPresence()
+                    broadcastPresence(bound)
+                } else {
+                    // Hidden: never announce to the whole subnet, but a device we are already paired
+                    // with must still be able to find us, so probe each trusted node directly. Same
+                    // frame, same fields — only the destination differs from the broadcast above.
+                    unicastPresenceToTrustedNodes(bound)
                 }
-                Thread.sleep(BROADCAST_INTERVAL_MS)
+                try {
+                    Thread.sleep(BROADCAST_INTERVAL_MS)
+                } catch (e: InterruptedException) {
+                    break // stop() is joining us
+                }
             }
         }
 
         // Listener Thread
-        thread(isDaemon = true, name = "Discovery-Listener") {
+        workers += thread(isDaemon = true, name = "Discovery-Listener") {
             val buffer = ByteArray(1024)
-            while (isRunning) {
-                try {
-                    val packet = DatagramPacket(buffer, buffer.size)
-                    socket?.receive(packet)
-                    val data = String(packet.data, 0, packet.length, Charsets.UTF_8)
-                    handleIncomingPacket(data, packet.address)
-                } catch (e: Exception) {
-                    if (isRunning) {
-                        e.printStackTrace()
+            try {
+                while (isRunning && !bound.isClosed) {
+                    try {
+                        val packet = DatagramPacket(buffer, buffer.size)
+                        bound.receive(packet)
+                        val data = String(packet.data, 0, packet.length, Charsets.UTF_8)
+                        handleIncomingPacket(data, packet.address, bound)
+                    } catch (e: Exception) {
+                        if (isRunning && !bound.isClosed) {
+                            e.printStackTrace()
+                        }
                     }
+                }
+            } finally {
+                // The listener is the only worker whose death takes discovery down with it. If it
+                // leaves while still flagged running (socket closed under it by something other than
+                // stop(), or an Error escaping the inner catch), clear the flag so a later start()
+                // rebinds instead of no-opping at its guard. A normal stop() nulls the field before
+                // joining, so the identity check keeps this off the ordinary path — no lock needed,
+                // and no risk of deadlocking against stop()'s own monitor while it joins us.
+                if (socket === bound && isRunning) {
+                    isRunning = false
+                    socket = null
+                    lastBindError = "discovery listener exited unexpectedly"
+                    DiagLog.w("discovery: listener thread exited unexpectedly — this device will neither see nor be seen until the next start")
                 }
             }
         }
 
         // Expiry Pruner Thread
-        thread(isDaemon = true, name = "Discovery-Pruner") {
-            while (isRunning) {
+        workers += thread(isDaemon = true, name = "Discovery-Pruner") {
+            while (isRunning && !bound.isClosed) {
                 pruneExpiredNodes()
-                Thread.sleep(2000L) // check every 2s
+                try {
+                    Thread.sleep(2000L) // check every 2s
+                } catch (e: InterruptedException) {
+                    break
+                }
             }
         }
     }
 
+    @Synchronized
     fun stop() {
         isRunning = false
-        socket?.close()
+        try { socket?.close() } catch (e: Exception) { /* already closed */ }
         socket = null
+        // Interrupt the sleepers, then wait for all three to actually leave their loops. Without the
+        // join, stop()->delay(500)->start() returned while the old workers were still sleeping.
+        val leaving = workers.toList()
+        workers.clear()
+        leaving.forEach { it.interrupt() }
+        leaving.forEach { runCatching { it.join(WORKER_JOIN_TIMEOUT_MS) } }
         discoveredNodes.clear()
     }
 
@@ -162,28 +216,57 @@ class TransferDaemon(
         discoveredNodes.clear()
     }
 
-    private fun broadcastPresence() {
+    /**
+     * The presence frame this daemon puts on the wire, for [kind] = `FILEBRIDGE_DISCOVERY` (a probe)
+     * or `FILEBRIDGE_REPLY` (a directed answer). Trailing caps field (|GCM1,FGCM1…) advertises
+     * clipboard + file AEAD support; the `did:` token after it carries this install's stable id so a
+     * peer can follow us to a new DHCP address for auto-push. Older peers parse caps at index 4 and
+     * ignore anything beyond, so this stays wire-compatible.
+     */
+    private fun presenceFrame(kind: String): ByteArray =
+        "$kind|${deviceNameProvider()}|${getLocalIpAddress()}|Windows|$DISCOVERY_CAPS|${WireFrames.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId()}"
+            .toByteArray(Charsets.UTF_8)
+
+    private fun broadcastPresence(via: DatagramSocket) {
         try {
-            val localIp = getLocalIpAddress()
-            // Trailing caps field (|GCM1,FGCM1) advertises clipboard + file AEAD support; the `did:`
-            // token after it carries this install's stable id so a peer can follow us to a new DHCP
-            // address for auto-push. Older peers parse caps at index 4 and ignore anything beyond, so
-            // this stays wire-compatible.
-            val message = "FILEBRIDGE_DISCOVERY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS|${WireFrames.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId()}"
-            val data = message.toByteArray(Charsets.UTF_8)
+            val data = presenceFrame("FILEBRIDGE_DISCOVERY")
             val packet = DatagramPacket(
                 data,
                 data.size,
                 InetAddress.getByName("255.255.255.255"),
                 DISCOVERY_PORT
             )
-            socket?.send(packet)
+            via.send(packet)
         } catch (e: Exception) {
             // Ignore broadcast errors
         }
     }
 
-    private fun handleIncomingPacket(data: String, sender: InetAddress) {
+    /**
+     * The not-discoverable substitute for [broadcastPresence]: the identical DISCOVERY frame, sent
+     * to each paired peer's last-known address instead of the subnet broadcast. Without it, two
+     * devices that both have "Discoverable to other devices" off could never find each other — each
+     * would be waiting for a probe neither is allowed to broadcast. Unreachable/stale addresses just
+     * fail silently, the same way a broadcast to an empty subnet does.
+     */
+    private fun unicastPresenceToTrustedNodes(via: DatagramSocket) {
+        val trusted = SecurityVault.getAllTrustedNodes().keys
+        if (trusted.isEmpty()) return
+        val data = try {
+            presenceFrame("FILEBRIDGE_DISCOVERY")
+        } catch (e: Exception) {
+            return
+        }
+        for (ip in trusted) {
+            try {
+                via.send(DatagramPacket(data, data.size, InetAddress.getByName(ip), DISCOVERY_PORT))
+            } catch (e: Exception) {
+                // Per-peer best effort: one unresolvable address must not stop the rest.
+            }
+        }
+    }
+
+    private fun handleIncomingPacket(data: String, sender: InetAddress, via: DatagramSocket) {
         val parts = data.split("|")
         if (parts.getOrNull(0) == "FILEBRIDGE_RESUME_REQUEST") {
             val sessionId = parts.getOrNull(1)
@@ -197,9 +280,10 @@ class TransferDaemon(
         val isReply = parts.getOrNull(0) == "FILEBRIDGE_REPLY"
         val isDiscovery = parts.getOrNull(0) == "FILEBRIDGE_DISCOVERY"
         if (parts.size >= 4 && (isDiscovery || isReply)) {
-            // A DISCOVERY probe is inbound presence; ignore it while not discoverable, mirroring
-            // Android. A REPLY is a directed answer to our own probe, so we always process it.
-            if (isDiscovery && !SecurityVault.isDiscoverable()) return
+            // Inbound presence is ALWAYS processed, in either discoverable state. "Discoverable to
+            // other devices" only governs what this device sends: dropping inbound probes as well
+            // used to blind the user to every peer, including their own paired devices, which is not
+            // what the setting says it does. See [DiscoveryPolicy] for who gets answered.
 
             val deviceName = parts[1]
             val os = parts[3]
@@ -243,22 +327,29 @@ class TransferDaemon(
                 discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId, supportsAuth2Accept)
             }
 
-            // Answer every DISCOVERY with a unicast REPLY (bypasses AP broadcast restrictions), mirroring
+            // Answer a DISCOVERY with a unicast REPLY (bypasses AP broadcast restrictions), mirroring
             // Android. Field order matches this daemon's own broadcast: name|ip|Windows|caps. Not sent
-            // for a REPLY, so two peers don't ping-pong replies forever.
-            if (isDiscovery) {
-                sendDiscoveryReply(sender)
+            // for a REPLY, so two peers don't ping-pong replies forever. While discoverable the answer
+            // goes to everyone exactly as before; while hidden only a paired peer is answered, so this
+            // device stays invisible to strangers without going blind — see [DiscoveryPolicy].
+            if (isDiscovery && DiscoveryPolicy.shouldReplyToProbe(
+                    discoverable = SecurityVault.isDiscoverable(),
+                    probe = data,
+                    senderIp = ipToTrack,
+                    trustedIps = SecurityVault.getAllTrustedNodes().keys,
+                    pairedDeviceIdFor = SecurityVault::getPairedDeviceId,
+                )
+            ) {
+                sendDiscoveryReply(sender, via)
             }
         }
     }
 
-    private fun sendDiscoveryReply(target: InetAddress) {
+    private fun sendDiscoveryReply(target: InetAddress, via: DatagramSocket) {
         try {
-            val localIp = getLocalIpAddress()
-            val message = "FILEBRIDGE_REPLY|${deviceNameProvider()}|$localIp|Windows|$DISCOVERY_CAPS|${WireFrames.DEVICE_ID_TOKEN}${SecurityVault.localDeviceId()}"
-            val data = message.toByteArray(Charsets.UTF_8)
+            val data = presenceFrame("FILEBRIDGE_REPLY")
             val packet = DatagramPacket(data, data.size, target, DISCOVERY_PORT)
-            socket?.send(packet)
+            via.send(packet)
         } catch (e: Exception) {
             // Best-effort unicast reply
         }

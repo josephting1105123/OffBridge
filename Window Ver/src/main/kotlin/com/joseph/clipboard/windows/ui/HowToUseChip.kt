@@ -33,10 +33,13 @@ import com.joseph.clipboard.windows.theme.LocalExtraColors
 fun HowToUseChip(
     onClick: () -> Unit,
     text: String = "How to use",
+    /** Applied before the chip's own visual modifiers, so a caller measuring it with
+     *  onGloballyPositioned reads the whole pill (the first-launch tour spotlights it). */
+    modifier: Modifier = Modifier,
 ) {
     val extra = LocalExtraColors.current
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(Dimens.radiusSm))
             .background(extra.accentMuted)
             .clickable(
