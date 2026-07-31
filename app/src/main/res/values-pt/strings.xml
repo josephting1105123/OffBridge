@@ -177,6 +177,7 @@
     <string name="unknown">Desconhecido</string>
     <string name="unknown_file">Arquivo Desconhecido</string>
     <string name="action_select_count">Selecionar (%d)</string>
+    <string name="action_edit">Editar</string>
     <string name="toast_clipboard_is_empty">A área de transferência está vazia</string>
     <string name="toast_failed_to_read_clipboard">Falha ao ler a área de transferência</string>
     <string name="unknown_device">Dispositivo Desconhecido</string>

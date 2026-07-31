@@ -177,6 +177,7 @@
     <string name="unknown">Unbekannt</string>
     <string name="unknown_file">Unbekannte Datei</string>
     <string name="action_select_count">Auswählen (%d)</string>
+    <string name="action_edit">Bearbeiten</string>
     <string name="toast_clipboard_is_empty">Zwischenablage ist leer</string>
     <string name="toast_failed_to_read_clipboard">Zwischenablage konnte nicht gelesen werden</string>
     <string name="unknown_device">Unbekanntes Gerät</string>

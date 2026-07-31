@@ -164,6 +164,7 @@
     <string name="unknown">未知</string>
     <string name="unknown_file">未知文件</string>
     <string name="action_select_count">选择 (%d)</string>
+    <string name="action_edit">编辑</string>
     <string name="toast_clipboard_is_empty">剪贴板为空</string>
     <string name="toast_failed_to_read_clipboard">无法读取剪贴板</string>
     <string name="unknown_device">未知设备</string>

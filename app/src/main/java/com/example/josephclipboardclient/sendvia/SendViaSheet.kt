@@ -1,6 +1,5 @@
 package com.EntropicSoftwareLab.ClipboardShare.sendvia
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,10 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -99,7 +94,12 @@ fun SendViaSheet(
                 label = stringResource(R.string.send_via_qr),
                 onClick = { onChoose(SendViaChoice.QR) },
             ) {
-                QrIcon(modifier = Modifier.size(dimens.iconLg), tint = colors.green)
+                Icon(
+                    painterResource(R.drawable.ic_qr_frame),
+                    contentDescription = null,
+                    tint = colors.green,
+                    modifier = Modifier.size(dimens.iconLg),
+                )
             }
             SendViaOption(
                 label = stringResource(R.string.send_via_nfc),
@@ -158,47 +158,5 @@ private fun RowScope.SendViaOption(
             textAlign = TextAlign.Center,
             maxLines = 2,
         )
-    }
-}
-
-/**
- * A QR-style glyph drawn in Compose: three finder patterns (top-left, top-right, bottom-left) plus
- * data modules on a 7-unit grid, including the middle-left row.
- */
-@Composable
-fun QrIcon(modifier: Modifier = Modifier, tint: Color) {
-    Canvas(modifier = modifier) {
-        val s = size.minDimension
-        val u = s / 7f
-        val ring = u * 0.5f
-
-        fun finder(col: Int, row: Int) {
-            val left = col * u
-            val top = row * u
-            drawRect(
-                color = tint,
-                topLeft = Offset(left + ring / 2f, top + ring / 2f),
-                size = Size(3f * u - ring, 3f * u - ring),
-                style = Stroke(width = ring),
-            )
-            drawRect(color = tint, topLeft = Offset(left + u, top + u), size = Size(u, u))
-        }
-        finder(0, 0)
-        finder(4, 0)
-        finder(0, 4)
-
-        val cells = listOf(
-            4 to 2, 6 to 2,
-            0 to 3, 1 to 3, 2 to 3, 4 to 3, 6 to 3,
-            3 to 4, 4 to 4, 6 to 4,
-            5 to 5,
-            3 to 6, 4 to 6, 6 to 6,
-        )
-        // Data modules, 5% smaller than a full cell and centred in it (subtler, lighter look).
-        val cell = u * 0.95f
-        val inset = u * 0.025f
-        for ((cx, cy) in cells) {
-            drawRect(color = tint, topLeft = Offset(cx * u + inset, cy * u + inset), size = Size(cell, cell))
-        }
     }
 }

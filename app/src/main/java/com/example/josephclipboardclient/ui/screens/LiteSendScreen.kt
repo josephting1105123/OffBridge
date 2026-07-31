@@ -163,7 +163,7 @@ fun LiteSendScreen(
                         Spacer(Modifier.width(dimens.spaceSm))
                         TotalSizeBox(totalSizeBytes)
                         Spacer(Modifier.weight(1f))
-                        CapsuleButton(stringResource(R.string.action_select), filled = false, enabled = selectedFiles.isNotEmpty(), fill = colors.card, textColor = colors.textPrimary, onClick = { onToggleSelectMode(true) })
+                        CapsuleButton(stringResource(R.string.action_edit), filled = false, enabled = selectedFiles.isNotEmpty(), fill = colors.card, textColor = colors.textPrimary, onClick = { onToggleSelectMode(true) })
                     }
                 }
 
@@ -361,11 +361,14 @@ fun LiteSendToScreen(
             ) {
                 items(devices) { device ->
                     // Per-device tri-state: Pair (unpaired) / Send (paired, idle) / Sending… (in flight).
+                    // Only one send runs at a time, so while any device is in flight every row's
+                    // action is disabled — the screen stays put either way, exited via Done.
                     DeviceSendCard(
                         name = device.name,
                         isWindows = device.isWindows,
                         isPaired = device.isPaired,
                         isSending = sendingIp == device.ip,
+                        sendEnabled = sendingIp == null,
                         onPair = { onPairDevice(device.ip, device.name) },
                         onSend = { onSendToDevice(device.ip) }
                     )

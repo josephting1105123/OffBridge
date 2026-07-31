@@ -177,6 +177,7 @@
     <string name="unknown">Desconocido</string>
     <string name="unknown_file">Archivo Desconocido</string>
     <string name="action_select_count">Seleccionar (%d)</string>
+    <string name="action_edit">Editar</string>
     <string name="toast_clipboard_is_empty">El portapapeles está vacío</string>
     <string name="toast_failed_to_read_clipboard">Error al leer el portapapeles</string>
     <string name="unknown_device">Dispositivo Desconocido</string>

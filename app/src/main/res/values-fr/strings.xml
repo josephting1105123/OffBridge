@@ -177,6 +177,7 @@
     <string name="unknown">Inconnu</string>
     <string name="unknown_file">Fichier inconnu</string>
     <string name="action_select_count">Sélectionner (%d)</string>
+    <string name="action_edit">Modifier</string>
     <string name="toast_clipboard_is_empty">Le presse-papiers est vide</string>
     <string name="toast_failed_to_read_clipboard">Échec de la lecture du presse-papiers</string>
     <string name="unknown_device">Appareil inconnu</string>
