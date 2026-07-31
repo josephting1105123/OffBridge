@@ -54,6 +54,39 @@ class TranslationParserTest {
         assertTrue(english["app_name"]?.isNotBlank() == true)
     }
 
+    /**
+     * Every locale must carry every English key. One logical string change fans out to ten blocks by
+     * hand, so "I added it to nine of them" is the failure mode this file has — and a missing key is
+     * invisible at runtime (getString silently falls back to English). All ten blocks are in parity
+     * today, so this can be a build gate rather than a note in a checklist.
+     */
+    @Test
+    fun everyLocaleCarriesEveryEnglishKey() {
+        val parsed = TranslationParser.parse(loadContent(), languageMap)
+        val english = parsed["English"] ?: error("English block missing")
+        for ((ui, _) in languageMap) {
+            val map = parsed[ui] ?: error("Missing translations for $ui")
+            val missing = english.keys - map.keys
+            assertTrue("$ui is missing ${missing.size} key(s): ${missing.take(8)}", missing.isEmpty())
+        }
+    }
+
+    /** The first-launch tour reads these six; an untranslated one shows English mid-tour. */
+    @Test
+    fun firstRunTourKeysResolveInEveryLocale() {
+        val parsed = TranslationParser.parse(loadContent(), languageMap)
+        val tourKeys = listOf(
+            "tour_pairing", "tour_clipboard", "tour_send_lan",
+            "tour_send_qr", "tour_receive", "tour_how_to_use",
+        )
+        for ((ui, _) in languageMap) {
+            val map = parsed[ui] ?: error("Missing translations for $ui")
+            for (key in tourKeys) {
+                assertTrue("$ui/$key missing or blank", map[key]?.isNotBlank() == true)
+            }
+        }
+    }
+
     @Test
     fun blankContentYieldsEmptyResult() {
         assertTrue(TranslationParser.parse("", languageMap).isEmpty())

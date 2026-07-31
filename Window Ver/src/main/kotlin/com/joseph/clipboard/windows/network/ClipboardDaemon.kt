@@ -10,6 +10,7 @@ import java.net.SocketException
 import kotlin.concurrent.thread
 import com.joseph.clipboard.windows.os.ClipboardManager
 import com.joseph.clipboard.windows.storage.CryptoEngine
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.SecurityVault
 
 class ClipboardDaemon(
@@ -18,28 +19,52 @@ class ClipboardDaemon(
     private val onClipboardDeleted: (String) -> Unit
 ) {
     val CLIPBOARD_PORT = Ports.CLIPBOARD
-    private var isRunning = false
-    // Written by the accept loop, read/closed by stop() from another thread — @Volatile so stop()
+    // @Volatile: written by start()/stop() on the caller's thread, read by the accept loop.
+    @Volatile private var isRunning = false
+    // Written by start(), read/closed by stop() from another thread — @Volatile so stop()
     // observes the bound socket and can actually close it (else the listener can stay bound).
     @Volatile private var serverSocket: ServerSocket? = null
+    @Volatile private var listener: Thread? = null
+
+    /** Last bind failure, or null while the listener is up. */
+    @Volatile var lastBindError: String? = null
+        private set
+
+    /** True while the port is bound and the accept loop is live. */
+    val isAlive: Boolean get() = isRunning
 
     // Upper bound on a single clipboard payload (base64 chars) — generous for real text
     // copies while preventing an unbounded read from exhausting the heap.
     private val MAX_CLIPBOARD_CHARS = 16 * 1024 * 1024
 
+    @Synchronized
     fun start() {
         if (isRunning) return
-        isRunning = true
 
-        thread(isDaemon = true, name = "Clipboard-Listener") {
-            // Capture the socket this run bound into a local. The finally must close only THIS
-            // socket — calling stop() would close whatever is in the serverSocket field, which a
-            // fast stop()/start() cycle may have already replaced with a freshly bound socket.
-            val socket = ServerSocket().apply {
+        // Bind on the CALLER's thread, and before arming isRunning. This bind used to sit inside the
+        // worker thread OUTSIDE its try block, so a BindException (port still held moments after a
+        // Restart Services) killed the thread with an uncaught exception while isRunning stayed true
+        // — every later start() then returned at the guard above, and incoming clipboard sync was
+        // dead for the rest of the process's life with nothing reported anywhere.
+        val socket = try {
+            ServerSocket().apply {
                 reuseAddress = true
                 bind(InetSocketAddress(CLIPBOARD_PORT))
             }
-            serverSocket = socket
+        } catch (e: Exception) {
+            lastBindError = e.message ?: e.toString()
+            System.err.println("ClipboardDaemon failed to bind port $CLIPBOARD_PORT: ${e.message}")
+            DiagLog.w("clipboard: bind of TCP $CLIPBOARD_PORT failed (${e.message}) — incoming clipboard sync stays off until a later start succeeds.")
+            return
+        }
+        serverSocket = socket
+        lastBindError = null
+        isRunning = true
+
+        listener = thread(isDaemon = true, name = "Clipboard-Listener") {
+            // The loop closes over the socket THIS run bound. The finally must close only that
+            // instance — closing the field would let a late-exiting old thread kill a socket a
+            // fresh start() has since published.
             try {
                 println("ClipboardDaemon started on port $CLIPBOARD_PORT")
 
@@ -57,10 +82,22 @@ class ClipboardDaemon(
                 } catch (e: Exception) {
                     // Ignore
                 }
+                // If the loop fell out while still flagged running, it died on its own rather than
+                // via stop() — clear the flag so a later start() rebinds instead of returning at its
+                // already-running guard. Without this the catch-all above is a second route into the
+                // exact silent-death this class was just fixed for. The identity check means a normal
+                // stop() (which nulls the field first) never takes this branch, so no lock is needed.
+                if (serverSocket === socket && isRunning) {
+                    isRunning = false
+                    serverSocket = null
+                    lastBindError = "listener exited unexpectedly"
+                    DiagLog.w("clipboard: listener thread exited unexpectedly — incoming clipboard sync is off until the next start")
+                }
             }
         }
     }
 
+    @Synchronized
     fun stop() {
         isRunning = false
         try {
@@ -69,6 +106,11 @@ class ClipboardDaemon(
             // Ignore
         }
         serverSocket = null
+        // Wait for the accept loop to actually leave before returning, so a restart's rebind can't
+        // race an old listener that still holds the port.
+        val leaving = listener
+        listener = null
+        if (leaving != null) runCatching { leaving.join(WORKER_JOIN_TIMEOUT_MS) }
     }
 
     private fun handleIncomingClipboard(clientSocket: Socket) {

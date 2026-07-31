@@ -1,5 +1,6 @@
 package com.joseph.clipboard.windows
 
+import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TransferHistoryManager
 import com.joseph.clipboard.windows.network.ClipboardDaemon
@@ -64,14 +65,19 @@ class DowngradeBlockedException(message: String) : Exception(message)
 private const val UPDATE_CHECK_COOLDOWN_MS = 24L * 60 * 60 * 1000
 
 /**
- * Hard wall-clock ceiling on [ClipboardAppController.checkForUpdates] — detection must resolve
- * within 5s, one way or the other. [UpdateChecker]'s own connect (2s) / request (4s) timeouts bound
- * the HttpClient's socket phases and normally fire first (their errors are more specific); this
- * backstop sits just above them to catch the hang vectors they can't (e.g. OS-level DNS resolution
- * or Windows proxy auto-detection stalling before a connection attempt even starts) — without it
- * the Updates page's "Checking for updates…" loader can spin forever.
+ * Hard wall-clock ceiling on [ClipboardAppController.checkForUpdates] — detection must resolve one
+ * way or the other. [UpdateChecker]'s own connect (3s) / request (8s) timeouts bound the HttpClient's
+ * socket phases and normally fire first (their errors are more specific); this backstop sits above
+ * them to catch the hang vectors they can't (e.g. OS-level DNS resolution or Windows proxy
+ * auto-detection stalling before a connection attempt even starts) — without it the Updates page's
+ * "Checking for updates…" loader can spin forever.
+ *
+ * It must stay ABOVE the checker's own worst case or it stops being a backstop and becomes the
+ * primary timeout: the checker retries once on timeout, so that worst case is 2 x 8s plus client
+ * setup. The old 5s sat *below* even a single 4s attempt plus connect, which is why raising the
+ * request budget alone would have changed nothing — this ceiling would have cut the retry off.
  */
-private const val UPDATE_CHECK_TIMEOUT_MS = 5_000L
+private const val UPDATE_CHECK_TIMEOUT_MS = 20_000L
 
 // Auto-resume backoff for a dropped incoming transfer (mirrors Android TransferDaemon:
 // MAX_AUTO_RESUME_ATTEMPTS / AUTO_RESUME_BASE_DELAY_MS exactly — same cap, same linear
@@ -179,6 +185,18 @@ class ClipboardAppController {
         Dispatchers.IO + SupervisorJob() +
             CoroutineExceptionHandler { _, e -> System.err.println("ClipboardAppController scope: uncaught $e") }
     )
+
+    /** Guards [restartServices] against overlapping runs (a double-click on the power menu). */
+    private val restartInProgress = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /**
+     * Guards [checkForUpdates] against stacking concurrent checks. The Updates page fires a forced
+     * check on every open and every Try-again press, and GitHub allows 60 unauthenticated requests
+     * per hour per address — so letting impatient presses queue up spends the very budget whose
+     * exhaustion produces [UpdateStatus.FailureKind.RATE_LIMITED]. A dropped request costs nothing:
+     * the in-flight check is about to publish a result to the same state the caller is watching.
+     */
+    private val updateCheckInProgress = java.util.concurrent.atomic.AtomicBoolean(false)
 
     // Daemons
     private val transferDaemon = TransferDaemon(
@@ -568,22 +586,53 @@ class ClipboardAppController {
         _trustedNodes.value = SecurityVault.getAllTrustedNodes().keys
     }
 
+    /**
+     * Power-menu "Restart Services": tear the four network daemons down and bring them back up.
+     *
+     * Each `stop()` now closes its socket AND joins its worker threads, so by the time this returns
+     * from the stop phase the ports are genuinely free — the previous version only flipped a flag and
+     * closed the socket, leaving the broadcaster/pruner asleep in their 3s/2s waits to wake up into
+     * the next run. The 500ms pause is kept as a small cushion for the OS to release the descriptors.
+     *
+     * Every daemon reports whether it rebound; a failure is written to diagnostics.log rather than
+     * disappearing, because the old failure mode (bind throws, daemon silently never runs again) was
+     * invisible in a windowed launch.
+     */
     fun restartServices() {
+        // Two overlapping restarts would interleave stop and start across daemons and could leave a
+        // port bound by the run that was supposed to be torn down. Double-clicks are just ignored.
+        if (!restartInProgress.compareAndSet(false, true)) return
         scope.launch {
-            // Stop all Network Daemons
-            transferDaemon.stop()
-            pairingDaemon.stop()
-            clipboardDaemon.stop()
-            fileTransferDaemon.stop()
+            try {
+                // Stop all Network Daemons
+                transferDaemon.stop()
+                pairingDaemon.stop()
+                clipboardDaemon.stop()
+                fileTransferDaemon.stop()
 
-            // Give sockets a moment to unbind
-            delay(500)
+                // Give sockets a moment to unbind
+                delay(500)
 
-            // Start Network Daemons again
-            transferDaemon.start()
-            pairingDaemon.start()
-            clipboardDaemon.start()
-            fileTransferDaemon.start()
+                // Start Network Daemons again
+                transferDaemon.start()
+                pairingDaemon.start()
+                clipboardDaemon.start()
+                fileTransferDaemon.start()
+
+                val dead = buildList {
+                    if (!transferDaemon.isAlive) add("discovery (${transferDaemon.lastBindError})")
+                    if (!pairingDaemon.isAlive) add("pairing (${pairingDaemon.lastBindError})")
+                    if (!clipboardDaemon.isAlive) add("clipboard (${clipboardDaemon.lastBindError})")
+                    if (!fileTransferDaemon.isAlive) add("file transfer (${fileTransferDaemon.lastBindError})")
+                }
+                if (dead.isEmpty()) {
+                    DiagLog.w("restart services: all four daemons rebound")
+                } else {
+                    DiagLog.w("restart services: FAILED to rebind ${dead.joinToString("; ")}")
+                }
+            } finally {
+                restartInProgress.set(false)
+            }
         }
     }
 
@@ -649,18 +698,26 @@ class ClipboardAppController {
             val elapsed = System.currentTimeMillis() - SecurityVault.getLastUpdateCheckEpochMillis()
             if (elapsed < UPDATE_CHECK_COOLDOWN_MS) return
         }
+        if (!updateCheckInProgress.compareAndSet(false, true)) return
         scope.launch {
-            _updateStatus.value = UpdateStatus.Checking
-            // UpdateChecker.check() is a blocking call. Run it on its own IO thread and race it
-            // against UPDATE_CHECK_TIMEOUT_MS instead of just awaiting it inline — a hang inside the
-            // blocking call can't be interrupted by cancellation, but this coroutine can still give
-            // up on it and unstick the UI; the abandoned thread dies on its own once the OS-level
-            // call eventually returns.
-            val pending = async(Dispatchers.IO) { UpdateChecker.check(AppVersion.VERSION) }
-            val result = withTimeoutOrNull(UPDATE_CHECK_TIMEOUT_MS) { pending.await() }
-                ?: UpdateStatus.CheckFailed("Update check timed out")
-            _updateStatus.value = result
-            SecurityVault.setLastUpdateCheckEpochMillis(System.currentTimeMillis())
+            try {
+                _updateStatus.value = UpdateStatus.Checking
+                // UpdateChecker.check() is a blocking call. Run it on its own IO thread and race it
+                // against UPDATE_CHECK_TIMEOUT_MS instead of just awaiting it inline — a hang inside
+                // the blocking call can't be interrupted by cancellation, but this coroutine can
+                // still give up on it and unstick the UI; the abandoned thread dies on its own once
+                // the OS-level call eventually returns.
+                val pending = async(Dispatchers.IO) { UpdateChecker.check(AppVersion.VERSION) }
+                val result = withTimeoutOrNull(UPDATE_CHECK_TIMEOUT_MS) { pending.await() }
+                    ?: UpdateStatus.CheckFailed(
+                        "Update check timed out",
+                        UpdateStatus.FailureKind.UNREACHABLE,
+                    )
+                _updateStatus.value = result
+                SecurityVault.setLastUpdateCheckEpochMillis(System.currentTimeMillis())
+            } finally {
+                updateCheckInProgress.set(false)
+            }
         }
     }
 
@@ -684,7 +741,17 @@ class ClipboardAppController {
                 UpdateInstaller.launchAndExit(installer) // does not return on success
             } catch (e: Exception) {
                 e.printStackTrace()
-                _updateStatus.value = UpdateStatus.CheckFailed(e.message ?: e.javaClass.simpleName)
+                // A failed DOWNLOAD, not a failed check — classify it so the card doesn't claim the
+                // release was unreadable. A transport failure is the user's network; anything else
+                // (bad status, disk, launch) is on our side and not something retrying will fix.
+                _updateStatus.value = UpdateStatus.CheckFailed(
+                    e.message ?: e.javaClass.simpleName,
+                    if (e is java.io.IOException) {
+                        UpdateStatus.FailureKind.UNREACHABLE
+                    } else {
+                        UpdateStatus.FailureKind.HTTP_ERROR
+                    },
+                )
             }
         }
     }
