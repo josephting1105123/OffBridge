@@ -30,28 +30,41 @@ object DiscoveryPolicy {
     /**
      * Should an inbound FILEBRIDGE_DISCOVERY probe get the usual unicast FILEBRIDGE_REPLY?
      *
-     * @param discoverable              the user's "Discoverable to other devices" setting.
-     * @param probeDeviceId             the probe's `did:` value, or null/blank when it carries none
-     *                                  (peers older than the token omit it).
-     * @param pairedDeviceIdForSenderIp `SecurityVault.getPairedDeviceId(context, senderIp)`.
-     * @param senderIsTrusted           senderIp appears in `SecurityVault.getTrustedNodes(context)`.
+     * @param discoverable      the user's "Discoverable to other devices" setting.
+     * @param probeDeviceId     the probe's `did:` value, or null/blank when it carries none (peers
+     *                          older than the token omit it).
+     * @param senderIp          the datagram's source address — never the payload-declared IP, so a
+     *                          peer cannot claim a paired address it isn't calling from.
+     * @param trustedIps        `SecurityVault.getTrustedNodes(context)`.
+     * @param pairedDeviceIdFor `SecurityVault.getPairedDeviceId(context, ip)` for a trusted IP, null
+     *                          for records written before device ids existed.
      */
     fun shouldReplyToProbe(
         discoverable: Boolean,
         probeDeviceId: String?,
-        pairedDeviceIdForSenderIp: String?,
-        senderIsTrusted: Boolean
+        senderIp: String,
+        trustedIps: Set<String>,
+        pairedDeviceIdFor: (String) -> String?
     ): Boolean {
         if (discoverable) return true
         val probed = probeDeviceId?.takeIf { it.isNotBlank() }
-        // A `did:`-bearing probe is matched on the stable id, so a paired peer is still answered
-        // after it moved to a new DHCP address. Probes without one predate the token, so fall back
-        // to the source address. Anything else gets silence.
-        return if (probed != null) {
-            probed == pairedDeviceIdForSenderIp?.takeIf { it.isNotBlank() }
-        } else {
-            senderIsTrusted
+        if (probed != null) {
+            // Matched against EVERY pairing record, not just the one filed under senderIp: the whole
+            // point of the id is to survive the peer moving to a new DHCP address, which is exactly
+            // when its old record is filed under an address it no longer calls from. A did matching
+            // no pairing does NOT fall through to the address check — the peer told us which device
+            // it is, and it isn't one of ours.
+            //
+            // Residual exposure, accepted: a `did:` travels in clear in every broadcast a visible
+            // peer sends, so a LAN attacker who harvested one can replay it to confirm a hidden
+            // device exists. The reply discloses only what that device broadcasts when visible, and
+            // the setting's promise is "don't appear in strangers' device lists", not resistance to
+            // an active on-link attacker.
+            return trustedIps.any { ip -> pairedDeviceIdFor(ip)?.takeIf { it.isNotBlank() } == probed }
         }
+        // No usable id (peer predates the token, or sent one that failed validation): the source
+        // address is all there is to go on.
+        return senderIp in trustedIps
     }
 }
 
@@ -68,17 +81,15 @@ object LanDiscovery {
      * receive loop.
      */
     private fun mayAnswerProbe(context: Context, senderIp: String, probeDeviceId: String?): Boolean {
+        // Short-circuit before touching the vault at all: the discoverable case is the common one and
+        // getTrustedNodes decrypts the whole pairing store, on a path that runs per inbound datagram.
         if (SecurityVault.isDiscoverable(context)) return true
-        // Look up only the side the policy will actually consult: getTrustedNodes decrypts the whole
-        // pairing store, and this runs once per inbound datagram.
-        val probed = probeDeviceId?.takeIf { it.isNotBlank() }
         return DiscoveryPolicy.shouldReplyToProbe(
             discoverable = false,
-            probeDeviceId = probed,
-            pairedDeviceIdForSenderIp =
-                if (probed != null) SecurityVault.getPairedDeviceId(context, senderIp) else null,
-            senderIsTrusted =
-                probed == null && SecurityVault.getTrustedNodes(context).contains(senderIp)
+            probeDeviceId = probeDeviceId,
+            senderIp = senderIp,
+            trustedIps = SecurityVault.getTrustedNodes(context).toSet(),
+            pairedDeviceIdFor = { ip -> SecurityVault.getPairedDeviceId(context, ip) }
         )
     }
 
