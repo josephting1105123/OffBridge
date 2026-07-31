@@ -278,11 +278,11 @@ class FileTransferFragment : Fragment() {
         input.hint = getString(R.string.transfer_add_text_hint)
         input.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
         // Bound the box so long text scrolls inside it instead of growing the dialog off-screen:
-        // start ~4 lines tall, cap at 6, then scroll internally. maxLines caps the WRAP_CONTENT
-        // height, so no fixed pixel height is needed.
+        // open at a single row, grow with the text to 7, then scroll internally. maxLines caps the
+        // WRAP_CONTENT height, so no fixed pixel height is needed.
         input.gravity = Gravity.TOP or Gravity.START
-        input.minLines = 4
-        input.maxLines = 6
+        input.minLines = 1
+        input.maxLines = 7
         input.setHorizontallyScrolling(false)
         input.isVerticalScrollBarEnabled = true
 

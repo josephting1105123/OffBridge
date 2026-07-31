@@ -57,6 +57,11 @@ object HotspotCredentialsDialog {
         val etPsk = EditText(context).apply {
             hint = context.getString(R.string.settings_hotspot_password_hint)
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            // setInputType applies MONOSPACE to any password variation, which rendered this field
+            // wide and ragged beside the SSID field above. Borrow the SSID field's face back — it
+            // must come AFTER inputType or setInputType overwrites it. Covers hint, typed text and
+            // the masked bullets alike, since the typeface is per-TextView.
+            typeface = etSsid.typeface
             setSingleLine()
             // Force masked regardless of inputType/setSingleLine ordering quirks on some keyboards —
             // the password must be HIDDEN by default, toggled only via the (unchecked) Show checkbox.

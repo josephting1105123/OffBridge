@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -7,39 +8,22 @@
     android:layout_marginStart="10dp"
     android:layout_marginEnd="10dp">
 
+    <!-- Fake QR display: the same unified ic_qr_frame mark the real screens use, on the white plate
+         a scannable code is always printed on. The tint is set explicitly to black — ic_qr_frame's
+         own android:tint resolves to colorControlNormal, which on the dark theme is near-white and
+         would vanish against this plate. -->
     <FrameLayout
         android:layout_width="140dp"
         android:layout_height="140dp"
         android:background="#FFFFFF">
 
-        <!-- Stylized fake QR: four quadrant blocks -->
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="top|start"
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_margin="14dp"
-            android:background="#000000"/>
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="top|end"
-            android:layout_margin="14dp"
-            android:background="#000000"/>
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="bottom|start"
-            android:layout_margin="14dp"
-            android:background="#000000"/>
-
-        <View
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="22dp"
-            android:background="#000000"/>
+            android:src="@drawable/ic_qr_frame"
+            app:tint="#000000"
+            android:contentDescription="@null" />
     </FrameLayout>
 
     <TextView

@@ -745,6 +745,13 @@ class QrScannerFragment : Fragment() {
             )
             return true
         }
+        // (c) LAN-only sender: it published no joinable network at all, so no Wi-Fi Direct / SoftAP
+        // tier could ever have run and "keep both phones close, check Bluetooth" is misleading. The
+        // only fix is to put this phone on the sender's network, which is what this copy says.
+        if (payload.isLanOnly()) {
+            tvStatus.text = getString(R.string.offgrid_error_lan_unreachable)
+            return false
+        }
         // No hotspot/Wi-Fi-radio guidance applied — show the generic copy, or name the Bluetooth
         // coordination link when that's the likely cause (sender's CONTROL_FAILED / local degrade).
         tvStatus.text = getString(
@@ -1028,14 +1035,29 @@ class QrScannerFragment : Fragment() {
         // a fast failure falls through to the Wi-Fi Direct ladder.
         val lanIp = payload.lanIp
         if (lanIp != null) {
-            TransportDiag.log("LAN: probing $lanIp:${payload.port} over current network…")
             uiScope.launch {
-                val conn = withContext(Dispatchers.IO) { probeLanConnect(lanIp, payload.port) }
+                // Only probe when some non-cellular interface actually puts the sender's address
+                // on-link. Without this the probe runs on whatever the default network happens to
+                // be — a phone on mobile data with Wi-Fi off spent 2.5s connecting to a 192.168.x
+                // address it has no route to before falling through to the ladder.
+                val onLink = withContext(Dispatchers.IO) {
+                    Net.hasOnLinkRoute(Net.localIpv4Cidrs(), lanIp)
+                }
+                if (!isAdded || state != ReceiverState.CONNECTING) return@launch
+                val conn = if (onLink) {
+                    TransportDiag.log("LAN: probing $lanIp:${payload.port} over current network…")
+                    withContext(Dispatchers.IO) { probeLanConnect(lanIp, payload.port) }
+                } else {
+                    TransportDiag.log("LAN: no local address on $lanIp's subnet — skipping the probe")
+                    null
+                }
                 if (!isAdded || state != ReceiverState.CONNECTING) {
                     conn?.let { try { it.close() } catch (_: Exception) {} }
                     return@launch
                 }
-                TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable ✓ (same network)" else "unreachable → ladder"}")
+                if (onLink) {
+                    TransportDiag.log("LAN: $lanIp:${payload.port} ${if (conn != null) "reachable ✓ (same network)" else "unreachable → ladder"}")
+                }
                 when {
                     conn != null -> startHandshake(payload, LanRoute(conn))
                     payload.isLanOnly() -> {

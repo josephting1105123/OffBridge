@@ -62,9 +62,8 @@ class BleControlServer(context: Context) : ControlChannel {
     override var onMessage: ((ByteArray) -> Unit)? = null
     override var onClosed: (() -> Unit)? = null
 
-    private val reassembler = GattReassembler { frame ->
-        mainHandler.post { onMessage?.invoke(frame) }
-    }
+    /** Fed only from the main thread (see [onCharacteristicWriteRequest]), as its contract requires. */
+    private val reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
 
     private val sendQueue = ArrayDeque<ByteArray>()
     @Volatile private var notifyInFlight = false
@@ -79,6 +78,12 @@ class BleControlServer(context: Context) : ControlChannel {
      */
     private var notifyRetries = 0
     private val NOTIFY_RETRY_TOKEN = Any()
+
+    /**
+     * The chunk currently handed to the stack. Kept so a failed notification can be put back at the
+     * head of the queue instead of leaving a hole in the frame. Main thread only.
+     */
+    private var inFlightChunk: ByteArray? = null
 
     companion object {
         private const val TAG = "OffGridBle"
@@ -158,7 +163,11 @@ class BleControlServer(context: Context) : ControlChannel {
             }
             if (closed || characteristic.uuid != ControlProtocol.CHAR_RX_UUID) return
             if (clientDevice?.address != device.address) return
-            value?.let { reassembler.accept(it) }
+            // Copy and hop to main: reassembly is single-threaded by contract and onMessage is
+            // delivered there. mainHandler.post preserves FIFO and the ATT writes already arrive in
+            // order, so chunk order survives.
+            val chunk = value?.copyOf() ?: return
+            mainHandler.post { if (!closed) reassembler.accept(chunk) }
         }
 
         override fun onDescriptorWriteRequest(
@@ -167,20 +176,42 @@ class BleControlServer(context: Context) : ControlChannel {
             preparedWrite: Boolean, responseNeeded: Boolean,
             offset: Int, value: ByteArray?
         ) {
+            var justEnabled = false
             if (descriptor.uuid == ControlProtocol.CCCD_UUID) {
                 notificationsEnabled =
                     value contentEquals BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                justEnabled = notificationsEnabled
             }
             if (responseNeeded) {
                 try {
                     gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null)
                 } catch (_: Exception) {}
             }
+            // pumpQueue bails out while notifications are off, so anything queued before the central
+            // subscribed would sit there forever without this nudge.
+            if (justEnabled) mainHandler.post { pumpQueue() }
         }
 
         override fun onNotificationSent(device: BluetoothDevice, status: Int) {
-            notifyInFlight = false
-            pumpQueue()
+            // Binder thread → main, so the congestion retry (which runs on main) and this are never
+            // two writers racing for the head of the queue.
+            mainHandler.post {
+                if (closed) return@post
+                notifyInFlight = false
+                val chunk = inFlightChunk
+                inFlightChunk = null
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    // The chunk did not reach the central. Advancing over it leaves a hole in the
+                    // frame, which reassembly now detects and discards — so the whole HELLO_ACK
+                    // would be lost. Put it back instead; a retransmit is deduplicated by index.
+                    Log.i(TAG, "notify failed status=$status — re-queuing the chunk")
+                    chunk?.let { synchronized(sendQueue) { sendQueue.addFirst(it) } }
+                    scheduleCongestionRetry()
+                    return@post
+                }
+                notifyRetries = 0
+                pumpQueue()
+            }
         }
     }
 
@@ -263,15 +294,17 @@ class BleControlServer(context: Context) : ControlChannel {
         }
     }
 
-    @Suppress("DEPRECATION")
     override fun send(frame: ByteArray) {
         if (closed) return
         synchronized(sendQueue) {
             GattChunker.split(frame, mtu).forEach { sendQueue.add(it) }
         }
-        pumpQueue()
+        // [ControlChannel] accepts send from any thread; the pump stays main-thread-confined so
+        // there is exactly one writer touching txCharacteristic and the queue's head.
+        mainHandler.post { pumpQueue() }
     }
 
+    /** Dispatches one chunk. Main thread only. */
     @Suppress("DEPRECATION")
     private fun pumpQueue() {
         if (closed || notifyInFlight || !notificationsEnabled) return
@@ -279,6 +312,7 @@ class BleControlServer(context: Context) : ControlChannel {
         val tx = txCharacteristic ?: return
         val chunk = synchronized(sendQueue) { sendQueue.poll() } ?: return
         notifyInFlight = true
+        inFlightChunk = chunk
         try {
             tx.value = chunk
             // notifyCharacteristicChanged returns false on GATT congestion; in that
@@ -286,15 +320,17 @@ class BleControlServer(context: Context) : ControlChannel {
             // re-queue the unsent chunk at the front, and re-post pumpQueue ourselves
             // — otherwise the send queue stalls forever.
             val ok = gattServer?.notifyCharacteristicChanged(device, tx, false) == true
-            if (ok) {
-                notifyRetries = 0
-            } else {
+            if (!ok) {
+                // notifyRetries is reset by a SUCCESSFUL onNotificationSent, not here: a chunk the
+                // stack accepted but never delivered must still count against the retry cap.
                 notifyInFlight = false
+                inFlightChunk = null
                 synchronized(sendQueue) { sendQueue.addFirst(chunk) }
                 scheduleCongestionRetry()
             }
         } catch (_: Exception) {
             notifyInFlight = false
+            inFlightChunk = null
             // The chunk was already polled off the queue; put it back so the
             // retry below does not silently drop it.
             synchronized(sendQueue) { sendQueue.addFirst(chunk) }
@@ -333,6 +369,9 @@ class BleControlServer(context: Context) : ControlChannel {
         try { gattServer?.close() } catch (_: Exception) {}
         gattServer = null
         clientDevice = null
+        notifyInFlight = false
+        inFlightChunk = null
+        notifyRetries = 0
         synchronized(sendQueue) { sendQueue.clear() }
     }
 }

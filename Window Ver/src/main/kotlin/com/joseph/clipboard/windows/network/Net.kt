@@ -16,6 +16,19 @@ object Ports {
     const val PAIRING = 65435
 }
 
+/**
+ * Per-thread cap on how long a daemon's `stop()` waits for its worker to leave its loop before
+ * giving up on it. Every worker is either sleeping (interrupted by stop) or blocked in
+ * accept()/receive() (unblocked by the socket close), so the join normally returns in microseconds;
+ * the cap only bounds the pathological case, so a wedged worker degrades to one leaked thread
+ * instead of freezing the caller. Shared by all four daemons so they can't drift apart.
+ *
+ * Kept small because `stop()` is not only on the Restart Services path: the window-close
+ * DisposableEffect calls it on the UI thread, and the JVM shutdown hook calls it on exit. Six
+ * workers x this value is the worst case either of those can stall for.
+ */
+internal const val WORKER_JOIN_TIMEOUT_MS = 500L
+
 object Net {
     /** Connect, send UTF-8 payload (caller includes trailing \n), flush, close. Returns true on success. */
     fun sendString(ip: String, port: Int, payload: String, connectTimeoutMs: Int = 3000): Boolean {

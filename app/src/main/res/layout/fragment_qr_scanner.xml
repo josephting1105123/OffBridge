@@ -436,6 +436,10 @@
                 android:textStyle="bold"
                 android:gravity="center" />
 
+            <!-- maxLines=1 + uniform autosize: the label is the longest string on this sheet and
+                 several locales (de/ru) overflow the ~208dp card at 320dp width. Without a line cap
+                 it wrapped and the second line was clipped by the fixed 52dp height; the autosize
+                 floor keeps it legible instead of shrinking without limit. -->
             <Button
                 android:id="@+id/btnBlockedDisconnectWifi"
                 style="@style/Widget.App.Button"
@@ -445,6 +449,11 @@
                 android:text="@string/offgrid_blocked_disconnect_wifi"
                 android:backgroundTint="?attr/appNavBarColor"
                 android:textColor="?attr/appTextPrimaryColor"
+                android:maxLines="1"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="11sp"
+                android:autoSizeMaxTextSize="16sp"
+                android:autoSizeStepGranularity="1sp"
                 android:gravity="center" />
 
             <LinearLayout
@@ -477,6 +486,7 @@
                     android:background="#33FFFFFF" />
             </LinearLayout>
 
+            <!-- Same treatment as the sibling above: ru/de run this label past the card width too. -->
             <Button
                 android:id="@+id/btnBlockedTurnOffHotspot"
                 style="@style/Widget.App.Button"
@@ -485,6 +495,11 @@
                 android:text="@string/offgrid_blocked_turn_off_hotspot"
                 android:backgroundTint="?attr/appGreen"
                 android:textColor="#000000"
+                android:maxLines="1"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="11sp"
+                android:autoSizeMaxTextSize="16sp"
+                android:autoSizeStepGranularity="1sp"
                 android:gravity="center" />
 
             <TextView

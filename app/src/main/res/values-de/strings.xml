@@ -177,6 +177,7 @@
     <string name="unknown">Unbekannt</string>
     <string name="unknown_file">Unbekannte Datei</string>
     <string name="action_select_count">Auswählen (%d)</string>
+    <string name="action_edit">Bearbeiten</string>
     <string name="toast_clipboard_is_empty">Zwischenablage ist leer</string>
     <string name="toast_failed_to_read_clipboard">Zwischenablage konnte nicht gelesen werden</string>
     <string name="unknown_device">Unbekanntes Gerät</string>
@@ -594,7 +595,7 @@
     <string name="offgrid_warn_hotspot_on">Ihr mobiler Hotspot ist an. Dies kann verhindern, dass Sie über Wi-Fi Direct empfangen. Schalten Sie ihn vor dem Empfangen aus.</string>
     <string name="action_open_hotspot_settings">Hotspot-Einstellungen</string>
     <string name="offgrid_blocked_title">Dateien können derzeit nicht empfangen werden</string>
-    <string name="offgrid_blocked_disconnect_wifi">Vom aktuellen Wi-Fi trennen</string>
+    <string name="offgrid_blocked_disconnect_wifi">WLAN trennen</string>
     <string name="offgrid_blocked_turn_off_hotspot">Hotspot ausschalten</string>
     <string name="offgrid_blocked_body">Ihr Wi-Fi ist mit einem anderen Netzwerk verbunden und Ihr Hotspot ist an, daher kann die Übertragung nicht abgeschlossen werden. Führen Sie eine der oben genannten Aktionen aus und kehren Sie dann hierher zurück.</string>
     <string name="label_or">oder</string>

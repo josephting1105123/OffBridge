@@ -22,6 +22,7 @@ import android.util.AttributeSet
 import android.view.PixelCopy
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -209,6 +210,76 @@ class TutorialOverlayView @JvmOverloads constructor(
     /** When false, tapping the dim background does NOT advance — used by the forced tour. */
     var advanceOnOutsideTap: Boolean = true
 
+    // --- Host-settling watcher -----------------------------------------------------------------
+    // A step can be raised while the host is still animating the target into place — the final tour
+    // step expands the power-menu bottom sheet and spotlights the Lite/Pro toggle inside it. Two
+    // things went wrong there, and both are timing, not geometry:
+    //   * a sheet settle is offsetTopAndBottom, NOT a layout pass, so the doOnLayout re-resolve in
+    //     showStep never fires again and the spotlight keeps the rect it computed mid-slide — which
+    //     sat past the bottom of the screen and came back clipped by the coerceAtMost clamps;
+    //   * the frost snapshot was taken from onAttachedToWindow, i.e. during that same slide, baking
+    //     a half-drawn ghost of the moving sheet into the blur.
+    // This pre-draw watcher fixes both: it re-resolves the spotlight whenever the target moves, and
+    // holds the one-shot frost capture until the target has stopped moving.
+    private val watchLoc = IntArray(2)
+    private var lastWatchX = Int.MIN_VALUE
+    private var lastWatchY = Int.MIN_VALUE
+    private var lastWatchW = -1
+    private var lastWatchH = -1
+    private var frostRequested = false
+    private var frostStillFrames = 0
+    private var frostDeadlineUptime = 0L
+    private var watcherInstalled = false
+    /** Min-height currently in force (set once a step expands its spotlight after a placeholder
+     *  swap) so a follow-up re-resolve doesn't silently shrink the hole back to the base size. */
+    private var activeMinHeightOverrideDp: Int? = null
+
+    private val settleWatcher = ViewTreeObserver.OnPreDrawListener {
+        val watched = watchedView()
+        if (watched == null || !watched.isAttachedToWindow) {
+            // Nothing to wait on (no resolvable target): take the snapshot rather than stay hidden.
+            requestFrostOnce()
+        } else {
+            watched.getLocationInWindow(watchLoc)
+            val moved = watchLoc[0] != lastWatchX || watchLoc[1] != lastWatchY ||
+                watched.width != lastWatchW || watched.height != lastWatchH
+            lastWatchX = watchLoc[0]; lastWatchY = watchLoc[1]
+            lastWatchW = watched.width; lastWatchH = watched.height
+
+            val step = currentStep
+            if (moved && step != null && currentTargetView === watched) {
+                // snapSpotlight: the hole rides along with the target instead of chasing it with a
+                // 300ms glide restarted on every frame of the host's animation.
+                updateSpotlightForView(
+                    watched, step,
+                    inflatePlaceholder = false,
+                    minHeightOverrideDp = activeMinHeightOverrideDp,
+                    snapSpotlight = true,
+                )
+            }
+
+            if (!frostRequested) {
+                frostStillFrames = if (moved) 0 else frostStillFrames + 1
+                if (frostStillFrames >= FROST_STILL_FRAMES ||
+                    android.os.SystemClock.uptimeMillis() >= frostDeadlineUptime
+                ) {
+                    requestFrostOnce()
+                }
+            }
+        }
+        true
+    }
+
+    /** The view the current step spotlights, or — before the first step resolves — the one it will. */
+    private fun watchedView(): View? = currentTargetView
+        ?: steps.firstOrNull()?.let { it.targetViewProvider?.invoke() ?: it.targetView }
+
+    private fun requestFrostOnce() {
+        if (frostRequested) return
+        frostRequested = true
+        beginFrostCapture()
+    }
+
     init {
         // Hardware layer required for PorterDuff CLEAR to work correctly
         setLayerType(LAYER_TYPE_HARDWARE, null)
@@ -255,11 +326,14 @@ class TutorialOverlayView @JvmOverloads constructor(
         this.totalStepsOverride = totalStepsOverride
         currentIndex = 0
 
-        // Entrance: fade the whole backdrop in (~180ms) so the dim/frost never pops on.
-        if (!reducedMotion()) {
-            alpha = 0f
-            animate().alpha(1f).setDuration(180).start()
-        }
+        // Stay hidden until the frost snapshot lands: PixelCopy reads the whole window, so a visible
+        // overlay would frost its own dim, and capturing before the host settles freezes a ghost of
+        // whatever is still animating in behind us. The watcher below decides when that moment is;
+        // the deadline is the backstop for a host that never stops moving.
+        visibility = INVISIBLE
+        alpha = if (reducedMotion()) 1f else 0f
+        frostDeadlineUptime = android.os.SystemClock.uptimeMillis() + FROST_SETTLE_TIMEOUT_MS
+        installSettleWatcher()
 
         if (isLaidOut && width > 0 && height > 0) {
             showStep(currentIndex)
@@ -268,9 +342,26 @@ class TutorialOverlayView @JvmOverloads constructor(
         }
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        beginFrostCapture()
+    private fun installSettleWatcher() {
+        if (watcherInstalled) return
+        watcherInstalled = true
+        viewTreeObserver.addOnPreDrawListener(settleWatcher)
+    }
+
+    private fun removeSettleWatcher() {
+        if (!watcherInstalled) return
+        watcherInstalled = false
+        // removeOnPreDrawListener throws if the observer was already killed with its window.
+        try { viewTreeObserver.removeOnPreDrawListener(settleWatcher) } catch (_: IllegalStateException) { }
+    }
+
+    /** Make the overlay visible, fading it in the first time (entrance ~180ms). */
+    private fun revealBackdrop() {
+        visibility = VISIBLE
+        if (alpha < 1f) {
+            animate().cancel()
+            animate().alpha(1f).setDuration(180).start()
+        }
     }
 
     /**
@@ -280,15 +371,19 @@ class TutorialOverlayView @JvmOverloads constructor(
      * SurfaceView content (the QR scanner's camera preview) frosts correctly too.
      */
     private fun beginFrostCapture() {
-        val root = rootView ?: return
-        if (root.width == 0 || root.height == 0) return
+        val root = rootView
+        if (root == null || root.width == 0 || root.height == 0) {
+            // No window to copy — go dim-only rather than leave the tour invisible.
+            revealBackdrop()
+            return
+        }
         val dest = Bitmap.createBitmap(
             (root.width / FROST_DOWNSCALE).coerceAtLeast(1),
             (root.height / FROST_DOWNSCALE).coerceAtLeast(1),
             Bitmap.Config.ARGB_8888
         )
         visibility = INVISIBLE
-        val reveal = Runnable { visibility = VISIBLE }
+        val reveal = Runnable { revealBackdrop() }
         postDelayed(reveal, 120)
         val onDone: (Boolean) -> Unit = { ok ->
             removeCallbacks(reveal)
@@ -302,7 +397,7 @@ class TutorialOverlayView @JvmOverloads constructor(
                 )
                 frostBitmap = Bitmap.createScaledBitmap(half, dest.width, dest.height, true)
             }
-            visibility = VISIBLE
+            revealBackdrop()
             invalidate()
         }
         try {
@@ -343,6 +438,7 @@ class TutorialOverlayView @JvmOverloads constructor(
     private fun showStep(index: Int) {
         if (index > 0) steps[index - 1].onHide?.invoke()
         clearPointerAndSecondary()
+        activeMinHeightOverrideDp = null
 
         val step = steps[index]
         currentStep = step
@@ -379,7 +475,9 @@ class TutorialOverlayView @JvmOverloads constructor(
         targetView: View,
         step: TutorialStep,
         inflatePlaceholder: Boolean = true,
-        minHeightOverrideDp: Int? = null
+        minHeightOverrideDp: Int? = null,
+        /** Skip the 300ms glide — used when following a target the host is still animating. */
+        snapSpotlight: Boolean = false
     ) {
         val loc = IntArray(2)
         targetView.getLocationInWindow(loc)
@@ -487,7 +585,13 @@ class TutorialOverlayView @JvmOverloads constructor(
             }
         }
 
-        animateSpotlight()
+        if (snapSpotlight) {
+            spotlightAnimator?.cancel()
+            drawnRect.set(spotlightRect)
+            invalidate()
+        } else {
+            animateSpotlight()
+        }
 
         positionTooltip(step)
     }
@@ -546,7 +650,14 @@ class TutorialOverlayView @JvmOverloads constructor(
             val alignBottom = (loc[1] - overlayLoc[1] + bottomAlignView.height).toFloat()
             tooltipY = (alignBottom - tooltipH).coerceAtLeast(minTop)
         } else if (step.tooltipAboveSpotlight) {
-            tooltipY = (spotlightRect.top - margin - tooltipH).coerceAtLeast(minTop)
+            val above = spotlightRect.top - margin - tooltipH
+            // Clamping a too-tall tooltip up to minTop used to park the caption card ON TOP of the
+            // spotlight on short screens. If it genuinely doesn't fit above, drop it below instead.
+            tooltipY = if (above >= minTop) {
+                above
+            } else {
+                (spotlightRect.bottom + margin).coerceAtMost(maxOf(minTop, maxTop))
+            }
         }
         if (step.tooltipPinTopMarginDp != null) {
             tooltipY = (step.tooltipPinTopMarginDp * resources.displayMetrics.density).coerceAtLeast(minTop)
@@ -585,6 +696,7 @@ class TutorialOverlayView @JvmOverloads constructor(
     fun dismiss() {
         currentStep?.onHide?.invoke()
         clearPointerAndSecondary()
+        removeSettleWatcher()
         val parent = this.parent as? ViewGroup
         parent?.removeView(this)
         onDismissed?.invoke()
@@ -649,6 +761,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         spotlightAnimator?.cancel()
         spotlightAnimator = null
         clearPointerAndSecondary()
+        removeSettleWatcher()
         frostBitmap = null
         super.onDetachedFromWindow()
     }
@@ -852,6 +965,7 @@ class TutorialOverlayView @JvmOverloads constructor(
         val step = currentStep
         val tv = currentTargetView
         if (step?.secondaryMinSpotlightHeightDp != null && tv != null) {
+            activeMinHeightOverrideDp = step.secondaryMinSpotlightHeightDp
             updateSpotlightForView(
                 tv, step,
                 inflatePlaceholder = false,
@@ -885,6 +999,10 @@ class TutorialOverlayView @JvmOverloads constructor(
     }
 
     companion object {
+        /** Consecutive still frames the spotlight target must hold before the frost is captured. */
+        private const val FROST_STILL_FRAMES = 3
+        /** Backstop: capture anyway if the host never stops moving. */
+        private const val FROST_SETTLE_TIMEOUT_MS = 900L
         /** Window snapshot downscale factor — the base of the frost blur. */
         private const val FROST_DOWNSCALE = 6
         private const val DIM_FLAT = 0x99000000.toInt()    // 60% black — dim must carry layering alone

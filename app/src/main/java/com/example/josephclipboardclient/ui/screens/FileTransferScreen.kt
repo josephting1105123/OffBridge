@@ -245,7 +245,7 @@ fun FileTransferScreen(
                         Spacer(Modifier.width(dimens.spaceSm))
                         TotalSizeBox(totalSizeBytes)
                         Spacer(Modifier.weight(1f))
-                        CapsuleButton(stringResource(R.string.action_select), filled = false, enabled = selectedFiles.isNotEmpty(), fill = colors.card, textColor = colors.textPrimary, onClick = { onToggleSelectMode(true) })
+                        CapsuleButton(stringResource(R.string.action_edit), filled = false, enabled = selectedFiles.isNotEmpty(), fill = colors.card, textColor = colors.textPrimary, onClick = { onToggleSelectMode(true) })
                     }
                 }
 

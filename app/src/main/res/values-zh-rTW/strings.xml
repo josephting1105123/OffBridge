@@ -164,6 +164,7 @@
     <string name="unknown">未知</string>
     <string name="unknown_file">未知檔案</string>
     <string name="action_select_count">選擇 (%d)</string>
+    <string name="action_edit">編輯</string>
     <string name="toast_clipboard_is_empty">剪貼簿為空</string>
     <string name="toast_failed_to_read_clipboard">無法讀取剪貼簿</string>
     <string name="unknown_device">未知裝置</string>
@@ -581,7 +582,7 @@
     <string name="offgrid_warn_hotspot_on">您的行動熱點已開啟。這可能會妨礙您透過 Wi-Fi Direct 接收。請在接收前將其關閉。</string>
     <string name="action_open_hotspot_settings">熱點設定</string>
     <string name="offgrid_blocked_title">目前無法接收檔案</string>
-    <string name="offgrid_blocked_disconnect_wifi">中斷與目前 Wi-Fi 的連線</string>
+    <string name="offgrid_blocked_disconnect_wifi">中斷 Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">關閉熱點</string>
     <string name="offgrid_blocked_body">您的 Wi-Fi 已連線至其他網路，且您的熱點已開啟，因此無法完成傳輸。請執行上述其中一項，然後返回此處。</string>
     <string name="label_or">或</string>

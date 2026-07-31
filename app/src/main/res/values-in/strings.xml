@@ -177,6 +177,7 @@
     <string name="unknown">Tidak diketahui</string>
     <string name="unknown_file">File Tidak Diketahui</string>
     <string name="action_select_count">Pilih (%d)</string>
+    <string name="action_edit">Edit</string>
     <string name="toast_clipboard_is_empty">Papan klip kosong</string>
     <string name="toast_failed_to_read_clipboard">Gagal membaca papan klip</string>
     <string name="unknown_device">Perangkat Tidak Diketahui</string>
@@ -597,7 +598,7 @@
     <string name="offgrid_warn_hotspot_on">Hotspot seluler Anda aktif. Ini dapat menghentikan Anda menerima melalui Wi-Fi Direct. Matikan sebelum menerima.</string>
     <string name="action_open_hotspot_settings">Pengaturan hotspot</string>
     <string name="offgrid_blocked_title">Tidak dapat menerima file sekarang</string>
-    <string name="offgrid_blocked_disconnect_wifi">Putuskan dari Wi-Fi saat ini</string>
+    <string name="offgrid_blocked_disconnect_wifi">Putuskan Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Matikan hotspot</string>
     <string name="offgrid_blocked_body">Wi-Fi Anda terhubung ke jaringan lain dan hotspot Anda aktif, sehingga transfer tidak dapat diselesaikan. Lakukan salah satu hal di atas, lalu kembali ke sini.</string>
     <string name="label_or">atau</string>

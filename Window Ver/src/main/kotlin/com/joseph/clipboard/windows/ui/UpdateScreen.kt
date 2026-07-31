@@ -150,6 +150,8 @@ fun UpdateScreen(appController: ClipboardAppController) {
                     onCheckAgain = null,
                 )
                 is UpdateStatus.CheckFailed -> UpdateFailedCard(
+                    kind = s.kind,
+                    reason = s.reason,
                     onRetry = { checkCycle++ },
                 )
                 else -> {}
@@ -295,9 +297,34 @@ private fun UpdateResultCard(
     }
 }
 
-/** The failed-check glass card: reason line + a Try-again brand button. Ring keeps flowing above. */
+/**
+ * The failed-check glass card. Every failure used to render the same "Couldn't check for updates"
+ * with a Try-again button, so a dropped network, GitHub throttling this address, and a malformed
+ * release all looked identical — and on the throttled one, Try-again is actively the wrong advice
+ * (each press spends another of the 60 unauthenticated requests GitHub allows per hour). The
+ * headline and hint now follow [UpdateStatus.FailureKind]; [reason] stays as the small raw detail
+ * (HTTP code, exception text) for anyone reporting a problem.
+ */
 @Composable
-private fun UpdateFailedCard(onRetry: () -> Unit) {
+private fun UpdateFailedCard(
+    kind: UpdateStatus.FailureKind,
+    reason: String,
+    onRetry: () -> Unit,
+) {
+    val (title, hint) = when (kind) {
+        UpdateStatus.FailureKind.UNREACHABLE ->
+            tr("update_failed_unreachable", "Couldn't reach the update server") to
+                tr("update_failed_unreachable_hint", "Check your network connection, then try again.")
+        UpdateStatus.FailureKind.RATE_LIMITED ->
+            tr("update_failed_rate_limited", "Too many update checks") to
+                tr("update_failed_rate_limited_hint", "GitHub is limiting checks from this network. Try again in a few minutes.")
+        UpdateStatus.FailureKind.HTTP_ERROR ->
+            tr("update_failed_server", "The update server returned an error") to
+                tr("update_failed_server_hint", "Nothing is wrong with this device. Try again shortly.")
+        UpdateStatus.FailureKind.BAD_RESPONSE ->
+            tr("update_check_failed", "Couldn't check for updates") to
+                tr("update_failed_release_hint", "The latest release couldn't be read. Download from the website instead.")
+    }
     GlassCard(modifier = Modifier.widthIn(max = 360.dp), contentPadding = PaddingValues(24.dp)) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -312,10 +339,28 @@ private fun UpdateFailedCard(onRetry: () -> Unit) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    tr("update_check_failed", "Couldn't check for updates"),
+                    title,
                     style = MaterialTheme.typography.subtitle1,
                     color = MaterialTheme.colors.onSurface,
                     textAlign = TextAlign.Center,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                hint,
+                style = MaterialTheme.typography.body2,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                lineHeight = 20.sp,
+            )
+            if (reason.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    reason,
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.45f),
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
                 )
             }
             Spacer(Modifier.height(20.dp))

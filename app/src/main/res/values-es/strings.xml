@@ -177,6 +177,7 @@
     <string name="unknown">Desconocido</string>
     <string name="unknown_file">Archivo Desconocido</string>
     <string name="action_select_count">Seleccionar (%d)</string>
+    <string name="action_edit">Editar</string>
     <string name="toast_clipboard_is_empty">El portapapeles está vacío</string>
     <string name="toast_failed_to_read_clipboard">Error al leer el portapapeles</string>
     <string name="unknown_device">Dispositivo Desconocido</string>
@@ -597,7 +598,7 @@
     <string name="offgrid_warn_hotspot_on">Tu punto de acceso móvil está activo. Esto puede impedir que recibas por Wi-Fi Direct. Desactívalo antes de recibir.</string>
     <string name="action_open_hotspot_settings">Ajustes del punto de acceso</string>
     <string name="offgrid_blocked_title">No se pueden recibir archivos ahora mismo</string>
-    <string name="offgrid_blocked_disconnect_wifi">Desconectar de la red Wi-Fi actual</string>
+    <string name="offgrid_blocked_disconnect_wifi">Desconectar Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Desactivar el punto de acceso</string>
     <string name="offgrid_blocked_body">Tu Wi-Fi está conectado a otra red y tu punto de acceso está activo, por lo que la transferencia no se puede completar. Haz una de las opciones de arriba y luego vuelve aquí.</string>
     <string name="label_or">o</string>

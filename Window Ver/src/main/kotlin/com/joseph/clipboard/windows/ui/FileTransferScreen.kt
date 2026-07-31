@@ -64,7 +64,10 @@ fun FileTransferScreen(
     onTutorialChainNext: (Screen) -> Unit = {},
     tutorialTrigger: Int = 0,
     onNavigateToPairing: () -> Unit = {},
-    onTransferHistoryVisibility: (Boolean) -> Unit = {}
+    onTransferHistoryVisibility: (Boolean) -> Unit = {},
+    /** Reports this screen's "How to use" chip bounds so the first-launch tour (hosted above the
+     *  nav rail, outside this screen) can spotlight it on its closing step. */
+    onHowToUseChipBounds: (Rect) -> Unit = {},
 ) {
     var selectAllFiles by remember { mutableStateOf(false) }
     var showSendVia by remember { mutableStateOf(false) }
@@ -158,7 +161,12 @@ fun FileTransferScreen(
                     color = MaterialTheme.colors.onBackground,
                     modifier = Modifier.weight(1f)
                 )
-                HowToUseChip(onClick = { showTutorial = true })
+                HowToUseChip(
+                    onClick = { showTutorial = true },
+                    modifier = Modifier.onGloballyPositioned { coords ->
+                        onHowToUseChipBounds(coords.boundsInWindow())
+                    },
+                )
                 // Capture bounds on the IconButton itself (after its start padding) so the square
                 // spotlight centres on the icon, not on the padded wrapper.
                 IconButton(
