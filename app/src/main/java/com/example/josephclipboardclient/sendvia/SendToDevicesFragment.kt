@@ -172,6 +172,16 @@ class SendToDevicesFragment : Fragment() {
         /** First outgoing sessionId of the batch — the listener opens its history detail. */
         const val RESULT_SESSION_ID = "session_id"
 
+        /**
+         * First target of the offer batch currently in flight, or null when idle. Process-level
+         * rather than per-instance because the offer loop runs in a detached scope that outlives
+         * this Fragment: now that the screen no longer pops the moment Send is tapped, a rotation
+         * mid-send would otherwise rebuild it with a fresh, re-enabled Send button and let the user
+         * fire a duplicate OFFER at a device already receiving one.
+         */
+        @Volatile
+        private var activeSendTargetIp: String? = null
+
         fun newInstance(items: List<TransferItem>, isMultiple: Boolean = true): SendToDevicesFragment {
             return SendToDevicesFragment().apply {
                 arguments = TransferItemArgs.toBundle(items).apply {
@@ -205,6 +215,12 @@ class SendToDevicesFragment : Fragment() {
     private val selectedIpsState = mutableStateOf<Set<String>>(emptySet())
     private val loadingState = mutableStateOf(true)
     private val sendingState = mutableStateOf(false)
+    // The device Lite's per-device card marks as in flight (Pro's batch reports its first target and
+    // doesn't read this). Held separately from selectedTargetIps: the 1 Hz refreshDeviceListUI
+    // prunes that set to whatever is still discovered + paired, so deriving the "Sending" label
+    // from it flipped the row back to "Send" the moment the target blinked out of discovery —
+    // while the transfer was still running. Mirrors [activeSendTargetIp] for Compose to observe.
+    private val sendingIpState = mutableStateOf<String?>(null)
     private var isLite = false
 
     private val fragmentJob = Job()
@@ -250,7 +266,7 @@ class SendToDevicesFragment : Fragment() {
                             // removed), so it needs the paired+unpaired list to offer "Pair" on unpaired
                             // rows — see allDevicesState's doc comment above.
                             devices = allDevicesState.value,
-                            sendingIp = if (sendingState.value && selectedTargetIps.isNotEmpty()) selectedTargetIps.first() else null,
+                            sendingIp = sendingIpState.value,
                             onSendToDevice = { ip ->
                                 // sendingState is a single fragment-wide flag (one transfer at a
                                 // time). Without this guard, tapping a second device's "Send" while
@@ -395,6 +411,12 @@ class SendToDevicesFragment : Fragment() {
 
     private fun refreshDeviceListUI() {
         if (!isAdded) return
+        // Re-adopt the process-level send lock every tick, so an instance rebuilt by a config change
+        // mid-send comes back showing "Sending" and a disabled button rather than an idle one.
+        val inFlight = activeSendTargetIp
+        if (sendingIpState.value != inFlight) sendingIpState.value = inFlight
+        if (sendingState.value != (inFlight != null)) sendingState.value = inFlight != null
+
         val allNodes = TransferDaemon.discoveredNodes.values.toList()
         val sortedNodes = allNodes.sortedBy { it.name }
 
@@ -435,10 +457,16 @@ class SendToDevicesFragment : Fragment() {
     private fun executeMultiDeviceTransfer() {
         val sendItems = items.toList()
         val ips = selectedTargetIps.toList()
-        if (sendItems.isEmpty() || ips.isEmpty() || sendingState.value) return
+        // activeSendTargetIp, not sendingState: the lock has to survive a config change (see its doc).
+        if (sendItems.isEmpty() || ips.isEmpty() || activeSendTargetIp != null) return
 
-        // Drives the bottom button to "Sending..." / disabled (mirrors the old btnSend tweaks).
+        // Drives the bottom button (Pro) and the tapped device's capsule (Lite) to "Sending..." /
+        // disabled. The screen deliberately STAYS on the device list for the whole send — it used to
+        // pop the moment the offers were queued, which in Lite (endSendFlow clears the entire child
+        // back stack) threw the user out to the hub the instant they tapped a device's Send.
+        activeSendTargetIp = ips.first()
         sendingState.value = true
+        sendingIpState.value = ips.first()
 
         val appContext = requireContext().applicationContext
 
@@ -447,9 +475,9 @@ class SendToDevicesFragment : Fragment() {
             val manifestList = TransferItemExpander.buildManifest(appContext, expandedItems)
             val fileUriStrings = expandedItems.map { it.uri.toString() }
 
-            // Register every target's session + pending record BEFORE any handshake so the
-            // history detail we navigate to below exists immediately; the offers themselves
-            // keep running in this detached scope after the screen closes.
+            // Register every target's session + pending record BEFORE any handshake so the history
+            // detail Pro opens on completion already exists; the offers themselves keep running in
+            // this detached scope even if the user leaves the screen first.
             val offers = ips.map { targetIp ->
                 val sessionId = java.util.UUID.randomUUID().toString()
                 val session = TransferSession(
@@ -480,19 +508,6 @@ class SendToDevicesFragment : Fragment() {
                     transport = "lan"
                 ))
                 PendingOffer(sessionId, targetIp, targetName, session)
-            }
-
-            // Close this screen. Pro reports the result so the Send tab opens the outgoing record's
-            // history detail; Lite instead returns to the hub (endSendFlow clears the whole stack, and
-            // the FileTransferFragment listener is torn down with it, so no detail sheet opens there).
-            withContext(Dispatchers.Main) {
-                if (isAdded) {
-                    parentFragmentManager.setFragmentResult(
-                        RESULT_KEY,
-                        bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
-                    )
-                    endSendFlow()
-                }
             }
 
             var hasFailures = false
@@ -577,10 +592,28 @@ class SendToDevicesFragment : Fragment() {
                 }
             }
 
-            // The fragment already popped when the offers were queued; toast via app context.
+            // Every offer is out. Release the in-flight lock so the list is usable again, then toast
+            // via the app context (the user may have left in the meantime).
             withContext(Dispatchers.Main) {
+                // Release the process-level lock first: a rebuilt instance re-reads it on its next
+                // poll tick, so it must be clear before this instance's own state is.
+                activeSendTargetIp = null
+                sendingState.value = false
+                sendingIpState.value = null
                 val message = if (hasFailures) appContext.getString(R.string.toast_transfer_interrupted) else appContext.getString(R.string.toast_batch_transfer_complete)
                 Toast.makeText(appContext, message, Toast.LENGTH_LONG).show()
+
+                // Pro's completion path: report the batch so the Send tab opens the outgoing
+                // record's history detail, then close. Lite has no such listener (endSendFlow would
+                // clear the whole stack), so it stays on the device list and the user leaves via
+                // Done — which is the point of the fix above.
+                if (isAdded && !isLite) {
+                    parentFragmentManager.setFragmentResult(
+                        RESULT_KEY,
+                        bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
+                    )
+                    endSendFlow()
+                }
             }
         }
     }

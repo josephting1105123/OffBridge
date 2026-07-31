@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.EntropicSoftwareLab.ClipboardShare.R
-import com.EntropicSoftwareLab.ClipboardShare.sendvia.QrIcon
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.DeviceCardRow
 import com.EntropicSoftwareLab.ClipboardShare.ui.formatTotalSize
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SELECTION_BADGE_SIZE
@@ -48,7 +47,7 @@ internal const val TUTORIAL_DEMO_TOTAL_BYTES = 1_288_490_189L
 
 /*
  * Fake UI rendered inside tutorial spotlights. Themed via AppThemeTokens so every card matches the
- * REAL screen components (FilePreviewCard, SendViaSheet, QrIcon, DeviceCardRow) in BOTH light and dark.
+ * REAL screen components (FilePreviewCard, SendViaSheet, DeviceCardRow) in BOTH light and dark.
  */
 
 /**
@@ -126,7 +125,12 @@ fun TutorialPlaceholderSendVia(
                 )
             }
             SendViaTile(label = stringResource(R.string.send_via_qr), tileModifier = qrButtonModifier) {
-                QrIcon(modifier = Modifier.size(dimens.iconLg), tint = colors.green)
+                Icon(
+                    painterResource(R.drawable.ic_qr_frame),
+                    contentDescription = null,
+                    tint = colors.green,
+                    modifier = Modifier.size(dimens.iconLg),
+                )
             }
             SendViaTile(label = stringResource(R.string.send_via_nfc), tileModifier = nfcButtonModifier) {
                 Icon(

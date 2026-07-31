@@ -177,6 +177,7 @@
     <string name="unknown">Неизвестно</string>
     <string name="unknown_file">Неизвестный файл</string>
     <string name="action_select_count">Выбрать (%d)</string>
+    <string name="action_edit">Изменить</string>
     <string name="toast_clipboard_is_empty">Буфер обмена пуст</string>
     <string name="toast_failed_to_read_clipboard">Не удалось прочитать буфер обмена</string>
     <string name="unknown_device">Неизвестное устройство</string>

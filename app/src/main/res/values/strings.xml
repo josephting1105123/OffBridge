@@ -209,6 +209,7 @@
     <string name="unknown">Unknown</string>
     <string name="unknown_file">Unknown File</string>
     <string name="action_select_count">Select (%d)</string>
+    <string name="action_edit">Edit</string>
     <string name="toast_clipboard_is_empty">Clipboard is empty</string>
     <string name="toast_failed_to_read_clipboard">Failed to read clipboard</string>
     <string name="unknown_device">Unknown Device</string>

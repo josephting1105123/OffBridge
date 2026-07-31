@@ -177,6 +177,7 @@
     <string name="unknown">Tidak diketahui</string>
     <string name="unknown_file">File Tidak Diketahui</string>
     <string name="action_select_count">Pilih (%d)</string>
+    <string name="action_edit">Edit</string>
     <string name="toast_clipboard_is_empty">Papan klip kosong</string>
     <string name="toast_failed_to_read_clipboard">Gagal membaca papan klip</string>
     <string name="unknown_device">Perangkat Tidak Diketahui</string>

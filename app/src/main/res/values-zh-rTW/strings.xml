@@ -164,6 +164,7 @@
     <string name="unknown">未知</string>
     <string name="unknown_file">未知檔案</string>
     <string name="action_select_count">選擇 (%d)</string>
+    <string name="action_edit">編輯</string>
     <string name="toast_clipboard_is_empty">剪貼簿為空</string>
     <string name="toast_failed_to_read_clipboard">無法讀取剪貼簿</string>
     <string name="unknown_device">未知裝置</string>

@@ -27,12 +27,20 @@ import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import androidx.compose.ui.text.style.TextOverflow
 
+/**
+ * One target device row: name plus a Pair / Send / Sending capsule.
+ *
+ * [isSending] marks THIS device as the one in flight; [sendEnabled] is false whenever any send is in
+ * flight (only one runs at a time), so the other rows' buttons go inert instead of silently
+ * swallowing taps.
+ */
 @Composable
 fun DeviceSendCard(
     name: String,
     isWindows: Boolean,
     isPaired: Boolean,
     isSending: Boolean,
+    sendEnabled: Boolean = true,
     onPair: () -> Unit,
     onSend: () -> Unit
 ) {
@@ -66,35 +74,58 @@ fun DeviceSendCard(
         )
         Box(contentAlignment = Alignment.CenterEnd) {
             when {
-                // In flight: plain text, no button.
-                isSending -> {
-                    Text(
-                        stringResource(R.string.action_sending),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = colors.info,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // In flight: the capsule stays put (the row must not reflow mid-send) but goes inert
+                // and swaps to the "Sending" label. textPrimary reads as white on the dark theme, as
+                // specified, without vanishing on the light one the way a literal Color.White would.
+                isSending -> CapsuleAction(
+                    label = stringResource(R.string.action_sending),
+                    labelColor = colors.textPrimary,
+                    enabled = false,
+                    onClick = {},
+                )
                 // Paired → "Send", unpaired → "Pair": both the same capsule as DeviceCardRow's Pair.
-                isPaired -> CapsuleAction(stringResource(R.string.action_send), onSend)
-                else -> CapsuleAction(stringResource(R.string.action_pair), onPair)
+                isPaired -> CapsuleAction(
+                    label = stringResource(R.string.action_send),
+                    labelColor = colors.info,
+                    enabled = sendEnabled,
+                    onClick = onSend,
+                )
+                // Pair stays live even mid-send: it just opens PairingActivity and has nothing to
+                // do with the transfer holding the send lock.
+                else -> CapsuleAction(
+                    label = stringResource(R.string.action_pair),
+                    labelColor = colors.green,
+                    enabled = true,
+                    onClick = onPair,
+                )
             }
         }
     }
 }
 
-/** Transparent, hairline-outlined green capsule — same design as DeviceCardRow's Pair/Unpair button. */
+/** Transparent, hairline-outlined capsule — same design as DeviceCardRow's Pair/Unpair button. */
 @Composable
-private fun CapsuleAction(label: String, onClick: () -> Unit) {
+private fun CapsuleAction(
+    label: String,
+    labelColor: Color,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     OutlinedButton(
         onClick = onClick,
+        enabled = enabled,
         shape = RoundedCornerShape(dimens.radiusPill),
         border = BorderStroke(dimens.hairlineWidth, colors.divider),
-        colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+        ),
         contentPadding = PaddingValues(horizontal = dimens.spaceLg, vertical = dimens.spaceSm),
     ) {
-        Text(label, color = colors.green, fontWeight = FontWeight.Bold)
+        // Colour the label explicitly rather than leaning on the button's content colour, so the
+        // disabled "Sending" state stays fully legible instead of fading to M3's 38% alpha.
+        Text(label, color = labelColor, fontWeight = FontWeight.Bold)
     }
 }
