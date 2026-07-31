@@ -311,6 +311,78 @@ object Net {
         }
     }
 
+    /** One local IPv4 together with the prefix length of the network it sits on (e.g. 192.168.1.7/24). */
+    data class Ipv4Cidr(val ip: String, val prefixLength: Int)
+
+    /** Dotted-quad → Int, or null when [ip] is not a well-formed IPv4 literal. Pure. */
+    private fun ipv4ToInt(ip: String): Int? {
+        val parts = ip.split('.')
+        if (parts.size != 4) return null
+        var acc = 0
+        for (part in parts) {
+            if (part.isEmpty() || part.length > 3 || part.any { it !in '0'..'9' }) return null
+            val octet = part.toIntOrNull() ?: return null
+            if (octet !in 0..255) return null
+            acc = (acc shl 8) or octet
+        }
+        return acc
+    }
+
+    /**
+     * True when [ip] is a dotted-quad IPv4 literal. Callers use it to keep a stored address off any
+     * API that would otherwise treat a non-literal as a hostname and block on a DNS lookup.
+     */
+    fun isIpv4Literal(ip: String): Boolean = ipv4ToInt(ip) != null
+
+    /**
+     * True when [remoteIp] falls inside the /[prefixLength] network that [localIp] belongs to — i.e.
+     * this interface can reach it without a router. Pure and unit-tested; a malformed address or a
+     * prefix outside 1..32 is "no". (A /0 is meaningless as an interface prefix and would otherwise
+     * claim every address on earth is on-link.)
+     */
+    fun sameIpv4Subnet(localIp: String, prefixLength: Int, remoteIp: String): Boolean {
+        if (prefixLength !in 1..32) return false
+        val local = ipv4ToInt(localIp) ?: return false
+        val remote = ipv4ToInt(remoteIp) ?: return false
+        val mask = -1 shl (32 - prefixLength)
+        return (local and mask) == (remote and mask)
+    }
+
+    /**
+     * Does any address in [local] put [remoteIp] on-link? Pure counterpart of [localIpv4Cidrs].
+     *
+     * Fails OPEN on an empty list: that means interface enumeration gave us nothing (it threw, or
+     * the caller is running before any network came up), and refusing to try a reachable peer on
+     * missing evidence is worse than one wasted probe.
+     */
+    fun hasOnLinkRoute(local: List<Ipv4Cidr>, remoteIp: String): Boolean {
+        if (local.isEmpty()) return true
+        return local.any { sameIpv4Subnet(it.ip, it.prefixLength, remoteIp) }
+    }
+
+    /**
+     * Every IPv4 (with its prefix length) on an up, non-loopback, non-cellular interface. Cellular is
+     * excluded deliberately: a carrier address can never share a subnet with a peer's LAN/hotspot IP,
+     * and a phone on mobile data with no Wi-Fi must not be credited with a route to one.
+     */
+    fun localIpv4Cidrs(): List<Ipv4Cidr> {
+        return try {
+            NetworkInterface.getNetworkInterfaces().asSequence()
+                .filter { it.isUp && !it.isLoopback }
+                .filter { iface -> iface.name?.lowercase()?.let { !isCellularIface(it) } ?: true }
+                .flatMap { it.interfaceAddresses.asSequence() }
+                .filter { it.address is Inet4Address }
+                .mapNotNull { ifAddr ->
+                    val ip = ifAddr.address?.hostAddress ?: return@mapNotNull null
+                    val prefix = ifAddr.networkPrefixLength.toInt()
+                    if (prefix !in 1..32) null else Ipv4Cidr(ip, prefix)
+                }
+                .toList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     /** Fire-and-forget UDP datagram. Returns true on success. Never throws. */
     /** First non-loopback IPv4 on any interface, or 127.0.0.1. (Moved from TransferDaemon.) */
     fun getMyIpAddress(): String {

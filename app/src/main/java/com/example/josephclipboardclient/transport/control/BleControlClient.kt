@@ -49,15 +49,22 @@ class BleControlClient(context: Context) : ControlChannel {
     private var rxCharacteristic: BluetoothGattCharacteristic? = null
     private var onReady: ((BluetoothDevice?) -> Unit)? = null
 
-    private val reassembler = GattReassembler { frame ->
-        mainHandler.post { onMessage?.invoke(frame) }
-    }
+    /** Fed only from the main thread (see [onCharacteristicChanged]), as its contract requires. */
+    private val reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
 
     private val sendQueue = ArrayDeque<ByteArray>()
     @Volatile private var writeInFlight = false
     @Volatile private var mtu = 23
     @Volatile private var ready = false
     @Volatile private var closed = false
+
+    /**
+     * The chunk currently handed to the stack. Kept so a failed or abandoned write can put it back
+     * at the head of the queue instead of leaving a hole in the frame. Main thread only.
+     */
+    private var inFlightChunk: ByteArray? = null
+    /** Consecutive re-dispatch attempts for the current chunk; reset once one completes. Main thread only. */
+    private var writeRetries = 0
 
     /**
      * GATT connect attempts so far (1 = first try). Bounds the retry below. Written only via
@@ -87,6 +94,14 @@ class BleControlClient(context: Context) : ControlChannel {
          * drain several chunks before that deadline.
          */
         private const val WRITE_WATCHDOG_MS = 400L
+
+        /**
+         * Back-off before re-dispatching a chunk the stack refused (a write is still outstanding, or
+         * the watchdog abandoned one). Re-posting with no delay busy-loops the main thread, which
+         * starves the very looper that delivers the reassembled HELLO_ACK.
+         */
+        private const val WRITE_RETRY_DELAY_MS = 30L
+        private const val MAX_WRITE_RETRIES = 100
 
         /** Central-mode availability — gates the whole control-channel attempt. */
         fun canScan(context: Context): Boolean {
@@ -195,14 +210,53 @@ class BleControlClient(context: Context) : ControlChannel {
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             if (closed || characteristic.uuid != ControlProtocol.CHAR_TX_UUID) return
-            characteristic.value?.let { reassembler.accept(it) }
+            // COPY before leaving the callback: the value buffer belongs to the stack and is reused
+            // for the next notification. Handing the live array to another thread would let a later
+            // chunk overwrite this one in place.
+            val chunk = characteristic.value?.copyOf() ?: return
+            // Reassembly is single-threaded by contract, so run it where onMessage is delivered.
+            // mainHandler.post preserves FIFO, and the ATT callbacks are already ordered, so chunk
+            // order survives the hop.
+            mainHandler.post { if (!closed) reassembler.accept(chunk) }
         }
 
         override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-            mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
-            writeInFlight = false
-            pumpQueue()
+            // Marshal to the main thread: this fires on a binder thread, and the watchdog below runs
+            // on main. Both used to drive pumpQueue, so two threads could pass the writeInFlight
+            // check, both assign rxCharacteristic.value and both dispatch — losing or reordering a
+            // chunk on a link that is supposed to be strictly ordered.
+            mainHandler.post { onWriteComplete(status) }
         }
+    }
+
+    /**
+     * Single owner of the write pump's completion path. Main thread only.
+     *
+     * A callback carries no correlation id, so when the watchdog has already abandoned a write there
+     * is no way to tell a late completion from the replacement's. We deliberately do NOT try to
+     * count them: the ATT stack itself serialises operations — a second [BluetoothGatt.writeCharacteristic]
+     * while one is outstanding returns false, which [pumpQueue] handles by re-queuing and backing off.
+     * So the worst a mis-attributed callback can do is dispatch the next chunk a little early and get
+     * refused, whereas tracking abandonments needs state that never converges when a stack drops a
+     * callback for good.
+     */
+    private fun onWriteComplete(status: Int) {
+        if (closed) return
+        mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
+        writeInFlight = false
+        val chunk = inFlightChunk
+        inFlightChunk = null
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            // The chunk did NOT reach the peer. Treating a failed write as delivered punches a hole
+            // in the frame that reassembly cannot repair, so the peer discards the whole HELLO and
+            // both sides wait out their timeouts. Put it back and try again.
+            Log.i(TAG, "GATT write failed status=$status — re-queuing the chunk")
+            chunk?.let { synchronized(sendQueue) { sendQueue.addFirst(it) } }
+            scheduleWriteRetry()
+            return
+        }
+        writeRetries = 0
+        pumpQueue()
     }
 
     private val SCAN_TIMEOUT_TOKEN = Any()
@@ -248,6 +302,9 @@ class BleControlClient(context: Context) : ControlChannel {
     /** Guards the send queue against a write whose completion callback never arrives. */
     private val WRITE_WATCHDOG_TOKEN = Any()
 
+    /** Back-off re-dispatch of a chunk the stack refused or the watchdog abandoned. */
+    private val WRITE_RETRY_TOKEN = Any()
+
     /** Opens (or re-opens) the GATT client to [dev]; counts the attempt so the retry stays bounded. */
     private fun attemptConnect(dev: BluetoothDevice) {
         gattAttempts++
@@ -286,15 +343,17 @@ class BleControlClient(context: Context) : ControlChannel {
         } catch (_: Exception) {}
     }
 
-    @Suppress("DEPRECATION")
     override fun send(frame: ByteArray) {
         if (closed || !ready) return
         synchronized(sendQueue) {
             GattChunker.split(frame, mtu).forEach { sendQueue.add(it) }
         }
-        pumpQueue()
+        // [ControlChannel] accepts send from any thread, but the pump is main-thread-confined so
+        // there is exactly one writer touching rxCharacteristic and the queue's head.
+        mainHandler.post { pumpQueue() }
     }
 
+    /** Dispatches one chunk. Main thread only — see [onWriteComplete]. */
     @Suppress("DEPRECATION")
     private fun pumpQueue() {
         if (closed || writeInFlight || !ready) return
@@ -302,45 +361,62 @@ class BleControlClient(context: Context) : ControlChannel {
         val rx = rxCharacteristic ?: return
         val chunk = synchronized(sendQueue) { sendQueue.poll() } ?: return
         writeInFlight = true
-        try {
-            // WRITE_TYPE_DEFAULT (ATT Write Request), not NO_RESPONSE. A Write Command is
-            // unacknowledged: a congested or slow peripheral drops it silently and nothing
-            // retransmits, which on a handshake means the frame never arrives and both sides sit
-            // there until their timeouts — observed as "receiver linked over BLE but HELLO never
-            // completed" on the sender while the receiver reported HELLO_RX sent. A request is
-            // acknowledged, retried by the link layer, and its completion callback is part of the
-            // ATT flow rather than a best-effort courtesy. The server declares PROPERTY_WRITE and
-            // answers with sendResponse when responseNeeded, so this is already supported. Control
-            // frames are a few hundred bytes at most; throughput is irrelevant next to arriving.
+        inFlightChunk = chunk
+        // WRITE_TYPE_DEFAULT (ATT Write Request), not NO_RESPONSE. A Write Command is
+        // unacknowledged: a congested or slow peripheral drops it silently and nothing
+        // retransmits, which on a handshake means the frame never arrives and both sides sit
+        // there until their timeouts — observed as "receiver linked over BLE but HELLO never
+        // completed" on the sender while the receiver reported HELLO_RX sent. A request is
+        // acknowledged, retried by the link layer, and its completion callback is part of the
+        // ATT flow rather than a best-effort courtesy. The server declares PROPERTY_WRITE and
+        // answers with sendResponse when responseNeeded, so this is already supported. Control
+        // frames are a few hundred bytes at most; throughput is irrelevant next to arriving.
+        val dispatched = try {
             rx.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
             rx.value = chunk
-            if (!g.writeCharacteristic(rx)) {
-                // Write didn't dispatch, so onCharacteristicWrite will never fire.
-                // Re-queue the polled chunk at the head and re-pump so the queue
-                // keeps draining instead of stalling the handshake (and losing the chunk).
-                writeInFlight = false
-                synchronized(sendQueue) { sendQueue.addFirst(chunk) }
-                mainHandler.post { pumpQueue() }
-            } else {
-                // The pump advances only when onCharacteristicWrite fires. Several vendor stacks
-                // accept the write, return true, and then never call back — one silent miss and the
-                // queue is wedged for the life of the link, so every chunk after the first is lost
-                // and the peer waits on an END that will never be sent. Time it out and carry on:
-                // a duplicate chunk is harmless (reassembly is accumulate-until-END, and a repeated
-                // frame is re-parsed idempotently), a stalled handshake is not.
-                mainHandler.postDelayed({
-                    if (closed || !writeInFlight) return@postDelayed
-                    Log.i(TAG, "GATT write callback never arrived — unblocking the send queue")
-                    writeInFlight = false
-                    pumpQueue()
-                }, WRITE_WATCHDOG_TOKEN, WRITE_WATCHDOG_MS)
-            }
+            g.writeCharacteristic(rx)
         } catch (_: Exception) {
-            // Same recovery on throw: no callback will arrive to resume the pump.
-            writeInFlight = false
-            synchronized(sendQueue) { sendQueue.addFirst(chunk) }
-            mainHandler.post { pumpQueue() }
+            false
         }
+        if (!dispatched) {
+            // Didn't reach the stack (usually because an ATT operation is still outstanding), so no
+            // completion callback will ever fire. Put the chunk back and retry after a back-off —
+            // re-posting immediately spins the main thread for as long as the link stays busy.
+            writeInFlight = false
+            inFlightChunk = null
+            synchronized(sendQueue) { sendQueue.addFirst(chunk) }
+            scheduleWriteRetry()
+            return
+        }
+        // The pump advances only when onCharacteristicWrite fires. Several vendor stacks accept the
+        // write, return true, and then never call back — one silent miss and the queue is wedged for
+        // the life of the link, so every chunk after the first is lost and the peer waits on an END
+        // that will never be sent. Re-queue the chunk and retry instead of skipping it: a duplicate
+        // is now genuinely harmless because GattReassembler drops an exact retransmit by index,
+        // whereas a skipped chunk would silently corrupt the frame.
+        mainHandler.postDelayed({
+            if (closed || !writeInFlight) return@postDelayed
+            Log.i(TAG, "GATT write callback never arrived — re-queuing the chunk")
+            writeInFlight = false
+            inFlightChunk?.let { synchronized(sendQueue) { sendQueue.addFirst(it) } }
+            inFlightChunk = null
+            scheduleWriteRetry()
+        }, WRITE_WATCHDOG_TOKEN, WRITE_WATCHDOG_MS)
+    }
+
+    /**
+     * Re-runs [pumpQueue] after a back-off. Bounded: a link whose writes never land is dead, and
+     * silently retrying forever would keep the ladder waiting on a control channel that is gone.
+     */
+    private fun scheduleWriteRetry() {
+        if (closed) return
+        if (writeRetries >= MAX_WRITE_RETRIES) {
+            Log.i(TAG, "GATT writes stalled past cap — closing the control channel")
+            closeOnce()
+            return
+        }
+        writeRetries++
+        mainHandler.postDelayed({ pumpQueue() }, WRITE_RETRY_TOKEN, WRITE_RETRY_DELAY_MS)
     }
 
     private fun closeOnce() {
@@ -355,6 +431,10 @@ class BleControlClient(context: Context) : ControlChannel {
         mainHandler.removeCallbacksAndMessages(GATT_RETRY_TOKEN)
         mainHandler.removeCallbacksAndMessages(SETUP_TIMEOUT_TOKEN)
         mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
+        mainHandler.removeCallbacksAndMessages(WRITE_RETRY_TOKEN)
+        writeInFlight = false
+        inFlightChunk = null
+        writeRetries = 0
         stopScan()
         try { gatt?.disconnect() } catch (_: Exception) {}
         try { gatt?.close() } catch (_: Exception) {}

@@ -443,7 +443,10 @@ class ReceiverSessionController(
     private fun startLocalLadder() {
         if (torndown || localLadderStarted) return
         localLadderStarted = true
+        // controlDegraded is passed through so the ladder can drop the tiers that only work by
+        // relaying credentials over the control channel that just died, instead of attempting them.
         ladder.start(hasNearbyPermission, preferredOrder = localPreferredOrder(),
+            controlDegraded = controlDegraded,
             listener = object : TransportLadder.Listener {
                 override fun onTierStarted(tier: TransportDescriptor, ordinal: Int, total: Int) {
                     currentTier = tier

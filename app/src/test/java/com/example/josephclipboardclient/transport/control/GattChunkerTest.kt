@@ -112,8 +112,88 @@ class GattChunkerTest {
     fun singleEndChunkEmitsItsPayload() {
         val out = ArrayList<ByteArray>()
         val r = GattReassembler { out.add(it) }
-        r.accept(byteArrayOf(0x05, 0x01, 'h'.code.toByte(), 'i'.code.toByte()))
+        // Index 0 = the first chunk of a frame, END = also the last.
+        r.accept(byteArrayOf(0x00, 0x01, 'h'.code.toByte(), 'i'.code.toByte()))
         assertEquals(1, out.size)
         assertArrayEquals(byteArrayOf('h'.code.toByte(), 'i'.code.toByte()), out[0])
+    }
+
+    // ---------------------------------------------------------------- index validation
+    // The rolling index in byte 0 used to be written by split() and ignored by the reassembler, so a
+    // chunk that was lost, duplicated or reordered on the GATT link was concatenated straight into
+    // the frame. The corrupt result failed ControlProtocol.parse()'s length check and vanished
+    // without a trace — the HELLO_RX/HELLO_ACK stand-off. These pin the index down.
+
+    @Test
+    fun loneEndChunkWithWrongIndexIsRejected() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        // Index 5 with no preceding 0..4: a fragment of someone else's frame, not a frame.
+        r.accept(byteArrayOf(0x05, 0x01, 'h'.code.toByte(), 'i'.code.toByte()))
+        assertTrue("an out-of-sequence chunk must never be emitted as a frame", out.isEmpty())
+    }
+
+    @Test
+    fun droppedChunkPoisonsTheFrameInsteadOfCorruptingIt() {
+        val frame = ByteArray(60) { it.toByte() }
+        val chunks = GattChunker.split(frame, mtu = 23) // maxData 18 -> 4 chunks
+        assertTrue("need a multi-chunk frame for this test", chunks.size >= 3)
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        chunks.filterIndexed { i, _ -> i != 1 }.forEach { r.accept(it) }
+        assertTrue("a frame missing a chunk must be dropped, not silently truncated", out.isEmpty())
+    }
+
+    @Test
+    fun duplicatedChunkIsIgnoredAndFrameStillRoundTrips() {
+        // This is the property the sender-side write watchdog depends on: when it re-sends a chunk
+        // whose completion callback never arrived, the peer must absorb the retransmit.
+        val frame = ByteArray(100) { (it * 7).toByte() }
+        val chunks = GattChunker.split(frame, mtu = 23)
+        assertTrue(chunks.size >= 3)
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        chunks.forEachIndexed { i, c ->
+            r.accept(c)
+            if (i == 1) r.accept(c)  // exact retransmit of the chunk just accepted
+        }
+        assertEquals(1, out.size)
+        assertArrayEquals("a duplicate chunk must not shift the payload", frame, out[0])
+    }
+
+    @Test
+    fun reorderedChunksAreRejected() {
+        val frame = ByteArray(60) { it.toByte() }
+        val chunks = GattChunker.split(frame, mtu = 23).toMutableList()
+        assertTrue(chunks.size >= 3)
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        java.util.Collections.swap(chunks, 1, 2)
+        chunks.forEach { r.accept(it) }
+        assertTrue("out-of-order chunks must not be assembled into a frame", out.isEmpty())
+    }
+
+    @Test
+    fun resyncsOnTheNextFrameAfterALostChunk() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val broken = GattChunker.split(ByteArray(60) { it.toByte() }, mtu = 23)
+        broken.filterIndexed { i, _ -> i != 1 }.forEach { r.accept(it) }
+        assertTrue(out.isEmpty())
+        val good = "the next frame must still get through".toByteArray()
+        GattChunker.split(good, mtu = 23).forEach { r.accept(it) }
+        assertEquals(1, out.size)
+        assertArrayEquals(good, out[0])
+    }
+
+    @Test
+    fun indexWrapsPastByteBoundaryWithoutBreakingReassembly() {
+        // maxData = 1 at mtu 4, so a 600-byte frame is 600 chunks and the index wraps twice.
+        val frame = ByteArray(600) { (it % 251).toByte() }
+        val chunks = GattChunker.split(frame, mtu = 4)
+        assertEquals(600, chunks.size)
+        val out = roundTrip(frame, mtu = 4)
+        assertEquals(1, out.size)
+        assertArrayEquals(frame, out[0])
     }
 }
