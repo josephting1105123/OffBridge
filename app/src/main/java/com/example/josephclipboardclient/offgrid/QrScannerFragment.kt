@@ -36,7 +36,6 @@ import com.EntropicSoftwareLab.ClipboardShare.copyPlainText
 import com.EntropicSoftwareLab.ClipboardShare.showSelectableTextDialog
 import com.EntropicSoftwareLab.ClipboardShare.SkeletonHelper
 import com.EntropicSoftwareLab.ClipboardShare.Net
-import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
 import com.EntropicSoftwareLab.ClipboardShare.TransferHistoryManager
 import com.EntropicSoftwareLab.ClipboardShare.TransferRecord
@@ -46,7 +45,6 @@ import com.EntropicSoftwareLab.ClipboardShare.TutorialTour
 import com.EntropicSoftwareLab.ClipboardShare.TutorialStep
 import com.EntropicSoftwareLab.ClipboardShare.tuneForBulkTransfer
 import com.EntropicSoftwareLab.ClipboardShare.transport.LanRoute
-import com.EntropicSoftwareLab.ClipboardShare.transport.ReceiveViability
 import com.EntropicSoftwareLab.ClipboardShare.transport.ReceiverSessionController
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
@@ -139,13 +137,8 @@ class QrScannerFragment : Fragment() {
     /** Session-scoped: suppresses the hotspot banner until the user leaves and returns (reset in onResume). */
     private var hotspotWarningDismissed = false
     private lateinit var receiveBlockedOverlay: View
-    /**
-     * The decoded payload the blocking sheet is currently up for, or null. Set only AFTER a code has
-     * been read and [ReceiveViability] found no route for that specific sender; scanning is never
-     * suppressed on radio state alone any more. Kept so [onResume] can re-evaluate once the user has
-     * fixed the radios and dismiss the sheet without a re-scan.
-     */
-    private var blockedPayload: OffGridPayload? = null
+    /** True while the hard-block overlay is up (hotspot ON + on another Wi-Fi) — suppresses scanning. */
+    @Volatile private var receiveBlocked = false
     private var tvDiag: TextView? = null
     private var diagScroll: ScrollView? = null
 
@@ -455,10 +448,6 @@ class QrScannerFragment : Fragment() {
             Net.openHotspotSettings(requireContext())
         }
         receiveBlockedOverlay = view.findViewById(R.id.receiveBlockedOverlay)
-        // A fresh view means a fresh sheet: the fragment instance can outlive its view, and a
-        // decision left over from the previous one would send onResume down the "re-check the
-        // blocked payload" branch instead of arming the scanner.
-        blockedPayload = null
         view.findViewById<Button>(R.id.btnBlockedDisconnectWifi).setOnClickListener {
             Net.openWifiSettings(requireContext())
         }
@@ -772,11 +761,11 @@ class QrScannerFragment : Fragment() {
     }
 
     /**
-     * Pre-scan radio check. It is ADVISORY only: a hotspot that's on can impair Wi-Fi Direct, so we
-     * raise the dismissible banner, but we never suppress scanning for it. Whether a transfer is
-     * actually impossible depends on the sender's route, which isn't known until a code is decoded —
-     * that call belongs to [evaluateBlockedForPayload].
-     *
+     * Re-evaluate the radio conflicts that affect receiving, off the main thread:
+     *  - hotspot ON **and** this phone is on another Wi-Fi → receiving can't work at all → HARD BLOCK
+     *    (full-screen modal + scanning suppressed).
+     *  - hotspot ON only → soft dismissible banner (Wi-Fi Direct may be impaired, but a transfer can
+     *    still work, e.g. the sender joining this hotspot).
      * detectHotspotIp / isConnectedToOtherWifi iterate NetworkInterface, so they run on Dispatchers.IO.
      */
     private fun evaluateReceiveBlockers() {
@@ -786,58 +775,18 @@ class QrScannerFragment : Fragment() {
             val onOtherWifi = hotspotOn && withContext(Dispatchers.IO) { Net.isConnectedToOtherWifi(appCtx) }
             // State may have advanced (a scan slipped in) during the IO — don't paint over a non-scan UI.
             if (!isAdded || state != ReceiverState.SCANNING) return@launch
-            TransportDiag.log("RX: pre-scan radio check — hotspot=$hotspotOn otherWifi=$onOtherWifi (advisory)")
+            val hardBlock = hotspotOn && onOtherWifi
+            TransportDiag.log("RX: pre-scan radio check — hotspot=$hotspotOn otherWifi=$onOtherWifi → ${if (hardBlock) "BLOCKED" else "ok"}")
+            receiveBlocked = hardBlock
+            receiveBlockedOverlay.visibility = if (hardBlock) View.VISIBLE else View.GONE
             hotspotWarningBanner.visibility =
-                if (hotspotOn && !hotspotWarningDismissed) View.VISIBLE else View.GONE
-            if (!payloadConsumed.get() &&
+                if (hotspotOn && !onOtherWifi && !hotspotWarningDismissed) View.VISIBLE else View.GONE
+            // Arm the NFC reader ONLY now that we've confirmed receiving isn't hard-blocked (and NFC is
+            // on). NFC was disarmed entering onResume, so a tap can't slip through the async check window.
+            if (!hardBlock && !payloadConsumed.get() &&
                 NfcAdapter.getDefaultAdapter(requireContext())?.isEnabled == true
             ) {
                 NfcPayloadReader.arm(requireActivity(), nfcReader)
-            }
-        }
-    }
-
-    /**
-     * Which rendezvous routes could carry a transfer from THIS sender, given the live radio state.
-     * Blocking is decided from this and nothing else — see [ReceiveViability]. Blocking IO
-     * (NetworkInterface enumeration, encrypted prefs), so callers hop to Dispatchers.IO.
-     */
-    private fun viableRoutesFor(payload: OffGridPayload, ctx: Context): Set<ReceiveViability.Route> {
-        val lanReachable = payload.lanIp?.let { Net.hasOnLinkRoute(Net.localIpv4Cidrs(), it) } == true
-        val senderAdvertisesBle = (payload.cap and TransportCaps.BLE_ADVERTISE) != 0
-        return ReceiveViability.viableRoutes(
-            lanReachable = lanReachable,
-            senderIsSoftApBridge = payload.softApBridge,
-            senderHasApCredentials = !payload.isLanOnly(),
-            onOtherWifi = Net.isConnectedToOtherWifi(ctx),
-            hotspotOn = Net.detectHotspotIp(ctx) != null,
-            haveSavedHotspotCreds = SecurityVault.getHotspotCredentials(ctx) != null,
-            controlChannelPossible = senderAdvertisesBle && BleControlClient.canScan(ctx)
-        )
-    }
-
-    /**
-     * Decides the blocking sheet for an already-decoded [payload], then paints either the sheet or
-     * the confirm card. Re-runnable: [onResume] calls it again so a user who turned their hotspot
-     * off (or joined the right Wi-Fi) is let through without re-scanning the code.
-     */
-    private fun evaluateBlockedForPayload(payload: OffGridPayload) {
-        val appCtx = requireContext().applicationContext
-        uiScope.launch {
-            val routes = withContext(Dispatchers.IO) { viableRoutesFor(payload, appCtx) }
-            if (!isAdded) return@launch
-            TransportDiag.log(
-                "RX: routes for '${payload.senderName}' → ${if (routes.isEmpty()) "NONE (blocked)" else routes.joinToString(",")}"
-            )
-            if (routes.isEmpty()) {
-                blockedPayload = payload
-                confirmCard.visibility = View.GONE
-                receiveBlockedOverlay.visibility = View.VISIBLE
-                tvStatus.text = getString(R.string.offgrid_blocked_title)
-            } else {
-                blockedPayload = null
-                receiveBlockedOverlay.visibility = View.GONE
-                showConfirmCard(payload)
             }
         }
     }
@@ -877,19 +826,12 @@ class QrScannerFragment : Fragment() {
         // card or runs during the ladder. Reset the dismiss first so a return always re-checks the
         // live hotspot state.
         hotspotWarningDismissed = false
-        val blocked = blockedPayload
-        when {
-            state == ReceiverState.SCANNING && !payloadConsumed.get() -> evaluateReceiveBlockers()
-            // The sheet is up for a decoded sender. Re-check against the radios they may have just
-            // fixed, so returning from Wi-Fi/hotspot settings releases the transfer without a rescan.
-            blocked != null -> {
-                hotspotWarningBanner.visibility = View.GONE
-                evaluateBlockedForPayload(blocked)
-            }
-            else -> {
-                hotspotWarningBanner.visibility = View.GONE
-                receiveBlockedOverlay.visibility = View.GONE
-            }
+        if (state == ReceiverState.SCANNING && !payloadConsumed.get()) {
+            evaluateReceiveBlockers()
+        } else {
+            hotspotWarningBanner.visibility = View.GONE
+            receiveBlockedOverlay.visibility = View.GONE
+            receiveBlocked = false
         }
     }
 
@@ -902,9 +844,7 @@ class QrScannerFragment : Fragment() {
     // ----------------------------------------------------------- validation
 
     private fun onCandidatePayload(raw: String) {
-        // No radio-state gate here any more: whether a transfer is possible is decided from the
-        // decoded descriptor in [evaluateBlockedForPayload], not before the code is even read.
-        if (payloadConsumed.get()) return
+        if (payloadConsumed.get() || receiveBlocked) return
         when (val result = OffGridPayload.parse(raw)) {
             is OffGridPayload.ParseResult.Valid -> {
                 // First valid payload wins; both sources then disarm.
@@ -929,13 +869,7 @@ class QrScannerFragment : Fragment() {
         disarmSources()
         hotspotWarningBanner.visibility = View.GONE  // a payload arrived — drop the pre-scan warning
         receiveBlockedOverlay.visibility = View.GONE
-        // Now the sender's routes are known, so the blocking question can finally be answered
-        // honestly. Async (interface enumeration + prefs); the confirm card is painted by whichever
-        // branch wins.
-        evaluateBlockedForPayload(payload)
-    }
 
-    private fun showConfirmCard(payload: OffGridPayload) {
         tvConfirmTitle.text = getString(R.string.offgrid_confirm_title, payload.senderName.ifEmpty { getString(R.string.unknown_device) })
         tvConfirmSubtitle.text = getString(
             R.string.offgrid_confirm_subtitle,
@@ -945,7 +879,6 @@ class QrScannerFragment : Fragment() {
         tvStatus.text = getString(R.string.offgrid_status_code_scanned)
 
         btnReceive.text = getString(R.string.action_receive)
-        btnReceive.isEnabled = true
         btnReceive.setOnClickListener { connectToGroup(payload) }
     }
 
