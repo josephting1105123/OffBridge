@@ -32,7 +32,7 @@ window.CS_CONFIG = {
     // Tracks what Play actually SERVES, which lags the direct APK: a build has to clear review and
     // finish rollout before this may move. Bump it only once the new version is live on the store
     // listing, never at the same time as androidApk below.
-    version: "3.7.1",
+    version: "3.7.5",
     size: "TBD", // store link — no size/sha shown
     // PERMANENT — never revert to "#". The APK asset may 404 until the user
     // uploads the first build (testing phase, accepted). The link must stay
@@ -48,7 +48,7 @@ window.CS_CONFIG = {
     label: "Download APK",
     os: "Android",
     fileType: "APK (direct)",
-    version: "3.7.2",
+    version: "3.7.5",
     size: "29 MB",
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
     sha256: "949d3d47622b0e50b23201cb3d3c76c8f74eb16897738211a3a33a0662ffa72e",
@@ -59,7 +59,7 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.7.8",
+    version: "3.7.9",
     size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
