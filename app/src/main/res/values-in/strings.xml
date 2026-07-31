@@ -597,7 +597,7 @@
     <string name="offgrid_warn_hotspot_on">Hotspot seluler Anda aktif. Ini dapat menghentikan Anda menerima melalui Wi-Fi Direct. Matikan sebelum menerima.</string>
     <string name="action_open_hotspot_settings">Pengaturan hotspot</string>
     <string name="offgrid_blocked_title">Tidak dapat menerima file sekarang</string>
-    <string name="offgrid_blocked_disconnect_wifi">Putuskan dari Wi-Fi saat ini</string>
+    <string name="offgrid_blocked_disconnect_wifi">Putuskan Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Matikan hotspot</string>
     <string name="offgrid_blocked_body">Wi-Fi Anda terhubung ke jaringan lain dan hotspot Anda aktif, sehingga transfer tidak dapat diselesaikan. Lakukan salah satu hal di atas, lalu kembali ke sini.</string>
     <string name="label_or">atau</string>

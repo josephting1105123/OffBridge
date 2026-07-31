@@ -401,7 +401,7 @@
     <string name="offgrid_warn_hotspot_on">Your mobile hotspot is on. This can stop you from receiving over Wi-Fi Direct. Turn it off before receiving.</string>
     <string name="action_open_hotspot_settings">Hotspot settings</string>
     <string name="offgrid_blocked_title">Can\'t receive files right now</string>
-    <string name="offgrid_blocked_disconnect_wifi">Disconnect from current Wi-Fi</string>
+    <string name="offgrid_blocked_disconnect_wifi">Disconnect Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Turn off hotspot</string>
     <string name="offgrid_blocked_body">Your Wi-Fi is connected to another network and your hotspot is on, so the transfer can\'t be completed. Do one of the above, then return here.</string>
     <string name="label_or">or</string>

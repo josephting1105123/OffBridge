@@ -581,7 +581,7 @@
     <string name="offgrid_warn_hotspot_on">您的移动热点已开启。这可能导致您无法通过 Wi-Fi Direct 接收。请在接收前将其关闭。</string>
     <string name="action_open_hotspot_settings">热点设置</string>
     <string name="offgrid_blocked_title">目前无法接收文件</string>
-    <string name="offgrid_blocked_disconnect_wifi">断开当前 Wi-Fi 连接</string>
+    <string name="offgrid_blocked_disconnect_wifi">断开 Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">关闭热点</string>
     <string name="offgrid_blocked_body">您的 Wi-Fi 已连接到另一个网络，且您的热点已开启，因此无法完成传输。请执行上述操作之一，然后返回此处。</string>
     <string name="label_or">或</string>

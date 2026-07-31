@@ -597,7 +597,7 @@
     <string name="offgrid_warn_hotspot_on">Seu ponto de acesso móvel está ativo. Isso pode impedir que você receba via Wi-Fi Direct. Desative-o antes de receber.</string>
     <string name="action_open_hotspot_settings">Configurações do ponto de acesso</string>
     <string name="offgrid_blocked_title">Não é possível receber arquivos agora</string>
-    <string name="offgrid_blocked_disconnect_wifi">Desconectar do Wi-Fi atual</string>
+    <string name="offgrid_blocked_disconnect_wifi">Desligar o Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Desativar ponto de acesso</string>
     <string name="offgrid_blocked_body">Seu Wi-Fi está conectado a outra rede e seu ponto de acesso está ativo, então a transferência não pode ser concluída. Faça uma das ações acima e retorne aqui.</string>
     <string name="label_or">ou</string>

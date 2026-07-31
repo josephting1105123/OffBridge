@@ -591,7 +591,7 @@
     <string name="offgrid_warn_hotspot_on">モバイルホットスポットがオンになっています。これにより Wi-Fi Direct での受信ができなくなる場合があります。受信する前にオフにしてください。</string>
     <string name="action_open_hotspot_settings">ホットスポット設定</string>
     <string name="offgrid_blocked_title">今はファイルを受信できません</string>
-    <string name="offgrid_blocked_disconnect_wifi">現在の Wi-Fi から切断する</string>
+    <string name="offgrid_blocked_disconnect_wifi">Wi-Fi を切断</string>
     <string name="offgrid_blocked_turn_off_hotspot">ホットスポットをオフにする</string>
     <string name="offgrid_blocked_body">Wi-Fi が別のネットワークに接続され、ホットスポットもオンになっているため、転送を完了できません。上記のいずれかを行ってから、ここに戻ってください。</string>
     <string name="label_or">または</string>

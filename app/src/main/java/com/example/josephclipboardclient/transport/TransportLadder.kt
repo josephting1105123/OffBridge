@@ -59,6 +59,47 @@ class TransportLadder(
     companion object {
         /** Settle gap between tiers that re-drive the Wi-Fi radio (picker → P2P etc.). */
         private const val INTER_TIER_SETTLE_MS = 1_000L
+
+        /**
+         * Drops tiers the local ladder cannot possibly run, given what it actually holds.
+         *
+         * A tier whose inputs are missing does not fail slowly and informatively — it fails in about
+         * a second with CONNECT_TIMEOUT, which reads like a radio problem and hides the real cause.
+         * The trace that motivated this filter is a LAN-only sender (empty ssid/psk, no GO): after
+         * the control channel degraded the ladder still announced "Wi-Fi tier 1/1: P2P_CRED_JOIN",
+         * failed instantly, and reported "all Wi-Fi tiers exhausted" — a join of a group whose SSID
+         * is the empty string was never going to work.
+         *
+         * Two classes of precondition:
+         *  - CREDENTIALS. Everything that joins an AP (Wi-Fi Direct group or SoftAP alike) needs a
+         *    non-blank ssid+psk; [P2P_NEGOTIATED] needs the group owner's MAC instead.
+         *  - THE CONTROL CHANNEL. [RECEIVER_AS_GO] and [SENDER_JOINS_AP] only work by relaying creds
+         *    in a HOST_READY control frame, so once control has degraded they are structurally dead
+         *    and must not be attempted. Credential-free / QR-credential tiers stay eligible.
+         *
+         * Pure and unit-tested; O(n) over a list that never exceeds a handful of tiers.
+         */
+        fun eligibleLocalTiers(
+            candidates: List<TransportDescriptor>,
+            hasApCredentials: Boolean,
+            hasGroupOwnerMac: Boolean,
+            controlDegraded: Boolean
+        ): List<TransportDescriptor> = candidates.filter { tier ->
+            when (tier) {
+                TransportDescriptor.P2P_CRED_JOIN,
+                TransportDescriptor.SPECIFIER,
+                TransportDescriptor.LOHS,
+                TransportDescriptor.SOFTAP_JOIN -> hasApCredentials
+
+                TransportDescriptor.P2P_NEGOTIATED -> hasGroupOwnerMac
+
+                TransportDescriptor.RECEIVER_AS_GO,
+                TransportDescriptor.SENDER_JOINS_AP -> !controlDegraded
+
+                // Retired data paths — never runnable here (executeTier reports UNSUPPORTED).
+                TransportDescriptor.BT_L2CAP, TransportDescriptor.AWARE -> false
+            }
+        }
     }
 
     // ------------------------------------------------------------ local mode
@@ -72,7 +113,12 @@ class TransportLadder(
      * denied, so the ladder is never empty. [preferredOrder] (Phase 3) then reorders
      * by per-peer historical success; unknown ids are ignored, missing ids keep position.
      */
-    fun start(hasNearbyPermission: Boolean, preferredOrder: List<Int>? = null, listener: Listener) {
+    fun start(
+        hasNearbyPermission: Boolean,
+        preferredOrder: List<Int>? = null,
+        controlDegraded: Boolean = false,
+        listener: Listener
+    ) {
         cancelled = false
         val tiers = mutableListOf<TransportDescriptor>()
         if (payload.softApBridge) {
@@ -98,7 +144,27 @@ class TransportLadder(
                 if (i >= 0) i else preferredOrder.size + defaultOrder.indexOf(t)
             }
         }
-        runFrom(0, tiers, listener)
+        val hasApCredentials = payload.ssid.isNotBlank() && payload.psk.isNotBlank()
+        val runnable = eligibleLocalTiers(
+            candidates = tiers,
+            hasApCredentials = hasApCredentials,
+            hasGroupOwnerMac = payload.goDeviceAddress != null,
+            controlDegraded = controlDegraded
+        )
+        if (runnable.size != tiers.size) {
+            val dropped = tiers.filterNot { runnable.contains(it) }.joinToString(",") { it.wireName }
+            TransportDiag.log("Wi-Fi ladder: skipping unrunnable tier(s) $dropped (creds=$hasApCredentials controlDegraded=$controlDegraded)")
+        }
+        if (runnable.isEmpty()) {
+            // Nothing here can succeed, so say so now instead of burning a doomed tier's timeout and
+            // reporting a misleading CONNECT_TIMEOUT. The caller surfaces the actionable card.
+            // Posted, not called inline: every other terminal callback from this class arrives
+            // asynchronously, so the listener has never had to be re-entrant against start().
+            TransportDiag.log("Wi-Fi ladder: no runnable tier — sender published no joinable network")
+            mainHandler.post { if (!cancelled) listener.onAllTiersFailed() }
+            return
+        }
+        runFrom(0, runnable, listener)
     }
 
     private fun runFrom(index: Int, tiers: List<TransportDescriptor>, listener: Listener) {

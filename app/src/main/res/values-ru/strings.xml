@@ -594,7 +594,7 @@
     <string name="offgrid_warn_hotspot_on">Ваша мобильная точка доступа включена. Это может помешать получению через Wi-Fi Direct. Отключите её перед получением.</string>
     <string name="action_open_hotspot_settings">Настройки точки доступа</string>
     <string name="offgrid_blocked_title">Сейчас не удаётся получить файлы</string>
-    <string name="offgrid_blocked_disconnect_wifi">Отключиться от текущей сети Wi-Fi</string>
+    <string name="offgrid_blocked_disconnect_wifi">Отключить Wi-Fi</string>
     <string name="offgrid_blocked_turn_off_hotspot">Отключить точку доступа</string>
     <string name="offgrid_blocked_body">Ваш Wi-Fi подключён к другой сети, а точка доступа включена, поэтому передача не может быть завершена. Выполните одно из действий выше, затем вернитесь сюда.</string>
     <string name="label_or">или</string>

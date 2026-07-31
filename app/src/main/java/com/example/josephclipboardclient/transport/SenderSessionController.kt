@@ -202,20 +202,46 @@ class SenderSessionController(
 
     private fun handlePreSessionFrame(raw: ByteArray) {
         if (torndown || session != null) return
-        val frame = ControlProtocol.parse(raw) ?: return
-        if (frame.type != ControlProtocol.HELLO_RX) return
-        val body = try { JSONObject(String(frame.body, Charsets.UTF_8)) } catch (_: Exception) { return }
+        // Every rejection below used to be a silent `return`, so the 8s watchdog reported "HELLO
+        // never completed" identically whether nothing arrived or a frame arrived and was thrown
+        // away. Naming the step makes the difference visible in the diagnostics trace.
+        val frame = ControlProtocol.parse(raw)
+        if (frame == null) {
+            TransportDiag.log("TX: control frame dropped — malformed/truncated (${raw.size} bytes)")
+            return
+        }
+        if (frame.type != ControlProtocol.HELLO_RX) {
+            TransportDiag.log("TX: control frame dropped — expected HELLO_RX, got type 0x%02x".format(frame.type))
+            return
+        }
+        val body = try { JSONObject(String(frame.body, Charsets.UTF_8)) } catch (_: Exception) {
+            TransportDiag.log("TX: HELLO_RX dropped — body is not JSON")
+            return
+        }
 
         val receiverPub = try {
             Base64.decode(body.optString("pk"), Base64.NO_WRAP)
-        } catch (_: Exception) { return }
+        } catch (_: Exception) {
+            TransportDiag.log("TX: HELLO_RX dropped — bad receiver public key")
+            return
+        }
         val helloHmac = try {
             Base64.decode(body.optString("hm"), Base64.NO_WRAP)
-        } catch (_: Exception) { return }
+        } catch (_: Exception) {
+            TransportDiag.log("TX: HELLO_RX dropped — bad HMAC encoding")
+            return
+        }
 
-        val sharedKey = try { ecdh.deriveSecrets(receiverPub).first } catch (_: Exception) { return }
+        val sharedKey = try { ecdh.deriveSecrets(receiverPub).first } catch (_: Exception) {
+            TransportDiag.log("TX: HELLO_RX dropped — ECDH failed on the receiver's key")
+            return
+        }
         val expected = SessionCrypto.hmacSha256(sharedKey, token)
-        if (!MessageDigest.isEqual(helloHmac, expected)) return
+        if (!MessageDigest.isEqual(helloHmac, expected)) {
+            // Wrong token: a stale QR/NFC payload, or a different session's receiver.
+            TransportDiag.log("TX: HELLO_RX REJECTED — token HMAC mismatch (stale code?)")
+            return
+        }
         // Valid HELLO arrived — the control channel is forming, so cancel the no-HELLO watchdog.
         mainHandler.removeCallbacksAndMessages(helloWatchdogToken)
 
