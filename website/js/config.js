@@ -63,7 +63,7 @@ window.CS_CONFIG = {
     size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
-    sha256: "c0f910855eff31ca716c70bd7b6f3e8444bf05cdd031dc7b064c30a49f941817",
+    sha256: "f50b42e8c2a63e1d8ca56a879d2355736e096588b5ee6e26894009b64c2f2a85",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 
