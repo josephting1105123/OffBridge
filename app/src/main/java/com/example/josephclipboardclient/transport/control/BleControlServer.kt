@@ -19,6 +19,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import java.util.ArrayDeque
 import java.util.UUID
 
@@ -63,7 +64,15 @@ class BleControlServer(context: Context) : ControlChannel {
     override var onClosed: (() -> Unit)? = null
 
     /** Fed only from the main thread (see [onCharacteristicWriteRequest]), as its contract requires. */
-    private val reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
+    private val reassembler = GattReassembler(
+        onDropped = { why -> TransportDiag.log("TX: control chunk dropped — $why") }
+    ) { frame -> onMessage?.invoke(frame) }
+
+    /**
+     * Inbound-chunk counter. "HELLO never completed" used to read the same whether the central's
+     * writes never reached us or arrived and failed reassembly; the first-chunk line separates them.
+     */
+    private var chunksIn = 0
 
     private val sendQueue = ArrayDeque<ByteArray>()
     @Volatile private var notifyInFlight = false
@@ -156,18 +165,38 @@ class BleControlServer(context: Context) : ControlChannel {
             preparedWrite: Boolean, responseNeeded: Boolean,
             offset: Int, value: ByteArray?
         ) {
+            // A QUEUED (long) write is not a chunk. The stack splits one oversized value into
+            // fragments at increasing offsets and only applies them on onExecuteWrite, so byte 0 of
+            // a fragment is frame data, not the chunk index — feeding it to the reassembler poisons
+            // the frame and the whole HELLO vanishes with nothing in the trace. We don't support the
+            // long-write path (chunking exists precisely so we never need it), so refuse it loudly:
+            // the central's write then FAILS, which its queue treats as a re-sendable chunk instead
+            // of a silent success. Same for a non-zero offset on a normal write.
+            val unsupported = preparedWrite || offset != 0
             if (responseNeeded) {
                 try {
-                    gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null)
+                    gattServer?.sendResponse(
+                        device, requestId,
+                        if (unsupported) BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED else BluetoothGatt.GATT_SUCCESS,
+                        offset, null
+                    )
                 } catch (_: Exception) {}
             }
             if (closed || characteristic.uuid != ControlProtocol.CHAR_RX_UUID) return
             if (clientDevice?.address != device.address) return
+            if (unsupported) {
+                TransportDiag.log("TX: refused a queued/offset GATT write (prepared=$preparedWrite offset=$offset)")
+                return
+            }
             // Copy and hop to main: reassembly is single-threaded by contract and onMessage is
             // delivered there. mainHandler.post preserves FIFO and the ATT writes already arrive in
             // order, so chunk order survives.
             val chunk = value?.copyOf() ?: return
-            mainHandler.post { if (!closed) reassembler.accept(chunk) }
+            mainHandler.post {
+                if (closed) return@post
+                if (chunksIn++ == 0) TransportDiag.log("TX: first control chunk in (${chunk.size} B)")
+                reassembler.accept(chunk)
+            }
         }
 
         override fun onDescriptorWriteRequest(

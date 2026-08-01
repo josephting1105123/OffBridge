@@ -59,7 +59,7 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.7.9",
+    version: "3.7.10",
     size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",

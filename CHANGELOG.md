@@ -4,6 +4,43 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.6 — Android (build 34) — off-grid handshake hotfix
+
+### Fixed
+- **Off-grid transfers still stalled at "waiting for the sender".** 3.7.5 fixed the receiving side's
+  chunk validation but left two ways for the handshake to die anyway, both of which this release
+  closes.
+
+  A frame is sent as several Bluetooth writes. If one of them was lost, the sender's retry was
+  discarded by the peer as out of sequence — there was no way to say "this is a new frame, start
+  over", so a retransmission could never land once an attempt had been cut short. Chunks now flag
+  the start of a frame, and a retry resynchronises on it. If writes are being swallowed at full
+  size, the retry also falls back to the smallest write every Bluetooth stack must accept.
+
+  Separately, when the sender's reply to the handshake went missing, the receiver's retry arrived
+  as plaintext against a session the sender already considered live — so it failed decryption and
+  was discarded in silence, and each side sat waiting for the other. The sender now recognises that
+  retry, replays its original reply unchanged, and re-drives the connection attempt the receiver
+  never heard about.
+
+### Changed
+- Discarded control chunks are logged with the reason. "The handshake never completed" previously
+  read the same whether the other device's writes never arrived or arrived and were rejected; a
+  diagnostics trace can now tell those apart.
+
+## 3.7.10 — Windows (off-grid handshake hotfix)
+
+### Fixed
+- **The same two off-grid handshake failures as Android 3.7.6**, fixed the same way on this side:
+  chunk retransmissions now carry a frame-start marker and resynchronise on it, and a phone
+  retrying its handshake because this PC's reply was lost gets that reply replayed instead of being
+  ignored.
+- **Reassembly validated nothing.** Chunks were concatenated in arrival order with no index check,
+  so a single retransmitted or out-of-order write produced a corrupt frame that failed its length
+  check and vanished without a trace. It now matches the phone's reassembler exactly — duplicates
+  dropped, gaps refused rather than papered over — with the behaviour pinned by unit tests this
+  side had never had.
+
 ## 3.7.5 — Android (build 33) (off-grid handshake, hidden discovery, send-screen fixes)
 
 ### Fixed

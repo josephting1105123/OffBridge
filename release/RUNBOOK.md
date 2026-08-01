@@ -1,9 +1,9 @@
 # Release runbook — the Claude-free operations manual
 
 This is the manual to run releases and a beta **without AI help**. Everything here is mechanical:
-follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.7.5,
-versionCode 33. (Android and Windows are on separate version tracks since 3.5.1; the Windows
-module is at 3.7.9.)
+follow the recipe. App id `com.EntropicSoftwareLab.ClipboardShare`, current versionName 3.7.6,
+versionCode 34. (Android and Windows are on separate version tracks since 3.5.1; the Windows
+module is at 3.7.10.)
 
 ---
 

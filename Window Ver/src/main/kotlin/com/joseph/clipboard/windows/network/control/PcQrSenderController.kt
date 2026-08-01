@@ -99,6 +99,16 @@ class PcQrSenderController(
     private var helloWatchdog: ScheduledFuture<*>? = null
     private var resultWatchdog: ScheduledFuture<*>? = null
 
+    /**
+     * The HELLO_ACK exactly as it went out, replayed by [resendHelloAck] when the phone retransmits
+     * its HELLO because the ACK was lost. Replaying the bytes is idempotent; re-running the HELLO
+     * handler would restart the join ladder mid-attempt.
+     */
+    private var helloAckFrame: ByteArray? = null
+
+    /** Bounds [resendHelloAck] — the phone only retries HELLO_RX twice. */
+    private var ackResends = 0
+
     /** Wire the channel callbacks. Call once, after the peripheral's advertising verdict is in. */
     fun begin() {
         channel.onMessage = { raw -> executor.execute { handlePreSessionFrame(raw) } }
@@ -182,12 +192,15 @@ class PcQrSenderController(
             addProperty("gof", -1) // a PC never hosts a phone-side Wi-Fi Direct group election
             add("plan", JsonArray().apply { add(SOFTAP_JOIN_ID) })
         }
-        channel.send(ControlProtocol.plainFrame(ControlProtocol.HELLO_ACK, ackBody))
+        val ackFrame = ControlProtocol.plainFrame(ControlProtocol.HELLO_ACK, ackBody)
+        helloAckFrame = ackFrame
+        channel.send(ackFrame)
 
         val s = ControlSession(channel, SessionCrypto(key, isSender = true), executor)
         session = s
         s.onFrame = { type, payload -> handleFrame(type, payload) }
         s.onDead = { handleControlLost() }
+        s.onPlaintextHello = { resendHelloAck() }
         s.start()
 
         _state.value = QrControlState.Linked(phoneName)
@@ -198,6 +211,33 @@ class PcQrSenderController(
             addProperty("port", TRANSFER_PORT)
         })
         startAttempt(1)
+    }
+
+    /**
+     * The phone re-sent HELLO_RX, so our HELLO_ACK never landed. Replay the cached ACK on the raw
+     * channel — it is plaintext (it bootstraps the session), so it must not go through
+     * [ControlSession.send] — and leave the join ladder exactly where it is. Runs on [executor].
+     */
+    private fun resendHelloAck() {
+        if (finished || transferring) return
+        val ack = helloAckFrame ?: return
+        if (ackResends >= MAX_ACK_RESENDS) return
+        ackResends++
+        channel.send(ack)
+        // Everything sent between the lost ACK and now was sealed, so the phone — which had no
+        // session yet — dropped all of it, DATA_READY and the TRY_TRANSPORT included. Re-drive the
+        // current attempt instead of leaving it linked and idle until the result watchdog fires.
+        //
+        // Only when nothing sealed has ever come back, though: a phone we HAVE heard from already
+        // holds a session, so this HELLO is something else and re-driving would restart a join that
+        // is already in flight.
+        val s = session ?: return
+        if (s.peerHeard || attempt <= 0) return
+        s.send(ControlProtocol.DATA_READY, JsonObject().apply {
+            addProperty("ip", gatewayIp)
+            addProperty("port", TRANSFER_PORT)
+        })
+        startAttempt(attempt)
     }
 
     // ----------------------------------------------------------- retry ladder
@@ -321,6 +361,9 @@ class PcQrSenderController(
 
         /** Mirror of the phone sender's HELLO_WATCHDOG_MS. */
         const val HELLO_WATCHDOG_MS = 8_000L
+
+        /** Mirror of the phone sender's MAX_ACK_RESENDS. */
+        const val MAX_ACK_RESENDS = 3
 
         /** SOFTAP_JOIN budget (25 s) + specifier watchdog grace + margin. */
         const val RESULT_TIMEOUT_MS = 35_000L

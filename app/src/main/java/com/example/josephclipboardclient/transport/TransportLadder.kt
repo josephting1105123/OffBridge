@@ -107,11 +107,14 @@ class TransportLadder(
     /**
      * Phase 1 sequence. P2P_CRED_JOIN leads, with P2P_NEGOTIATED behind it when a
      * group-owner address is known; [hasNearbyPermission] gates these true-P2P
-     * tiers (NEARBY_WIFI_DEVICES / fine location). The SPECIFIER picker was dropped
-     * from the active ladder — it failed to discover the sender's network on tested
-     * devices — but is retained as the sole Wi-Fi fallback when the permission is
-     * denied, so the ladder is never empty. [preferredOrder] (Phase 3) then reorders
-     * by per-peer historical success; unknown ids are ignored, missing ids keep position.
+     * tiers (NEARBY_WIFI_DEVICES / fine location). SPECIFIER trails them as the
+     * last resort — it is slower and shows an OS consent dialog, and on some devices
+     * it never finds the GO's beacon, but it is the only tier that hands the radio
+     * decision to the framework, so it is the one chance left when the phone is
+     * already associated with another network. Without the permission it is also the
+     * sole Wi-Fi fallback, so the ladder is never empty. [preferredOrder] (Phase 3)
+     * then reorders by per-peer historical success; unknown ids are ignored, missing
+     * ids keep position.
      */
     fun start(
         hasNearbyPermission: Boolean,
@@ -130,6 +133,14 @@ class TransportLadder(
         } else if (hasNearbyPermission) {
             tiers.add(TransportDescriptor.P2P_CRED_JOIN)
             if (payload.goDeviceAddress != null) tiers.add(TransportDescriptor.P2P_NEGOTIATED)
+            // Last resort, and the only one that can work when this phone's Wi-Fi is already
+            // associated with some other network: P2P_CRED_JOIN drives the p2p interface alongside
+            // that STA link, which fails outright on chipsets that can't hold both (band-pinned GO
+            // on one channel, home AP on another → CONNECT_TIMEOUT and a one-tier ladder that
+            // dead-ends). A WifiNetworkSpecifier request targets the GO's SSID as an ordinary AP
+            // and lets the framework itself decide how to free the radio. It costs a consent tap
+            // and only runs once the fast path has already failed.
+            tiers.add(TransportDescriptor.SPECIFIER)
         } else {
             // Without NEARBY_WIFI_DEVICES the true-P2P tiers can't run; keep the
             // specifier picker as the sole Wi-Fi fallback so the ladder isn't empty.

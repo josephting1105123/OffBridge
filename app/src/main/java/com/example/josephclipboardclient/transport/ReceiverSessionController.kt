@@ -90,6 +90,18 @@ class ReceiverSessionController(
     companion object {
         private const val TAG = "OffGridCtl"
         private const val HELLO_ACK_TIMEOUT_MS = 5_000L
+
+        /**
+         * When to re-send HELLO_RX if no ACK has come back, inside the same 5 s budget.
+         *
+         * The handshake used to be a single shot: one frame, then a five-second wait, then degrade.
+         * Anything that ate that one frame — a chunk lost in the peer's GATT server, or a peripheral
+         * that negotiates a 247-byte MTU and then quietly swallows writes near the limit — cost the
+         * whole control channel, which is the "HELLO_RX sent" / "HELLO never completed" stand-off in
+         * the HONOR traces. The retries go out with ATT-minimum chunks, so the second attempt does
+         * not repeat whatever the first one tripped over.
+         */
+        private val HELLO_RETRY_DELAYS_MS = longArrayOf(1_400L, 2_800L)
     }
 
     private val helloTimeoutToken = Any()
@@ -165,8 +177,21 @@ class ReceiverSessionController(
                     put("idk", Base64.encodeToString(it, Base64.NO_WRAP))
                 }
             }
-            TransportDiag.log("control: HELLO_RX sent, awaiting ACK (${HELLO_ACK_TIMEOUT_MS / 1000}s)…")
-            client.send(ControlProtocol.plainFrame(ControlProtocol.HELLO_RX, hello))
+            val frame = ControlProtocol.plainFrame(ControlProtocol.HELLO_RX, hello)
+            val attempts = HELLO_RETRY_DELAYS_MS.size + 1
+            TransportDiag.log(
+                "control: HELLO_RX sent (1/$attempts), awaiting ACK (${HELLO_ACK_TIMEOUT_MS / 1000}s)…"
+            )
+            client.send(frame)
+            // Every retry shares helloTimeoutToken with the deadline below, so the ACK handler's
+            // single removeCallbacksAndMessages(helloTimeoutToken) cancels the whole schedule.
+            HELLO_RETRY_DELAYS_MS.forEachIndexed { i, delay ->
+                mainHandler.postDelayed({
+                    if (torndown || session != null) return@postDelayed
+                    TransportDiag.log("control: no HELLO_ACK yet — re-sending HELLO_RX (${i + 2}/$attempts, small chunks)")
+                    client.resendSmall(frame)
+                }, helloTimeoutToken, delay)
+            }
             mainHandler.postDelayed({
                 if (!torndown && session == null) {
                     Log.i(TAG, "HELLO_ACK timeout — degraded local ladder")
@@ -432,6 +457,9 @@ class ReceiverSessionController(
      */
     private fun degradeToLocalLadder() {
         if (torndown) return
+        // Drop any pending HELLO retransmit/deadline: the control channel is being abandoned, so a
+        // later retry would only log a re-send against a client we are about to close.
+        mainHandler.removeCallbacksAndMessages(helloTimeoutToken)
         // We fell back to a Wi-Fi-only ladder because the BLE control channel couldn't be used; if
         // that ladder then exhausts, the control failure is the likely root cause to surface.
         controlDegraded = true

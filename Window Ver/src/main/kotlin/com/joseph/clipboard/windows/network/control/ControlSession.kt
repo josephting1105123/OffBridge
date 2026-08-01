@@ -49,9 +49,27 @@ class ControlSession(
     /** Liveness lost (3 missed pongs) or the underlying link closed. Fires once, on [executor]. */
     var onDead: (() -> Unit)? = null
 
+    /**
+     * A plaintext HELLO_RX arrived after the session formed — our HELLO_ACK never reached the phone
+     * and it is retrying. Without this the frame fails [SessionCrypto.open] and vanishes, leaving
+     * the phone to time out against a session this side believes is healthy. Mirrors the phone's
+     * `ControlSession.onPlaintextHello`.
+     */
+    var onPlaintextHello: (() -> Unit)? = null
+
     private var missedPongs = 0
     private var dead = false
     private var pingFuture: ScheduledFuture<*>? = null
+
+    /**
+     * True once ANY sealed frame from the phone has opened — PING/PONG included, so a linked but
+     * otherwise silent phone still counts within one ping interval. Proof that the phone holds a
+     * session of its own, which separates "our HELLO_ACK was lost" from "the phone is linked and
+     * something else re-sent a HELLO". Mirrors the phone's `ControlSession.peerHeard`.
+     */
+    @Volatile
+    var peerHeard = false
+        private set
 
     fun start() {
         channel.onMessage = { raw -> executor.execute { handleRaw(raw) } }
@@ -83,7 +101,14 @@ class ControlSession(
     private fun handleRaw(raw: ByteArray) {
         if (dead) return
         val frame = ControlProtocol.parse(raw) ?: return
+        // HELLO_RX is plaintext by definition, so it can never open as a sealed frame. Reaching
+        // here means the phone is retransmitting its HELLO because our ACK was lost.
+        if (frame.type == ControlProtocol.HELLO_RX) {
+            onPlaintextHello?.invoke()
+            return
+        }
         val clear = crypto.open(frame.type, frame.seq, frame.body) ?: return
+        peerHeard = true
         val payload = try {
             JsonParser.parseString(String(clear, Charsets.UTF_8)).asJsonObject
         } catch (_: Exception) {

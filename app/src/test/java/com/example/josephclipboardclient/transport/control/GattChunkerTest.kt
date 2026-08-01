@@ -186,6 +186,71 @@ class GattChunkerTest {
         assertArrayEquals(good, out[0])
     }
 
+    // ------------------------------------------------------- retransmission / START resync
+    // The HELLO handshake re-sends its frame when no ACK comes back. A retry has to land even when
+    // the abandoned attempt left the peer holding half a frame, which index validation alone can't
+    // do: index 0 is not a frame start (it wraps every 256 chunks). Hence the START flag.
+
+    @Test
+    fun firstChunkFlagsStartAndLastFlagsEnd() {
+        val chunks = GattChunker.split(ByteArray(40) { it.toByte() }, mtu = 23)
+        assertTrue("multi-chunk frame expected", chunks.size >= 3)
+        assertEquals("first chunk must flag START", 0x02, chunks.first()[1].toInt() and 0x02)
+        assertEquals("only the first chunk flags START", 0, chunks[1][1].toInt() and 0x02)
+        assertTrue("last chunk must flag END", chunks.last()[1].toInt() and 0x01 != 0)
+
+        val single = GattChunker.split("hi".toByteArray(), mtu = 23)
+        assertEquals(1, single.size)
+        assertEquals("a single-chunk frame is both START and END", 0x03, single[0][1].toInt() and 0x03)
+    }
+
+    @Test
+    fun retransmittedFrameLandsAfterATruncatedAttempt() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val frame = ByteArray(60) { it.toByte() }
+        val chunks = GattChunker.split(frame, mtu = 23)
+        assertTrue(chunks.size >= 3)
+        // Attempt 1 dies part-way through — the peer is left mid-frame with no END in sight.
+        chunks.dropLast(2).forEach { r.accept(it) }
+        assertTrue(out.isEmpty())
+        // Attempt 2 re-sends the whole frame. Without START it would be discarded as out-of-sequence.
+        chunks.forEach { r.accept(it) }
+        assertEquals(1, out.size)
+        assertArrayEquals(frame, out[0])
+    }
+
+    @Test
+    fun retransmitAtASmallerChunkSizeStillReassembles() {
+        // The retry path re-chunks to the ATT minimum, so the two attempts have different chunk
+        // counts and boundaries; the second must not be read as a continuation of the first.
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val frame = ByteArray(600) { (it * 3).toByte() }
+        val big = GattChunker.split(frame, mtu = 247)
+        assertTrue("need a multi-chunk first attempt", big.size >= 2)
+        big.dropLast(1).forEach { r.accept(it) }
+        assertTrue(out.isEmpty())
+        val small = GattChunker.split(frame, mtu = 247, maxPayload = GattChunker.CONSERVATIVE_PAYLOAD)
+        assertTrue("the conservative split must produce more chunks", small.size > 1)
+        small.forEach { r.accept(it) }
+        assertEquals(1, out.size)
+        assertArrayEquals(frame, out[0])
+    }
+
+    @Test
+    fun conservativePayloadCapsChunksAtTheAttMinimum() {
+        val chunks = GattChunker.split(
+            ByteArray(100), mtu = 512, maxPayload = GattChunker.CONSERVATIVE_PAYLOAD
+        )
+        chunks.forEach {
+            assertTrue("chunk of ${it.size} B exceeds a 20-byte ATT write", it.size <= 20)
+        }
+        // …and the cap never enlarges a chunk the MTU already limits below it.
+        val tiny = GattChunker.split(ByteArray(100), mtu = 8, maxPayload = GattChunker.CONSERVATIVE_PAYLOAD)
+        tiny.forEach { assertTrue(it.size <= 5) } // mtu 8 -> 3 data bytes + 2 header
+    }
+
     @Test
     fun indexWrapsPastByteBoundaryWithoutBreakingReassembly() {
         // maxData = 1 at mtu 4, so a 600-byte frame is 600 chunks and the index wraps twice.

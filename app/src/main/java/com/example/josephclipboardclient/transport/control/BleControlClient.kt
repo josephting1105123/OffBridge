@@ -17,6 +17,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ParcelUuid
 import android.util.Log
+import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import java.util.ArrayDeque
 import java.util.UUID
 
@@ -50,7 +51,12 @@ class BleControlClient(context: Context) : ControlChannel {
     private var onReady: ((BluetoothDevice?) -> Unit)? = null
 
     /** Fed only from the main thread (see [onCharacteristicChanged]), as its contract requires. */
-    private val reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
+    private val reassembler = GattReassembler(
+        onDropped = { why -> TransportDiag.log("RX: control chunk dropped — $why") }
+    ) { frame -> onMessage?.invoke(frame) }
+
+    /** Inbound-chunk counter, so the trace shows whether the sender's notifications arrive at all. */
+    private var chunksIn = 0
 
     private val sendQueue = ArrayDeque<ByteArray>()
     @Volatile private var writeInFlight = false
@@ -217,7 +223,11 @@ class BleControlClient(context: Context) : ControlChannel {
             // Reassembly is single-threaded by contract, so run it where onMessage is delivered.
             // mainHandler.post preserves FIFO, and the ATT callbacks are already ordered, so chunk
             // order survives the hop.
-            mainHandler.post { if (!closed) reassembler.accept(chunk) }
+            mainHandler.post {
+                if (closed) return@post
+                if (chunksIn++ == 0) TransportDiag.log("RX: first control chunk in (${chunk.size} B)")
+                reassembler.accept(chunk)
+            }
         }
 
         override fun onCharacteristicWrite(g: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
@@ -343,14 +353,43 @@ class BleControlClient(context: Context) : ControlChannel {
         } catch (_: Exception) {}
     }
 
-    override fun send(frame: ByteArray) {
+    override fun send(frame: ByteArray) = send(frame, Int.MAX_VALUE)
+
+    private fun send(frame: ByteArray, maxPayload: Int) {
         if (closed || !ready) return
         synchronized(sendQueue) {
-            GattChunker.split(frame, mtu).forEach { sendQueue.add(it) }
+            GattChunker.split(frame, mtu, maxPayload).forEach { sendQueue.add(it) }
         }
         // [ControlChannel] accepts send from any thread, but the pump is main-thread-confined so
         // there is exactly one writer touching rxCharacteristic and the queue's head.
         mainHandler.post { pumpQueue() }
+    }
+
+    /**
+     * Discards anything still queued and re-sends [frame] chunked to the ATT minimum (20-byte
+     * writes), for a handshake frame the peer never acknowledged.
+     *
+     * Two failure modes are covered at once, without having to tell them apart: a chunk lost
+     * somewhere in the peer's stack (the retransmit simply replaces the frame — its first chunk
+     * carries START, so the peer resyncs even if it is stuck mid-frame), and a peripheral that
+     * negotiates a large MTU but silently swallows writes near the limit, which several OEM GATT
+     * servers do. Dropping the queue first matters: leaving the abandoned attempt's chunks in front
+     * of the new ones would interleave two index sequences and poison both.
+     */
+    fun resendSmall(frame: ByteArray) {
+        if (closed || !ready) return
+        mainHandler.post {
+            if (closed || !ready) return@post
+            mainHandler.removeCallbacksAndMessages(WRITE_WATCHDOG_TOKEN)
+            mainHandler.removeCallbacksAndMessages(WRITE_RETRY_TOKEN)
+            synchronized(sendQueue) { sendQueue.clear() }
+            // The abandoned chunk is deliberately NOT re-queued: it belongs to the attempt we just
+            // gave up on. A late completion callback for it only clears the flag and pumps.
+            inFlightChunk = null
+            writeInFlight = false
+            writeRetries = 0
+            send(frame, GattChunker.CONSERVATIVE_PAYLOAD)
+        }
     }
 
     /** Dispatches one chunk. Main thread only — see [onWriteComplete]. */

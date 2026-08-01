@@ -92,8 +92,11 @@ class ControlPlaneVectorTest {
             "67815a6e0f59cc5f9838316284872dea8c5cc8543e1251393dd576c8b7a05b14"
         const val SEALED_FRAME_HEX =
             "0300000001001723af2fee319aed2a3ebda805f19797678a0cdddfa1c1b2"
+        // Chunk header = [rolling idx][flags: bit0 END, bit1 START]. The first chunk carries 0x02,
+        // the last 0x01, a single-chunk frame 0x03. Older builds mask bit0 only, so START is
+        // invisible to them — the vector changed, the interop did not.
         const val CHUNKS_VECTOR =
-            "0000000102030405060708090a0b0c0d0e0f1011:" +
+            "0002000102030405060708090a0b0c0d0e0f1011:" +
                 "010012131415161718191a1b1c1d1e1f20212223:" +
                 "020124252627"
         const val PLAIN_HEADER_HEX = "01000000000007"

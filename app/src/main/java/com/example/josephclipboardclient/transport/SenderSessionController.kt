@@ -120,6 +120,21 @@ class SenderSessionController(
     /** Fires if a BLE central connects but never completes HELLO — records the control failure. */
     private val helloWatchdogToken = Any()
 
+    /**
+     * The HELLO_ACK exactly as it went out, kept so a receiver that never saw it can be answered
+     * again from [resendHelloAck] without re-deriving anything. Re-running the HELLO handler for a
+     * retransmit would build a second plan and call advance(0) again mid-ladder; replaying the
+     * cached bytes is idempotent, which is the whole point.
+     */
+    private var helloAckFrame: ByteArray? = null
+
+    /** Bounds [resendHelloAck] so a peer stuck in a retransmit loop can't be amplified. */
+    private var ackResends = 0
+
+    /** Last TRY_TRANSPORT body and DATA_READY address, replayed by [resendHelloAck]. Main thread. */
+    private var lastTryParams: JSONObject? = null
+    private var lastDataReadyIp: String? = null
+
     /** Why an empty/exhausted plan happened, for actionable UI guidance. Set by [buildPlan]. */
     private var exhaustReason = LadderExhaustReason.GENERIC
 
@@ -139,6 +154,8 @@ class SenderSessionController(
         private const val TAG = "OffGridCtl"
         /** A GATT central that connects but doesn't finish HELLO within this is treated as control-failed. */
         private const val HELLO_WATCHDOG_MS = 8_000L
+        /** The receiver retries HELLO_RX twice, so three replays is already generous. */
+        private const val MAX_ACK_RESENDS = 3
     }
 
     /** Capability bitmap advertised in the QR `cap` field (§5). */
@@ -293,12 +310,15 @@ class SenderSessionController(
             put("sta", myCaps.staConnected)
         }
         val channel = bleServer ?: return
-        channel.send(ControlProtocol.plainFrame(ControlProtocol.HELLO_ACK, ackBody))
+        val ackFrame = ControlProtocol.plainFrame(ControlProtocol.HELLO_ACK, ackBody)
+        helloAckFrame = ackFrame
+        channel.send(ackFrame)
 
         val s = ControlSession(channel, SessionCrypto(sharedKey, isSender = true))
         session = s
         s.onFrame = { type, payload -> handleFrame(type, payload) }
         s.onDead = { handleControlLost() }
+        s.onPlaintextHello = { resendHelloAck() }
         s.start()
 
         listener.onControlLinked(receiverName)
@@ -306,6 +326,34 @@ class SenderSessionController(
         // The GO is already up: exact-IP delivery kills the candidate guessing (§9 #8).
         sendDataReady(groupOwnerIp ?: OffGridPayload.GROUP_OWNER_IP)
         advance(0)
+    }
+
+    /**
+     * The receiver re-sent its HELLO_RX, so our HELLO_ACK never landed. Replay the cached ACK on the
+     * raw channel (it is plaintext — it bootstraps the session, so it must not go through
+     * [ControlSession.send]) and leave the ladder exactly where it is.
+     */
+    private fun resendHelloAck() {
+        if (torndown) return
+        val ack = helloAckFrame ?: return
+        val channel = bleServer ?: return
+        if (ackResends >= MAX_ACK_RESENDS) return
+        ackResends++
+        TransportDiag.log("TX: receiver re-sent HELLO_RX (our ACK was lost) — re-sending HELLO_ACK")
+        channel.send(ack)
+        // Everything we sent between the lost ACK and now was sealed, so the receiver — which had no
+        // session yet — dropped all of it, including the TRY_TRANSPORT it is supposed to execute.
+        // Replaying the ACK alone would leave it linked and idle until the keepalive killed the
+        // channel ~15 s later. Sequence numbers stay monotonic, so the replay opens cleanly on the
+        // session the receiver is about to build.
+        //
+        // Only when nothing sealed has ever come back, though: a peer we HAVE heard from already
+        // holds a session, so this HELLO is something else (a stale central, a second phone) and
+        // replaying a tier at it would restart a join that is already in flight.
+        val s = session ?: return
+        if (s.peerHeard) return
+        lastDataReadyIp?.let { sendDataReady(it) }
+        lastTryParams?.let { s.send(ControlProtocol.TRY_TRANSPORT, it) }
     }
 
     /** Capability-driven tier sequence — the hotspot-first decision tree (plan v2). The sender always
@@ -588,10 +636,13 @@ class SenderSessionController(
     }
 
     private fun sendTry(tier: TransportDescriptor, params: JSONObject) {
-        session?.send(ControlProtocol.TRY_TRANSPORT, params.put("t", tier.id))
+        val body = params.put("t", tier.id)
+        lastTryParams = body
+        session?.send(ControlProtocol.TRY_TRANSPORT, body)
     }
 
     private fun sendDataReady(ip: String) {
+        lastDataReadyIp = ip
         session?.send(
             ControlProtocol.DATA_READY,
             JSONObject().put("ip", ip).put("port", OffGridPayload.TRANSFER_PORT)
