@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
@@ -59,10 +61,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.EntropicSoftwareLab.ClipboardShare.ImageThumbnails
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.TransferItem
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaOverlay
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.HowToUseChip
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.SkeletonBox
 import com.EntropicSoftwareLab.ClipboardShare.ui.formatTotalSize
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.TutorialOverlay
@@ -77,11 +81,12 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.modal.rememberBackdropState
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.rememberTutorialAnchors
 import com.EntropicSoftwareLab.ClipboardShare.ui.tutorial.tutorialAnchor
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.provider.OpenableColumns
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.ui.geometry.Rect
 import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Compose Send-Files tab. Pure presentation: it renders the pinned header (send icon + title +
@@ -528,13 +533,19 @@ internal fun FilePreviewCard(
     val displayPath = item.relativePath ?: remember(item.uri) { queryDisplayName(context, item.uri) }
     val isTextItem = remember(displayPath) { displayPath.matches(Regex("Text \\d+")) }
 
-    val imageBitmap = remember(item.uri, isImage) {
-        if (!isImage) null
-        else runCatching {
-            context.contentResolver.openInputStream(item.uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream)?.asImageBitmap()
-            }
-        }.getOrNull()
+    // Thumbnails are decoded downsampled, and off the composition thread. Decoding the picked file
+    // at full resolution (what this did before) is ~200 MB of pixels for a 50 MP photo, which the
+    // hardware canvas then refuses to draw — "Canvas: trying to draw too large(N bytes) bitmap",
+    // thrown from a draw pass no caller can catch, so the app dies just for showing a card. The
+    // bound lives in [ImageThumbnails]; the app context keeps the off-thread decode alive across a
+    // configuration change.
+    // Carries (bitmap, finished) so the skeleton shows only while a decode is actually in flight —
+    // a file we can't decode at all falls through to the generic icon instead of pulsing forever.
+    val appContext = remember(context) { context.applicationContext }
+    val thumbnail by produceState<Pair<ImageBitmap?, Boolean>>(null to false, item.uri, isImage) {
+        value = if (!isImage) null to true else withContext(Dispatchers.IO) {
+            ImageThumbnails.decode(appContext, item.uri, ImageThumbnails.GRID_MAX_PX)?.asImageBitmap() to true
+        }
     }
 
     val borderColor = if (selected) colors.green else colors.divider
@@ -568,12 +579,19 @@ internal fun FilePreviewCard(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isImage && imageBitmap != null) {
+                val (thumbnailBitmap, thumbnailDecoded) = thumbnail
+                if (isImage && thumbnailBitmap != null) {
                     Image(
-                        bitmap = imageBitmap,
+                        bitmap = thumbnailBitmap,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(dimens.radiusSm)),
+                    )
+                } else if (isImage && !thumbnailDecoded) {
+                    // Decode in flight: hold the slot rather than flashing the file icon for a frame.
+                    SkeletonBox(
+                        modifier = Modifier.fillMaxSize(),
+                        cornerRadius = dimens.radiusSm,
                     )
                 } else if (item.isFolder) {
                     Icon(

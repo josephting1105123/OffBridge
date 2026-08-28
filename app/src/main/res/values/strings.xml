@@ -615,6 +615,12 @@
     <string name="history_chooser_open_file">Open File</string>
     <string name="history_file_not_found">File not found</string>
     <string name="history_cannot_open_file">Cannot open file</string>
+    <string name="open_choice_message">OffBridge can show this file itself. You can also open it with another app.</string>
+    <string name="open_choice_preview">Preview</string>
+    <string name="open_choice_other_app">Open with…</string>
+    <string name="open_choice_no_app">No app on this device can open this file</string>
+    <string name="preview_truncated">Showing the beginning of this file only. Open it with another app to see all of it.</string>
+    <string name="preview_empty_file">(This file is empty)</string>
     <string name="history_waiting_zero">Waiting (0%)</string>
     <string name="history_detail_subtitle">%1$s • %2$d files (%3$s MB)</string>
     <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>

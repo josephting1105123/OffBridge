@@ -480,6 +480,12 @@
     <string name="history_chooser_open_file">開啟檔案</string>
     <string name="history_file_not_found">找不到檔案</string>
     <string name="history_cannot_open_file">無法開啟檔案</string>
+    <string name="open_choice_message">OffBridge 可以直接顯示這個檔案，你也可以用其他應用程式開啟。</string>
+    <string name="open_choice_preview">預覽</string>
+    <string name="open_choice_other_app">用其他應用程式開啟</string>
+    <string name="open_choice_no_app">此裝置上沒有可以開啟這個檔案的應用程式</string>
+    <string name="preview_truncated">僅顯示檔案開頭部分。用其他應用程式開啟可檢視完整內容。</string>
+    <string name="preview_empty_file">（這個檔案是空的）</string>
     <string name="history_waiting_zero">等待中 (0%)</string>
     <string name="history_detail_subtitle">%1$s • %2$d 個檔案 (%3$s MB)</string>
     <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>

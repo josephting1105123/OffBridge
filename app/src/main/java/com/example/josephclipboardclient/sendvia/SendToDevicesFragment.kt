@@ -2,9 +2,7 @@ package com.EntropicSoftwareLab.ClipboardShare.sendvia
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.LayoutInflater
@@ -19,6 +17,7 @@ import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.DiscoveredDevice
+import com.EntropicSoftwareLab.ClipboardShare.ImageThumbnails
 import com.EntropicSoftwareLab.ClipboardShare.MainActivity
 import com.EntropicSoftwareLab.ClipboardShare.PairingActivity
 import com.EntropicSoftwareLab.ClipboardShare.Ports
@@ -43,7 +42,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.Socket
-import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
@@ -362,29 +360,12 @@ class SendToDevicesFragment : Fragment() {
         return if (parts.size > 1) "${parts[0]}/.../${parts.last()}" else parts.last()
     }
 
-    private fun decodeThumbnail(context: Context, uri: Uri): ImageBitmap? {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val source = ImageDecoder.createSource(context.contentResolver, uri)
-                ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
-                    val maxPx = 240
-                    val w = info.size.width
-                    val h = info.size.height
-                    val largest = maxOf(w, h)
-                    if (largest > maxPx) {
-                        val scale = maxPx.toFloat() / largest
-                        decoder.setTargetSize((w * scale).toInt().coerceAtLeast(1), (h * scale).toInt().coerceAtLeast(1))
-                    }
-                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
-                }.asImageBitmap()
-            } else {
-                @Suppress("DEPRECATION")
-                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)?.asImageBitmap()
-            }
-        } catch (_: Exception) {
-            null
-        }
-    }
+    /** Bounded decode shared with the send-queue grid and the fullscreen viewer — see
+     *  [ImageThumbnails] for why a preview must never decode at full resolution. The old pre-API-28
+     *  branch here decoded whole (MediaStore.Images.Media.getBitmap) and was dead code anyway:
+     *  minSdk is 29. */
+    private fun decodeThumbnail(context: Context, uri: Uri): ImageBitmap? =
+        ImageThumbnails.decode(context, uri, ImageThumbnails.GRID_MAX_PX)?.asImageBitmap()
 
     private fun onToggleDevice(ip: String) {
         if (selectedTargetIps.contains(ip)) selectedTargetIps.remove(ip) else selectedTargetIps.add(ip)

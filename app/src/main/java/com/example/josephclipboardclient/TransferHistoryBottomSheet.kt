@@ -35,7 +35,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.util.Log
-import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 
@@ -777,64 +776,23 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
                         }
                     }
                 } else {
-                    // Open the received file itself (e.g. a text viewer for a .txt). Previously this
-                    // branch only revealed the containing folder, so tapping a received .txt — or any
-                    // non image/video/apk/pdf file — never opened it. Resolve a MIME from the
-                    // extension; unknown types fall back to */*. A direct ACTION_VIEW throws
-                    // ActivityNotFoundException when nothing on the device can handle it, so we only
-                    // drop to the old open-the-folder chain when the file genuinely can't be viewed.
-                    val fileMime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
-                    val fileIntent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(fileUri, fileMime)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    try {
-                        startActivity(fileIntent)
-                    } catch (eFile: ActivityNotFoundException) {
-                        // No app declared an ACTION_VIEW handler for the resolved type — common for
-                        // text/plain, since many phones ship no text viewer. Before falling back to
-                        // merely revealing the containing folder (which never shows the text), let the
-                        // user pick ANY app to open the file itself: a */* chooser surfaces editors and
-                        // file apps that register for */* rather than text/plain. For text files, if even
-                        // that finds nothing, guarantee readability with an in-app preview. Only a
-                        // genuinely un-viewable binary drops through to the old folder chain.
-                        // Direct start (NOT createChooser): the system chooser always resolves, so it
-                        // would never throw even with zero targets and we'd dead-end on an empty "no apps"
-                        // screen. A plain ACTION_VIEW throws ActivityNotFoundException when nothing matches,
-                        // letting us fall through to the in-app preview / folder chain. If several apps
-                        // match, Android shows its own "Open with" disambiguation.
-                        val anyAppShown = try {
-                            val anyApp = Intent(Intent.ACTION_VIEW).apply {
-                                setDataAndType(fileUri, "*/*")
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            startActivity(anyApp)
-                            true
-                        } catch (eAny: Exception) {
-                            false
+                    // Open the received file itself (e.g. a text viewer for a .txt), never just the
+                    // folder it sits in. The MIME comes from FileOpenTypes, which patches the gaps
+                    // MimeTypeMap leaves (.md, .log, .kt, ... resolved to */* and matched nothing).
+                    val targetUri = fileUri ?: return
+                    val fileMime = FileOpenTypes.mimeForOpening(name)
+                    if (FileOpenTypes.isTextLike(name)) {
+                        // We can always read this one ourselves, so offer that as the default and
+                        // let the user take it elsewhere if they'd rather. See FileOpenUi.
+                        FileOpenUi.showTextOpenChoice(requireContext(), targetUri, name, fileMime) {
+                            revealFolder(folderUri)
                         }
-                        if (!anyAppShown && !(fileMime.startsWith("text/") && showTextPreview(fileUri, name))) {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW)
-                                intent.setDataAndType(folderUri, "resource/folder")
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
-                            } catch (e1: ActivityNotFoundException) {
-                                try {
-                                    val fallback = Intent(Intent.ACTION_VIEW)
-                                    fallback.setDataAndType(folderUri, "vnd.android.document/directory")
-                                    fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
-                                } catch (e2: ActivityNotFoundException) {
-                                    try {
-                                        val dlFallback = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
-                                        dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        startActivity(dlFallback)
-                                    } catch (e3: ActivityNotFoundException) {
-                                        Toast.makeText(requireContext(), getString(R.string.history_cannot_open_file), Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            }
+                    } else {
+                        // Binary we can't render: hand it off, widening to */* (which surfaces file
+                        // managers that register for "any file"), and only reveal the containing
+                        // folder if nothing at all took it.
+                        if (!FileOpenUi.openWithExternalApp(requireContext(), targetUri, fileMime)) {
+                            revealFolder(folderUri)
                         }
                     }
                 }
@@ -848,38 +806,33 @@ class TransferHistoryBottomSheet : BottomSheetDialogFragment(), TransferHistoryM
     }
 
     /**
-     * Last-resort in-app viewer for a received text file: when nothing on the device can open it, read
-     * the bytes and show them in a scrollable, selectable dialog with a Copy action, so received text is
-     * always readable. Returns true if the preview was shown; returns false (letting the caller fall
-     * back to the folder chain) for files over ~1 MB or on any read error.
+     * Last-resort reveal chain for a file we could not hand to any viewer: the containing folder in
+     * a file manager, then the documents UI, then the system Downloads screen, then a toast. Shared
+     * by both branches of [openFile] — the in-app text preview means text files reach this only if
+     * their bytes can't be read at all.
      */
-    private fun showTextPreview(uri: Uri, name: String): Boolean {
-        if (!isAdded) return false
-        val content = try {
-            val cap = 1024 * 1024  // 1 MB — inline preview is for short snippets, not large files
-            // Chunked read into a growable buffer: allocation stays proportional to the actual file
-            // (a fixed cap-sized array charged 1 MB to preview a 10-byte note).
-            val out = java.io.ByteArrayOutputStream()
-            val chunk = ByteArray(32 * 1024)
-            requireContext().contentResolver.openInputStream(uri)?.use { input ->
-                while (out.size() <= cap) {
-                    val r = input.read(chunk)
-                    if (r == -1) break
-                    out.write(chunk, 0, r)
+    private fun revealFolder(folderUri: Uri?) {
+        if (!isAdded) return
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(folderUri, "resource/folder")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(Intent.createChooser(intent, getString(R.string.history_chooser_open_storage)))
+        } catch (e1: ActivityNotFoundException) {
+            try {
+                val fallback = Intent(Intent.ACTION_VIEW)
+                fallback.setDataAndType(folderUri, "vnd.android.document/directory")
+                fallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(Intent.createChooser(fallback, getString(R.string.history_chooser_open_storage)))
+            } catch (e2: ActivityNotFoundException) {
+                try {
+                    val dlFallback = Intent(DownloadManager.ACTION_VIEW_DOWNLOADS)
+                    dlFallback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(dlFallback)
+                } catch (e3: ActivityNotFoundException) {
+                    Toast.makeText(requireContext(), getString(R.string.history_cannot_open_file), Toast.LENGTH_SHORT).show()
                 }
-            } ?: return false
-            if (out.size() > cap) return false  // too large to show inline; use the folder fallback instead
-            out.toString("UTF-8")
-        } catch (e: Exception) {
-            return false
+            }
         }
-        showSelectableTextDialog(
-            requireContext(),
-            title = name,
-            text = content,
-            copyButtonLabel = android.R.string.copy,
-            copiedToast = R.string.history_toast_copied,
-        )
-        return true
     }
 }

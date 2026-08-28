@@ -30,6 +30,7 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridSendActivity
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendToDevicesFragment
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaChoice
@@ -364,12 +365,27 @@ class FileTransferFragment : Fragment() {
         syncSelectionState()
     }
 
-    /** Tap a queued file (normal mode): image -> fullscreen viewer, other -> open in an external app. */
+    /** Tap a queued file (normal mode): image -> fullscreen viewer, text -> the built-in preview or
+     *  an app of the user's choosing, anything else -> open in an external app. */
     private fun previewFile(item: TransferItem) {
-        val mime = if (item.isFolder) "inode/directory"
-        else runCatching { requireContext().contentResolver.getType(item.uri) }.getOrNull() ?: "application/octet-stream"
-        if (mime.startsWith("image/")) showFullScreenImageDialog(item.uri)
-        else if (!item.isFolder) openFilePreview(item.uri, mime)
+        if (item.isFolder) return
+        val mime = runCatching { requireContext().contentResolver.getType(item.uri) }.getOrNull()
+            ?: "application/octet-stream"
+        if (mime.startsWith("image/")) {
+            showFullScreenImageDialog(item.uri)
+            return
+        }
+        // Text goes through the same guaranteed-viewer flow as a received file. Without it, tapping
+        // a queued .txt (an added "Text N" snippet included) did nothing at all on a phone with no
+        // text viewer: openFilePreview swallowed the ActivityNotFoundException in silence.
+        val name = item.relativePath ?: TransferItemExpander.getFileName(requireContext(), item.uri)
+        if (FileOpenTypes.isTextLike(name) || mime.startsWith("text/")) {
+            // An added "Text N" snippet carries no extension, so keep the resolver's type for it.
+            val openMime = if (FileOpenTypes.isTextLike(name)) FileOpenTypes.mimeForOpening(name) else mime
+            FileOpenUi.showTextOpenChoice(requireContext(), item.uri, name.substringAfterLast('/'), openMime)
+        } else {
+            openFilePreview(item.uri, mime)
+        }
     }
 
     private fun showFullScreenImageDialog(uri: Uri) {
@@ -380,18 +396,31 @@ class FileTransferFragment : Fragment() {
             setBackgroundColor(Color.parseColor("#D9000000"))
             setOnClickListener { dialog.dismiss() }
         }
-        try { imageView.setImageURI(uri) } catch (_: Exception) { dialog.dismiss(); return }
         dialog.setContentView(imageView)
         dialog.show()
+        // Decoded bounded and off the main thread. setImageURI decoded the picked file whole and
+        // synchronously: a 50 MP photo is ~200 MB of pixels, which the hardware canvas refuses to
+        // draw (see ImageThumbnails) — the same crash the grid thumbnails used to hit.
+        val appCtx = requireContext().applicationContext
+        viewLifecycleOwner.lifecycleScope.launch {
+            val bitmap = withContext(Dispatchers.IO) {
+                ImageThumbnails.decode(appCtx, uri, ImageThumbnails.FULLSCREEN_MAX_PX)
+            }
+            if (bitmap == null) {
+                dialog.dismiss()
+                if (isAdded) Toast.makeText(appCtx, getString(R.string.history_cannot_open_file), Toast.LENGTH_SHORT).show()
+            } else {
+                imageView.setImageBitmap(bitmap)
+            }
+        }
     }
 
     private fun openFilePreview(uri: Uri, mimeType: String) {
-        try {
-            startActivity(Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, mimeType)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            })
-        } catch (_: Exception) { /* no app can handle this type */ }
+        // Widens to */* when nothing claims the exact type (file managers register for it), then
+        // says so rather than looking broken — the old version swallowed the failure silently.
+        if (!FileOpenUi.openWithExternalApp(requireContext(), uri, mimeType)) {
+            Toast.makeText(requireContext(), getString(R.string.open_choice_no_app), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openTransferHistory() {
