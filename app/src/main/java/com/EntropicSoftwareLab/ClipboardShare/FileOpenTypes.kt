@@ -45,7 +45,7 @@ object FileOpenTypes {
 
     /**
      * Whether the built-in text viewer can show [fileName]. Extension-driven on purpose: a `.ts` or
-     * `.json` is perfectly readable text even though its MIME isn't `text/*`.
+     * `.json` is perfectly readable text even though its MIME is not a `text/` type.
      */
     fun isTextLike(fileName: String): Boolean = extensionOf(fileName) in TEXT_MIME
 
