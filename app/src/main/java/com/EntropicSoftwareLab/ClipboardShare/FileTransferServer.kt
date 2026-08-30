@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
+import com.EntropicSoftwareLab.ClipboardShare.transport.ScreenshotWire
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
@@ -310,6 +311,16 @@ object FileTransferServer {
                         TransferHistoryManager.updateStatus(context, sessionId, "cancelled")
                     }
                 }
+                socket.close()
+                return
+            }
+
+            // A paired laptop asking for a screenshot this phone announced. The trust gate above has
+            // already established that the caller holds a pairing key for this IP; ScreenshotWatcher
+            // additionally refuses any session id it did not itself hand out, so an IP-spoofer with
+            // no key cannot get here and a paired peer cannot fish for arbitrary files.
+            ScreenshotWire.parseFetch(batchHeader)?.let { sessionId ->
+                ScreenshotWatcher.handleFetch(context, sessionId, senderIp)
                 socket.close()
                 return
             }

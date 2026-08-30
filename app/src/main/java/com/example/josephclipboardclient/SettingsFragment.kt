@@ -42,6 +42,25 @@ class SettingsFragment : Fragment() {
     private val hotspotAutoConnectState = mutableStateOf(false)
     private val acceptClipboardState = mutableStateOf(false)
     private val discoverableState = mutableStateOf(false)
+    private val screenshotNotifyState = mutableStateOf(false)
+
+    /**
+     * Photo access for screenshot notifications.
+     *
+     * The toggle only sticks if the permission is actually granted: a switch that reads "on" while
+     * the feature can never fire is exactly the silent failure this whole change is about.
+     */
+    private val requestScreenshotPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val ctx = context ?: return@registerForActivityResult
+        if (granted) {
+            ScreenshotWatcher.setEnabled(ctx, true)
+        } else {
+            Toast.makeText(ctx, getString(R.string.settings_screenshot_notify_denied), Toast.LENGTH_LONG).show()
+        }
+        screenshotNotifyState.value = ScreenshotWatcher.isActive(ctx)
+    }
 
     private val openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
@@ -83,6 +102,7 @@ class SettingsFragment : Fragment() {
                         hotspotAutoConnect = hotspotAutoConnectState.value,
                         acceptClipboard = acceptClipboardState.value,
                         discoverable = discoverableState.value,
+                        screenshotNotify = screenshotNotifyState.value,
                         onChangeLanguage = { showLanguageDialog() },
                         onChangeSaveLocation = { openDirectoryLauncher.launch(null) },
                         onChangeSaveMedia = { showSaveMediaDialog() },
@@ -95,6 +115,7 @@ class SettingsFragment : Fragment() {
                             SecurityVault.setDiscoverable(requireContext(), enabled)
                             discoverableState.value = enabled
                         },
+                        onScreenshotNotifyChange = ::onScreenshotNotifyChange,
                         onDonate = ::onDonate,
                         onPrivacyPolicy = { showPrivacyPolicyDialog() },
                         onOpenSourceLicences = { showOssLicencesDialog() },
@@ -127,6 +148,9 @@ class SettingsFragment : Fragment() {
         syncHotspotState()
         acceptClipboardState.value = ClipboardService.isSyncEnabled
         discoverableState.value = SecurityVault.isDiscoverable(requireContext())
+        // Reads the live permission too, so revoking photo access in system settings turns the
+        // switch back off instead of leaving it claiming a feature that can no longer run.
+        screenshotNotifyState.value = ScreenshotWatcher.isActive(requireContext())
     }
 
     private var hotspotSwitchUpdating = false
@@ -146,6 +170,28 @@ class SettingsFragment : Fragment() {
      * the credentials dialog and the switch re-syncs to the real state when the dialog closes — staying
      * on if saved, reverting if cancelled; toggling OFF clears the saved creds.
      */
+    /**
+     * Turns screenshot notifications on or off, asking for photo access the first time.
+     *
+     * The permission is requested here rather than at startup on purpose: it is the broadest thing
+     * this app asks for, and asking for it only when someone switches on the one feature that needs
+     * it is both easier to justify to the user and the honest scope.
+     */
+    private fun onScreenshotNotifyChange(enabled: Boolean) {
+        val ctx = context ?: return
+        if (!enabled) {
+            ScreenshotWatcher.setEnabled(ctx, false)
+            screenshotNotifyState.value = false
+            return
+        }
+        if (ScreenshotWatcher.hasPermission(ctx)) {
+            ScreenshotWatcher.setEnabled(ctx, true)
+            screenshotNotifyState.value = ScreenshotWatcher.isActive(ctx)
+        } else {
+            requestScreenshotPermission.launch(ScreenshotWatcher.requiredPermission())
+        }
+    }
+
     private fun onHotspotAutoConnectChange(isChecked: Boolean) {
         if (hotspotSwitchUpdating) return
         if (isChecked) {

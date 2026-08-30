@@ -19,6 +19,7 @@ import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.DiscoveredDevice
+import com.EntropicSoftwareLab.ClipboardShare.OfferHandshake
 import com.EntropicSoftwareLab.ClipboardShare.MainActivity
 import com.EntropicSoftwareLab.ClipboardShare.PairingActivity
 import com.EntropicSoftwareLab.ClipboardShare.Ports
@@ -514,51 +515,16 @@ class SendToDevicesFragment : Fragment() {
             for ((sessionId, targetIp, targetName, session) in offers) {
 
                 try {
-                    // Bounded connect (mirrors DownloadEngine's resume path): the 2-arg Socket
-                    // ctor blocks on the OS default SYN timeout — a vanished peer stalled the
-                    // whole multi-device offer loop for tens of seconds (AND-24). connect runs
-                    // INSIDE use so a timeout still closes the socket instead of leaking the fd.
-                    Socket().use { fileSocket ->
-                        fileSocket.connect(java.net.InetSocketAddress(targetIp, Ports.FILE_TRANSFER), 8000)
-                        val outStream = fileSocket.getOutputStream()
-                        val offerHeader = "OFFER|$sessionId|${TransferDaemon.customDeviceName}|${expandedItems.size}\n"
-                        var manifestStr = "MANIFEST|"
-                        for (manifestItem in manifestList) {
-                            manifestStr += "${manifestItem.first}:${manifestItem.second}|"
-                        }
-                        manifestStr += "\n"
-
-                        outStream.write(offerHeader.toByteArray(Charsets.UTF_8))
-                        outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
-                        outStream.flush()
-
-                        // Wait for the receiver's next line (shared size-capped reader — the old
-                        // hand-rolled loop had no byte cap, AND-24).
-                        fileSocket.soTimeout = 10000
-                        val inStream = fileSocket.getInputStream()
-                        var response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
-
-                        // AUTH2: a new receiver may challenge us to prove we hold the shared pairing key
-                        // before it shows its incoming-file popup. Answer with HMAC-SHA256(pairingKey,
-                        // nonce), then read the real OFFER_RECEIVED. An old receiver sends OFFER_RECEIVED
-                        // directly and we fall straight through — so we tolerate BOTH sequences without
-                        // depending on the peer's advertised caps.
-                        if (response.startsWith("OFFER_CHALLENGE|")) {
-                            val nonce = Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), Base64.NO_WRAP)
-                            val pairingKey = SecurityVault.getKeyForNode(appContext, targetIp)
-                                ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
-                            val proof = com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto.hmacSha256(pairingKey, nonce)
-                            outStream.write("OFFER_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
-                            outStream.flush()
-                            response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
-                        }
-
-                        if (response != "OFFER_RECEIVED") {
-                            throw Exception("Receiver did not acknowledge offer")
-                        }
-
-                        // Stop here. Receiver will connect back with ACCEPT_OFFER or DECLINE_OFFER.
-                    }
+                    // Connect, announce, answer the AUTH2 challenge if the receiver raises one, and
+                    // stop. The receiver dials back with ACCEPT_OFFER or DECLINE_OFFER. Shared with
+                    // the screenshot-notify path so there is exactly one copy of that exchange.
+                    OfferHandshake.sendOffer(
+                        context = appContext,
+                        targetIp = targetIp,
+                        sessionId = sessionId,
+                        deviceName = TransferDaemon.customDeviceName,
+                        manifest = manifestList,
+                    )
 
                     // Keep session paused so the loop doesn't kill it and it waits for Accept
                     session.isPaused = true

@@ -55,12 +55,14 @@ fun SettingsScreen(
     hotspotAutoConnect: Boolean,
     acceptClipboard: Boolean,
     discoverable: Boolean,
+    screenshotNotify: Boolean,
     onChangeLanguage: () -> Unit,
     onChangeSaveLocation: () -> Unit,
     onChangeSaveMedia: () -> Unit,
     onHotspotAutoConnectChange: (Boolean) -> Unit,
     onAcceptClipboardChange: (Boolean) -> Unit,
     onDiscoverableChange: (Boolean) -> Unit,
+    onScreenshotNotifyChange: (Boolean) -> Unit,
     onDonate: () -> Unit,
     onPrivacyPolicy: () -> Unit,
     onOpenSourceLicences: () -> Unit,
@@ -154,6 +156,19 @@ fun SettingsScreen(
                 onCheckedChange = onDiscoverableChange,
                 colors = colors,
                 dimens = dimens,
+            )
+            SettingSwitchRow(
+                label = stringResource(R.string.settings_screenshot_notify_label),
+                checked = screenshotNotify,
+                onCheckedChange = onScreenshotNotifyChange,
+                colors = colors,
+                dimens = dimens,
+            )
+            Text(
+                stringResource(R.string.settings_screenshot_notify_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(bottom = dimens.spaceSm),
             )
 
             Spacer(Modifier.height(dimens.spaceMd))

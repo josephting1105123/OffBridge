@@ -127,6 +127,10 @@ class ClipboardService : Service() {
             PairingDaemon.start(applicationContext)
         }
 
+        // No-op unless the user turned screenshot notifications on AND granted photo access, so
+        // this costs nothing on a default install.
+        ScreenshotWatcher.start(applicationContext)
+
         startTcpReceiver()
         startNotificationUpdater()
         startDaemonWatchdog()
@@ -615,6 +619,7 @@ class ClipboardService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         ServiceLifecycleLog.log(this, "onDestroy")
+        ScreenshotWatcher.stop(applicationContext)
         // Guard like the adjacent socket close: if registration never completed, unregisterReceiver
         // throws IllegalArgumentException ("Receiver not registered") and would crash teardown.
         try { unregisterReceiver(pairingNotificationReceiver) } catch (e: IllegalArgumentException) {}

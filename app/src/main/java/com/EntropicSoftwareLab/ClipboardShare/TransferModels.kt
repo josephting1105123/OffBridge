@@ -33,6 +33,11 @@ data class DiscoveredDevice(
      * every pre-existing positional [DiscoveredDevice] constructor call stays valid unchanged.
      * Defaults false so un-updated peers are byte-identical. */
     val supportsAuth2Accept: Boolean = false,
+    /** Peer advertised [TransferDaemon.SCREENSHOT_CAP] -> it understands SCREENSHOT_AVAILABLE and
+     * will answer SCREENSHOT_FETCH. Gates whether this phone bothers telling that peer a screenshot
+     * was taken. Appended last, like the field above, so existing positional constructor calls stay
+     * valid; defaults false so a peer that never advertises it is simply never notified. */
+    val supportsScreenshotNotify: Boolean = false,
 )
 
 data class TransferSession(

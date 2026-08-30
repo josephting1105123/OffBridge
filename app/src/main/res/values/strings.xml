@@ -707,5 +707,9 @@
     <string name="bg_health_stopped_heading">Background service stopped</string>
     <string name="bg_health_stopped_body">Nothing on this phone is obviously blocking it, so this was most likely a one-off. Restarting brings it back.</string>
     <string name="bg_health_stopped_action">Restart</string>
+    <!-- Screenshot-to-laptop notifications. -->
+    <string name="settings_screenshot_notify_label">Tell my PC about screenshots</string>
+    <string name="settings_screenshot_notify_note">When you take a screenshot, paired PCs get a notification offering to open it. The image is only sent if you click Open.</string>
+    <string name="settings_screenshot_notify_denied">Screenshot notifications need access to your photos. Allow it in Settings to turn this on.</string>
 </resources>
 

@@ -332,8 +332,23 @@ object TransferDaemon {
      */
     const val ACCEPT_AUTH_CAP = "AUTH2R"
 
+    /**
+     * Screenshot-notification capability token, advertised comma-joined after [ACCEPT_AUTH_CAP]
+     * (`...|Android|GCM1,FGCM1,FGCM2,AUTH2,AUTH2R,SNAP1`). Presence means the peer understands
+     * `SCREENSHOT_AVAILABLE` and will answer with `SCREENSHOT_FETCH` when the user asks to open the
+     * shot; a peer that omits it is simply never told a screenshot was taken.
+     *
+     * Unlike every token above it, this one is deliberately NOT routed through DowngradePolicy and
+     * never pinned. Stripping GCM1 or AUTH2 off the unauthenticated discovery buys an attacker a
+     * weaker channel, so those fail closed. Stripping SNAP1 buys nothing but the suppression of a
+     * convenience notification - failing closed there would turn a hostile packet into a broken app
+     * for no security gain. The metadata itself is still sealed under [CLIPBOARD_GCM_CAP], which IS
+     * pinned, so what the screenshot frame carries is protected regardless of this flag.
+     */
+    const val SCREENSHOT_CAP = "SNAP1"
+
     /** Capability list advertised in discovery — comma-joined, order-stable, parsed by `contains`. */
-    internal val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP"
+    internal val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP,$SCREENSHOT_CAP"
     internal const val DISCOVERY_INTERVAL_MIN_MS = 3000L
     internal const val DISCOVERY_INTERVAL_MAX_MS = 12000L
     internal const val DISCOVERY_WAKE_WINDOW_MS = 20000L

@@ -37,6 +37,10 @@ data class DiscoveredDevice(
      * to our ACCEPT_OFFER/RESUME_REQUEST — the accept/resume-direction mirror of [supportsAuth2].
      * Defaults false so un-updated peers are byte-identical. */
     var supportsAuth2Accept: Boolean = false,
+    /** Peer advertised [TransferDaemon.SCREENSHOT_CAP] -> it sends SCREENSHOT_AVAILABLE when a
+     * screenshot is taken and answers our SCREENSHOT_FETCH. Defaults false so un-updated peers are
+     * byte-identical. */
+    var supportsScreenshotNotify: Boolean = false,
 )
 
 class TransferDaemon(
@@ -85,8 +89,16 @@ class TransferDaemon(
          * so reusing AUTH2 would silently break them. Mirrors Android's TransferDaemon.ACCEPT_AUTH_CAP. */
         const val ACCEPT_AUTH_CAP = "AUTH2R"
 
+        /** Screenshot-notification token, advertised comma-joined after [ACCEPT_AUTH_CAP] (`...|Windows|
+         * GCM1,FGCM1,FGCM2,AUTH2,AUTH2R,SNAP1`). Mirrors Android's SCREENSHOT_CAP. Presence means the
+         * peer understands SCREENSHOT_AVAILABLE and answers SCREENSHOT_FETCH; a peer without it is
+         * simply never told a screenshot was taken. Deliberately NOT pinned by DowngradePolicy -
+         * stripping it costs a notification, not a security property, and the frame's payload is
+         * sealed under [CLIPBOARD_GCM_CAP], which is pinned. */
+        const val SCREENSHOT_CAP = "SNAP1"
+
         /** Capability list advertised in discovery — comma-joined, parsed by `contains`. */
-        private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP"
+        private val DISCOVERY_CAPS = "$CLIPBOARD_GCM_CAP,$FILE_GCM_CAP,$FILE_GCM_CAP_V2,$OFFER_AUTH_CAP,$ACCEPT_AUTH_CAP,$SCREENSHOT_CAP"
     }
 
     private val discoveredNodes = ConcurrentHashMap<String, DiscoveredDevice>()
@@ -294,6 +306,7 @@ class TransferDaemon(
             val supportsFileV2 = caps.contains(FILE_GCM_CAP_V2)
             val supportsAuth2 = caps.contains(OFFER_AUTH_CAP)
             val supportsAuth2Accept = caps.contains(ACCEPT_AUTH_CAP)
+            val supportsScreenshotNotify = caps.contains(SCREENSHOT_CAP)
             // Stable device id from the `did:` token anywhere in the tail after the positional fields
             // (absent on peers that predate it). Lets clipboard auto-push follow this peer to a new
             // address; see ClipboardTargeting.
@@ -320,11 +333,12 @@ class TransferDaemon(
                 existing.supportsAuthFileV2 = supportsFileV2
                 existing.supportsAuth2 = supportsAuth2
                 existing.supportsAuth2Accept = supportsAuth2Accept
+                existing.supportsScreenshotNotify = supportsScreenshotNotify
                 // Keep the last id we saw: a did-aware peer sends it on every frame, and we never want
                 // a stray malformed packet to null out a good id mid-session.
                 if (peerDeviceId != null) existing.deviceId = peerDeviceId
             } else {
-                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId, supportsAuth2Accept)
+                discoveredNodes[ipToTrack] = DiscoveredDevice(deviceName, ipToTrack, os, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, peerDeviceId, supportsAuth2Accept, supportsScreenshotNotify)
             }
 
             // Answer a DISCOVERY with a unicast REPLY (bypasses AP broadcast restrictions), mirroring

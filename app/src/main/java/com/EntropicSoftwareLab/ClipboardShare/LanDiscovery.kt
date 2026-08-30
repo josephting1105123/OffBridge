@@ -196,6 +196,7 @@ object LanDiscovery {
                                 val supportsFileV2 = caps.contains(TransferDaemon.FILE_GCM_CAP_V2)
                                 val supportsAuth2 = caps.contains(TransferDaemon.OFFER_AUTH_CAP)
                                 val supportsAuth2Accept = caps.contains(TransferDaemon.ACCEPT_AUTH_CAP)
+                                val supportsScreenshotNotify = caps.contains(TransferDaemon.SCREENSHOT_CAP)
                                 // Stable device id from the `did:` token anywhere in the tail after the
                                 // positional fields (absent on peers that predate it). Lets clipboard
                                 // auto-push follow this peer to a new address; see ClipboardTargeting.
@@ -210,7 +211,7 @@ object LanDiscovery {
                                     val effectiveDeviceId = peerDeviceId ?: TransferDaemon.discoveredNodes[actualIp]?.deviceId
                                     TransferDaemon.putDiscoveredNode(
                                         actualIp,
-                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, effectiveDeviceId, supportsAuth2Accept)
+                                        DiscoveredDevice(actualIp, remoteName, remoteOs, now, supportsAuth, supportsFile, supportsFileV2, supportsAuth2, effectiveDeviceId, supportsAuth2Accept, supportsScreenshotNotify)
                                     )
                                     if (isNewNode) wakeDiscovery()
 
