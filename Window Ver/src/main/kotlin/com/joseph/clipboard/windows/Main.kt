@@ -79,6 +79,7 @@ import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
 import androidx.compose.foundation.BorderStroke
 import com.joseph.clipboard.windows.os.SingleInstance
+import com.joseph.clipboard.windows.os.StartupRegistration
 import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TranslationManager
 import com.joseph.clipboard.windows.theme.SurfaceElevatedDark
@@ -377,7 +378,12 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                                 // destructive meaning, no red fill.
                                 Button(
                                     // Daemon teardown happens in the JVM shutdown hook (see main()).
-                                    onClick = { exitProcess(0) },
+                                    // The tray icon is not the shutdown hook's job, though - a removed
+                                    // process with a live icon looks like an app that is still running.
+                                    onClick = {
+                                        SystemTrayManager.dispose()
+                                        exitProcess(0)
+                                    },
                                     modifier = Modifier.fillMaxWidth().height(48.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         backgroundColor = SurfaceElevatedDark,
@@ -698,7 +704,27 @@ fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: Clipbo
 /** Minimum usable width (dp) for the floating portrait window: the 80.dp nav rail plus content. */
 private const val MIN_FLOATING_WIDTH_DP = 340f
 
-fun main() = application {
+/**
+ * Entry point.
+ *
+ * [args] carries `--tray` when Windows started us at login (see [StartupRegistration]) - the app
+ * comes up hidden with only the tray icon, the way Phone Link does, instead of throwing a window at
+ * the user every time they sign in.
+ */
+fun main(args: Array<String>) {
+    // Claim the instance mutex BEFORE Compose starts. A second launch cannot usefully continue -
+    // the first one already holds every daemon port - so it asks the original to show itself and
+    // gets out of the way. This matters much more now that login can start a copy the user does
+    // not know about.
+    if (!SingleInstance.acquire()) {
+        SingleInstance.signalExisting()
+        exitProcess(0)
+    }
+    val startHidden = args.any { it.equals(StartupRegistration.TRAY_ARG, ignoreCase = true) }
+    runApp(startHidden)
+}
+
+private fun runApp(startHidden: Boolean) = application {
     // The floating (non-maximized) window is a tall, phone-shaped portrait: ~80% of the current
     // monitor's work-area height, with width derived from a 9:19.5 phone aspect — so it mirrors the
     // Android app's vertical shape rather than the monitor's landscape ratio. Computed from the
@@ -733,11 +759,30 @@ fun main() = application {
         (floorDp * gc.defaultTransform.scaleX).toInt()
     }
     val windowState = rememberWindowState(size = defaultFloatingSize)
-    // Publish the single-instance mutex once (not per recomposition) so the Inno installer's AppMutex
-    // can detect a running instance — even one only minimized to the system tray — and prompt the user
-    // to close it before an in-place upgrade replaces an in-use runtime file
-    // (runtime\bin\ucrtbase.dll -> "MoveFile failed; code 5"). Best-effort; see os/SingleInstance.kt.
-    remember { SingleInstance.acquire() }
+    // Window visibility, separate from minimize. Hiding (rather than minimizing) is what takes the
+    // app out of the taskbar and leaves only the tray icon, which is the behaviour people expect
+    // from a background sync app and what Phone Link does. Starts false when Windows launched us at
+    // login, so signing in doesn't put a window on screen.
+    var windowVisible by remember { mutableStateOf(!startHidden) }
+    // Hides the window, or quits, depending on the setting. The X button used to call
+    // exitApplication unconditionally, which tore down every daemon: the phone would report the
+    // laptop as paired and then never reach it. Quitting for real is still one click away in the
+    // tray menu and the in-app power menu.
+    fun closeOrHide() {
+        if (SecurityVault.isCloseToTray()) {
+            windowVisible = false
+            if (!SecurityVault.isCloseToTrayHintShown()) {
+                SecurityVault.markCloseToTrayHintShown()
+                SystemTrayManager.showNotification(
+                    "OffBridge is still running",
+                    "It stays in the system tray so your phone can still reach this PC. Right-click the tray icon and choose Quit to stop it."
+                )
+            }
+        } else {
+            SystemTrayManager.dispose()
+            exitApplication()
+        }
+    }
     val appController = remember {
         ClipboardAppController().apply {
             start()
@@ -754,7 +799,12 @@ fun main() = application {
 
     DisposableEffect(Unit) {
         SystemTrayManager.initialize(
-            onOpenApp = { windowState.isMinimized = false },
+            onOpenApp = {
+                // Setting isMinimized alone left a hidden window hidden - the tray Open item
+                // appeared to do nothing once closing started hiding instead of quitting.
+                windowVisible = true
+                windowState.isMinimized = false
+            },
             onPushClipboard = { trayScope.launch { appController.pushCurrentClipboard() } },
             // Daemon teardown happens in the JVM shutdown hook (see appController above).
             onQuit = { exitProcess(0) }
@@ -766,8 +816,9 @@ fun main() = application {
     }
 
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = { closeOrHide() },
         state = windowState,
+        visible = windowVisible,
         title = "OffBridge",
         undecorated = true,
         // The four corner handles below are the only way to resize the floating window — disabling
@@ -852,10 +903,23 @@ fun main() = application {
                 minFloatingWidthPx,
                 kotlin.math.round(minFloatingWidthPx / floatingAspectRatio).toInt()
             )
+            appController.isWindowVisible = { windowVisible }
             appController.onRequestForeground = {
+                windowVisible = true
                 windowState.isMinimized = false
                 window.toFront()
                 window.requestFocus()
+            }
+            // A second launch (desktop shortcut while the app sits hidden in the tray) asks us to
+            // surface rather than starting a rival process. Fires on the waiter thread, so hop to
+            // the UI thread before touching window state.
+            SingleInstance.listenForShowRequests {
+                java.awt.EventQueue.invokeLater {
+                    windowVisible = true
+                    windowState.isMinimized = false
+                    window.toFront()
+                    window.requestFocus()
+                }
             }
         }
         // Passive update check, well after startup so it never competes with daemon/UI init. Only
@@ -912,7 +976,7 @@ fun main() = application {
                                 }, modifier = Modifier.size(40.dp)) {
                                     Box(modifier = Modifier.size(12.dp).border(1.5.dp, MaterialTheme.colors.onBackground))
                                 }
-                                IconButton(onClick = ::exitApplication, modifier = Modifier.size(40.dp)) {
+                                IconButton(onClick = { closeOrHide() }, modifier = Modifier.size(40.dp)) {
                                     Icon(Icons.Filled.Close, contentDescription = "Close", tint = MaterialTheme.colors.onBackground, modifier = Modifier.size(18.dp))
                                 }
                             }

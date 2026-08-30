@@ -49,6 +49,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.DialogWindow
 import com.joseph.clipboard.windows.LocalThemeMode
+import com.joseph.clipboard.windows.os.StartupRegistration
 import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TranslationManager
 import com.joseph.clipboard.windows.theme.LocalExtraColors
@@ -58,6 +59,11 @@ fun SettingsScreen(appController: ClipboardAppController) {
     val themeModeState = LocalThemeMode.current
     var saveLocation by remember { mutableStateOf(SecurityVault.getSaveLocation()) }
     var autoUpdateCheckEnabled by remember { mutableStateOf(SecurityVault.isAutoUpdateCheckEnabled()) }
+    var startWithWindows by remember { mutableStateOf(StartupRegistration.isEnabled()) }
+    // False when running from Gradle, where ProcessHandle reports java.exe and a Run entry would
+    // point at a JDK that never starts the app. Hide the row rather than offer a broken switch.
+    val startupSupported = remember { StartupRegistration.isSupported() }
+    var closeToTray by remember { mutableStateOf(SecurityVault.isCloseToTray()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
@@ -91,6 +97,10 @@ fun SettingsScreen(appController: ClipboardAppController) {
     val saveToText = TranslationManager.getString("save_to_setting")
     val updatesText = TranslationManager.getString("settings_section_updates").takeIf { it != "settings_section_updates" } ?: "Updates"
     val autoUpdateCheckLabel = TranslationManager.getString("update_auto_check_label").takeIf { it != "update_auto_check_label" } ?: "Automatically check for updates"
+    val startupText = TranslationManager.getString("settings_section_startup").takeIf { it != "settings_section_startup" } ?: "Startup"
+    val startWithWindowsLabel = TranslationManager.getString("start_with_windows_label").takeIf { it != "start_with_windows_label" } ?: "Start OffBridge when I sign in"
+    val closeToTrayLabel = TranslationManager.getString("close_to_tray_label").takeIf { it != "close_to_tray_label" } ?: "Keep running in the tray when I close the window"
+    val startupNote = TranslationManager.getString("startup_section_note").takeIf { it != "startup_section_note" } ?: "Your phone can only reach this PC while OffBridge is running. Both of these keep it running without you having to think about it."
     val othersText = TranslationManager.getString("settings_section_others").takeIf { it != "settings_section_others" } ?: "Others"
     val supportText = TranslationManager.getString("support_setting").takeIf { it != "support_setting" } ?: "Support"
     val privacyText = TranslationManager.getString("privacy_policy_setting").takeIf { it != "privacy_policy_setting" } ?: "Privacy Policy"
@@ -171,6 +181,34 @@ fun SettingsScreen(appController: ClipboardAppController) {
             GlassCard {
                 GlassToggleRow(discoverableLabel, isDiscoverable, onCheckedChange = { appController.updateDiscoverable(it) })
                 GlassToggleRow(acceptClipboardLabel, acceptClipboard, onCheckedChange = { appController.updateAcceptIncomingClipboard(it) })
+            }
+            Spacer(Modifier.height(Dimens.spaceXl))
+
+            // STARTUP - the two settings that decide whether the phone can reach this PC at all.
+            SectionHeader(startupText)
+            GlassCard {
+                if (startupSupported) {
+                    GlassToggleRow(
+                        startWithWindowsLabel,
+                        startWithWindows,
+                        onCheckedChange = { wanted ->
+                            // Reflect what the registry actually says, not what was asked for: a
+                            // failed write must not leave the switch claiming a state it never reached.
+                            StartupRegistration.setEnabled(wanted)
+                            startWithWindows = StartupRegistration.isEnabled()
+                        }
+                    )
+                }
+                GlassToggleRow(
+                    closeToTrayLabel,
+                    closeToTray,
+                    onCheckedChange = {
+                        closeToTray = it
+                        SecurityVault.setCloseToTray(it)
+                    }
+                )
+                Spacer(Modifier.height(Dimens.spaceSm))
+                Text(startupNote, style = MaterialTheme.typography.caption, color = extra.textSecondary)
             }
             Spacer(Modifier.height(Dimens.spaceXl))
 

@@ -16,6 +16,19 @@ object SystemTrayManager {
 
     private var trayIcon: TrayIcon? = null
 
+    /**
+     * What a click on the NEXT balloon should do, if anything.
+     *
+     * AWT gives a TrayIcon one ActionListener, fired both by a double-click on the icon and by a
+     * click on a balloon message - there is no per-notification callback. So the action is armed
+     * just before displayMessage and consumed by the first click that follows; anything else falls
+     * through to "open the app", which is the right default for the icon itself.
+     *
+     * Single-slot on purpose: two screenshots in quick succession means the balloon on screen is
+     * the second one, and that is the one the click should open.
+     */
+    @Volatile private var armedAction: (() -> Unit)? = null
+
     /** The PNG sizes make-app-icon.ps1 writes next to app.ico, ascending. */
     private val ICON_SIZES = listOf(16, 24, 32, 48, 256)
 
@@ -46,7 +59,7 @@ object SystemTrayManager {
         }
         val quitItem = MenuItem("Quit").apply {
             addActionListener {
-                trayIcon?.let { tray.remove(it) }
+                dispose()
                 // Exit is the caller's job: quitting via exitProcess here would skip the
                 // app-level daemon/socket teardown (DisposableEffect.onDispose never runs).
                 onQuit()
@@ -60,7 +73,13 @@ object SystemTrayManager {
 
         trayIcon = TrayIcon(image, "OffBridge", popup).apply {
             isImageAutoSize = true
-            addActionListener { onOpenApp() } // double click action
+            addActionListener {
+                // Fires for a double-click on the icon AND for a click on a balloon. An armed
+                // action wins and is consumed once; everything else opens the app.
+                val pending = armedAction
+                armedAction = null
+                if (pending != null) pending() else onOpenApp()
+            }
         }
 
         try {
@@ -70,8 +89,38 @@ object SystemTrayManager {
         }
     }
 
-    fun showNotification(title: String, message: String, type: TrayIcon.MessageType = TrayIcon.MessageType.INFO) {
+    /**
+     * Shows a tray balloon, optionally with something for a click on it to do.
+     *
+     * [onClick] is armed for the next click only - see [armedAction]. Passing null (the default)
+     * leaves the icon behaving as it always has: click opens the app.
+     */
+    fun showNotification(
+        title: String,
+        message: String,
+        type: TrayIcon.MessageType = TrayIcon.MessageType.INFO,
+        onClick: (() -> Unit)? = null,
+    ) {
+        armedAction = onClick
         trayIcon?.displayMessage(title, message, type)
+    }
+
+    /**
+     * Removes the icon from the tray.
+     *
+     * Every exit path has to call this, not just the tray Quit item. Closing the window used to
+     * leave a dead icon behind that only vanished when the user hovered it - an app that looks like
+     * it is still running when it is not is worse than no icon at all.
+     */
+    fun dispose() {
+        val icon = trayIcon ?: return
+        trayIcon = null
+        armedAction = null
+        try {
+            SystemTray.getSystemTray().remove(icon)
+        } catch (t: Throwable) {
+            System.err.println("SystemTrayManager: tray icon could not be removed: ${t.message}")
+        }
     }
 
     /**

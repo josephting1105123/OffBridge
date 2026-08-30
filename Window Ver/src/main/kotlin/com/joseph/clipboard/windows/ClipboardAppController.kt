@@ -158,6 +158,18 @@ class ClipboardAppController {
 
     var onRequestForeground: (() -> Unit)? = null
 
+    /**
+     * Whether the app window is actually on screen. Set from Main.
+     *
+     * Closing the window now hides it to the tray instead of quitting, so "the app is running" and
+     * "the user can see it" stopped being the same thing. Arrivals that would silently raise a modal
+     * behind a hidden window become tray balloons instead. Unset means visible, which keeps the
+     * pre-existing behaviour for any caller that never wires this up.
+     */
+    var isWindowVisible: (() -> Boolean)? = null
+
+    private fun windowIsVisible(): Boolean = isWindowVisible?.invoke() ?: true
+
     data class IncomingPairingData(
         val ip: String,
         val name: String,
@@ -330,7 +342,18 @@ class ClipboardAppController {
             val session = IncomingFileSession(sessionId, ip, deviceName, safeManifest)
             activeIncomingFileSessions[sessionId] = session
             _incomingFileOffer.value = session
-            onRequestForeground?.invoke()
+            if (windowIsVisible()) {
+                onRequestForeground?.invoke()
+            } else {
+                // Hidden in the tray: raising the window unprompted would undo the thing the user
+                // just asked for by closing it. Tell them instead, and let the click decide.
+                val count = safeManifest.size
+                SystemTrayManager.showNotification(
+                    "Incoming files from $deviceName",
+                    if (count == 1) safeManifest.first().first else "$count files waiting for you to accept",
+                    onClick = { onRequestForeground?.invoke() },
+                )
+            }
         },
         onAcceptReceived = { sessionId, fgcm, useV2, socket ->
             val session = activeOutgoingFileSessions[sessionId]
@@ -1456,6 +1479,16 @@ class ClipboardAppController {
             )
 
             updateRecord(sessionId) { it.copy(status = "completed") }
+            // Completion was previously silent: with the window hidden you had no way to know a
+            // transfer finished short of opening the app to look.
+            if (!windowIsVisible()) {
+                val names = session.manifest.map { it.first }
+                SystemTrayManager.showNotification(
+                    "Received from ${session.senderName}",
+                    if (names.size == 1) names.first() else "${names.size} files saved to ${SecurityVault.getSaveLocation()}",
+                    onClick = { onRequestForeground?.invoke() },
+                )
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             if (_transferHistory.value.find { it.sessionId == sessionId }?.status != "cancelled") {

@@ -32,6 +32,12 @@ object SecurityVault {
     // TutorialTour.KEY_COMPLETED_V2 in spirit, but simpler — Windows has no Lite/Pro mode gate, so
     // this is a single persisted "has this ever been shown" flag, not a resumable step counter.
     private var firstRunTourShown: Boolean = false
+    // Closing the window hides to the tray instead of quitting. On by default: that is what the
+    // tray icon has always implied, and the alternative (X kills every daemon) was the single
+    // biggest reason the laptop stopped answering the phone.
+    private var closeToTray: Boolean = true
+    // Shown once, the first time closing the window hides it, so the app never silently vanishes.
+    private var closeToTrayHintShown: Boolean = false
     // This install's own stable identifier, minted once and persisted. Trust records are keyed by IP,
     // so a peer that re-pairs from a new DHCP lease used to land as a SECOND entry next to the stale
     // one (two "Windows PC" rows in the Paired list). Peers exchange this id during the pairing
@@ -129,7 +135,9 @@ object SecurityVault {
         val theme: String? = null,
         val lastUpdateCheckEpochMillis: Long? = null,
         val autoUpdateCheckEnabled: Boolean? = null,
-        val firstRunTourShown: Boolean? = null
+        val firstRunTourShown: Boolean? = null,
+        val closeToTray: Boolean? = null,
+        val closeToTrayHintShown: Boolean? = null
     )
 
     init {
@@ -155,6 +163,8 @@ object SecurityVault {
             dto.lastUpdateCheckEpochMillis?.let { lastUpdateCheckEpochMillis = it }
             dto.autoUpdateCheckEnabled?.let { autoUpdateCheckEnabled = it }
             dto.firstRunTourShown?.let { firstRunTourShown = it }
+            dto.closeToTray?.let { closeToTray = it }
+            dto.closeToTrayHintShown?.let { closeToTrayHintShown = it }
             var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
                 if (nodesStr.isNotBlank()) {
@@ -216,6 +226,8 @@ object SecurityVault {
                 lastUpdateCheckEpochMillis = lastUpdateCheckEpochMillis,
                 autoUpdateCheckEnabled = autoUpdateCheckEnabled,
                 firstRunTourShown = firstRunTourShown,
+                closeToTray = closeToTray,
+                closeToTrayHintShown = closeToTrayHintShown,
             )
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
@@ -297,6 +309,22 @@ object SecurityVault {
     fun markFirstRunTourShown() {
         if (firstRunTourShown) return
         firstRunTourShown = true
+        save()
+    }
+
+    fun isCloseToTray(): Boolean = closeToTray
+
+    fun setCloseToTray(enabled: Boolean) {
+        if (closeToTray == enabled) return
+        closeToTray = enabled
+        save()
+    }
+
+    fun isCloseToTrayHintShown(): Boolean = closeToTrayHintShown
+
+    fun markCloseToTrayHintShown() {
+        if (closeToTrayHintShown) return
+        closeToTrayHintShown = true
         save()
     }
 

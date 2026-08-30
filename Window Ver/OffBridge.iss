@@ -80,6 +80,18 @@ SetupAppRunningError=OffBridge is still running.%n%nPlease close it completely â
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Checked by default: the phone can only reach this PC while OffBridge is running, and an app the
+; user has to remember to launch is an app that is not running when they need it. The same switch
+; lives in Settings > Startup, which writes the identical HKCU Run value, so turning it off there
+; and re-running Setup will re-enable it -- deliberate, since Setup is an explicit user action.
+Name: "autostart"; Description: "Start OffBridge when I sign in to Windows"; GroupDescription: "Startup:"
+
+[Registry]
+; Per-user Run entry, matching os/StartupRegistration.kt byte for byte (same key, same value name,
+; same --tray argument). HKCU rather than HKLM so it needs no elevation to change later from the
+; app's own Settings screen, and so it follows the user rather than the machine.
+; uninsdeletevalue: an uninstall must not leave Windows trying to launch a deleted exe at every login.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "OffBridge"; ValueData: """{app}\{#MyAppExeName}"" --tray"; Flags: uninsdeletevalue; Tasks: autostart
 
 ; [InstallDelete] intentionally omitted: the [Files] entry below uses the `ignoreversion` flag, which
 ; already overwrites every app file on upgrade. A blanket `Type: filesandordirs; Name: "{app}\*"` would
