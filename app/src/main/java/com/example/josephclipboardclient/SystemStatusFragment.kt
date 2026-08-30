@@ -6,8 +6,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,6 +44,7 @@ class SystemStatusFragment : Fragment() {
     private val pairedDevicesState = mutableStateOf<List<PairedDeviceUi>>(emptyList())
     private val scanningState = mutableStateOf(false)
     private val showTutorialState = mutableStateOf(false)
+    private val backgroundIssuesState = mutableStateOf<List<BackgroundIssue>>(emptyList())
 
     private val uiJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + uiJob)
@@ -91,6 +94,9 @@ class SystemStatusFragment : Fragment() {
                         showTutorial = showTutorialState.value,
                         onShowTutorial = { showTutorialState.value = true },
                         onTutorialDismiss = { showTutorialState.value = false },
+                        backgroundIssues = backgroundIssuesState.value,
+                        autostartVendor = OemAutostart.vendorLabel(),
+                        onFixBackgroundIssue = ::onFixBackgroundIssue,
                     )
                 }
             }
@@ -188,7 +194,61 @@ class SystemStatusFragment : Fragment() {
         val connected = hasValidNetwork()
         isConnectedState.value = connected
         statusTextState.value = getString(if (connected) R.string.status_active_and_polling else R.string.status_no_network)
+        backgroundIssuesState.value = BackgroundHealth.evaluate(requireContext())
         refreshDeviceList()
+    }
+
+    /**
+     * Sends the user to the one setting that fixes the named issue.
+     *
+     * Each branch marks its prompt as shown so the card stops repeating it: for the OEM row that
+     * flag is the only state we have, since no vendor exposes a way to read the grant back.
+     */
+    private fun onFixBackgroundIssue(issue: BackgroundIssue) {
+        val ctx = context ?: return
+        when (issue) {
+            BackgroundIssue.BATTERY_OPTIMIZED -> {
+                BackgroundPrefs.markShown(ctx, BackgroundPrefs.BATTERY_PROMPT_SHOWN)
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:${ctx.packageName}")
+                        }
+                    )
+                } catch (e: Exception) {
+                    Toast.makeText(ctx, getString(R.string.perm_battery_settings_error_toast), Toast.LENGTH_LONG).show()
+                }
+            }
+            BackgroundIssue.OEM_AUTOSTART_UNKNOWN -> {
+                BackgroundPrefs.markShown(ctx, BackgroundPrefs.OEM_AUTOSTART_PROMPT_SHOWN)
+                OemAutostart.open(ctx)
+            }
+            BackgroundIssue.NOTIFICATIONS_BLOCKED -> {
+                try {
+                    startActivity(
+                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+                    )
+                } catch (e: Exception) {
+                    startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.parse("package:${ctx.packageName}")
+                        }
+                    )
+                }
+            }
+            BackgroundIssue.SERVICE_STOPPED -> {
+                TransferDaemon.start(ctx.applicationContext)
+                val serviceIntent = Intent(ctx, ClipboardService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    ctx.startForegroundService(serviceIntent)
+                } else {
+                    ctx.startService(serviceIntent)
+                }
+            }
+        }
+        // Re-read immediately so the row disappears on return instead of lingering for up to 2s.
+        backgroundIssuesState.value = BackgroundHealth.evaluate(ctx)
     }
 
     private fun refreshDeviceList() {

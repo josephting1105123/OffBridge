@@ -50,8 +50,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.EntropicSoftwareLab.ClipboardShare.BackgroundIssue
 import com.EntropicSoftwareLab.ClipboardShare.PolishDialogWindow
 import com.EntropicSoftwareLab.ClipboardShare.R
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.BackgroundHealthCard
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.BentoTile
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.EmptyState
@@ -94,6 +96,9 @@ fun SystemStatusScreen(
     showTutorial: Boolean,
     onShowTutorial: () -> Unit,
     onTutorialDismiss: () -> Unit,
+    backgroundIssues: List<BackgroundIssue> = emptyList(),
+    autostartVendor: String? = null,
+    onFixBackgroundIssue: (BackgroundIssue) -> Unit = {},
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -160,6 +165,16 @@ fun SystemStatusScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
+
+            // Only present when something is actually wrong. Sits directly under the status tile
+            // that says "Offline", because that tile is where the user looks first and it has never
+            // been able to say why.
+            BackgroundHealthCard(
+                issues = backgroundIssues,
+                vendorLabel = autostartVendor,
+                onFix = onFixBackgroundIssue,
+                modifier = Modifier.padding(bottom = dimens.spaceLg),
+            )
 
             // Device name
             OutlinedTextField(

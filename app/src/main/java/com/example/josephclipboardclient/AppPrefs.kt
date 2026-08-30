@@ -29,3 +29,27 @@ object NotificationChannels {
     const val PAIRING = "PAIRING_REQUESTS_CHANNEL_V2"
     const val TRANSFER_REQUEST = "FILE_TRANSFER_REQUEST_CHANNEL_V2"
 }
+
+/**
+ * One-shot flags for the prompts that keep the daemon alive in the background.
+ *
+ * These exist because "ask on every cold start" is not a reminder, it's a wall. The battery
+ * exemption dialog used to fire from MainActivity.onCreate on every single launch whether or not
+ * the user had already answered it, which trains people to dismiss it reflexively — and a reflexive
+ * dismissal of the one prompt that keeps the service running is exactly the failure it was meant to
+ * prevent. Ask once; re-offer from the connection-health card, where there's room to say why.
+ */
+object BackgroundPrefs {
+
+    const val BATTERY_PROMPT_SHOWN = "battery_opt_prompt_shown"
+    const val OEM_AUTOSTART_PROMPT_SHOWN = "oem_autostart_prompt_shown"
+
+    fun wasShown(context: Context, key: String): Boolean =
+        context.getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+            .getBoolean(key, false)
+
+    fun markShown(context: Context, key: String) {
+        context.getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(key, true).apply()
+    }
+}

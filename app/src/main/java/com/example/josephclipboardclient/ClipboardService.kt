@@ -83,11 +83,26 @@ class ClipboardService : Service() {
 
         private const val ALERT_NOTIFICATION_AUTO_DISMISS_MS = 3000L  // sent/received clipboard toast lifetime
         private const val FOREGROUND_NOTIFICATION_REFRESH_MS = 2000L  // status-notification redraw interval
+        // Safety-net interval for the daemon watchdog. Slow on purpose: start() is a no-op when
+        // already running, so a tight loop would only burn wakeups to discover nothing is wrong.
+        private const val DAEMON_WATCHDOG_INTERVAL_MS = 60_000L
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onCreate() {
         super.onCreate()
+        ServiceLifecycleLog.log(this, "onCreate")
+
+        // startForeground() runs FIRST, before anything that can block.
+        //
+        // startForegroundService() gives the service five seconds to reach startForeground() or the
+        // system throws ForegroundServiceDidNotStartInTimeException and kills the process. The daemon
+        // starts below are synchronous and slow — WifiManager/PowerManager lock acquisition plus
+        // ServerSocket binds — and they used to run first. At cold boot, with Wi-Fi still negotiating,
+        // that could eat the whole budget, which is why the service so often never came back after a
+        // reboot. Nothing above this line may block.
+        if (!startForegroundServiceNotification()) return
+
         clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
         val pairingFilter = IntentFilter(PairingDaemon.ACTION_TRIGGER_PAIRING_NOTIFICATION)
@@ -104,12 +119,54 @@ class ClipboardService : Service() {
         // exactly that window. Idempotent across service restarts.
         AppForeground.register(application)
 
-        TransferDaemon.start(applicationContext)
-        PairingDaemon.start(applicationContext)
+        // Off the main thread, per the note above. TransferDaemon.start() is synchronized and
+        // idempotent, so racing this against the other call sites (MainActivity, SystemStatusFragment)
+        // is safe — whichever loses returns immediately.
+        serviceScope.launch {
+            TransferDaemon.start(applicationContext)
+            PairingDaemon.start(applicationContext)
+        }
 
-        startForegroundServiceNotification()
         startTcpReceiver()
         startNotificationUpdater()
+        startDaemonWatchdog()
+    }
+
+    /**
+     * Swiping the app out of Recents doesn't stop a foreground service, but several OEM ROMs kill
+     * the whole process anyway. START_STICKY is what brings it back; this is here to record that it
+     * happened, because the restart otherwise looks identical to a cold boot in the log.
+     *
+     * Deliberately does NOT call startForegroundService() — the app is backgrounded at this point
+     * and API 31+ refuses the start, so the attempt would only throw.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        ServiceLifecycleLog.log(this, "onTaskRemoved — task swiped; relying on START_STICKY")
+        super.onTaskRemoved(rootIntent)
+    }
+
+    /**
+     * Restarts the daemon if it stopped while the service is still alive.
+     *
+     * SystemStatusFragment already polls for this every 2s, but that poll is fragment-scoped: it
+     * dies with the screen, so the app only ever self-healed while the user was looking at it. This
+     * one lives as long as the service does. The interval is slow on purpose — start() is a no-op
+     * when already running, and this is a safety net, not a control loop.
+     */
+    private fun startDaemonWatchdog() {
+        serviceScope.launch {
+            while (isActive) {
+                delay(DAEMON_WATCHDOG_INTERVAL_MS)
+                if (!TransferDaemon.isRunning) {
+                    ServiceLifecycleLog.log(this@ClipboardService, "watchdog: daemon stopped, restarting")
+                    try {
+                        TransferDaemon.start(applicationContext)
+                    } catch (e: Exception) {
+                        Log.w("ClipboardService", "watchdog restart failed: ${e.message}")
+                    }
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -294,7 +351,13 @@ class ClipboardService : Service() {
         return views
     }
 
-    private fun startForegroundServiceNotification() {
+    /**
+     * Creates the notification channels and enters the foreground.
+     *
+     * Returns false when the system refused the start, so onCreate can abandon the rest of setup
+     * instead of wiring up daemons for a service that is about to be torn down.
+     */
+    private fun startForegroundServiceNotification(): Boolean {
         notificationStartTime = System.currentTimeMillis()
         chronometerBase = SystemClock.elapsedRealtime()
 
@@ -333,9 +396,11 @@ class ClipboardService : Service() {
                 startForeground(1, notification)
             }
         } catch (e: Exception) {
-            Log.w("ClipboardService", "startForeground failed, stopping service: ${e.message}")
+            ServiceLifecycleLog.log(this, "startForeground REFUSED: ${e.javaClass.simpleName}: ${e.message}")
             stopSelf()
+            return false
         }
+        return true
     }
 
     private fun showPairingNotification(senderName: String, senderIp: String, aesKey: ByteArray, visualPin: String?, expiresAt: Long, senderDeviceId: String?) {
@@ -549,6 +614,7 @@ class ClipboardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         super.onDestroy()
+        ServiceLifecycleLog.log(this, "onDestroy")
         // Guard like the adjacent socket close: if registration never completed, unregisterReceiver
         // throws IllegalArgumentException ("Receiver not registered") and would crash teardown.
         try { unregisterReceiver(pairingNotificationReceiver) } catch (e: IllegalArgumentException) {}

@@ -693,5 +693,19 @@
     <string name="update_downloading">Downloading update…</string>
     <string name="update_download_failed">Update download failed</string>
     <string name="update_allow_install_hint">Allow installing apps, then tap Download again</string>
+    <!-- Connection health card (System screen): why the background service isn't staying up. -->
+    <string name="bg_health_title">This phone may go offline</string>
+    <string name="bg_health_battery_heading">Battery optimisation is on</string>
+    <string name="bg_health_battery_body">Android can suspend OffBridge while it runs in the background, and the laptop stops seeing this phone. Allowing it to run unrestricted is the single biggest fix.</string>
+    <string name="bg_health_battery_action">Allow</string>
+    <string name="bg_health_oem_heading">%1$s controls autostart</string>
+    <string name="bg_health_oem_body">This phone keeps its own list of apps allowed to start on their own. Until OffBridge is on that list, the service won\'t come back after a restart.</string>
+    <string name="bg_health_oem_action">Open list</string>
+    <string name="bg_health_notifications_heading">Notifications are turned off</string>
+    <string name="bg_health_notifications_body">The background service needs a visible notification to keep running. Without it Android is free to stop the service at any time.</string>
+    <string name="bg_health_notifications_action">Turn on</string>
+    <string name="bg_health_stopped_heading">Background service stopped</string>
+    <string name="bg_health_stopped_body">Nothing on this phone is obviously blocking it, so this was most likely a one-off. Restarting brings it back.</string>
+    <string name="bg_health_stopped_action">Restart</string>
 </resources>
 

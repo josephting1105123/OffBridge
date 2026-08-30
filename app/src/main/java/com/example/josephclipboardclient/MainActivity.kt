@@ -964,13 +964,23 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Battery exemption: asked ONCE, not on every launch.
+        //
+        // This used to fire unconditionally from onCreate every single time the app opened, which
+        // turns the one prompt that keeps the daemon alive into something people learn to dismiss
+        // without reading. If it is still not granted, the connection-health card on the System
+        // screen re-offers it with the reason attached — a better place to make the argument than
+        // a cold-start interrupt.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            if (!powerManager.isIgnoringBatteryOptimizations(packageName) &&
+                !BackgroundPrefs.wasShown(this, BackgroundPrefs.BATTERY_PROMPT_SHOWN)
+            ) {
                 try {
                     val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
                     intent.data = Uri.parse("package:${packageName}")
                     startActivity(intent)
+                    BackgroundPrefs.markShown(this, BackgroundPrefs.BATTERY_PROMPT_SHOWN)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
