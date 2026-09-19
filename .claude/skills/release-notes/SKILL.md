@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Draft user-facing release notes for a ClipboardShare release (GitHub lane and/or Play "what's new"), optionally localized into all 10 languages. Use when asked for release notes, changelog text, a "what's new" blurb, or store-listing update copy.
+description: Draft user-facing release notes for a OffBridge release (GitHub lane and/or Play "what's new"), optionally localized into all 10 languages. Use when asked for release notes, changelog text, a "what's new" blurb, or store-listing update copy.
 ---
 
 # Release Notes
@@ -11,7 +11,7 @@ Assemble notes from the record, write them for users, and never invent history.
 
 1. `CHANGELOG.md` — the curated record.
 2. Commits since the last release tag of the **relevant platform track** — Android and Windows version independently (separate tracks since 3.5.1; bump/describe only the platform being shipped).
-3. Release docs (`release/RUNBOOK.md`, prior notes on the `ClipboardShare-Showcase` releases) for tone and precedent.
+3. Release docs (`release/RUNBOOK.md`, prior notes on the `OffBridge-Showcase` releases) for tone and precedent.
 
 **Flag history gaps instead of filling them.** The 2.x era predates the migrated repo — if a range has no record, say so and ask, don't reconstruct plausible-sounding features.
 
@@ -24,7 +24,7 @@ Assemble notes from the record, write them for users, and never invent history.
 
 ## Formats
 
-- **GitHub lane:** full notes on the `ClipboardShare-Showcase` release (assets keep stable names: `ClipboardShareSetup.exe`, `ClipboardShare-android.apk`).
+- **GitHub lane:** full notes on the `OffBridge-Showcase` release (assets keep stable names: `OffBridgeSetup.exe`, `OffBridge-android.apk`).
 - **Play "what's new":** ≤500 chars per locale, hard limit — write the English cut first, then check every translation still fits.
 - **Localized variants:** all 10 languages (en, zh-CN, zh-TW, es, fr, ja, de, pt, in, ru) when requested; follow the add-i18n-strings conventions for tone consistency with in-app strings.
 

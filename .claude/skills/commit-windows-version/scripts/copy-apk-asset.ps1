@@ -1,6 +1,6 @@
 <#
-  Copy ClipboardShare-android.apk from the previous Showcase release to the newly published one,
-  so the evergreen /releases/latest/download/ClipboardShare-android.apk link (the website's
+  Copy OffBridge-android.apk from the previous Showcase release to the newly published one,
+  so the evergreen /releases/latest/download/OffBridge-android.apk link (the website's
   Direct APK card) keeps working after the new release becomes latest. The publish script only
   uploads the Windows installer — run this right after it, every Windows release.
   Token read from Windows Credential Manager, same as the publish script.
@@ -12,8 +12,8 @@
 param(
   [Parameter(Mandatory=$true)][string]$FromTag,       # previous release tag still carrying the APK, e.g. 3.7.2
   [Parameter(Mandatory=$true)][int]$ToReleaseId,      # numeric id from CREATED_RELEASE/REUSING_RELEASE output
-  [string]$Repo = "josephting1105123/ClipboardShare-Showcase",
-  [string]$AssetName = "ClipboardShare-android.apk"
+  [string]$Repo = "josephting1105123/OffBridge-Showcase",
+  [string]$AssetName = "OffBridge-android.apk"
 )
 $ErrorActionPreference = "Stop"
 
@@ -39,7 +39,7 @@ public class CredManCopy {
 $token = [CredManCopy]::Read("git:https://github.com")
 if (-not $token) { Write-Output "ERROR_NO_CREDENTIAL"; exit 2 }
 $token = $token.Trim()
-$headers = @{ Authorization = "token $token"; Accept = "application/vnd.github+json"; "User-Agent" = "ClipboardShare-Release" }
+$headers = @{ Authorization = "token $token"; Accept = "application/vnd.github+json"; "User-Agent" = "OffBridge-Release" }
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
