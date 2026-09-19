@@ -37,10 +37,10 @@ import java.util.UUID
  * blocked, advertising aborted) means the caller simply doesn't set the QR's BLE cap bit and
  * the session behaves exactly like today's QR-credentials-only flow.
  */
-class BleControlPeripheral : ControlChannel {
+class BleControlPeripheral : ControlPeripheral {
 
     /** A phone subscribed to the TX characteristic (link forming) — reports the ATT MTU. */
-    var onSubscribed: ((mtu: Int) -> Unit)? = null
+    override var onSubscribed: ((mtu: Int) -> Unit)? = null
 
     override var onMessage: ((ByteArray) -> Unit)? = null
     override var onClosed: (() -> Unit)? = null
@@ -64,7 +64,7 @@ class BleControlPeripheral : ControlChannel {
      * already runs [com.joseph.clipboard.windows.network.HotspotController.start] there —
      * this runs within the same spin-up window).
      */
-    fun start(serviceUuid: UUID): Boolean {
+    override fun start(serviceUuid: UUID): Boolean {
         closed = false
         val cs: File
         val ps1: File

@@ -48,21 +48,13 @@ tasks.named("compileKotlin") {
 }
 
 dependencies {
-    implementation(compose.desktop.currentOs)
-    implementation(compose.material)
-    implementation(compose.material3)
-    implementation(compose.ui)
-    implementation(compose.foundation)
-    implementation(compose.materialIconsExtended)
+    // The portable ~94% of this client. Compose, gson and zxing arrive transitively as `api`
+    // dependencies of core, so they are deliberately not re-declared here.
+    implementation(project(":desktop-core"))
 
-    // JSON persistence (transfer history, config) — routed through the shared version catalog so
-    // both clients pin one gson version.
-    implementation(libs.gson)
-    // QR generation for off-grid "send via QR" (pure-JVM, no Android deps) — routed through the shared
-    // version catalog (zxing 3.5.3, same alias :app uses) so both clients pin one zxing version.
-    implementation(libs.zxing.core)
-    // Windows DPAPI (Crypt32) for encrypting pairing keys at rest in config.json. Windows-only;
-    // SecurityVault degrades to plaintext on non-Windows (e.g. Linux CI) so tests still run.
+    // Windows DPAPI (Crypt32) for encrypting pairing keys at rest in config.json, plus the Kernel32
+    // named mutex the Inno installer checks before an in-place upgrade. Windows-only, and scoped to
+    // this module on purpose so the Linux artifact never ships Win32 bindings.
     implementation(libs.jna.platform)
 
     testImplementation(libs.junit)

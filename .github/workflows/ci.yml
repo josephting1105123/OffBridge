@@ -36,9 +36,16 @@ jobs:
         run: chmod +x ./gradlew
 
       # Cross-platform crypto interop golden vectors (FileSeal / ClipboardSeal) — the offline proof
-      # that the Android and Windows clients seal/open byte-identically.
-      - name: Windows-module unit tests (:window-ver)
+      # that the Android, Windows and Linux clients seal/open byte-identically. Most of these live in
+      # :desktop-core now; the platform modules keep only their own backend's tests.
+      - name: Desktop core unit tests (:desktop-core)
+        run: ./gradlew :desktop-core:test --no-daemon --stacktrace
+
+      - name: Windows-backend unit tests (:window-ver)
         run: ./gradlew :window-ver:test --no-daemon --stacktrace
+
+      - name: Linux-backend unit tests (:linux-ver)
+        run: ./gradlew :linux-ver:test --no-daemon --stacktrace
 
       - name: Android unit tests
         run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
@@ -52,6 +59,30 @@ jobs:
       - name: Android release build (R8 validation)
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
+      # The desktop client is a GUI app, so unit tests alone can never answer "does it actually come
+      # up on Linux". --selftest boots no window: it resolves the XDG dirs, takes the single-instance
+      # lock, binds all four daemon ports, round-trips the vault and loads the translations, then
+      # exits. Deliberately run WITHOUT xvfb so a regression that reintroduces an AWT dependency into
+      # startup fails here rather than in a user's headless install.
+      - name: Linux headless self-test
+        run: ./gradlew :linux-ver:run --args="--selftest" --no-daemon --stacktrace
+
+      # jpackage never cross-builds, so a Linux installer can only ever be produced on a Linux
+      # machine — this job is the build machine for the Linux client, not just its test runner.
+      - name: Install Linux packaging tools
+        run: sudo apt-get update && sudo apt-get install -y fakeroot binutils
+
+      - name: Build Linux .deb (:linux-ver)
+        run: ./gradlew :linux-ver:packageReleaseDeb --no-daemon --stacktrace
+
+      - name: Upload Linux package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offbridge-linux-deb
+          path: Linux Ver/build2/compose/binaries/main-release/deb/*.deb
+          if-no-files-found: warn
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -59,5 +90,7 @@ jobs:
           name: test-reports
           path: |
             app/build/reports/tests/
+            Desktop Core/build2/reports/tests/
             Window Ver/build2/reports/tests/
+            Linux Ver/build2/reports/tests/
           if-no-files-found: ignore

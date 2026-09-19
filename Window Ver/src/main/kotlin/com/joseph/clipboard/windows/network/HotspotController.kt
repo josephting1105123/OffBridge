@@ -1,5 +1,7 @@
 package com.joseph.clipboard.windows.network
 
+import com.joseph.clipboard.desktop.platform.HotspotInfo
+
 import com.google.gson.Gson
 import com.joseph.clipboard.windows.os.startDrained
 import java.io.File
@@ -27,9 +29,6 @@ import java.security.SecureRandom
  * Reference: Microsoft Windows-classic-samples `WiFiDirectLegacyAP`, govert/WiFiDirectLegacyAPDemo.
  */
 object HotspotController {
-
-    /** Live AP credentials the phone needs (carried in the off-grid QR). */
-    data class HotspotInfo(val ssid: String, val passphrase: String, val gatewayIp: String)
 
     private val gson = Gson()
     // Guards the start() critical section so two concurrent start() calls can't race. stop() deliberately

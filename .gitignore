@@ -19,6 +19,10 @@ jdk17.zip
 
 Window Ver/build/
 Window Ver/build2/
+Desktop Core/build/
+Desktop Core/build2/
+Linux Ver/build/
+Linux Ver/build2/
 app/release/
 # Gradle drops the Play bundle's outputs here (baseline profiles, output-metadata.json).
 # Build products, not sources — app/release/ was already covered but this path was not.
@@ -46,6 +50,9 @@ Installation package (Latest only)/
 
 # Personal interview prep — never publish (see PORTFOLIO.md header)
 PORTFOLIO.md
+
+# Marketing playbook — never publish; in a public repo it reads as an astroturfing plan
+release/REDDIT-LAUNCH.md
 
 # Claude Code runtime lock
 .claude/scheduled_tasks.lock
