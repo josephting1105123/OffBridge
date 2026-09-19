@@ -34,7 +34,12 @@ class FileTransferDaemon(
      * gate below (XP-05) — the sessionId was issued over the ECDH-authenticated P2P_WELCOME, so it is
      * an unguessable per-session token. Mirrors the Android FileTransferServer exemption. Defaults to
      * "no p2p session" so a caller that doesn't wire it keeps LAN-only behavior. */
-    private val isOffGridResumeSession: (sessionId: String) -> Boolean = { false }
+    private val isOffGridResumeSession: (sessionId: String) -> Boolean = { false },
+    /** A paired phone announced a screenshot: `SCREENSHOT_AVAILABLE|sessionId|sealedB64`. The payload
+     * is sealed under the pairing key, so the daemon hands both halves straight to the controller
+     * rather than trying to interpret them here. Defaults to "ignore", so a caller that does not wire
+     * it up behaves exactly as before. */
+    private val onScreenshotAvailable: (ip: String, sessionId: String, sealedB64: String) -> Unit = { _, _, _ -> },
 ) {
     private val FILE_TRANSFER_PORT = Ports.FILE_TRANSFER
     @Volatile private var isRunning = false
@@ -166,6 +171,15 @@ class FileTransferDaemon(
                         clientSocket.close()
                         return@thread
                     }
+                }
+
+                // Checked before OFFER because it is the cheaper test and shares the trust gate above:
+                // only an IP with a stored pairing key reaches this line.
+                ScreenshotWire.parseAvailable(header)?.let { (sessionId, sealed) ->
+                    val ip = clientSocket.inetAddress?.hostAddress
+                    if (ip != null) onScreenshotAvailable(ip, sessionId, sealed)
+                    clientSocket.close()
+                    return@thread
                 }
 
                 if (header.startsWith("OFFER|")) {

@@ -20,6 +20,8 @@ import com.joseph.clipboard.windows.network.PairingClient
 import com.joseph.clipboard.windows.network.PairingDaemon
 import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.network.TransferDaemon
+import com.joseph.clipboard.windows.network.ScreenshotAdmission
+import com.joseph.clipboard.windows.network.ScreenshotWire
 import com.joseph.clipboard.windows.os.ClipboardManager
 import com.joseph.clipboard.windows.os.SystemTrayManager
 import com.joseph.clipboard.windows.update.AppVersion
@@ -53,6 +55,9 @@ import com.joseph.clipboard.windows.network.FileStreamer
 import java.io.File
 import java.net.Socket
 import com.joseph.clipboard.windows.storage.CryptoEngine
+import com.joseph.clipboard.windows.storage.ClipboardSeal
+import java.awt.Desktop
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Thrown when a peer that previously negotiated an authenticated (AES-GCM) channel now offers only
@@ -341,6 +346,16 @@ class ClipboardAppController {
             val safeManifest = manifest.map { (name, size) -> FileStreamer.sanitizeIncomingFileName(name) to size }
             val session = IncomingFileSession(sessionId, ip, deviceName, safeManifest)
             activeIncomingFileSessions[sessionId] = session
+            // An answer to a screenshot the user already clicked Open on: accept it without a second
+            // prompt. ScreenshotAdmission decides, and it refuses anything that is not exactly the
+            // single image we asked for moments ago - see that file for why each condition is there.
+            if (ScreenshotAdmission.mayAutoAccept(
+                    pendingScreenshotFetches[sessionId], safeManifest, System.currentTimeMillis()
+                )
+            ) {
+                scope.launch { acceptIncomingFileTransfer(sessionId) }
+                return@FileTransferDaemon
+            }
             _incomingFileOffer.value = session
             if (windowIsVisible()) {
                 onRequestForeground?.invoke()
@@ -421,7 +436,8 @@ class ClipboardAppController {
         supportsAcceptAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2Accept } },
         // XP-05: admit an off-grid receiver's RESUME_REQUEST past the LAN trust gate when its sessionId
         // names a live outgoing p2p session (registered in handleP2pHello with transport="p2p").
-        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" }
+        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" },
+        onScreenshotAvailable = { ip, sessionId, sealed -> onScreenshotAnnounced(ip, sessionId, sealed) },
     )
 
     // UI State
@@ -1058,6 +1074,142 @@ class ClipboardAppController {
         currentFileOffset = 0L
     )
 
+
+    // ---- Screenshot notifications (see network/ScreenshotWire.kt) ----
+
+    /** A screenshot a paired phone has told us about but has not sent. */
+    data class AnnouncedScreenshot(
+        val sessionId: String,
+        val senderIp: String,
+        val senderName: String,
+        val name: String,
+        val size: Long,
+        val modifiedMillis: Long,
+        val thumbnailB64: String,
+        val announcedAtMs: Long,
+    )
+
+    /**
+     * Announcements we could still act on, and fetches we are still waiting to be answered.
+     *
+     * Both are bounded by [pruneScreenshots]: they are fed by an automatic trigger on the phone, so
+     * without a cap a chatty or hostile peer could grow them without limit in a process that is now
+     * expected to run for weeks.
+     */
+    private val announcedScreenshots = ConcurrentHashMap<String, AnnouncedScreenshot>()
+    private val pendingScreenshotFetches = ConcurrentHashMap<String, ScreenshotAdmission.Expected>()
+
+    private val _screenshotOffer = MutableStateFlow<AnnouncedScreenshot?>(null)
+    val screenshotOffer: StateFlow<AnnouncedScreenshot?> = _screenshotOffer
+
+    /** How long an announcement stays actionable, matching the phone's own retention. */
+    private val SCREENSHOT_TTL_MS = 30 * 60 * 1000L
+    private val MAX_ANNOUNCED_SCREENSHOTS = 10
+
+    /**
+     * A paired phone reports a new screenshot.
+     *
+     * Everything about the frame is untrusted until [ClipboardSeal.open] succeeds: it authenticates
+     * the payload under the pairing key, rejects anything tampered with, and rejects stale or
+     * replayed blobs. A failure here is silent on purpose — the honest response to a frame we can't
+     * authenticate is to ignore it, not to tell the user something arrived.
+     */
+    private fun onScreenshotAnnounced(ip: String, sessionId: String, sealedB64: String) {
+        val key = SecurityVault.getAesKey(ip) ?: return
+        val blob = try {
+            Base64.getDecoder().decode(sealedB64)
+        } catch (e: IllegalArgumentException) {
+            return
+        }
+        val plaintext = ClipboardSeal.open(key, blob, System.currentTimeMillis()) ?: return
+        val metadata = ScreenshotWire.decodeMetadata(String(plaintext, Charsets.UTF_8)) ?: return
+
+        // The name is attacker-controlled and ends up in a file path and a shell open, so it is
+        // reduced to a safe leaf here, at the boundary, exactly as an incoming offer's names are.
+        val safeName = FileStreamer.sanitizeIncomingFileName(metadata.name)
+        if (!ScreenshotWire.isOpenableImage(safeName)) return
+        if (metadata.size <= 0L) return
+
+        val senderName = transferDaemon.getDiscoveredNodes().find { it.ip == ip }?.name ?: ip
+        val announced = AnnouncedScreenshot(
+            sessionId = sessionId,
+            senderIp = ip,
+            senderName = senderName,
+            name = safeName,
+            size = metadata.size,
+            modifiedMillis = metadata.modifiedMillis,
+            thumbnailB64 = metadata.thumbnailB64,
+            announcedAtMs = System.currentTimeMillis(),
+        )
+        announcedScreenshots[sessionId] = announced
+        pruneScreenshots()
+
+        if (windowIsVisible()) {
+            // The window is on screen, so show the preview card rather than a balloon behind it.
+            _screenshotOffer.value = announced
+        } else {
+            SystemTrayManager.showNotification(
+                "Screenshot on $senderName",
+                "$safeName — click to open it here",
+                onClick = { requestScreenshot(sessionId) },
+            )
+        }
+    }
+
+    /**
+     * Asks the phone to send a screenshot it announced.
+     *
+     * Records what we asked for BEFORE sending, so the offer that comes back can be matched against
+     * it — see [ScreenshotAdmission]. The phone answers with an ordinary OFFER carrying the same
+     * session id, which is what lets the accept happen without a second prompt.
+     */
+    fun requestScreenshot(sessionId: String) {
+        val announced = announcedScreenshots[sessionId] ?: return
+        if (_screenshotOffer.value?.sessionId == sessionId) _screenshotOffer.value = null
+
+        pendingScreenshotFetches[sessionId] = ScreenshotAdmission.Expected(
+            sessionId = sessionId,
+            name = announced.name,
+            size = announced.size,
+            requestedAtMs = System.currentTimeMillis(),
+        )
+        scope.launch {
+            try {
+                Socket().use { socket ->
+                    socket.connect(InetSocketAddress(announced.senderIp, Ports.FILE_TRANSFER), 5000)
+                    val out = socket.getOutputStream()
+                    out.write((ScreenshotWire.fetchLine(sessionId) + "\n").toByteArray(Charsets.UTF_8))
+                    out.flush()
+                }
+            } catch (e: Exception) {
+                pendingScreenshotFetches.remove(sessionId)
+                SystemTrayManager.showNotification(
+                    "Could not reach ${announced.senderName}",
+                    "The screenshot could not be fetched.",
+                    TrayIcon.MessageType.WARNING,
+                )
+            }
+        }
+    }
+
+    /** Dismisses an announcement without fetching it. */
+    fun dismissScreenshot(sessionId: String) {
+        announcedScreenshots.remove(sessionId)
+        if (_screenshotOffer.value?.sessionId == sessionId) _screenshotOffer.value = null
+    }
+
+    /** Drops expired entries, then the oldest, keeping both maps inside their bounds. */
+    private fun pruneScreenshots() {
+        val cutoff = System.currentTimeMillis() - SCREENSHOT_TTL_MS
+        announcedScreenshots.entries.removeIf { it.value.announcedAtMs < cutoff }
+        pendingScreenshotFetches.entries.removeIf {
+            System.currentTimeMillis() - it.value.requestedAtMs > ScreenshotAdmission.FETCH_DEADLINE_MS
+        }
+        while (announcedScreenshots.size > MAX_ANNOUNCED_SCREENSHOTS) {
+            val oldest = announcedScreenshots.values.minByOrNull { it.announcedAtMs } ?: break
+            announcedScreenshots.remove(oldest.sessionId)
+        }
+    }
     fun acceptIncomingFileTransfer(sessionId: String) {
         val session = activeIncomingFileSessions[sessionId] ?: return
         _incomingFileOffer.value = null
@@ -1479,13 +1631,25 @@ class ClipboardAppController {
             )
 
             updateRecord(sessionId) { it.copy(status = "completed") }
-            // Completion was previously silent: with the window hidden you had no way to know a
-            // transfer finished short of opening the app to look.
-            if (!windowIsVisible()) {
-                val names = session.manifest.map { it.first }
+
+            // A screenshot the user asked to open: hand it straight to the shell. The extension is
+            // re-checked against the RESOLVED on-disk name, not the announced one — a name-collision
+            // rename happens between accept and here, and this is the last point before the file
+            // reaches Windows.
+            val screenshot = pendingScreenshotFetches.remove(sessionId)
+            val savedName = names.firstOrNull()
+            if (screenshot != null && savedName != null && ScreenshotAdmission.mayOpen(savedName)) {
+                runCatching { Desktop.getDesktop().open(File(saveDir, savedName)) }
+                    .onFailure { System.err.println("Could not open the received screenshot: ${it.message}") }
+            } else if (!windowIsVisible()) {
+                // Completion used to be silent: with the window hidden there was no way to know a
+                // transfer had finished short of opening the app to look. Screenshots are exempt —
+                // the image itself is about to appear on screen.
+                val received = names.ifEmpty { session.manifest.map { it.first } }
                 SystemTrayManager.showNotification(
                     "Received from ${session.senderName}",
-                    if (names.size == 1) names.first() else "${names.size} files saved to ${SecurityVault.getSaveLocation()}",
+                    if (received.size == 1) received.first()
+                    else "${received.size} files saved to ${SecurityVault.getSaveLocation()}",
                     onClick = { onRequestForeground?.invoke() },
                 )
             }
