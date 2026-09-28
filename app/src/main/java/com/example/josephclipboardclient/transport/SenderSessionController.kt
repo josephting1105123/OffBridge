@@ -120,6 +120,9 @@ class SenderSessionController(
     /** Fires if a BLE central connects but never completes HELLO — records the control failure. */
     private val helloWatchdogToken = Any()
 
+    /** Bounds the wait for the current tier's TRANSPORT_RESULT (see [armTierWatchdog]). */
+    private val tierWatchdogToken = Any()
+
     /**
      * The HELLO_ACK exactly as it went out, kept so a receiver that never saw it can be answered
      * again from [resendHelloAck] without re-deriving anything. Re-running the HELLO handler for a
@@ -146,6 +149,8 @@ class SenderSessionController(
      */
     @Volatile private var controlFailed = false
 
+    private var serverReopens = 0
+
     private val ladderId: String =
         MessageDigest.getInstance("SHA-256").digest(token)
             .joinToString("") { "%02x".format(it) }.substring(0, 10)
@@ -156,6 +161,11 @@ class SenderSessionController(
         private const val HELLO_WATCHDOG_MS = 8_000L
         /** The receiver retries HELLO_RX twice, so three replays is already generous. */
         private const val MAX_ACK_RESENDS = 3
+        /** Slack on top of a tier's own budgets before its missing result counts as a failure. */
+        private const val TIER_RESULT_GRACE_MS = 15_000L
+        /** Re-opens of the GATT server after a central drops before HELLO (see [onServerClosed]). */
+        private const val MAX_SERVER_REOPENS = 3
+        private const val SERVER_REOPEN_DELAY_MS = 300L
     }
 
     /** Capability bitmap advertised in the QR `cap` field (§5). */
@@ -182,19 +192,53 @@ class SenderSessionController(
             TransportDiag.log("TX: BLE advertise UNAVAILABLE — receiver can't discover us (no control channel)")
             return
         }
-        val server = BleControlServer(appContext)
-        bleServer = server
-        server.onMessage = { raw -> mainHandler.post { handlePreSessionFrame(raw) } }
-        server.onClosed = { mainHandler.post { handleControlLost() } }
-        server.onClientConnected = { mainHandler.post { onBleClientConnected() } }
-        if (!server.start(ControlProtocol.sessionServiceUuid(token))) {
+        if (!openServer()) {
             controlFailed = true
             TransportDiag.log("TX: BLE advertise FAILED to start — no control channel/BT")
-            server.close()
-            bleServer = null
         } else {
             TransportDiag.log("TX: BLE advertising ✓ — waiting for receiver to connect")
         }
+    }
+
+    /** Opens the GATT server and advertises this session's service UUID. */
+    private fun openServer(): Boolean {
+        val server = BleControlServer(appContext)
+        bleServer = server
+        server.onMessage = { raw -> mainHandler.post { handlePreSessionFrame(raw) } }
+        server.onClosed = { mainHandler.post { onServerClosed(server) } }
+        server.onClientConnected = { mainHandler.post { onBleClientConnected() } }
+        if (server.start(ControlProtocol.sessionServiceUuid(token))) return true
+        server.close()
+        bleServer = null
+        return false
+    }
+
+    /**
+     * The server closes itself whenever its central disconnects. Before HELLO that is usually the
+     * receiver's first GATT connect collapsing (the MIUI status-133 case), which the receiver answers
+     * by reconnecting once — to a server that had already stopped advertising, so the retry could
+     * never land and this QR was dead for the control channel until it expired. Re-open it on the
+     * same token instead; the receiver's next connect or rescan then finds it. Bounded, so an
+     * advertiser that keeps failing still ends in the ordinary control-lost path.
+     */
+    private fun onServerClosed(server: BleControlServer) {
+        if (torndown || bleServer !== server) return
+        if (session == null && !dataConnected && serverReopens < MAX_SERVER_REOPENS) {
+            serverReopens++
+            bleServer = null
+            mainHandler.removeCallbacksAndMessages(helloWatchdogToken)
+            TransportDiag.log("TX: BLE link closed before HELLO — re-opening control server ($serverReopens/$MAX_SERVER_REOPENS)")
+            mainHandler.postDelayed({
+                if (torndown || session != null || bleServer != null) return@postDelayed
+                if (!openServer()) {
+                    controlFailed = true
+                    TransportDiag.log("TX: BLE control server re-open FAILED")
+                    handleControlLost()
+                }
+            }, SERVER_REOPEN_DELAY_MS)
+            return
+        }
+        handleControlLost()
     }
 
     /**
@@ -218,7 +262,10 @@ class SenderSessionController(
     // ----------------------------------------------------------- HELLO phase
 
     private fun handlePreSessionFrame(raw: ByteArray) {
-        if (torndown || session != null) return
+        if (torndown) return
+        // A HELLO_RX retry queued before the first one built the session belongs to the session:
+        // it is how a lost HELLO_ACK gets replayed (see [resendHelloAck]).
+        session?.let { it.deliver(raw); return }
         // Every rejection below used to be a silent `return`, so the 8s watchdog reported "HELLO
         // never completed" identically whether nothing arrived or a frame arrived and was thrown
         // away. Naming the step makes the difference visible in the diagnostics trace.
@@ -499,6 +546,7 @@ class SenderSessionController(
 
     private fun advance(index: Int) {
         if (torndown || dataConnected) return
+        mainHandler.removeCallbacksAndMessages(tierWatchdogToken)
         currentAttempt?.let {
             // Close a dangling attempt as failed before moving on.
             if (it.outcome == AttemptOutcome.PENDING) {
@@ -506,6 +554,7 @@ class SenderSessionController(
             }
         }
         if (index >= plan.size) {
+            mainHandler.removeCallbacksAndMessages(tierWatchdogToken)
             // controlFailed is only known after the ladder has actually run, so refine the generic
             // reason here (not in buildPlan): a generic Wi-Fi exhaustion that was preceded by a BLE
             // control failure is reported as CONTROL_FAILED so the UI can name the real cause.
@@ -523,6 +572,7 @@ class SenderSessionController(
         TransportDiag.log("TX: tier ${index + 1}/${plan.size} → ${tier.wireName}")
         listener.onTierChanged(tier, index + 1, plan.size)
         currentAttempt = TransportAttemptLog.begin(appContext, ladderId, tier)
+        armTierWatchdog(index, tier)
 
         when (tier) {
             TransportDescriptor.P2P_CRED_JOIN, TransportDescriptor.SPECIFIER -> {
@@ -625,6 +675,35 @@ class SenderSessionController(
             // Retired/unsupported in any plan — defensive skip if they ever appear.
             TransportDescriptor.AWARE, TransportDescriptor.BT_L2CAP -> skipCurrent()
         }
+    }
+
+    /**
+     * The ladder advances only on a TRANSPORT_RESULT (or a local failure), so one lost frame — a
+     * TRY_TRANSPORT the receiver never executed, or a result that never came back — used to park the
+     * session on this tier for good: PING/PONG kept the link alive, and nothing else was waiting.
+     * This bounds it. Two budgets plus grace, because the host tiers chain two waits (the receiver
+     * brings its group or hotspot up, then we join it) and LOHS starts ours before the receiver joins;
+     * a receiver still working on the tier has concluded by then. Windows' sender runs the same guard.
+     */
+    private fun armTierWatchdog(index: Int, tier: TransportDescriptor) {
+        val waitMs = tier.budgetMs * 2 + TIER_RESULT_GRACE_MS
+        mainHandler.postDelayed({
+            if (torndown || dataConnected || planIndex != index) return@postDelayed
+            // Data already flowing means only the result frame went missing, not the route.
+            if (TransferDaemon.activeSessions.values.any { it.transport == "p2p" && !it.isIncoming }) return@postDelayed
+            TransportDiag.log("TX: no result for ${tier.wireName} after ${waitMs / 1000}s — moving on")
+            // A host tier's join of the receiver's network may still be pending; its late failure
+            // callback would advance a second time and skip the tier we are about to try.
+            credentialJoiner?.teardown()
+            credentialJoiner = null
+            specifierJoiner?.teardown()
+            specifierJoiner = null
+            currentAttempt?.let {
+                TransportAttemptLog.end(appContext, it, AttemptOutcome.FAILED, FailureCode.CONNECT_TIMEOUT)
+                currentAttempt = null
+            }
+            advance(index + 1)
+        }, tierWatchdogToken, waitMs)
     }
 
     private fun skipCurrent() {
@@ -818,6 +897,7 @@ class SenderSessionController(
 
     private fun handleControlLost() {
         if (torndown) return
+        mainHandler.removeCallbacksAndMessages(tierWatchdogToken)
         session?.close()
         session = null
         if (!dataConnected) {
@@ -830,6 +910,18 @@ class SenderSessionController(
 
     /** True once a coordinated tier produced a live data connection. */
     fun isDataConnected(): Boolean = dataConnected
+
+    /**
+     * The receiver's TCP handshake was accepted, so a route is carrying data whatever the control
+     * plane last heard. Stops the ladder, including the result watchdog, from acting on a tier that
+     * has in fact won (Windows' `PcQrSenderController.notifyTransferStarted`).
+     */
+    fun notifyTransferStarted() {
+        mainHandler.post {
+            dataConnected = true
+            mainHandler.removeCallbacksAndMessages(tierWatchdogToken)
+        }
+    }
 
     fun isGroupTornDown(): Boolean = groupTornDown
 
@@ -870,6 +962,7 @@ class SenderSessionController(
     fun teardown() {
         torndown = true
         mainHandler.removeCallbacksAndMessages(helloWatchdogToken)
+        mainHandler.removeCallbacksAndMessages(tierWatchdogToken)
         currentAttempt?.let {
             if (it.outcome == AttemptOutcome.PENDING) {
                 TransportAttemptLog.end(appContext, it, AttemptOutcome.FAILED, FailureCode.CANCELLED)

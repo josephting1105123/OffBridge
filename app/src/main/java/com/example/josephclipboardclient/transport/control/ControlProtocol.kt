@@ -172,6 +172,15 @@ class ControlSession(
         }
     }
 
+    /**
+     * Feeds a frame that reached the controller's pre-session handler after this session formed.
+     * The pre-session handler is posted, so frames reassembled in the same looper turn as the
+     * HELLO frame were already queued for it before [start] re-pointed the channel here. Dropping
+     * them lost the sender's first sealed frames (DATA_READY, TRY_TRANSPORT) on a busy main thread.
+     * Main thread only; queue order is preserved, which the monotonic sequence check relies on.
+     */
+    fun deliver(raw: ByteArray) = handleRaw(raw)
+
     private fun handleRaw(raw: ByteArray) {
         if (dead) return
         val frame = ControlProtocol.parse(raw) ?: return

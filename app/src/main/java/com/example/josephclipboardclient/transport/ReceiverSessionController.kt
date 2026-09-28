@@ -203,7 +203,11 @@ class ReceiverSessionController(
     }
 
     private fun handlePreSessionFrame(raw: ByteArray) {
-        if (torndown || session != null) return
+        if (torndown) return
+        // The sender seals DATA_READY and TRY_TRANSPORT straight after HELLO_ACK. When their chunks
+        // are reassembled before this handler has run for the ACK, they are queued here too — and
+        // were discarded once the ACK built the session, leaving both sides waiting on each other.
+        session?.let { it.deliver(raw); return }
         val frame = ControlProtocol.parse(raw) ?: return
         if (frame.type != ControlProtocol.HELLO_ACK) return
         val key = sharedKey ?: return

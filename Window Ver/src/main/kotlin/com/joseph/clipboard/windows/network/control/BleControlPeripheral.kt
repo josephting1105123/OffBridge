@@ -416,14 +416,20 @@ class BleControlPeripheral : ControlChannel {
                         var request = Await(args.GetRequestAsync());
                         var data = new byte[request.Value.Length];
                         DataReader.FromBuffer(request.Value).ReadBytes(data);
-                        if (request.Option == GattWriteOption.WriteWithResponse) request.Respond();
                         string client = args.Session != null ? args.Session.DeviceId.Id : "?";
+                        bool accepted;
                         lock (Sync)
                         {
                             // Chunks from anyone other than the locked (first-subscribed) client are dropped.
-                            if (_lockedId != null && client != _lockedId) return;
+                            accepted = _lockedId == null || client == _lockedId;
                         }
-                        Emit("{\"ev\":\"rx\",\"client\":\"" + J(client) + "\",\"d\":\"" + Convert.ToBase64String(data) + "\"}");
+                        // Emit BEFORE responding. The phone sends its next chunk as soon as the response
+                        // lands, and this handler runs on the thread pool, so responding first let the
+                        // next chunk's handler emit ahead of this one — an out-of-order index that the
+                        // reassembler (correctly) treats as a lost chunk, discarding the whole frame.
+                        if (accepted)
+                            Emit("{\"ev\":\"rx\",\"client\":\"" + J(client) + "\",\"d\":\"" + Convert.ToBase64String(data) + "\"}");
+                        if (request.Option == GattWriteOption.WriteWithResponse) request.Respond();
                     }
                     catch (Exception e)
                     {

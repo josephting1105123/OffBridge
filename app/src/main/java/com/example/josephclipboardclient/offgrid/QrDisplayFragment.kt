@@ -620,6 +620,7 @@ class QrDisplayFragment : Fragment() {
     }
 
     private fun onPeerConnected(deviceName: String) {
+        senderController?.notifyTransferStarted()
         if (!isAdded) return
         state = SenderState.TRANSFERRING
         expiryJob?.cancel()

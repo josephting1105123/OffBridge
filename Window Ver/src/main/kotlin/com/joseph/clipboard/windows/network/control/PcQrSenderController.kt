@@ -164,7 +164,10 @@ class PcQrSenderController(
     // ----------------------------------------------------------- HELLO phase
 
     private fun handlePreSessionFrame(raw: ByteArray) {
-        if (finished || session != null) return // one session per QR window; later HELLOs ignored
+        if (finished) return
+        // One session per QR window. A frame queued here before the first HELLO built the session
+        // (a HELLO_RX retry, most likely) belongs to that session, not the bin.
+        session?.let { it.deliver(raw); return }
         val frame = ControlProtocol.parse(raw) ?: return
         if (frame.type != ControlProtocol.HELLO_RX) return
         val body = try {
