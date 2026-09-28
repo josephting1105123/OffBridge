@@ -690,7 +690,10 @@ class SenderSessionController(
         mainHandler.postDelayed({
             if (torndown || dataConnected || planIndex != index) return@postDelayed
             // Data already flowing means only the result frame went missing, not the route.
-            if (TransferDaemon.activeSessions.values.any { it.transport == "p2p" && !it.isIncoming }) return@postDelayed
+            // (A paused send stays registered for resume, so it must not count as flowing.)
+            if (TransferDaemon.activeSessions.values.any {
+                    it.transport == "p2p" && !it.isIncoming && !it.isPaused && !it.isCancelled
+                }) return@postDelayed
             TransportDiag.log("TX: no result for ${tier.wireName} after ${waitMs / 1000}s — moving on")
             // A host tier's join of the receiver's network may still be pending; its late failure
             // callback would advance a second time and skip the tier we are about to try.

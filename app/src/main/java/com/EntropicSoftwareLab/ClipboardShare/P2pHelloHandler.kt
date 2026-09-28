@@ -44,19 +44,7 @@ object P2pHelloHandler {
         }
 
         if (ctx.busy) {
-            TransportDiag.log("TX: P2P_HELLO — already busy with another peer → sent P2P_BUSY")
-            // A peer is already in HANDSHAKE/TRANSFERRING (edge case 9).
-            TransferDaemon.daemonScope.launch(Dispatchers.IO) {
-                try {
-                    connection.output.run {
-                        write("P2P_BUSY\n".toByteArray(Charsets.UTF_8))
-                        flush()
-                    }
-                } catch (_: Exception) {
-                } finally {
-                    try { connection.close() } catch (_: Exception) {}
-                }
-            }
+            replyBusy(connection)
             return
         }
 
@@ -99,8 +87,19 @@ object P2pHelloHandler {
         }
         TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' → sending P2P_WELCOME + OFFER")
 
-        ctx.busy = true
+        // Claim atomically: the check above is a fast path, but two dials validated in parallel (a
+        // receiver retrying while its first attempt is still in flight) both passed it, and each
+        // then ran a session — one of which waited out its 30 s ACCEPT_OFFER read and reported an
+        // error to the sender's screen while the real transfer was running.
+        val claimed = synchronized(ctx) { if (ctx.busy) false else { ctx.busy = true; true } }
+        if (!claimed) {
+            replyBusy(connection)
+            return
+        }
         val sessionId = UUID.randomUUID().toString()
+        // Set once the session is registered; lets the outer catch unregister a session that never
+        // got as far as streaming.
+        var registered: TransferSession? = null
 
         TransferDaemon.daemonScope.launch(Dispatchers.IO) {
             try {
@@ -135,6 +134,7 @@ object P2pHelloHandler {
                     transport = "p2p"
                 )
                 TransferDaemon.putActiveSession(sessionId, session)
+                registered = session
 
                 TransferHistoryManager.addRecord(context, TransferRecord(
                     sessionId = sessionId,
@@ -172,6 +172,10 @@ object P2pHelloHandler {
                 val replyFlags = replyParts.drop(2)
                 val ackExpected = replyFlags.contains("ack")
                 val sealKey = if (replyFlags.contains(OffGridHandshake.ACCEPT_FLAG_SEAL)) sharedKey else null
+                // Kept for an off-grid RESUME_REQUEST, which arrives from a never-paired IP and so
+                // has no pairing key to seal with — FileTransferServer resumes with this instead.
+                session.p2pSealKey = sealKey
+                session.fileV2Negotiated = sealKey != null
 
                 // See OffGridHandshake's twin line: a plaintext fallback is externally
                 // indistinguishable from a sealed transfer, so the outcome must be stated.
@@ -218,6 +222,14 @@ object P2pHelloHandler {
             } catch (e: Exception) {
                 e.printStackTrace()
                 TransportDiag.log("TX: P2P handshake error after WELCOME: ${e.javaClass.simpleName} ${e.message ?: ""}")
+                // Reached only when the socket died before ACCEPT_OFFER (streaming errors are caught
+                // inside). The session was registered and recorded as pending but can never run:
+                // left behind, it lingered in activeSessions — where the next transfer's hand-off
+                // could pick it up as "the" outgoing p2p session — and in history as pending forever.
+                registered?.let {
+                    TransferDaemon.removeActiveSession(it.sessionId)
+                    TransferHistoryManager.updateStatus(context, it.sessionId, "failed")
+                }
                 ctx.onTransferError(false)
             } finally {
                 try { connection.close() } catch (_: Exception) {}
@@ -229,5 +241,20 @@ object P2pHelloHandler {
             }
         }
     }
-}
 
+    /** A peer is already in HANDSHAKE/TRANSFERRING (edge case 9). */
+    private fun replyBusy(connection: TransportConnection) {
+        TransportDiag.log("TX: P2P_HELLO — already busy with another peer → sent P2P_BUSY")
+        TransferDaemon.daemonScope.launch(Dispatchers.IO) {
+            try {
+                connection.output.run {
+                    write("P2P_BUSY\n".toByteArray(Charsets.UTF_8))
+                    flush()
+                }
+            } catch (_: Exception) {
+            } finally {
+                try { connection.close() } catch (_: Exception) {}
+            }
+        }
+    }
+}
