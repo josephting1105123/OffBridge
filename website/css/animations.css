@@ -59,12 +59,6 @@
   }
 }
 
-/* --- Stepper progress line: drawn by the section's own --p ---------------- */
-.stepline__fill {
-  transform: scaleX(var(--p, 0));
-  transform-origin: left center;
-}
-
 /* --- Transport-ladder loop (bento tile) ----------------------------------- */
 .ladder-step {
   transition: color var(--dur-med) var(--ease-std),
@@ -114,8 +108,5 @@
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
-  }
-  .stepline__fill {
-    transform: scaleX(1) !important;
   }
 }

@@ -1,0 +1,703 @@
+/* ==========================================================================
+   flow.css — the "How it works" walkthrough (a copy going PC -> phone through
+   discovery, ECDH, the 6-digit check and AES-GCM sealing) and the hero "hop"
+   chip that crosses between the two device screenshots.
+   Stage visibility is keyed off .howviz[data-stage]; js/flow.js sets it.
+   Without JS the diagram rests on stage 1 and every step's text is shown.
+   ========================================================================== */
+
+/* --- Layout --------------------------------------------------------------- */
+.howviz {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .howviz {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+}
+
+/* --- The diagram ---------------------------------------------------------- */
+.flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(64px, 1fr) minmax(0, 0.8fr);
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 16px);
+  min-height: clamp(300px, 32vw, 400px);
+  padding: 56px clamp(16px, 3.5vw, 40px) 64px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  background:
+    radial-gradient(circle at 1px 1px, var(--hairline-strong) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--card);
+  overflow: hidden;
+  isolation: isolate;
+}
+/* Soft emerald pool under whichever side is "speaking" in the current stage. */
+.flow::before {
+  content: "";
+  position: absolute;
+  inset: 20% 10%;
+  z-index: -1;
+  background: radial-gradient(50% 50% at 50% 50%, var(--accent-glow), transparent 70%);
+  opacity: 0.35;
+  filter: blur(24px);
+  transition: opacity var(--dur-slow) var(--ease-std);
+}
+.howviz[data-stage="4"] .flow::before {
+  opacity: 0.6;
+}
+
+.flow__nocloud {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-caption);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.flow__nocloud .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Nodes (PC + phone) --------------------------------------------------- */
+.flow__node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.flow__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--t-caption);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.flow__name .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.flow__screen {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 12px 8px 8px;
+  background: var(--bg);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow-3);
+  transition: border-color var(--dur-slow) var(--ease-std),
+    box-shadow var(--dur-slow) var(--ease-std);
+}
+.flow__node--pc .flow__screen {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--r-md);
+}
+/* Window title-bar dots */
+.flow__node--pc .flow__screen::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 22px;
+  height: 5px;
+  background:
+    radial-gradient(circle, var(--hairline-strong) 2px, transparent 2.5px) 0 0 / 8px 5px repeat-x;
+}
+.flow__node--phone .flow__screen {
+  aspect-ratio: 9 / 17;
+  max-width: 116px;
+  border-radius: 18px;
+  padding: 10px 6px;
+}
+/* Paired and sealed: the screens pick up the accent edge. */
+.howviz[data-stage="3"] .flow__screen,
+.howviz[data-stage="4"] .flow__screen {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: var(--shadow-3), 0 0 0 4px var(--accent-muted);
+}
+
+/* Screen layers: all four sit in one grid cell, only the current one shows. */
+.scr {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  text-align: center;
+  font-size: clamp(11px, 0.6rem + 0.35vw, 13px);
+  line-height: 1.3;
+  color: var(--text-secondary);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 260ms var(--ease-std), transform 420ms var(--ease);
+}
+.howviz[data-stage="1"] .scr--1,
+.howviz[data-stage="2"] .scr--2,
+.howviz[data-stage="3"] .scr--3,
+.howviz[data-stage="4"] .scr--4 {
+  opacity: 1;
+  transform: none;
+}
+.scr .icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Stage 1 — "looking" dots */
+.scr__dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.scr__dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-text);
+  opacity: 0.3;
+}
+.howviz[data-stage="1"] .scr__dots i {
+  animation: dot-pulse 1.2s var(--ease-std) infinite;
+}
+.scr__dots i:nth-child(2) { animation-delay: 160ms; }
+.scr__dots i:nth-child(3) { animation-delay: 320ms; }
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* Stage 2 — the shared key appears on both sides once the halves have crossed */
+.scr--2 {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.howviz[data-stage="2"] .scr--2 .icon {
+  animation: key-pop 2.4s var(--ease) both;
+}
+.howviz[data-stage="2"] .scr--2 span {
+  animation: key-label 2.4s var(--ease) both;
+}
+@keyframes key-pop {
+  0%, 62% { opacity: 0; transform: scale(0.4) rotate(-30deg); }
+  80%, 100% { opacity: 1; transform: none; }
+}
+@keyframes key-label {
+  0%, 66% { opacity: 0; }
+  84%, 100% { opacity: 1; }
+}
+
+/* Stage 3 — identical 6-digit code, then a tick */
+.scr__code {
+  font-size: clamp(14px, 0.7rem + 0.7vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.scr__ok {
+  color: var(--accent-text);
+}
+.howviz[data-stage="3"] .scr__code {
+  animation: code-in 700ms var(--ease) both;
+}
+.howviz[data-stage="3"] .scr__ok {
+  animation: tick-in 500ms var(--ease) 900ms both;
+}
+@keyframes code-in {
+  from { opacity: 0; letter-spacing: 0.3em; filter: blur(4px); }
+  to { opacity: 1; letter-spacing: 0.04em; filter: blur(0); }
+}
+@keyframes tick-in {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Stage 4 — the copied line, then the pasted line on arrival */
+.scr__label {
+  font-size: var(--t-caption);
+  color: var(--text-tertiary);
+}
+.scr__text {
+  padding: 3px 8px;
+  border-radius: var(--r-xs);
+  background: var(--accent-muted);
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.howviz[data-stage="4"] .flow__node--pc .scr__text {
+  animation: copied-flash 3.6s var(--ease-std) infinite;
+}
+.howviz[data-stage="4"] .flow__node--phone .scr__text {
+  animation: pasted-in 3.6s var(--ease) infinite;
+}
+@keyframes copied-flash {
+  0%, 2% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  10% { box-shadow: 0 0 0 5px var(--accent-glow); }
+  22%, 100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes pasted-in {
+  0%, 78% { opacity: 0; transform: translateY(4px); }
+  86%, 100% { opacity: 1; transform: none; }
+}
+
+/* Discovery rings (stage 1 only) */
+.flow__ring {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  z-index: 0;
+  width: 70%;
+  aspect-ratio: 1;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+  pointer-events: none;
+}
+.howviz[data-stage="1"] .flow__ring {
+  animation: ring-out 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.howviz[data-stage="1"] .flow__ring--late {
+  animation-delay: 1.2s;
+}
+@keyframes ring-out {
+  0% { opacity: 0.55; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+}
+
+/* --- The channel between them -------------------------------------------- */
+.flow__channel {
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+}
+.flow__wire {
+  position: absolute;
+  top: 50%;
+  left: -6px;
+  right: -6px;
+  height: 2px;
+  margin-top: -1px;
+  background: repeating-linear-gradient(90deg, var(--text-tertiary) 0 6px, transparent 6px 12px);
+  opacity: 0.45;
+  transition: opacity var(--dur-slow) var(--ease-std);
+}
+.howviz[data-stage="1"] .flow__wire {
+  animation: wire-find 2.4s var(--ease) both;
+}
+@keyframes wire-find {
+  0%, 30% { clip-path: inset(0 50% 0 50%); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+.howviz[data-stage="2"] .flow__wire,
+.howviz[data-stage="3"] .flow__wire,
+.howviz[data-stage="4"] .flow__wire {
+  background-image: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 12px);
+  opacity: 0.8;
+  animation: wire-flow 0.9s linear infinite;
+}
+@keyframes wire-flow {
+  from { background-position: 0 0; }
+  to { background-position: 12px 0; }
+}
+
+/* A rider spans the channel; translating it by -50% / +50% puts its centred
+   chip on the PC's edge / the phone's edge. */
+.flow__rider {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: 50%;
+  height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.flow__rider--pka { top: calc(50% - 24px); }
+.flow__rider--pkb { top: calc(50% + 24px); }
+
+.flow__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline-strong);
+  background: var(--card);
+  box-shadow: var(--shadow-3);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--text);
+}
+.flow__chip .icon {
+  width: 13px;
+  height: 13px;
+}
+.flow__chip--key {
+  color: var(--accent-text);
+}
+
+.howviz[data-stage="2"] .flow__rider--pka {
+  animation: ride-right 2.4s var(--ease-std) both;
+}
+.howviz[data-stage="2"] .flow__rider--pkb {
+  animation: ride-left 2.4s var(--ease-std) both;
+}
+@keyframes ride-right {
+  0% { opacity: 0; transform: translateX(-50%); }
+  10% { opacity: 1; transform: translateX(-50%); }
+  58% { opacity: 1; transform: translateX(50%); }
+  70%, 100% { opacity: 0; transform: translateX(50%); }
+}
+@keyframes ride-left {
+  0% { opacity: 0; transform: translateX(50%); }
+  10% { opacity: 1; transform: translateX(50%); }
+  58% { opacity: 1; transform: translateX(-50%); }
+  70%, 100% { opacity: 0; transform: translateX(-50%); }
+}
+
+/* The data packet: plain on the PC, sealed in flight, plain again on arrival. */
+.flow__chip--data {
+  display: inline-grid;
+  justify-items: center;
+}
+.flow__plain,
+.flow__sealed {
+  grid-area: 1 / 1;
+}
+.flow__sealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-text);
+  opacity: 0;
+}
+.flow__cipher {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.howviz[data-stage="4"] .flow__rider--data {
+  animation: ride-data 3.6s var(--ease-std) infinite;
+}
+.howviz[data-stage="4"] .flow__plain {
+  animation: plain-swap 3.6s var(--ease-std) infinite;
+}
+.howviz[data-stage="4"] .flow__sealed {
+  animation: sealed-swap 3.6s var(--ease-std) infinite;
+}
+.howviz[data-stage="4"] .flow__chip--data {
+  animation: sealed-glow 3.6s var(--ease-std) infinite;
+}
+@keyframes ride-data {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.9); }
+  8% { opacity: 1; transform: translateX(-50%) scale(1); }
+  24% { opacity: 1; transform: translateX(-50%); }
+  74% { opacity: 1; transform: translateX(50%); }
+  80% { opacity: 1; transform: translateX(50%) scale(1); }
+  88%, 100% { opacity: 0; transform: translateX(50%) scale(0.85); }
+}
+@keyframes plain-swap {
+  0%, 16% { opacity: 1; }
+  22%, 76% { opacity: 0; }
+  80%, 100% { opacity: 1; }
+}
+@keyframes sealed-swap {
+  0%, 16% { opacity: 0; }
+  22%, 76% { opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+@keyframes sealed-glow {
+  0%, 16% { box-shadow: var(--shadow-3); border-color: var(--hairline-strong); }
+  22%, 76% {
+    box-shadow: var(--shadow-3), 0 0 0 1px var(--accent-glow), 0 0 22px var(--accent-glow);
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  80%, 100% { box-shadow: var(--shadow-3); border-color: var(--hairline-strong); }
+}
+
+/* Caption under the whole diagram, one per stage */
+.flow__note {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 20px;
+  display: grid;
+  justify-items: center;
+}
+.note {
+  grid-area: 1 / 1;
+  text-align: center;
+  font-size: var(--t-small);
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 260ms var(--ease-std);
+}
+.howviz[data-stage="1"] .note--1,
+.howviz[data-stage="2"] .note--2,
+.howviz[data-stage="3"] .note--3,
+.howviz[data-stage="4"] .note--4 {
+  opacity: 1;
+}
+
+/* --- Step list ------------------------------------------------------------ */
+.hsteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.hstep {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color var(--dur-med) var(--ease-std),
+    border-color var(--dur-med) var(--ease-std);
+}
+.hstep:hover {
+  background: var(--hairline);
+}
+.hstep:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.hstep[aria-pressed="true"] {
+  background: var(--card);
+  border-color: var(--hairline-strong);
+}
+.hstep__num {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline-strong);
+  font-weight: 700;
+  font-size: var(--t-small);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--dur-med) var(--ease-std),
+    color var(--dur-med) var(--ease-std), border-color var(--dur-med) var(--ease-std);
+}
+.hstep[aria-pressed="true"] .hstep__num {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-on);
+}
+.hstep__body {
+  display: grid;
+  min-width: 0;
+  padding-top: 5px;
+}
+.hstep__title {
+  font-weight: 650;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+/* Collapsed text expands on the active step (grid-rows trick, no height anim). */
+.hstep__more {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 360ms var(--ease);
+}
+.hstep__text {
+  overflow: hidden;
+  font-size: var(--t-small);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.hstep[aria-pressed="true"] .hstep__more,
+.howviz:not(.is-ready) .hstep__more {
+  grid-template-rows: 1fr;
+}
+.hstep[aria-pressed="true"] .hstep__text {
+  padding-top: 6px;
+}
+
+/* Autoplay progress: the active step's bar fills, and its animationend
+   advances the walkthrough (js/flow.js). Pausing the bar pauses autoplay. */
+.hstep__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.howviz.is-auto .hstep[aria-pressed="true"] .hstep__bar {
+  animation: step-bar 5.2s linear both;
+}
+@keyframes step-bar {
+  to { transform: scaleX(1); }
+}
+
+.howviz__play {
+  margin-top: 12px;
+  margin-left: 16px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-small);
+  color: var(--text-tertiary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.howviz__play:hover {
+  color: var(--text);
+}
+.howviz__play:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--r-xs);
+}
+.howviz__play-play { display: none; }
+.howviz:not(.is-auto) .howviz__play-pause { display: none; }
+.howviz:not(.is-auto) .howviz__play-play { display: inline; }
+
+/* Off-screen or held (pointer over the diagram, keyboard on a step): freeze. */
+.howviz.is-off *,
+.howviz.is-held .hstep__bar {
+  animation-play-state: paused !important;
+}
+
+/* --- Narrow screens ------------------------------------------------------- */
+@media (max-width: 560px) {
+  .flow {
+    grid-template-columns: minmax(0, 1.2fr) minmax(48px, 0.7fr) minmax(0, 0.85fr);
+    padding-inline: 14px;
+  }
+  .flow__chip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  .flow__chip--key .icon {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Hero hop chip
+   ========================================================================== */
+.hop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+}
+.hop__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline-strong);
+  background: var(--card);
+  box-shadow: var(--shadow-8);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+  transition: color 200ms var(--ease-std), border-color 200ms var(--ease-std),
+    box-shadow 300ms var(--ease-std);
+}
+.hop__lock,
+.hop__check {
+  display: none;
+  width: 15px;
+  height: 15px;
+}
+.hop.is-sealed .hop__chip {
+  color: var(--accent-text);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: var(--shadow-8), 0 0 0 1px var(--accent-glow), 0 0 28px var(--accent-glow);
+}
+.hop.is-sealed .hop__lock,
+.hop.is-done .hop__check {
+  display: block;
+}
+.hop.is-done .hop__check {
+  color: var(--accent-text);
+}
+@media (max-width: 760px) {
+  .hop {
+    display: none;
+  }
+}
+
+/* --- Reduced motion: one readable still frame per stage ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .flow__ring,
+  .hstep__bar,
+  .hop {
+    display: none;
+  }
+  .flow__wire {
+    animation: none !important;
+    clip-path: none !important;
+  }
+  .howviz[data-stage="2"] .flow__rider--pka,
+  .howviz[data-stage="2"] .flow__rider--pkb,
+  .howviz[data-stage="4"] .flow__rider--data {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  .howviz[data-stage="4"] .flow__plain,
+  .howviz[data-stage="4"] .flow__node--phone .scr__text {
+    animation: none !important;
+  }
+  .howviz[data-stage="4"] .flow__plain { opacity: 0; }
+  .howviz[data-stage="4"] .flow__sealed {
+    animation: none !important;
+    opacity: 1;
+  }
+  .howviz[data-stage="4"] .flow__chip--data {
+    animation: none !important;
+  }
+  .howviz[data-stage="2"] .scr--2 .icon,
+  .howviz[data-stage="2"] .scr--2 span,
+  .howviz[data-stage="3"] .scr__code,
+  .howviz[data-stage="3"] .scr__ok {
+    animation: none !important;
+  }
+}

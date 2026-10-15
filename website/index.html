@@ -113,6 +113,7 @@
   <link rel="stylesheet" href="css/device.css" />
   <link rel="stylesheet" href="css/sections.css" />
   <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/flow.css" />
 
   <!-- Below-the-fold interactive widgets (mobile card carousel, tile expand overlay) —
        not needed for first paint, so load without blocking render. -->
@@ -368,6 +369,14 @@
                 <img class="shot shot--light" src="assets/screenshots/windows-main-light.webp" alt="OffBridge on Windows — System Status showing paired devices" width="1200" height="636" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
               </div>
             </div>
+            <!-- A copy hopping PC -> phone, sealed in flight. Decorative; js/flow.js drives it. -->
+            <span class="hop" aria-hidden="true" data-hop>
+              <span class="hop__chip">
+                <svg class="icon hop__lock"><use href="#i-lock"></use></svg>
+                <svg class="icon hop__check"><use href="#i-check"></use></svg>
+                <span class="hop__text">meet at 6pm</span>
+              </span>
+            </span>
           </div>
         </div>
       </div>
@@ -603,25 +612,104 @@
     <section id="how" aria-labelledby="how-title">
       <div class="container container--wide">
         <div class="section-head section-head--center">
-          <span class="eyebrow">Three steps</span>
-          <h2 id="how-title">Paired in seconds, securely</h2>
+          <span class="eyebrow">How it works</span>
+          <h2 id="how-title">Paired in seconds, sealed all the way</h2>
+          <p class="section-lead">Follow one copy from your PC to your phone. Four things happen, and none of them involve a server.</p>
         </div>
-        <div class="steps" data-reveal="fade">
-          <div class="stepline"><div class="stepline__fill"></div></div>
-          <div class="step">
-            <div class="step__num">1</div>
-            <h3>Find your device</h3>
-            <p>On the same network, devices discover each other automatically. No shared network? Pair by QR and the host raises a hotspot.</p>
+
+        <div class="howviz" data-howviz data-stage="1">
+          <!-- The diagram. Purely visual; the step list beside it carries the same
+               information as text, so the stage is aria-hidden. -->
+          <div class="flow" aria-hidden="true">
+            <div class="flow__nocloud"><svg class="icon"><use href="#i-cloud-off"></use></svg> No server in between</div>
+
+            <div class="flow__node flow__node--pc">
+              <span class="flow__ring"></span><span class="flow__ring flow__ring--late"></span>
+              <div class="flow__screen">
+                <div class="scr scr--1"><span class="scr__dots"><i></i><i></i><i></i></span> Looking for devices</div>
+                <div class="scr scr--2"><svg class="icon"><use href="#i-key"></use></svg><span>Shared key</span></div>
+                <div class="scr scr--3"><span class="scr__code tnum">482 913</span><svg class="icon scr__ok"><use href="#i-check-circle"></use></svg></div>
+                <div class="scr scr--4"><span class="scr__label">Copied</span><span class="scr__text">meet at 6pm</span></div>
+              </div>
+              <span class="flow__name"><svg class="icon"><use href="#i-monitor"></use></svg> Windows PC</span>
+            </div>
+
+            <div class="flow__channel">
+              <div class="flow__wire"></div>
+              <div class="flow__rider flow__rider--pka"><span class="flow__chip flow__chip--key"><svg class="icon"><use href="#i-key"></use></svg> public key</span></div>
+              <div class="flow__rider flow__rider--pkb"><span class="flow__chip flow__chip--key"><svg class="icon"><use href="#i-key"></use></svg> public key</span></div>
+              <div class="flow__rider flow__rider--data">
+                <span class="flow__chip flow__chip--data">
+                  <span class="flow__plain">meet at 6pm</span>
+                  <span class="flow__sealed"><svg class="icon"><use href="#i-lock"></use></svg><span class="flow__cipher" data-cipher>9f3a c17e 04b2</span></span>
+                </span>
+              </div>
+            </div>
+
+            <div class="flow__node flow__node--phone">
+              <span class="flow__ring"></span><span class="flow__ring flow__ring--late"></span>
+              <div class="flow__screen">
+                <div class="scr scr--1"><span class="scr__dots"><i></i><i></i><i></i></span> Looking</div>
+                <div class="scr scr--2"><svg class="icon"><use href="#i-key"></use></svg><span>Shared key</span></div>
+                <div class="scr scr--3"><span class="scr__code tnum">482 913</span><svg class="icon scr__ok"><use href="#i-check-circle"></use></svg></div>
+                <div class="scr scr--4"><span class="scr__label">Ready to paste</span><span class="scr__text">meet at 6pm</span></div>
+              </div>
+              <span class="flow__name"><svg class="icon"><use href="#i-phone"></use></svg> Android</span>
+            </div>
+            <div class="flow__note">
+              <span class="note note--1">Same Wi-Fi, or a hotspot one device raises</span>
+              <span class="note note--2">Only the public halves cross</span>
+              <span class="note note--3">Codes match, so nobody is in the middle</span>
+              <span class="note note--4">AES-256-GCM, checked on arrival</span>
+            </div>
           </div>
-          <div class="step">
-            <div class="step__num">2</div>
-            <h3>Verify the code</h3>
-            <p>Both devices show a 6-digit code. Confirm they match and accept; that blocks impostors. Scanning a pairing QR does the same check for you.</p>
-          </div>
-          <div class="step">
-            <div class="step__num">3</div>
-            <h3>Sync &amp; send</h3>
-            <p>Clipboard syncs automatically; send files over the network, or off-grid via QR / NFC when there's no shared Wi-Fi.</p>
+
+          <div class="howviz__steps">
+            <ol class="hsteps">
+              <li>
+                <button class="hstep" type="button" data-step="1" aria-pressed="true">
+                  <span class="hstep__num">1</span>
+                  <span class="hstep__body">
+                    <span class="hstep__title">Find each other</span>
+                    <span class="hstep__more"><span class="hstep__text">On the same Wi-Fi the two devices discover each other on their own. No shared network? Pair by QR and one device raises a hotspot.</span></span>
+                  </span>
+                  <span class="hstep__bar"></span>
+                </button>
+              </li>
+              <li>
+                <button class="hstep" type="button" data-step="2" aria-pressed="false">
+                  <span class="hstep__num">2</span>
+                  <span class="hstep__body">
+                    <span class="hstep__title">Agree a key</span>
+                    <span class="hstep__more"><span class="hstep__text">Each device makes a key pair and sends only the public half (ECDH on secp256r1). Both work out the same secret key, which never crosses the network.</span></span>
+                  </span>
+                  <span class="hstep__bar"></span>
+                </button>
+              </li>
+              <li>
+                <button class="hstep" type="button" data-step="3" aria-pressed="false">
+                  <span class="hstep__num">3</span>
+                  <span class="hstep__body">
+                    <span class="hstep__title">Check the code</span>
+                    <span class="hstep__more"><span class="hstep__text">Both screens show a 6-digit code from that exchange. If they match and you accept, nobody is sitting in the middle. Scanning a pairing QR does the same check for you.</span></span>
+                  </span>
+                  <span class="hstep__bar"></span>
+                </button>
+              </li>
+              <li>
+                <button class="hstep" type="button" data-step="4" aria-pressed="false">
+                  <span class="hstep__num">4</span>
+                  <span class="hstep__body">
+                    <span class="hstep__title">Seal and send</span>
+                    <span class="hstep__more"><span class="hstep__text">Every copy and file is sealed with AES-256-GCM before it leaves, and off-grid transfers over QR or NFC are sealed too. The receiver checks the seal and rejects anything altered.</span></span>
+                  </span>
+                  <span class="hstep__bar"></span>
+                </button>
+              </li>
+            </ol>
+            <button class="howviz__play" type="button" data-howviz-toggle hidden>
+              <span class="howviz__play-pause">Pause</span><span class="howviz__play-play">Play</span> the walkthrough
+            </button>
           </div>
         </div>
       </div>
@@ -933,6 +1021,7 @@
   <script defer src="js/config.js"></script>
   <script defer src="js/main.js"></script>
   <script defer src="js/reveal.js"></script>
+  <script defer src="js/flow.js"></script>
   <script defer src="js/platform.js"></script>
   <script defer src="js/popout.js"></script>
   <script defer src="js/carousel.js"></script>
