@@ -570,6 +570,9 @@
     <string name="pairing_from_device">From: %1$s</string>
     <string name="pairing_verify_code">Verify this code matches on both devices:\n%1$s</string>
     <string name="pairing_verify_label">Make sure this code matches on both devices</string>
+    <string name="pairing_codes_match">Codes match</string>
+    <string name="pairing_confirm_hint">Tap Codes match only if %1$s shows the same code.</string>
+    <string name="pairing_peer_cancelled">%1$s cancelled the pairing</string>
     <string name="pairing_paired_with">Paired with %1$s</string>
     <string name="perm_notification_granted_toast">Notification permission granted!</string>
     <string name="perm_notification_recommended_toast">Notifications are recommended for the best experience.</string>

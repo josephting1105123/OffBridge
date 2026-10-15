@@ -630,6 +630,9 @@
     <string name="receive_tut_qr">Сканирование QR — нажмите «Открыть камеру», чтобы отсканировать QR-код отправителя и получить файл через любую сеть.</string>
     <string name="pairing_verify_code">Убедитесь, что этот код совпадает на обоих устройствах:\n%1$s</string>
     <string name="pairing_verify_label">Убедитесь, что этот код совпадает на обоих устройствах</string>
+    <string name="pairing_codes_match">Коды совпадают</string>
+    <string name="pairing_confirm_hint">Нажмите «Коды совпадают», только если на %1$s отображается тот же код.</string>
+    <string name="pairing_peer_cancelled">%1$s отменил(а) сопряжение</string>
     <string name="perm_nearby_title">Устройства поблизости и Wi-Fi</string>
     <string name="perm_nearby_desc">Позволяет приложению находить другие телефоны и подключаться к ним через Wi-Fi Direct для автономных передач. Без этого передачи работают только когда оба устройства находятся в одной сети Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Разрешение на доступ к устройствам поблизости предоставлено.</string>

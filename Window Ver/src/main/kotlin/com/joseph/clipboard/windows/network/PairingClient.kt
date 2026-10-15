@@ -23,11 +23,19 @@ object PairingClient {
     // in the background if the peer accepted a moment later, leaving one-sided trust.
     @Volatile private var activeSocket: Socket? = null
     @Volatile private var cancelled = false
+    @Volatile private var activeGate: PairConfirmGate? = null
 
-    /** Aborts an in-progress [pair] from the requester UI. Safe to call when no pairing is in flight. */
+    /** Aborts an in-progress [pair] from the requester UI. Closing the socket also tells a pc1 peer
+     *  not to save. Safe to call when no pairing is in flight. */
     fun cancel() {
         cancelled = true
+        activeGate?.cancel()
         try { activeSocket?.close() } catch (_: Exception) {}
+    }
+
+    /** The requester's user tapped "Codes match" for the PIN shown with [Event.WaitingForAccept]. */
+    fun confirm() {
+        activeGate?.confirm()
     }
 
     /** Outcome delivered to the caller; [visualPin] is non-null when waiting for user acceptance. */
@@ -60,6 +68,8 @@ object PairingClient {
     ) {
         var socket: Socket? = null
         cancelled = false
+        val gate = PairConfirmGate()
+        activeGate = gate
         try {
             onEvent(Event.Connecting(ip, deviceName))
             socket = Socket()
@@ -96,18 +106,36 @@ object PairingClient {
                 val useV2 = ackTail.contains("pv2")
                 // Same tail carries the peer's device id (absent on older peers).
                 val peerDeviceId = WireFrames.parseDeviceId(ackTail)
+                // The peer holds trust until our PAIR_CONFIRM only if it advertised pc1; an older
+                // peer has already saved by the time it sends PAIR_ACCEPT.
+                val peerAwaitsConfirm = ackTail.contains(WireFrames.CONFIRM_TOKEN)
                 val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
 
+                val pinShownAt = System.currentTimeMillis()
                 onEvent(Event.WaitingForAccept(ip, deviceName, visualPin))
                 // The acceptor waits up to 2 min for the human to tap Accept. Keeping the initial
                 // 15s read timeout here would abandon the socket while the acceptor still saves the
                 // key — creating one-sided trust. Match the acceptor's window (Android sets 120000
                 // before its final PAIR_ACCEPT read the same way).
-                socket.soTimeout = 120000
+                socket.soTimeout = PairingDaemon.PAIR_CONFIRM_WINDOW_MS.toInt()
                 val finalResponse = reader.readLineCapped()
 
+                // PAIR_ACCEPT alone proves nothing: a rogue host that answered our click sends it
+                // straight after its ACK. Trust needs our own user's PIN comparison too, in either
+                // order. The wait shares the window that started when the PIN appeared, so we give
+                // up no later than the peer stops waiting for PAIR_CONFIRM.
                 if (finalResponse == "PAIR_ACCEPT" && !cancelled) {
-                    onPaired(ip, aesKey, deviceName, peerDeviceId)
+                    val decision = gate.await(PairingDaemon.PAIR_CONFIRM_WINDOW_MS - (System.currentTimeMillis() - pinShownAt))
+                    if (decision == true && !cancelled) {
+                        var confirmSent = true
+                        if (peerAwaitsConfirm) {
+                            writer.println(WireFrames.PAIR_CONFIRM)
+                            // checkError() flushes and reports a failed write: if the peer never got
+                            // the confirm it won't save, so neither do we.
+                            confirmSent = !writer.checkError()
+                        }
+                        if (confirmSent) onPaired(ip, aesKey, deviceName, peerDeviceId)
+                    }
                 }
             }
 
@@ -122,6 +150,7 @@ object PairingClient {
             onEvent(Event.Done)
         } finally {
             activeSocket = null
+            if (activeGate === gate) activeGate = null
             try { socket?.close() } catch (_: Exception) {}
         }
     }

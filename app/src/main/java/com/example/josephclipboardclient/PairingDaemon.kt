@@ -51,7 +51,22 @@ object PairingDaemon {
     /** Initiator's stable device id from PAIR_REQ; null when the peer predates device ids. */
     const val EXTRA_SENDER_DEVICE_ID = "SENDER_DEVICE_ID"
 
-    private val pendingConfirmations = ConcurrentHashMap<String, PrintWriter>()
+    /**
+     * An inbound PIN pairing parked until this side's user answers. The key and peer details live
+     * here rather than in the confirmation intent, so the save uses what the daemon derived itself.
+     */
+    private class PendingPair(
+        val socket: Socket,
+        val reader: BufferedReader,
+        val writer: PrintWriter,
+        val aesKey: ByteArray,
+        val senderName: String,
+        val senderDeviceId: String?,
+        /** The initiator advertised pc1: hold trust until its PAIR_CONFIRM arrives. */
+        val initiatorConfirms: Boolean,
+    )
+
+    private val pendingConfirmations = ConcurrentHashMap<String, PendingPair>()
 
     // Inbound-connection guards, matching the Windows daemon's values so both platforms present the
     // same floor on the same unauthenticated port.
@@ -70,32 +85,71 @@ object PairingDaemon {
     // complete in the background if the peer accepted a moment later, leaving one-sided trust.
     @Volatile private var outgoingSocket: Socket? = null
     @Volatile private var outgoingCancelled = false
+    @Volatile private var outgoingGate: PairConfirmGate? = null
 
     /** Aborts an in-progress [initiatePairing] from the requester UI: unblocks its socket read and
-     *  prevents it from persisting trust. Safe to call when no pairing is in flight. */
+     *  prevents it from persisting trust. Closing the socket also tells a pc1 peer not to save.
+     *  Safe to call when no pairing is in flight. */
     fun cancelInitiatePairing() {
         outgoingCancelled = true
+        outgoingGate?.cancel()
         try { outgoingSocket?.close() } catch (_: Exception) {}
+    }
+
+    /** The requester's user tapped "Codes match" for the PIN [initiatePairing] passed to onPin. */
+    fun confirmInitiatePairing() {
+        outgoingGate?.confirm()
     }
 
     private val confirmationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val senderIp = intent?.getStringExtra("SENDER_IP") ?: return
-            val writer = pendingConfirmations.remove(senderIp) ?: return
+            val pending = pendingConfirmations.remove(senderIp) ?: return
+            val appCtx = context?.applicationContext ?: registeredContext ?: return
 
             daemonScope.launch {
                 try {
                     if (intent.action == ACTION_PAIRING_ACCEPTED) {
-                        writer.println("PAIR_ACCEPT")
+                        completeAcceptedPairing(appCtx, senderIp, pending)
                     } else {
-                        writer.println("PAIR_DECLINE")
+                        pending.writer.println("PAIR_DECLINE")
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 } finally {
-                    writer.close()
+                    runCatching { pending.socket.close() }
                 }
             }
+        }
+    }
+
+    /**
+     * Our user accepted. Send PAIR_ACCEPT, then save trust: at once for an older initiator, or only
+     * after its PAIR_CONFIRM for a pc1 initiator. That line means the initiator's user compared the
+     * PINs too; a Cancel there closes the socket and nothing is stored here.
+     */
+    private fun completeAcceptedPairing(context: Context, senderIp: String, pending: PendingPair) {
+        pending.writer.println("PAIR_ACCEPT")
+        // PrintWriter(autoflush) swallows IOExceptions; checkError() flushes and reports them. If
+        // the initiator never got PAIR_ACCEPT it can't have saved, so neither do we.
+        if (pending.writer.checkError()) return
+        if (pending.initiatorConfirms) {
+            // The initiator's user may still be comparing codes; give them the same window.
+            pending.socket.soTimeout = PAIR_CONFIRM_WINDOW_MS.toInt()
+            val line = try { pending.reader.readLineCapped() } catch (_: Exception) { null }
+            if (line != PairingWire.PAIR_CONFIRM) {
+                showToast(context, context.getString(R.string.pairing_peer_cancelled, pending.senderName))
+                return
+            }
+        }
+        SecurityVault.saveTrustedNode(context, senderIp, pending.aesKey, pending.senderDeviceId, pending.senderName)
+        showToast(context, context.getString(R.string.pairing_paired_with, pending.senderName))
+        context.sendBroadcast(Intent("com.example.josephclipboardclient.PAIRING_SUCCESSFUL").setPackage(context.packageName))
+    }
+
+    private fun showToast(context: Context, text: String) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(context, text, android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -263,6 +317,7 @@ object PairingDaemon {
                     val tail = parts.drop(3)
                     val initiatorV2 = tail.contains("pv2")
                     val senderDeviceId = PairingWire.parseDeviceId(tail)
+                    val initiatorConfirms = tail.contains(PairingWire.CONFIRM_TOKEN)
 
                     val ecdh = EcdhSession()
                     val myPubKey = ecdh.getPublicKey()
@@ -279,7 +334,8 @@ object PairingDaemon {
 
                     // A second PAIR_REQ from the same IP overwrites the map entry; close the
                     // previously parked writer/socket so it isn't leaked forever.
-                    pendingConfirmations.put(senderIp, writer)?.let { try { it.close() } catch (_: Exception) {} }
+                    val pending = PendingPair(socket, reader, writer, aesKey, senderName, senderDeviceId, initiatorConfirms)
+                    pendingConfirmations.put(senderIp, pending)?.let { runCatching { it.socket.close() } }
 
                     // Expire a parked confirmation after the same human-accept window the initiator
                     // waits (see initiatePairing). If the user never responds, drop and close this
@@ -288,7 +344,7 @@ object PairingDaemon {
                     // will have replaced it), avoiding a race with the confirmation broadcast.
                     daemonScope.launch {
                         delay(PAIR_CONFIRM_WINDOW_MS)
-                        if (pendingConfirmations.remove(senderIp, writer)) {
+                        if (pendingConfirmations.remove(senderIp, pending)) {
                             runCatching { socket.close() }
                         }
                     }
@@ -447,6 +503,8 @@ object PairingDaemon {
     suspend fun initiatePairing(context: Context, targetIp: String, myDeviceName: String, targetName: String, onPin: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
         var socket: Socket? = null
         outgoingCancelled = false
+        val gate = PairConfirmGate()
+        outgoingGate = gate
         try {
             socket = Socket()
             outgoingSocket = socket
@@ -481,22 +539,38 @@ object PairingDaemon {
                 val useV2 = ackTail.contains("pv2")
                 // Same tail carries the peer's device id (absent on older peers).
                 val peerDeviceId = PairingWire.parseDeviceId(ackTail)
+                // The peer holds trust until our PAIR_CONFIRM only if it advertised pc1; an older
+                // peer has already saved by the time it sends PAIR_ACCEPT.
+                val peerAwaitsConfirm = ackTail.contains(PairingWire.CONFIRM_TOKEN)
                 val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
-                onPin(visualPin)   // surface the MITM-verification code while we wait for the peer to accept
+                val pinShownAt = System.currentTimeMillis()
+                onPin(visualPin)   // the UI shows the code with "Codes match" / Cancel
 
                 // The peer parks this connection until a human taps Accept/Decline, so the final
                 // read must allow a real human accept window. A shorter timeout here would make the
                 // initiator give up ("TIMEOUT") while the acceptor still saves trust — one-sided.
-                socket.soTimeout = 120000
+                socket.soTimeout = PAIR_CONFIRM_WINDOW_MS.toInt()
                 val finalResponse = reader.readLineCapped()
-                if (outgoingCancelled) {
-                    return@withContext "CANCELLED"
-                } else if (finalResponse == "PAIR_ACCEPT") {
-                    SecurityVault.saveTrustedNode(context, targetIp, aesKey, peerDeviceId, targetName)
-                    return@withContext "SUCCESS"
-                } else {
-                    return@withContext "DECLINED"
+                if (outgoingCancelled) return@withContext "CANCELLED"
+                if (finalResponse != "PAIR_ACCEPT") return@withContext "DECLINED"
+
+                // PAIR_ACCEPT alone proves nothing: a rogue host that answered our tap sends it
+                // straight after its ACK. Trust needs our own user's PIN comparison too, in either
+                // order. The wait shares the window that started when the PIN appeared, so we give
+                // up no later than the peer stops waiting for PAIR_CONFIRM.
+                val decision = gate.await(PAIR_CONFIRM_WINDOW_MS - (System.currentTimeMillis() - pinShownAt))
+                when {
+                    decision == null -> return@withContext "TIMEOUT"
+                    !decision || outgoingCancelled -> return@withContext "CANCELLED"
                 }
+                if (peerAwaitsConfirm) {
+                    writer.println(PairingWire.PAIR_CONFIRM)
+                    // checkError() flushes and reports a failed write: if the peer never got the
+                    // confirm it won't save, so neither do we.
+                    if (writer.checkError()) return@withContext "FAILED"
+                }
+                SecurityVault.saveTrustedNode(context, targetIp, aesKey, peerDeviceId, targetName)
+                return@withContext "SUCCESS"
             }
         } catch (e: SocketTimeoutException) {
             return@withContext "TIMEOUT"
@@ -507,6 +581,7 @@ object PairingDaemon {
             e.printStackTrace()
         } finally {
             outgoingSocket = null
+            if (outgoingGate === gate) outgoingGate = null
             socket?.close()
         }
         return@withContext if (outgoingCancelled) "CANCELLED" else "FAILED"

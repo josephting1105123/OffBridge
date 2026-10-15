@@ -633,6 +633,9 @@
     <string name="receive_tut_qr">Pindai QR — ketuk Buka Kamera untuk memindai kode QR pengirim dan menarik file melalui jaringan apa pun.</string>
     <string name="pairing_verify_code">Pastikan kode ini cocok di kedua perangkat:\n%1$s</string>
     <string name="pairing_verify_label">Pastikan kode ini cocok di kedua perangkat</string>
+    <string name="pairing_codes_match">Kode cocok</string>
+    <string name="pairing_confirm_hint">Ketuk Kode cocok hanya jika %1$s menampilkan kode yang sama.</string>
+    <string name="pairing_peer_cancelled">%1$s membatalkan pemasangan</string>
     <string name="perm_nearby_title">Perangkat di sekitar &amp; Wi-Fi</string>
     <string name="perm_nearby_desc">Memungkinkan aplikasi menemukan dan terhubung ke ponsel lain melalui Wi-Fi Direct untuk transfer luar jaringan. Tanpa itu, transfer hanya berfungsi saat kedua perangkat berada di jaringan Wi-Fi yang sama.</string>
     <string name="perm_nearby_granted_toast">Izin perangkat di sekitar diizinkan.</string>

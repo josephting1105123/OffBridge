@@ -58,6 +58,19 @@
         android:layout_height="64dp"
         android:indeterminateTint="?attr/appGreen" />
 
+    <!-- Shown with the PIN. Trust is saved only after this tap AND the peer's accept. -->
+    <Button
+        android:id="@+id/btnPairingConfirm"
+        android:layout_width="wrap_content"
+        android:layout_height="56dp"
+        android:layout_marginTop="32dp"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:backgroundTint="?attr/appGreen"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        android:text="@string/pairing_codes_match" />
+
     <Button
         android:id="@+id/btnPairingCancel"
         android:layout_width="wrap_content"

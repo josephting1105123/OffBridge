@@ -287,6 +287,8 @@ class PairingDaemon(
                         val tail = parts.drop(3)
                         val initiatorV2 = tail.contains("pv2")
                         val senderDeviceId = WireFrames.parseDeviceId(tail)
+                        // pc1: the initiator sends PAIR_CONFIRM once its own user compared PINs.
+                        val initiatorConfirms = tail.contains(WireFrames.CONFIRM_TOKEN)
 
                         val ecdh = EcdhSession()
                         val myPubKey = ecdh.getPublicKey()
@@ -324,6 +326,10 @@ class PairingDaemon(
                             // peer it never confirmed — abort the save instead of storing a ghost node.
                             if (writer.checkError()) {
                                 println("Pairing aborted with $senderName ($senderIp): PAIR_ACCEPT write failed")
+                            } else if (initiatorConfirms && !awaitInitiatorConfirm(clientSocket, reader)) {
+                                // The initiator's user cancelled (closing the socket) or never
+                                // confirmed: they did not vouch for the PIN, so store nothing.
+                                println("Pairing cancelled by $senderName ($senderIp) before PAIR_CONFIRM")
                             } else {
                                 SecurityVault.saveTrustedNode(senderIp, aesKey, senderDeviceId, senderName)
                                 println("Pairing accepted with $senderName ($senderIp)")
@@ -343,5 +349,16 @@ class PairingDaemon(
                 } catch (e: Exception) {}
             }
         }
+    }
+
+    /**
+     * After our PAIR_ACCEPT, waits for a pc1 initiator's PAIR_CONFIRM: the line its client sends
+     * once its own user tapped "Codes match". Gets the same human window as the accept itself.
+     */
+    private fun awaitInitiatorConfirm(socket: Socket, reader: BufferedReader): Boolean = try {
+        socket.soTimeout = PAIR_CONFIRM_WINDOW_MS.toInt()
+        reader.readLineCapped() == WireFrames.PAIR_CONFIRM
+    } catch (_: Exception) {
+        false
     }
 }

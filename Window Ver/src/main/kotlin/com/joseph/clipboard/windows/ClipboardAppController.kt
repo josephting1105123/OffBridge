@@ -178,7 +178,9 @@ class ClipboardAppController {
         val ip: String,
         val deviceName: String,
         val status: String,
-        val visualPin: String? = null
+        val visualPin: String? = null,
+        /** The user tapped "Codes match"; the overlay drops the button and waits for the peer. */
+        val userConfirmed: Boolean = false,
     )
 
     // SupervisorJob so one child coroutine's uncaught exception can't cancel the whole scope's Job
@@ -801,6 +803,12 @@ class ClipboardAppController {
         _discoveredDevices.value = emptyList()
     }
     
+    /** The user compared the PIN with the other screen and tapped "Codes match". */
+    fun confirmOutgoingPairing() {
+        PairingClient.confirm()
+        _outgoingPairingState.value = _outgoingPairingState.value?.copy(userConfirmed = true)
+    }
+
     fun cancelOutgoingPairing() {
         // Close the handshake socket so the blocking read unwinds and can't finish pairing in the
         // background; nulling the state alone would only hide the overlay while the pair completed.
