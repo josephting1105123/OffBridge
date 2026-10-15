@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OffBridge — Off-grid clipboard sync & file transfer</title>
-  <meta name="description" content="OffBridge syncs your clipboard and transfers files between Android and Windows — peer-to-peer over LAN or fully off-grid (QR, NFC, Wi-Fi Direct). No cloud, no internet, AES-256 encrypted over your network." />
+  <meta name="description" content="OffBridge syncs your clipboard and transfers files between Android and Windows — peer-to-peer over LAN or fully off-grid (QR, NFC, Wi-Fi Direct). No cloud, no internet, AES-256 encrypted end to end." />
   <meta name="theme-color" content="#141414" />
   <meta name="color-scheme" content="dark light" />
 
@@ -18,7 +18,7 @@
   <meta property="og:site_name" content="OffBridge" />
   <meta property="og:url" content="https://offbridge.app/" />
   <meta property="og:title" content="OffBridge — Off-grid clipboard sync & file transfer" />
-  <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted over your network." />
+  <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted end to end." />
   <meta property="og:image" content="https://offbridge.app/assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -27,7 +27,7 @@
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="OffBridge — Off-grid clipboard sync & file transfer" />
-  <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted over your network." />
+  <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted end to end." />
   <meta name="twitter:image" content="https://offbridge.app/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -135,8 +135,8 @@
     "name": "OffBridge",
     "operatingSystem": "Android, Windows",
     "applicationCategory": "UtilitiesApplication",
-    "softwareVersion": "3.7.2",
-    "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted over your network.",
+    "softwareVersion": "3.7.6",
+    "description": "Off-grid clipboard sync and file transfer between Android and Windows. Peer-to-peer over LAN or fully off-grid via QR, NFC and Wi-Fi Direct. No cloud, no account, AES-256 encrypted end to end.",
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
   }
@@ -333,9 +333,9 @@
           </h1>
           <p class="hero__lead" data-reveal>
             OffBridge syncs text and sends files between your Android phone and
-            Windows PC, directly, device to device. Pair once by confirming a 6-digit
-            code, then move files over your network or completely off-grid via QR or NFC.
-            AES-256 encrypted over your network, and nothing ever touches a server.
+            Windows PC, directly, device to device. Pair once by scanning a QR code or
+            confirming a 6-digit code, then move files over your network or completely
+            off-grid via QR or NFC. AES-256 encrypted end to end, and nothing ever touches a server.
           </p>
           <div class="hero__cta" data-reveal>
             <a class="btn btn--primary btn--lg" data-cta="android" href="#download">
@@ -403,12 +403,13 @@
         <div class="split__copy">
           <span class="eyebrow">Clipboard sync</span>
           <h2 id="clip-title">Copy here. Paste there. Instantly.</h2>
-          <p class="section-lead">Copy a link, a code snippet, an address on one device and it's
-            ready to paste on the other. Sync runs quietly in the background, or push it on demand.</p>
+          <p class="section-lead">Copy a link, a code snippet or an address on your PC and it's
+            ready to paste on your phone. Going the other way takes one tap, because Android
+            doesn't let any app read your clipboard from the background.</p>
           <ul class="feat-list">
-            <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Real-time &amp; background.</strong> Paired devices stay in sync automatically.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Push on demand.</strong> One tap, or the Android quick-settings tile.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>History you keep.</strong> Recent copies are saved locally and recoverable.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>PC to phone, automatically.</strong> Copy on Windows and it lands on your paired phones.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Phone to PC in one tap.</strong> The Push to PC quick-settings tile, or Share &rarr; OffBridge from any app.</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>History you keep.</strong> Saved on the device, and restorable from a backup folder after a reinstall.</span></li>
           </ul>
         </div>
 
@@ -487,7 +488,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg><span><strong>LAN.</strong> Same router, direct over your Wi-Fi at full local speed.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Wi-Fi Direct / hotspot.</strong> A peer link or a hosted hotspot when there's no router.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a private two-device link from nothing, with no network at all.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a private two-device link from nothing, with no network at all. A short Bluetooth channel carries the handshake; the files go over Wi-Fi.</span></li>
               </ul>
             </div>
           </div>
@@ -501,7 +502,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap to begin.</strong> The NFC bump seeds an off-grid handshake between the two phones.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Then the fastest link.</strong> Bytes move over the quickest path the phones can form.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Only the phone you tapped.</strong> The bump keys an ECDH handshake, so no other device can join the link.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Only the phone you tapped.</strong> The bump keys an ECDH handshake, so no other device can join the link, and the files are sealed with AES-256-GCM.</span></li>
               </ul>
             </div>
           </div>
@@ -515,7 +516,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Show, then scan.</strong> The code holds everything the two devices need to meet.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Both platforms.</strong> Windows presents the code; Android scans it with the camera.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Verified session.</strong> An ECDH handshake proves the scan, so only the scanning device connects.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Verified, sealed session.</strong> An ECDH handshake proves the scan, so only the scanning device connects, and the files are sealed with AES-256-GCM.</span></li>
               </ul>
             </div>
           </div>
@@ -554,14 +555,15 @@
             <p>Browse past transfers and copies.</p>
             <div class="cluster" style="gap:6px;margin-top:4px">
               <span class="capsule capsule--on">All</span><span class="capsule">Sent</span>
-              <span class="capsule">Received</span><span class="capsule">Pending</span>
+              <span class="capsule">Received</span><span class="capsule">Completed</span>
+              <span class="capsule">Pending</span><span class="capsule">Cancelled</span>
             </div>
             <div class="card-more">
-              <p class="card-more__lead">Every copy and transfer is logged on the device so you can find something later and send it again without hunting for the original.</p>
+              <p class="card-more__lead">Every copy and transfer is logged on the device, so you can find a file later or pick up a transfer that stopped part-way.</p>
               <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>Filter fast.</strong> Narrow to Sent, Received or Pending in a tap.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>Filter fast.</strong> Narrow to Sent, Received, Completed, Pending or Cancelled in a tap.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Stored locally.</strong> The log lives only on your device, never a server.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Re-send in a tap.</strong> Reopen or resend a past item straight from the list.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Open or resume.</strong> Open a received file where it was saved, or ask the sender to resume a paused transfer.</span></li>
               </ul>
             </div>
           </div>
@@ -609,12 +611,12 @@
           <div class="step">
             <div class="step__num">1</div>
             <h3>Find your device</h3>
-            <p>On the same network, devices discover each other automatically, ready to pair.</p>
+            <p>On the same network, devices discover each other automatically. No shared network? Pair by QR and the host raises a hotspot.</p>
           </div>
           <div class="step">
             <div class="step__num">2</div>
             <h3>Verify the code</h3>
-            <p>Both devices show a 6-digit code. Confirm they match and accept; that blocks impostors.</p>
+            <p>Both devices show a 6-digit code. Confirm they match and accept; that blocks impostors. Scanning a pairing QR does the same check for you.</p>
           </div>
           <div class="step">
             <div class="step__num">3</div>
@@ -632,8 +634,8 @@
           <span class="eyebrow">Private by design</span>
           <h2 id="sec-title">Your data never leaves your devices.</h2>
           <p class="section-lead">There is no cloud to breach and no account to leak. Pairing is verified
-            face-to-face with a 6-digit code, and everything in flight is encrypted with keys that exist
-            only on your hardware.</p>
+            face-to-face with a 6-digit code or a QR scan, and everything in flight is encrypted with keys
+            that exist only on your hardware.</p>
           <a class="btn btn--ghost" href="#faq">Read the FAQ <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
           <div class="security__media">
             <div class="device device--phone" data-parallax style="--par:30px">
@@ -655,6 +657,7 @@
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg><span><strong>ECDH on the curve.</strong> A fresh secp256r1 exchange derives the shared key.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>You are the check.</strong> Confirming the six digits is what defeats an impostor.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Or scan to pair.</strong> A pairing QR carries a one-time key and expires; the other device must prove it holds that key before anything is paired.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Pinned after first trust.</strong> A later key swap fails closed instead of silently downgrading.</span></li>
               </ul>
             </div>
@@ -662,13 +665,13 @@
           <div class="glass assure" data-reveal>
             <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
             <h3>AES-256 encryption</h3>
-            <p>Over your network, every clipboard payload and file is sealed with authenticated AES-256-GCM before it leaves the device.</p>
+            <p>Every clipboard payload and file is sealed with authenticated AES-256-GCM before it leaves the device, on your network or off it.</p>
             <div class="card-more">
-              <p class="card-more__lead">On a shared network, what you send is sealed with AES-256-GCM under the key from pairing. GCM is authenticated, so tampering is detected, not just hidden.</p>
+              <p class="card-more__lead">What you send is sealed with AES-256-GCM, under the key from pairing on a shared network or a per-session key off-grid. GCM is authenticated, so tampering is detected, not just hidden.</p>
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Authenticated.</strong> AES-GCM verifies integrity, not only confidentiality.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Files too.</strong> Large transfers are sealed the same way, chunk by chunk.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Off-grid differs.</strong> A QR / NFC link is a direct connection between just those two devices, protected by an authenticated handshake rather than a sealed stream.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Off-grid too.</strong> QR, NFC, Wi-Fi Direct and hotspot transfers are sealed from Android 3.7.3 and Windows 3.7.7. If either device is older, the link falls back to an authenticated but unsealed stream, so update both.</span></li>
               </ul>
             </div>
           </div>
@@ -708,8 +711,8 @@
         <div class="section-head section-head--center">
           <span class="eyebrow">Cross-platform</span>
           <h2 id="plat-title">Built for Android and Windows</h2>
-          <p class="section-lead">Clipboard sync, file transfer, off-grid QR transfer and AES-256 work
-            on both. A few abilities depend on the hardware each platform has.</p>
+          <p class="section-lead">Clipboard sync, file transfer, QR pairing, off-grid QR transfer and AES-256
+            work on both, in the same 10 languages. A few abilities depend on the hardware each platform has.</p>
         </div>
 
         <div class="compare">
@@ -723,6 +726,7 @@
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> NFC &amp; QR off-grid file transfer</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Scan &amp; receive via camera</li>
+              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR pairing (show or scan)</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Wi-Fi Direct &amp; hotspot bridge</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Quick-settings tile &amp; share-sheet</li>
               <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> System-tray (desktop only)</li>
@@ -733,6 +737,7 @@
                 <li><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg><span><strong>On Google Play.</strong> Installs and updates from the Play Store; runs on Android 10 (API 29) and up.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap, scan, share.</strong> NFC hand-off, camera QR scanning and the system share-sheet are Android-only.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Push from the shade.</strong> A quick-settings tile sends your clipboard to the PC without opening the app.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Lite or Pro.</strong> Lite keeps things simple; Pro unlocks the full interface, with pairing, clipboard sync, transfer history and every option. Switch any time.</span></li>
               </ul>
             </div>
           </div>
@@ -746,6 +751,7 @@
             <ul class="cap-list">
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR off-grid sender</li>
+              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR pairing (shows the code)</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> System-tray background app</li>
               <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> AES-256 &amp; verified pairing</li>
               <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> NFC tap (no hardware)</li>
@@ -755,7 +761,7 @@
               <p class="card-more__lead">The desktop build runs quietly from the system tray and ships its own runtime, so there's no Java to install.</p>
               <ul class="detail-list">
                 <li><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg><span><strong>Installer, bundled runtime.</strong> A standard .exe for Windows 10/11 (64-bit); nothing else to set up.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Lives in the tray.</strong> Stays in the background and shows a QR code for off-grid sends.</span></li>
+                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Lives in the tray.</strong> Stays in the background, sends what you copy to your phone, and shows a QR code for off-grid sends.</span></li>
                 <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Same crypto.</strong> AES-256 and verified 6-digit pairing, identical to the Android client.</span></li>
               </ul>
             </div>
@@ -850,11 +856,19 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>Is my data uploaded anywhere?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Never. There are no servers and no account. Clipboard contents and files move straight between your devices, with keys stored only on your hardware. Over a shared network those bytes are AES-256-GCM sealed. On an off-grid QR or NFC link there is no network to share in the first place: the two devices talk directly to each other over a connection nothing else can join.</p></div></div>
+            <div class="faq__body"><div><p>Never. There are no servers and no account. Clipboard contents and files move straight between your devices, with keys stored only on your hardware. Those bytes are sealed with AES-256-GCM whether they cross your Wi-Fi or an off-grid QR or NFC link. Off-grid sealing needs Android 3.7.3 or later and Windows 3.7.7 or later on both ends; with an older device the off-grid link is still direct and authenticated, but the file bytes are not sealed.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>What is the 6-digit code?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
             <div class="faq__body"><div><p>It's a Short Authentication String derived from a secure key exchange. Both devices show the same number, and confirming they match proves you're connected to the right device and not an impostor.</p></div></div>
+          </details>
+          <details class="faq__item" data-reveal>
+            <summary>Does copying on my phone sync to my PC by itself?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
+            <div class="faq__body"><div><p>Not on its own. Since Android 10, apps can't read the clipboard while they're in the background, and OffBridge doesn't try to get around that. What you copy on Windows reaches the phone automatically; to send from the phone, tap the Push to PC quick-settings tile or use Share &rarr; OffBridge.</p></div></div>
+          </details>
+          <details class="faq__item" data-reveal>
+            <summary>Which languages does it support?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
+            <div class="faq__body"><div><p>Both apps ship in English, German, Spanish, French, Indonesian, Japanese, Portuguese, Russian, and Simplified and Traditional Chinese.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>How large a file can I send?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
@@ -862,7 +876,7 @@
           </details>
           <details class="faq__item" data-reveal>
             <summary>How do I install it?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Android installs from Google Play. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></div></div>
+            <div class="faq__body"><div><p>Android installs from Google Play, or as a direct APK from the card above if you'd rather not use Play; the APK usually gets a new release a little before the store does. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></div></div>
           </details>
           <details class="faq__item" data-reveal>
             <summary>Windows blocked the installer or can't verify the publisher?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
