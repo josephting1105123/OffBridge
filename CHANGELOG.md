@@ -4,6 +4,47 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.7 — Android (build 35) — off-grid reliability and resume
+
+### Fixed
+- **Off-grid transfers could still stall at "waiting for the sender" right after the phones
+  linked.** The sender's first two encrypted messages (where to connect, and which Wi-Fi method to
+  try) could arrive while the receiver was still finishing the handshake, and were thrown away. The
+  receiver never started a method and the sender waited for a reply that could not come. They are
+  now kept and handled in order.
+- **One lost message could freeze an off-grid transfer for good.** The sending phone only moved on
+  when the receiver reported back, and the Bluetooth keep-alive stayed healthy, so nothing ever
+  timed it out. Each method now has a time limit, which stops counting once data is flowing.
+- **A failed first Bluetooth connection left that QR code unusable.** On some phones (notably MIUI)
+  the first connection drops before the handshake and the receiver retries once — but the sender
+  had already stopped advertising. It now starts advertising again on the same code.
+- **Interrupted off-grid transfers could not be resumed once they were encrypted.** The resume
+  request didn't say the transfer was encrypted, so the sender resumed in plain text and the
+  receiver failed to decrypt every piece. Resume now stays encrypted, restarting the current file
+  from the beginning, as resumes over a local network already do.
+- **A retry could put an error on the sender's screen mid-transfer.** Two connection attempts
+  arriving together could both be accepted; the spare one gave up after 30 seconds and reported a
+  failure while the real transfer carried on. Only one is accepted now.
+- **A connection that dropped during setup left a dead "pending" transfer behind**, which the next
+  transfer could mistake for its own. It is now removed and marked failed.
+- **A repeated Bluetooth message could be handled twice.** A one-piece message re-sent after a
+  missed write confirmation was treated as new. Exact repeats are now dropped.
+
+## 3.7.11 — Windows (off-grid reliability and resume)
+
+### Fixed
+- **Bluetooth messages from the phone could arrive out of order and be discarded.** The PC
+  confirmed each piece before passing it on, and pieces are handled on several threads, so the next
+  piece could overtake it. Pieces are now passed on before they are confirmed.
+- **A phone whose first Bluetooth connection dropped could not link again** until the QR window was
+  reopened. Before the handshake the PC now keeps advertising and lets the phone reconnect.
+- **Interrupted encrypted off-grid transfers could not be resumed**, for the same reason as
+  Android 3.7.7. The PC now remembers the transfer's key and resumes encrypted, and refuses a resume
+  that would drop the encryption.
+- **A phone's handshake retry could be ignored** when it arrived while the first attempt was still
+  being processed. It now gets the reply re-sent.
+- **A repeated Bluetooth message could be handled twice**, as on Android 3.7.7.
+
 ## 3.7.6 — Android (build 34) — off-grid handshake hotfix
 
 ### Fixed

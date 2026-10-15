@@ -156,6 +156,29 @@ class PcQrSenderControllerTest {
     }
 
     @Test
+    fun `a pre-HELLO unsubscribe keeps the channel, a post-HELLO one does not`() {
+        val channel = FakeChannel()
+        val pcEcdh = EcdhSession()
+        val controller = PcQrSenderController(
+            channel, token, pcEcdh, "192.168.49.1", "OffBridge-1234", "pass12345678"
+        )
+        controller.begin()
+        controller.onCentralSubscribed()
+        awaitState(controller) { it == QrControlState.CentralConnected }
+        // The phone's first connect collapsed before HELLO: keep listening, back to Advertising.
+        assertTrue(controller.onCentralUnsubscribed())
+        awaitState(controller) { it == QrControlState.Advertising }
+
+        // It reconnects and links; from now on a drop is real.
+        controller.onCentralSubscribed()
+        val phone = Phone(pcEcdh.getPublicKey(), token)
+        channel.deliver(phone.helloRx())
+        assertEquals(ControlProtocol.HELLO_ACK, nextFrame(channel).type)
+        awaitState(controller) { it is QrControlState.Linked || it is QrControlState.Joining }
+        assertTrue(!controller.onCentralUnsubscribed())
+    }
+
+    @Test
     fun `a bad HELLO hmac is ignored`() {
         val channel = FakeChannel()
         val pcEcdh = EcdhSession()
