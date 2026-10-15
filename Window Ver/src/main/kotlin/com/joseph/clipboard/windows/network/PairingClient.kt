@@ -86,7 +86,7 @@ object PairingClient {
             )
 
             onEvent(Event.WaitingForResponse(ip, deviceName))
-            val ackResponse = reader.readLine()
+            val ackResponse = reader.readLineCapped()
             if (ackResponse != null && ackResponse.startsWith("PAIR_ACK|")) {
                 val ackParts = ackResponse.split("|")
                 val peerPubKey = Base64.getDecoder().decode(ackParts[1])
@@ -104,7 +104,7 @@ object PairingClient {
                 // key — creating one-sided trust. Match the acceptor's window (Android sets 120000
                 // before its final PAIR_ACCEPT read the same way).
                 socket.soTimeout = 120000
-                val finalResponse = reader.readLine()
+                val finalResponse = reader.readLineCapped()
 
                 if (finalResponse == "PAIR_ACCEPT" && !cancelled) {
                     onPaired(ip, aesKey, deviceName, peerDeviceId)
@@ -141,7 +141,7 @@ object PairingClient {
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
                 writer.println(WireFrames.unpairReq())
                 if (key != null) {
-                    val challenge = reader.readLine()
+                    val challenge = reader.readLineCapped()
                     if (challenge != null && challenge.startsWith("UNPAIR_CHALLENGE|")) {
                         val nonce = Base64.getDecoder().decode(challenge.removePrefix("UNPAIR_CHALLENGE|"))
                         val proof = SessionCrypto.hmacSha256(key, nonce)

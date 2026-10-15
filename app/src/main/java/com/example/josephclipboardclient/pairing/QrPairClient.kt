@@ -1,5 +1,6 @@
 package com.EntropicSoftwareLab.ClipboardShare.pairing
 
+import com.EntropicSoftwareLab.ClipboardShare.readLineCapped
 import android.content.Context
 import android.net.Network
 import com.EntropicSoftwareLab.ClipboardShare.EcdhSession
@@ -194,7 +195,7 @@ object QrPairClient {
                 QrPairWire.req(myDeviceName, ecdh.getPublicKey(), payload.token, SecurityVault.localDeviceId(context))
             )
 
-            val response = reader.readLine() ?: return Result.Failed
+            val response = reader.readLineCapped() ?: return Result.Failed
             QrPairWire.parseDeny(response)?.let { return Result.Denied }
 
             val ack = QrPairWire.parseAck(response) ?: return Result.Failed

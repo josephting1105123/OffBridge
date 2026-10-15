@@ -210,7 +210,7 @@ object PairingDaemon {
                 val writer = PrintWriter(socket.getOutputStream(), true)
                 val senderIp = (socket.remoteSocketAddress as InetSocketAddress).address.hostAddress
 
-                val request = reader.readLine()
+                val request = reader.readLineCapped()
 
                 if (request != null && request.startsWith("UNPAIR_REQ|")) {
                     // Authenticated unpair: only honor it if the sender proves possession of the
@@ -220,7 +220,7 @@ object PairingDaemon {
                     if (key == null) { socket.close(); return@launch }
                     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
                     writer.println("UNPAIR_CHALLENGE|${Base64.encodeToString(nonce, Base64.NO_WRAP)}")
-                    val proofLine = reader.readLine()
+                    val proofLine = reader.readLineCapped()
                     if (proofLine != null && proofLine.startsWith("UNPAIR_PROOF|")) {
                         val proof = try {
                             Base64.decode(proofLine.removePrefix("UNPAIR_PROOF|"), Base64.NO_WRAP)
@@ -369,7 +369,7 @@ object PairingDaemon {
             // If the ACK never left, the scanner can't have stored anything — bail before we do.
             if (writer.checkError()) return
 
-            val finLine = reader.readLine() ?: return
+            val finLine = reader.readLineCapped() ?: return
             val fin = QrPairWire.parseFin(finLine)
             if (fin == null || !PairSeal.verify(aesKey, fin, PairSeal.peerConfirmation(tokenHex), System.currentTimeMillis())) {
                 writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
@@ -419,7 +419,7 @@ object PairingDaemon {
                     writer.println("UNPAIR_REQ|")
                     writer.flush()
                     if (key != null) {
-                        val challenge = reader.readLine()
+                        val challenge = reader.readLineCapped()
                         if (challenge != null && challenge.startsWith("UNPAIR_CHALLENGE|")) {
                             val nonce = Base64.decode(challenge.removePrefix("UNPAIR_CHALLENGE|"), Base64.NO_WRAP)
                             writer.println("UNPAIR_PROOF|${Base64.encodeToString(unpairHmac(key, nonce), Base64.NO_WRAP)}")
@@ -471,7 +471,7 @@ object PairingDaemon {
                 )
             )
 
-            val ackResponse = reader.readLine()
+            val ackResponse = reader.readLineCapped()
             if (ackResponse != null && ackResponse.startsWith("PAIR_ACK|")) {
                 val ackParts = ackResponse.split("|")
                 val peerPubKey = Base64.decode(ackParts[1], Base64.NO_WRAP)
@@ -488,7 +488,7 @@ object PairingDaemon {
                 // read must allow a real human accept window. A shorter timeout here would make the
                 // initiator give up ("TIMEOUT") while the acceptor still saves trust — one-sided.
                 socket.soTimeout = 120000
-                val finalResponse = reader.readLine()
+                val finalResponse = reader.readLineCapped()
                 if (outgoingCancelled) {
                     return@withContext "CANCELLED"
                 } else if (finalResponse == "PAIR_ACCEPT") {

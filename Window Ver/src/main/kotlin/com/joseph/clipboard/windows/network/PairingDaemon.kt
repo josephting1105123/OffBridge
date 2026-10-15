@@ -185,7 +185,7 @@ class PairingDaemon(
             // If the ACK never left, the scanner can't have stored anything — bail before we do.
             if (writer.checkError()) return
 
-            val finLine = reader.readLine() ?: return
+            val finLine = reader.readLineCapped() ?: return
             val fin = QrPairWire.parseFin(finLine)
             if (fin == null || !PairSeal.verify(aesKey, fin, PairSeal.peerConfirmation(tokenHex), System.currentTimeMillis())) {
                 writer.println(QrPairWire.deny(QrPairWire.DENY_BAD_REQUEST))
@@ -232,7 +232,7 @@ class PairingDaemon(
                 val reader = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
                 val writer = PrintWriter(clientSocket.getOutputStream(), true)
 
-                val request = reader.readLine() ?: return@thread
+                val request = reader.readLineCapped() ?: return@thread
                 
                 if (request.startsWith("UNPAIR_REQ|")) {
                     // Authenticated unpair: require the sender to prove possession of the per-node key
@@ -241,7 +241,7 @@ class PairingDaemon(
                     if (key == null) { clientSocket.close(); return@thread }
                     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
                     writer.println("UNPAIR_CHALLENGE|${Base64.getEncoder().encodeToString(nonce)}")
-                    val proofLine = reader.readLine()
+                    val proofLine = reader.readLineCapped()
                     if (proofLine != null && proofLine.startsWith("UNPAIR_PROOF|")) {
                         val proof = try {
                             Base64.getDecoder().decode(proofLine.removePrefix("UNPAIR_PROOF|"))

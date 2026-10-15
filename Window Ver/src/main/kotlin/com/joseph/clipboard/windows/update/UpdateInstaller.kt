@@ -31,6 +31,18 @@ object UpdateInstaller {
         .followRedirects(HttpClient.Redirect.NORMAL)
         .build()
 
+    /** HTTPS only, and only GitHub's release hosts. Applied to the API-supplied URL and again to the
+     *  final URL after redirects. */
+    private fun requireTrusted(uri: URI) {
+        if (!uri.scheme.equals("https", ignoreCase = true)) {
+            throw IOException("Refusing non-HTTPS update download: ${uri.scheme}")
+        }
+        val host = uri.host?.lowercase() ?: ""
+        if (ALLOWED_HOST_SUFFIXES.none { host == it || host.endsWith(".$it") }) {
+            throw UntrustedDownloadHostException(host)
+        }
+    }
+
     /**
      * Downloads the installer at [downloadUrl] to a temp file, verifying the byte count against
      * the server's Content-Length. Throws on any failure (untrusted host, HTTP error, size
@@ -39,14 +51,15 @@ object UpdateInstaller {
      */
     fun download(downloadUrl: String, targetVersion: String): File {
         val uri = URI.create(downloadUrl)
-        val host = uri.host?.lowercase() ?: ""
-        if (ALLOWED_HOST_SUFFIXES.none { host == it || host.endsWith(".$it") }) {
-            throw UntrustedDownloadHostException(host)
-        }
+        requireTrusted(uri)
 
         val tempDir = File(System.getProperty("java.io.tmpdir"), "OffBridgeUpdate")
         tempDir.mkdirs()
-        val target = File(tempDir, "OffBridgeSetup-$targetVersion.exe")
+        // targetVersion is the release tag from the API response; keep only version characters so a
+        // hostile tag can't put path separators or ".." into the installer's file name.
+        val safeVersion = targetVersion.filter { it.isLetterOrDigit() || it == '.' || it == '-' }
+            .trim('.').ifEmpty { "latest" }
+        val target = File(tempDir, "OffBridgeSetup-$safeVersion.exe")
 
         val request = HttpRequest.newBuilder()
             .uri(uri)
@@ -58,6 +71,14 @@ object UpdateInstaller {
         if (response.statusCode() !in 200..299) {
             target.delete()
             throw IOException("Download failed: HTTP ${response.statusCode()}")
+        }
+        // response.uri() is the post-redirect URL: re-check it so a redirect can't hand us an
+        // installer from outside GitHub's hosts.
+        try {
+            requireTrusted(response.uri())
+        } catch (e: IOException) {
+            target.delete()
+            throw e
         }
         val expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1)
         if (expectedLength >= 0 && target.length() != expectedLength) {

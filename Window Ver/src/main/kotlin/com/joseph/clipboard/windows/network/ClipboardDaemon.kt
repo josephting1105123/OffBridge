@@ -122,6 +122,15 @@ class ClipboardDaemon(
                     return@thread
                 }
 
+                // Trust gate before the read (parity with Android ClipboardService): an unpaired host
+                // gets dropped here instead of making us buffer up to MAX_CLIPBOARD_CHARS first.
+                val senderIp = clientSocket.inetAddress.hostAddress
+                val aesKey = SecurityVault.getAesKey(senderIp)
+                if (aesKey == null) {
+                    println("Rejected clipboard sync from $senderIp (not paired)")
+                    return@thread
+                }
+
                 // Read full payload, but bounded: reader.readText() reads until EOF with
                 // no cap, so a peer that streams an endless/huge payload would OOM the JVM.
                 val inputStream: InputStream = clientSocket.getInputStream()
@@ -139,34 +148,28 @@ class ClipboardDaemon(
                 val base64Payload = sb.toString().trim()
 
                 if (base64Payload.isNotEmpty()) {
-                    val senderIp = clientSocket.inetAddress.hostAddress
-                    val aesKey = SecurityVault.getAesKey(senderIp)
-                    if (aesKey != null) {
-                        try {
-                            // decryptString accepts only sealed (AES-GCM) payloads since the 3.5.0
-                            // CBC retirement; senderIp just names the peer in the rejection error.
-                            val decryptedText = CryptoEngine.decryptString(base64Payload, aesKey, senderIp)
-                            if (decryptedText.startsWith("CMD_DELETE|")) {
-                                // Remote deleted a history entry. Android sends this as an encrypted
-                                // "CMD_DELETE|<text>" control frame; the suffix must NOT be pasted or
-                                // re-added to history. Remove any matching history row (parity with
-                                // Android's ClipboardHistoryManager.removeEntry) and wipe it from the
-                                // OS clipboard if it still matches.
-                                val toDelete = decryptedText.substring("CMD_DELETE|".length)
-                                onClipboardDeleted(toDelete)
-                                val current = ClipboardManager.readText()
-                                if (current == toDelete) {
-                                    ClipboardManager.writeText("")
-                                }
-                            } else {
-                                ClipboardManager.writeText(decryptedText)
-                                onClipboardReceived(decryptedText)
+                    try {
+                        // decryptString accepts only sealed (AES-GCM) payloads since the 3.5.0
+                        // CBC retirement; senderIp just names the peer in the rejection error.
+                        val decryptedText = CryptoEngine.decryptString(base64Payload, aesKey, senderIp)
+                        if (decryptedText.startsWith("CMD_DELETE|")) {
+                            // Remote deleted a history entry. Android sends this as an encrypted
+                            // "CMD_DELETE|<text>" control frame; the suffix must NOT be pasted or
+                            // re-added to history. Remove any matching history row (parity with
+                            // Android's ClipboardHistoryManager.removeEntry) and wipe it from the
+                            // OS clipboard if it still matches.
+                            val toDelete = decryptedText.substring("CMD_DELETE|".length)
+                            onClipboardDeleted(toDelete)
+                            val current = ClipboardManager.readText()
+                            if (current == toDelete) {
+                                ClipboardManager.writeText("")
                             }
-                        } catch (e: Exception) {
-                            System.err.println("Failed to decrypt clipboard payload: ${e.message}")
+                        } else {
+                            ClipboardManager.writeText(decryptedText)
+                            onClipboardReceived(decryptedText)
                         }
-                    } else {
-                        System.err.println("No AES key found for $senderIp, cannot decrypt clipboard.")
+                    } catch (e: Exception) {
+                        System.err.println("Failed to decrypt clipboard payload: ${e.message}")
                     }
                 }
             } catch (e: Exception) {

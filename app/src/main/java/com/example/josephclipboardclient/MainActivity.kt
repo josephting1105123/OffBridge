@@ -527,6 +527,14 @@ class MainActivity : AppCompatActivity() {
                 intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.let { uris.addAll(it) }
             }
         }
+        // This activity is exported, and the stream is opened with OUR permissions. Without this
+        // filter any installed app could share file:///data/data/<us>/... or a content URI from our
+        // own FileProvider and get our private files (pairing keys, history DB) staged for sending.
+        // Real shares arrive as other apps' content:// URIs with a read grant, so keep only those.
+        uris.retainAll { uri ->
+            uri.scheme.equals("content", ignoreCase = true) &&
+                !uri.authority.equals("$packageName.provider", ignoreCase = true)
+        }
 
         if (uris.isNotEmpty()) {
             // Live shell mode, not the pref: the Pro branch below casts fragmentMap[send] which is only
