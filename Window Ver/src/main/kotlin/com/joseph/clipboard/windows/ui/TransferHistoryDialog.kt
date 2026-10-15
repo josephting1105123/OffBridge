@@ -33,6 +33,7 @@ import com.joseph.clipboard.windows.theme.Dimens
 import com.joseph.clipboard.windows.theme.InfoColor
 import com.joseph.clipboard.windows.theme.ErrorColor
 import com.joseph.clipboard.windows.storage.SecurityVault
+import com.joseph.clipboard.windows.os.SafeOpen
 import java.awt.Desktop
 import java.io.File
 
@@ -494,7 +495,8 @@ fun TransferHistoryDialog(
                                                     // Outgoing → the original source file; incoming → the save folder.
                                                     val file = resolveRecordFile(record, i, fileName)
                                                     if (file != null && file.exists()) {
-                                                        Desktop.getDesktop().open(file)
+                                                        // Executables and scripts are revealed in Explorer, never run.
+                                                        SafeOpen.openOrReveal(file)
                                                     }
                                                 }
                                             } catch (e: Exception) {

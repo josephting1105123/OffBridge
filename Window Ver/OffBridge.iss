@@ -126,11 +126,18 @@ Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 ; a PUBLIC network by default, so narrowing to profile=private would leave the off-grid hotspot inbound
 ; blocked and break the core use case. Runs elevated. Keep profile=any until the AP interface is
 ; provably Private-classified.
+; remoteip=localsubnet is what keeps profile=any from meaning "anyone": only hosts on a subnet this PC
+; is directly attached to can reach the listeners, so on a café or hotel network a host routed in from
+; elsewhere is dropped. Every peer path OffBridge has is directly attached: same-Wi-Fi LAN, the Wi-Fi
+; Direct GO subnet (192.168.49.x, a /24 on the GO adapter), and the phone's hotspot/LOHS when this PC
+; joins it. What it does NOT reach is a phone on a different routed subnet of the same
+; site (separate guest VLAN, some mesh setups) — that was never reachable by discovery broadcast anyway.
+; All four ports keep the same scope; dropping any one of them reintroduces the one-sided block above.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (TCP 65433)"""; Flags: runhidden
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN TCP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 remoteip=localsubnet profile=any"; Flags: runhidden
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN UDP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 remoteip=localsubnet profile=any"; Flags: runhidden
 ; Auto-launch at the end
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 

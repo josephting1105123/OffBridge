@@ -6,6 +6,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.file.Path
 import java.time.Duration
 
 /**
@@ -23,18 +24,21 @@ object UpdateInstaller {
         IOException("Refusing to download update installer from untrusted host: $host")
 
     // A GitHub release-asset URL (browser_download_url) 302-redirects to GitHub's CDN
-    // (objects.githubusercontent.com), so redirects MUST be followed or every download fails with
-    // HTTP 302. NORMAL (not ALWAYS) follows them but refuses an HTTPS->HTTP downgrade. The host
-    // allowlist below validates the initial URL; the redirect stays within GitHub's own infra.
+    // (objects.githubusercontent.com / release-assets.githubusercontent.com). The client does NOT
+    // follow redirects itself: download() walks them by hand so every hop is checked against
+    // [requireTrusted] before any body is written to disk. Letting the client follow them would only
+    // let us check the final URL after the whole installer was already downloaded.
     private val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(10))
-        .followRedirects(HttpClient.Redirect.NORMAL)
+        .followRedirects(HttpClient.Redirect.NEVER)
         .build()
 
-    /** HTTPS only, and only GitHub's release hosts. Applied to the API-supplied URL and again to the
-     *  final URL after redirects. */
-    private fun requireTrusted(uri: URI) {
-        if (!uri.scheme.equals("https", ignoreCase = true)) {
+    private const val MAX_REDIRECTS = 5
+
+    /** HTTPS only, and only GitHub's release hosts. Applied to the API-supplied URL and to every
+     *  redirect hop. */
+    internal fun requireTrusted(uri: URI) {
+        if (!"https".equals(uri.scheme, ignoreCase = true)) {
             throw IOException("Refusing non-HTTPS update download: ${uri.scheme}")
         }
         val host = uri.host?.lowercase() ?: ""
@@ -43,14 +47,20 @@ object UpdateInstaller {
         }
     }
 
+    /** Resolves a redirect's Location against the URL that returned it (Location may be relative). */
+    internal fun redirectTarget(current: URI, location: String?): URI {
+        if (location.isNullOrBlank()) throw IOException("Redirect without a Location header")
+        return current.resolve(URI.create(location.trim()))
+    }
+
     /**
      * Downloads the installer at [downloadUrl] to a temp file, verifying the byte count against
-     * the server's Content-Length. Throws on any failure (untrusted host, HTTP error, size
-     * mismatch) rather than returning a partially-downloaded file — callers surface the failure via
-     * [UpdateStatus.CheckFailed] instead of ever launching a truncated installer.
+     * the server's Content-Length. Throws on any failure (untrusted host or redirect hop, HTTP
+     * error, size mismatch) rather than returning a partially-downloaded file — callers surface the
+     * failure via [UpdateStatus.CheckFailed] instead of ever launching a truncated installer.
      */
     fun download(downloadUrl: String, targetVersion: String): File {
-        val uri = URI.create(downloadUrl)
+        var uri = URI.create(downloadUrl)
         requireTrusted(uri)
 
         val tempDir = File(System.getProperty("java.io.tmpdir"), "OffBridgeUpdate")
@@ -61,31 +71,44 @@ object UpdateInstaller {
             .trim('.').ifEmpty { "latest" }
         val target = File(tempDir, "OffBridgeSetup-$safeVersion.exe")
 
-        val request = HttpRequest.newBuilder()
-            .uri(uri)
-            .header("User-Agent", "OffBridge-Windows/$targetVersion")
-            .timeout(Duration.ofMinutes(5))
-            .GET()
-            .build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofFile(target.toPath()))
-        if (response.statusCode() !in 200..299) {
-            target.delete()
-            throw IOException("Download failed: HTTP ${response.statusCode()}")
+        // Redirect responses have their body thrown away: only a 2xx from a checked host gets written
+        // to [target]. ofFile() does not truncate, so clear any leftover from an earlier attempt first.
+        target.delete()
+        var hops = 0
+        while (true) {
+            val request = HttpRequest.newBuilder()
+                .uri(uri)
+                .header("User-Agent", "OffBridge-Windows/$targetVersion")
+                .timeout(Duration.ofMinutes(5))
+                .GET()
+                .build()
+            val response = try {
+                client.send(request, HttpResponse.BodyHandler<Path?> { info ->
+                    if (info.statusCode() in 200..299) HttpResponse.BodySubscribers.ofFile(target.toPath())
+                    else HttpResponse.BodySubscribers.replacing(null)
+                })
+            } catch (e: Exception) {
+                target.delete() // never leave a half-written installer behind
+                throw e
+            }
+            val status = response.statusCode()
+            if (status in 300..399) {
+                if (++hops > MAX_REDIRECTS) throw IOException("Too many redirects downloading update")
+                uri = redirectTarget(uri, response.headers().firstValue("Location").orElse(null))
+                requireTrusted(uri)
+                continue
+            }
+            if (status !in 200..299) {
+                target.delete()
+                throw IOException("Download failed: HTTP $status")
+            }
+            val expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1)
+            if (expectedLength >= 0 && target.length() != expectedLength) {
+                target.delete()
+                throw IOException("Downloaded file size (${target.length()}) did not match Content-Length ($expectedLength)")
+            }
+            return target
         }
-        // response.uri() is the post-redirect URL: re-check it so a redirect can't hand us an
-        // installer from outside GitHub's hosts.
-        try {
-            requireTrusted(response.uri())
-        } catch (e: IOException) {
-            target.delete()
-            throw e
-        }
-        val expectedLength = response.headers().firstValueAsLong("Content-Length").orElse(-1)
-        if (expectedLength >= 0 && target.length() != expectedLength) {
-            target.delete()
-            throw IOException("Downloaded file size (${target.length()}) did not match Content-Length ($expectedLength)")
-        }
-        return target
     }
 
     /**

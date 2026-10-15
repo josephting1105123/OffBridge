@@ -40,7 +40,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
-import java.awt.Desktop
+import com.joseph.clipboard.windows.os.SafeOpen
 import kotlin.math.roundToInt
 import kotlinx.coroutines.*
 import com.joseph.clipboard.windows.ClipboardAppController
@@ -705,9 +705,8 @@ fun SelectedFileItem(file: File, isSelected: Boolean, onToggle: (Boolean) -> Uni
                     onTap = { onToggle(!isSelected) },
                     onDoubleTap = {
                         try {
-                            if (Desktop.isDesktopSupported()) {
-                                Desktop.getDesktop().open(file)
-                            }
+                            // Executables and scripts are revealed in Explorer, never run.
+                            SafeOpen.openOrReveal(file)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
