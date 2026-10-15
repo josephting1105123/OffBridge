@@ -105,7 +105,10 @@ data class OutgoingFileSession(
     // "lan" (IP-paired) or "p2p" (off-grid QR/hotspot). An off-grid receiver resumes from an
     // ephemeral, never-paired IP, so the trust gate exempts a RESUME_REQUEST that names a live p2p
     // outgoing session (XP-05) — mirrors the Android FileTransferServer exemption.
-    val transport: String = "lan"
+    val transport: String = "lan",
+    // p2p only: the raw ECDH secret from P2P_HELLO, which an off-grid RESUME_REQUEST must prove
+    // (OffGridResumeAuth) before FileTransferDaemon hands the socket to onResumeReceived.
+    val p2pAuthKey: ByteArray? = null
 )
 
 data class IncomingFileSession(
@@ -398,7 +401,8 @@ class ClipboardAppController {
         supportsAcceptAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2Accept } },
         // XP-05: admit an off-grid receiver's RESUME_REQUEST past the LAN trust gate when its sessionId
         // names a live outgoing p2p session (registered in handleP2pHello with transport="p2p").
-        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" }
+        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" },
+        offGridResumeKey = { sid -> activeOutgoingFileSessions[sid]?.takeIf { it.transport == "p2p" }?.p2pAuthKey }
     )
 
     // UI State
@@ -955,7 +959,7 @@ class ClipboardAppController {
                 // ONE length snapshot drives the wire MANIFEST, the streamer's committed byte
                 // counts, and the history record — three separate file.length() reads let a file
                 // change size between them and desync the receiver's positional read (XP-DEF-04).
-                val outSession = OutgoingFileSession(
+                val snapshot = OutgoingFileSession(
                     session.sessionId,
                     socket.inetAddress.hostAddress ?: "",
                     session.files,
@@ -963,8 +967,10 @@ class ClipboardAppController {
                 )
                 val handshake = OffGridQrSender.runHandshake(
                     socket, header, session,
-                    outSession.files.mapIndexed { i, f -> f.name to outSession.fileSizes[i] }
+                    snapshot.files.mapIndexed { i, f -> f.name to snapshot.fileSizes[i] }
                 )
+                // Same snapshot, plus the handshake key a later off-grid resume has to prove.
+                val outSession = snapshot.copy(p2pAuthKey = handshake.authKey)
                 if (!handshake.accepted) {
                     // Restore the window (only if no newer QR replaced it) so a genuine retry works.
                     qrHost.restorePendingSession(session)

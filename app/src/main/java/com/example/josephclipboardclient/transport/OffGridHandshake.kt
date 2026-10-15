@@ -158,6 +158,8 @@ object OffGridHandshake {
                 // actually asked for the seal, so the receive path can't try to unseal a plaintext
                 // stream (or vice versa): this field IS the negotiated outcome, not a capability.
                 p2pSealKey = if (sealSupported) sharedKey else null,
+                // Always kept, sealed or not: a resume must prove this key (OffGridResumeAuth).
+                p2pAuthKey = sharedKey,
                 // The off-grid seal exists only in the v2 form, and DownloadEngine reads this flag
                 // (not the key's presence) to choose deriveKeyV2 + the session/file-bound AAD
                 // prefix. Leaving it false would derive the v1 key against a v2 sender and every

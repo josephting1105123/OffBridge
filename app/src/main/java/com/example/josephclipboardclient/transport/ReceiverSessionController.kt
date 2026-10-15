@@ -222,7 +222,9 @@ class ReceiverSessionController(
         )
 
         val channel = bleClient ?: return
-        val s = ControlSession(channel, SessionCrypto(key, isSender = false))
+        // Version from the QR/NFC payload, never from HELLO_ACK: the payload came out of band, so
+        // a BLE on-path attacker can't strip the bit to push us back to v1 (TransportCaps.CTRL_AAD).
+        val s = ControlSession(channel, SessionCrypto(key, isSender = false, bindHeader = (payload.cap and TransportCaps.CTRL_AAD) != 0))
         session = s
         s.onFrame = { type, payload -> handleFrame(type, payload) }
         s.onDead = { handleControlLost() }
@@ -516,7 +518,7 @@ class ReceiverSessionController(
     private fun localCaps(): Int {
         // Bluetooth is no longer a data path — advertise only the BLE-scan capability. (Don't OR in
         // BT_L2CAP: a legacy sender that still saw that bit would wait for a BT data link we never open.)
-        var cap = 0
+        var cap = TransportCaps.CTRL_AAD // we can always run SessionCrypto v2
         if (BleControlClient.canScan(appContext)) cap = cap or TransportCaps.BLE_SCAN
         return cap
     }

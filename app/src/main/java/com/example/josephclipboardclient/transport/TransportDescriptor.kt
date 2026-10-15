@@ -130,4 +130,17 @@ object TransportCaps {
      * it never sends the "seal" flag. Only new↔new seals.
      */
     const val SEALED_STREAM = 1 shl 6
+
+    /**
+     * Control plane: this build seals BLE control frames with [SessionCrypto] v2, which binds the
+     * frame header (type|seq|len) as GCM AAD under its own HKDF label. Identical to Windows
+     * `OffGridQrSender.CAP_CTRL_AAD`.
+     *
+     * The receiver decides from the QR/NFC payload's `cap` (shown out of band, so a BLE attacker
+     * can't edit it) and always sets this bit in HELLO_RX; the sender decides from HELLO_RX. Old↔new
+     * stays v1 on both ends. If an attacker strips the bit from the plaintext HELLO_RX, the sender
+     * falls to v1 while the receiver stays on v2, nothing opens, and the session fails closed instead
+     * of downgrading.
+     */
+    const val CTRL_AAD = 1 shl 7
 }

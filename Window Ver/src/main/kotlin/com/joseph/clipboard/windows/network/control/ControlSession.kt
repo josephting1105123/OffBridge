@@ -26,6 +26,15 @@ interface ControlChannel {
     var onClosed: (() -> Unit)?
 
     fun close()
+
+    /**
+     * The current peer failed (or never sent) a valid HELLO: drop it and let the next one link.
+     * Ignored after [markAuthenticated]. Default no-op for channels with nothing to release.
+     */
+    fun releaseClient(why: String) {}
+
+    /** The peer's HELLO verified; its ownership of the channel is final. */
+    fun markAuthenticated() {}
 }
 
 /**

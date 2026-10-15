@@ -47,6 +47,7 @@ import com.EntropicSoftwareLab.ClipboardShare.tuneForBulkTransfer
 import com.EntropicSoftwareLab.ClipboardShare.transport.LanRoute
 import com.EntropicSoftwareLab.ClipboardShare.transport.ReceiverSessionController
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.control.BleControlClient
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportCaps
@@ -1375,10 +1376,15 @@ class QrScannerFragment : Fragment() {
                     // Re-assert the delivery-ack contract on the resumed leg so the sender keeps
                     // the session alive until we confirm, mirroring the initial ACCEPT_OFFER.
                     val ackSuffix = if (session.completionAckRequired) "|ack" else ""
-                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$ackSuffix\n"
+                    val authKey = session.p2pAuthKey ?: throw java.io.IOException("no handshake key to prove on resume")
+                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$ackSuffix|${OffGridResumeAuth.FLAG}\n"
                     connection.output.run {
                         write(cmd.toByteArray(Charsets.UTF_8))
                         flush()
+                    }
+                    // The sender streams only after we prove the ECDH secret from the original HELLO.
+                    if (!OffGridResumeAuth.answer(connection.input, connection.output, authKey, sessionId)) {
+                        throw java.io.IOException("sender refused the off-grid resume")
                     }
                     TransferHistoryManager.updateStatus(appContext, sessionId, "transferring")
                     activeConnection = connection

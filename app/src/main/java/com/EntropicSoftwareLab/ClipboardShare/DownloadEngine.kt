@@ -4,6 +4,7 @@ import android.content.Context
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -570,14 +571,23 @@ object DownloadEngine {
                 // offset are order-independent on both receivers, and a legacy sender ignores the extra
                 // field. Mirrors the initial off-grid accept (QrScannerFragment ackSuffix).
                 val ackSuffix = if (session.completionAckRequired) "|ack" else ""
+                // Off-grid session: the sender wants proof of the HELLO's ECDH secret, not a pairing key.
+                val p2pAuthKey = session.p2pAuthKey
+                val authSuffix = if (p2pAuthKey != null) "|${OffGridResumeAuth.FLAG}" else ""
                 val resumeCmd = if (fileKey != null)
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}$ackSuffix\n"
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}$ackSuffix$authSuffix\n"
                 else
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}$ackSuffix\n"
+                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}$ackSuffix$authSuffix\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                if (p2pAuthKey != null) {
+                    if (!OffGridResumeAuth.answer(connection.input, connection.output, p2pAuthKey, session.sessionId)) {
+                        throw java.io.IOException("sender refused the off-grid resume")
+                    }
+                } else {
+                    answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                }
                 executeDownloadStream(context, connection, session, fileKey)
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the

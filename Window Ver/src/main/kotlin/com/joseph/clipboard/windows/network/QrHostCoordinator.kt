@@ -125,7 +125,7 @@ class QrHostCoordinator(
                 false
             }
             if (advertising && qrEpoch.get() == myEpoch) {
-                cap = cap or OffGridQrSender.CAP_BLE_ADVERTISE
+                cap = cap or OffGridQrSender.CAP_BLE_ADVERTISE or OffGridQrSender.CAP_CTRL_AAD
                 val controller = PcQrSenderController(
                     channel = peripheral,
                     token = session.token,

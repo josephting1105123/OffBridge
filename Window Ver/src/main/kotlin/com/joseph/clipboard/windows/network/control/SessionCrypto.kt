@@ -12,8 +12,15 @@ import javax.crypto.spec.SecretKeySpec
  * on BOTH platforms; change one side and the vectors break).
  *
  *   frame = type(1) | seq(4, big-endian) | len(2, big-endian) | AES-256-GCM(payload)
- *   key   = HKDF-SHA256(ecdh_secret, info = "ctrl-v1")
+ *   key   = HKDF-SHA256(ecdh_secret, info = "ctrl-v1")          (v1)
+ *         = HKDF-SHA256(ecdh_secret, info = "ctrl-v2")          (v2, [bindHeader])
  *   nonce = 4-byte direction salt ‖ 8-byte seq
+ *   aad   = none (v1) | the 7-byte type|seq|len header (v2)
+ *
+ * v1 left the header outside the tag, so a BLE on-path attacker could relabel a sealed frame's type
+ * (seq still has to be fresh, and the nonce binds the full seq, but type and len were free). v2 binds
+ * all three. Peers pick v2 only when both advertise TransportCaps.CTRL_AAD; the separate HKDF label
+ * means a v1 frame can never open under a v2 key or the reverse, so a version mismatch fails closed.
  *
  * The BLE link itself is unauthenticated; this layer carries the same
  * ECDH-derived trust as the TCP handshake. Sequence numbers are strictly
@@ -22,7 +29,7 @@ import javax.crypto.spec.SecretKeySpec
  * HELLO frames (types 0x01/0x02) are the bootstrap and travel as plaintext
  * bodies in the same framing; everything after them is sealed here.
  */
-class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean) {
+class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean, private val bindHeader: Boolean = false) {
 
     private val key: SecretKeySpec
     private val mySalt: ByteArray
@@ -32,7 +39,7 @@ class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean) {
     private var rxHighestSeq: Long = 0L
 
     init {
-        key = SecretKeySpec(hkdfSha256(ecdhSharedKey, INFO_CTRL, KEY_LEN), "AES")
+        key = SecretKeySpec(hkdfSha256(ecdhSharedKey, if (bindHeader) INFO_CTRL_V2 else INFO_CTRL, KEY_LEN), "AES")
         mySalt = if (isSender) SALT_TX else SALT_RX
         peerSalt = if (isSender) SALT_RX else SALT_TX
     }
@@ -42,8 +49,10 @@ class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean) {
         val seq = txSeq++
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(TAG_BITS, nonce(mySalt, seq)))
+        val hdr = header(type, seq, payload.size + TAG_BITS / 8)
+        if (bindHeader) cipher.updateAAD(hdr)
         val ct = cipher.doFinal(payload)
-        return header(type, seq, ct.size) + ct
+        return hdr + ct
     }
 
     /**
@@ -55,6 +64,7 @@ class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean) {
         return try {
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(TAG_BITS, nonce(peerSalt, seq)))
+            if (bindHeader) cipher.updateAAD(header(type, seq, body.size))
             val pt = cipher.doFinal(body)
             rxHighestSeq = seq
             pt
@@ -70,6 +80,7 @@ class SessionCrypto(ecdhSharedKey: ByteArray, isSender: Boolean) {
         private const val TAG_BITS = 128
         private const val KEY_LEN = 32
         private val INFO_CTRL = "ctrl-v1".toByteArray(Charsets.UTF_8)
+        private val INFO_CTRL_V2 = "ctrl-v2".toByteArray(Charsets.UTF_8)
 
         /** Direction salts: sender→receiver and receiver→sender never share a nonce space. */
         private val SALT_TX = byteArrayOf(0x74, 0x78, 0x00, 0x01) // "tx",0,1

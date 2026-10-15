@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
@@ -89,11 +90,11 @@ object FileTransferServer {
             // ECDH + QR-token P2P_HELLO handshake, not by IP pairing, and on a mid-transfer drop its
             // receiver reconnects to resume from an ephemeral, never-paired IP — the same reason
             // P2P_HELLO above bypasses this gate. A RESUME_REQUEST whose sessionId matches a live
-            // *outgoing off-grid* session is that already-authenticated peer resuming, so admit it. The
-            // sessionId was issued over the ECDH-authenticated channel (P2P_WELCOME), making it an
-            // unguessable per-session token; and off-grid streams plaintext by construction, so no
-            // pairing key is needed here. Scoped to transport=="p2p": LAN resumes are unaffected — their
-            // peer IP is paired and still runs the full gate. Without this, off-grid resume always failed.
+            // *outgoing off-grid* session may be that peer resuming, so let it past the IP gate. It is
+            // NOT trusted yet: the sessionId travels in the clear in P2P_WELCOME, so the RESUME branch
+            // below makes it prove the session's ECDH secret ([OffGridResumeAuth]) before any byte
+            // flows. Scoped to transport=="p2p": LAN resumes are unaffected — their peer IP is paired
+            // and still runs the full gate. Without this, off-grid resume always failed.
             val isOffGridResume = batchHeader.startsWith("RESUME_REQUEST|") && run {
                 val sid = batchHeader.split('|').getOrNull(1)
                 val s = sid?.let { TransferDaemon.activeSessions[it] }
@@ -121,10 +122,14 @@ object FileTransferServer {
                     val fileIndex = parts[2].toIntOrNull()
                     val offset = parts[3].toLongOrNull()
                     if (fileIndex == null || offset == null) { socket.close(); return }
-                    if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) { socket.close(); return }
                     // Receiver flags after the offset, order-independent: "ack" → wait for the delivery
                     // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
                     val flags = parts.drop(4)
+                    if (isOffGridResume) {
+                        if (!performOffGridResumeChallenge(socket, inputStream, sessionId, flags)) { socket.close(); return }
+                    } else if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) {
+                        socket.close(); return
+                    }
                     val ackExpected = flags.contains("ack")
                     // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
                     // selects the v2 FileSeal (per-session key + session/file-bound AAD).
@@ -461,6 +466,28 @@ object FileTransferServer {
      * from exactly where header parsing left off. Returns false ⇒ caller must close the socket and
      * stop; no popup, no bytes, no state mutated on this session.
      */
+    /**
+     * Off-grid RESUME_REQUEST admission: the receiver must prove the ECDH secret from this session's
+     * P2P_HELLO (see [OffGridResumeAuth]). A receiver that didn't send the flag is too old to answer,
+     * so it is refused outright rather than sent a challenge line it would write into its .part file.
+     */
+    private fun performOffGridResumeChallenge(socket: Socket, inputStream: java.io.InputStream, sessionId: String, flags: List<String>): Boolean {
+        val key = TransferDaemon.activeSessions[sessionId]?.p2pAuthKey
+        if (key == null) {
+            TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — session holds no handshake key")
+            return false
+        }
+        if (OffGridResumeAuth.FLAG !in flags) {
+            TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — receiver can't prove the session key (update it, or re-scan)")
+            return false
+        }
+        val ok = try {
+            OffGridResumeAuth.challenge(inputStream, socket.getOutputStream(), key, sessionId)
+        } catch (_: Exception) { false }
+        if (!ok) TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — resume proof failed")
+        return ok
+    }
+
     private fun performAcceptAuth2Challenge(context: Context, socket: Socket, inputStream: java.io.InputStream, senderIp: String): Boolean {
         val decision = DowngradePolicy.decide(
             peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2Accept == true,
