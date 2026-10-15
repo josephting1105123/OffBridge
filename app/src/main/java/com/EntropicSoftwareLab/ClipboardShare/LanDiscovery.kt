@@ -69,6 +69,9 @@ object DiscoveryPolicy {
 }
 
 object LanDiscovery {
+    private const val RESUME_NOTIFY_MIN_INTERVAL_MS = 30_000L
+    @Volatile private var lastResumeNotifyAt = 0L
+
     @Volatile private var discoveryWakeUntilMs: Long = 0L
 
     fun wakeDiscovery() {
@@ -232,7 +235,13 @@ object LanDiscovery {
                             }
                         } else if (msg.startsWith("FILEBRIDGE_RESUME_REQUEST|")) {
                             val parts = msg.split("|")
-                            if (parts.size >= 2) {
+                            // UDP is unauthenticated: only a paired peer's nudge may raise this
+                            // high-priority, sound-and-vibrate notification, and at most once per
+                            // RESUME_NOTIFY_MIN_INTERVAL_MS, so a LAN host can't use it as a buzzer.
+                            val now = System.currentTimeMillis()
+                            if (parts.size >= 2 && SecurityVault.getKeyForNode(context, senderIp) != null &&
+                                now - lastResumeNotifyAt >= RESUME_NOTIFY_MIN_INTERVAL_MS) {
+                                lastResumeNotifyAt = now
                                 val targetSessionId = parts[1]
                                 val resumeIntent = Intent(context, MainActivity::class.java).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)

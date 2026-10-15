@@ -203,6 +203,8 @@ class ClipboardAppController {
      */
     private val updateCheckInProgress = java.util.concurrent.atomic.AtomicBoolean(false)
 
+    @Volatile private var lastResumeNotifyAt = 0L
+
     // Daemons
     private val transferDaemon = TransferDaemon(
         deviceNameProvider = { SecurityVault.getDeviceName() },
@@ -210,11 +212,17 @@ class ClipboardAppController {
         // reconnect; previously unhandled here, so an Android→Windows resume looked "sent" on the
         // Android side but silently vanished. See requestPeerResumeOutgoing for the mirror (Windows
         // sending the same nudge when Windows is the outgoing side).
-        onResumeRequested = { _, _ ->
-            SystemTrayManager.showNotification(
-                "Resume Request",
-                "A peer is requesting to resume a transfer. Open OffBridge to continue."
-            )
+        // UDP is unauthenticated, so only a paired peer's nudge raises the tray toast, and at most
+        // once per 30 s, so a LAN host can't spam notifications with forged packets.
+        onResumeRequested = { _, fromIp ->
+            val now = System.currentTimeMillis()
+            if (SecurityVault.getAesKey(fromIp) != null && now - lastResumeNotifyAt >= 30_000L) {
+                lastResumeNotifyAt = now
+                SystemTrayManager.showNotification(
+                    "Resume Request",
+                    "A peer is requesting to resume a transfer. Open OffBridge to continue."
+                )
+            }
         }
     )
     

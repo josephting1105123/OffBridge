@@ -11,8 +11,8 @@ import java.time.Duration
 
 /**
  * Downloads and launches an update installer entirely in-app — no browser, no leaving the Updates
- * page. No SHA-256 pinning (see the plan's explicit scope decision): trust is HTTPS + the GitHub
- * account, same level as today's manual download from the release page.
+ * page. Trust is HTTPS to GitHub's hosts plus a SHA-256 match against the checksum published in the
+ * code repo ([PublishedChecksum]), checked before the installer is launched.
  */
 object UpdateInstaller {
     // The download URL comes from a parsed GitHub API response (UpdateChecker) — restrict it to
@@ -106,6 +106,14 @@ object UpdateInstaller {
             if (expectedLength >= 0 && target.length() != expectedLength) {
                 target.delete()
                 throw IOException("Downloaded file size (${target.length()}) did not match Content-Length ($expectedLength)")
+            }
+            // The installer runs elevated, so it must match the SHA-256 published from the code repo
+            // before it's ever launched. Any doubt (no hash yet, mismatch, fetch failure) deletes it.
+            try {
+                PublishedChecksum.verify(target, targetVersion)
+            } catch (e: Exception) {
+                target.delete()
+                throw e
             }
             return target
         }
