@@ -285,7 +285,9 @@ English (en)
   "update_failed_rate_limited_hint": "GitHub is limiting checks from this network. Try again in a few minutes.",
   "update_failed_server": "The update server returned an error",
   "update_failed_server_hint": "Nothing is wrong with this device. Try again shortly.",
-  "update_failed_release_hint": "The latest release couldn't be read. Download from the website instead."
+  "update_failed_release_hint": "The latest release couldn't be read. Download from the website instead.",
+  "update_failed_unverified": "Couldn't verify this update",
+  "update_failed_unverified_hint": "The installer couldn't be matched to the checksum published on offbridge.app, so it wasn't run. Try again later, or download from the website."
 }
 
 Simplified Chinese (zh-CN)
@@ -575,7 +577,9 @@ Simplified Chinese (zh-CN)
   "update_failed_rate_limited_hint": "GitHub 正在限制来自此网络的检查请求。请几分钟后再试。",
   "update_failed_server": "更新服务器返回了错误",
   "update_failed_server_hint": "这不是本机的问题，请稍后重试。",
-  "update_failed_release_hint": "无法读取最新版本信息。请改从官网下载。"
+  "update_failed_release_hint": "无法读取最新版本信息。请改从官网下载。",
+  "update_failed_unverified": "无法验证此更新",
+  "update_failed_unverified_hint": "安装程序无法与 offbridge.app 上公布的校验值匹配，因此未运行。请稍后再试，或从官网下载。"
 }
 
 Traditional Chinese (zh-TW)
@@ -865,7 +869,9 @@ Traditional Chinese (zh-TW)
   "update_failed_rate_limited_hint": "GitHub 正在限制來自此網路的檢查要求。請幾分鐘後再試。",
   "update_failed_server": "更新伺服器回傳了錯誤",
   "update_failed_server_hint": "這不是本機的問題，請稍後重試。",
-  "update_failed_release_hint": "無法讀取最新版本資訊。請改從官網下載。"
+  "update_failed_release_hint": "無法讀取最新版本資訊。請改從官網下載。",
+  "update_failed_unverified": "無法驗證此更新",
+  "update_failed_unverified_hint": "安裝程式無法與 offbridge.app 上公布的校驗值相符，因此未執行。請稍後再試，或從官網下載。"
 }
 
 Spanish (es)
@@ -1155,7 +1161,9 @@ Spanish (es)
   "update_failed_rate_limited_hint": "GitHub está limitando las comprobaciones desde esta red. Inténtalo de nuevo en unos minutos.",
   "update_failed_server": "El servidor de actualizaciones devolvió un error",
   "update_failed_server_hint": "No hay ningún problema con este dispositivo. Vuelve a intentarlo en breve.",
-  "update_failed_release_hint": "No se pudo leer la última versión. Descárgala desde el sitio web."
+  "update_failed_release_hint": "No se pudo leer la última versión. Descárgala desde el sitio web.",
+  "update_failed_unverified": "No se pudo verificar esta actualización",
+  "update_failed_unverified_hint": "El instalador no coincide con la suma de comprobación publicada en offbridge.app, así que no se ejecutó. Vuelve a intentarlo más tarde o descárgalo desde el sitio web."
 }
 
 French (fr)
@@ -1445,7 +1453,9 @@ French (fr)
   "update_failed_rate_limited_hint": "GitHub limite les requêtes provenant de ce réseau. Réessayez dans quelques minutes.",
   "update_failed_server": "Le serveur de mise à jour a renvoyé une erreur",
   "update_failed_server_hint": "Cet appareil n'est pas en cause. Réessayez dans un instant.",
-  "update_failed_release_hint": "La dernière version n'a pas pu être lue. Téléchargez-la depuis le site web."
+  "update_failed_release_hint": "La dernière version n'a pas pu être lue. Téléchargez-la depuis le site web.",
+  "update_failed_unverified": "Impossible de vérifier cette mise à jour",
+  "update_failed_unverified_hint": "Le programme d'installation ne correspond pas à la somme de contrôle publiée sur offbridge.app ; il n'a donc pas été lancé. Réessayez plus tard ou téléchargez-le depuis le site web."
 }
 
 Japanese (ja)
@@ -1735,7 +1745,9 @@ Japanese (ja)
   "update_failed_rate_limited_hint": "GitHub がこのネットワークからの確認を制限しています。数分後にもう一度お試しください。",
   "update_failed_server": "アップデートサーバーがエラーを返しました",
   "update_failed_server_hint": "この端末に問題はありません。しばらくしてからお試しください。",
-  "update_failed_release_hint": "最新リリースを読み取れませんでした。ウェブサイトからダウンロードしてください。"
+  "update_failed_release_hint": "最新リリースを読み取れませんでした。ウェブサイトからダウンロードしてください。",
+  "update_failed_unverified": "この更新を検証できませんでした",
+  "update_failed_unverified_hint": "インストーラーが offbridge.app で公開されているチェックサムと一致しなかったため、実行しませんでした。しばらくしてから再試行するか、ウェブサイトからダウンロードしてください。"
 }
 
 German (de)
@@ -2025,7 +2037,9 @@ German (de)
   "update_failed_rate_limited_hint": "GitHub begrenzt Anfragen aus diesem Netzwerk. In einigen Minuten erneut versuchen.",
   "update_failed_server": "Der Update-Server hat einen Fehler zurückgegeben",
   "update_failed_server_hint": "Es liegt nicht an diesem Gerät. In Kürze erneut versuchen.",
-  "update_failed_release_hint": "Die neueste Version konnte nicht gelesen werden. Bitte von der Website herunterladen."
+  "update_failed_release_hint": "Die neueste Version konnte nicht gelesen werden. Bitte von der Website herunterladen.",
+  "update_failed_unverified": "Dieses Update konnte nicht überprüft werden",
+  "update_failed_unverified_hint": "Das Installationsprogramm stimmte nicht mit der auf offbridge.app veröffentlichten Prüfsumme überein und wurde deshalb nicht gestartet. Später erneut versuchen oder von der Website herunterladen."
 }
 
 Portuguese (pt)
@@ -2315,7 +2329,9 @@ Portuguese (pt)
   "update_failed_rate_limited_hint": "O GitHub está limitando as verificações desta rede. Tente novamente em alguns minutos.",
   "update_failed_server": "O servidor de atualizações retornou um erro",
   "update_failed_server_hint": "Não há nada de errado com este dispositivo. Tente novamente em breve.",
-  "update_failed_release_hint": "Não foi possível ler a versão mais recente. Baixe pelo site."
+  "update_failed_release_hint": "Não foi possível ler a versão mais recente. Baixe pelo site.",
+  "update_failed_unverified": "Não foi possível verificar esta atualização",
+  "update_failed_unverified_hint": "O instalador não corresponde à soma de verificação publicada em offbridge.app, por isso não foi executado. Tente novamente mais tarde ou baixe pelo site."
 }
 
 Indonesian (id)
@@ -2605,7 +2621,9 @@ Indonesian (id)
   "update_failed_rate_limited_hint": "GitHub sedang membatasi permintaan dari jaringan ini. Coba lagi beberapa menit lagi.",
   "update_failed_server": "Server pembaruan mengembalikan kesalahan",
   "update_failed_server_hint": "Tidak ada masalah dengan perangkat ini. Coba lagi sebentar lagi.",
-  "update_failed_release_hint": "Rilis terbaru tidak dapat dibaca. Unduh dari situs web saja."
+  "update_failed_release_hint": "Rilis terbaru tidak dapat dibaca. Unduh dari situs web saja.",
+  "update_failed_unverified": "Pembaruan ini tidak dapat diverifikasi",
+  "update_failed_unverified_hint": "Penginstal tidak cocok dengan checksum yang diterbitkan di offbridge.app, jadi tidak dijalankan. Coba lagi nanti, atau unduh dari situs web."
 }
 
 Russian (ru)
@@ -2895,5 +2913,7 @@ Russian (ru)
   "update_failed_rate_limited_hint": "GitHub ограничивает запросы из этой сети. Повторите попытку через несколько минут.",
   "update_failed_server": "Сервер обновлений вернул ошибку",
   "update_failed_server_hint": "С этим устройством всё в порядке. Повторите попытку чуть позже.",
-  "update_failed_release_hint": "Не удалось прочитать сведения о последней версии. Скачайте её с сайта."
+  "update_failed_release_hint": "Не удалось прочитать сведения о последней версии. Скачайте её с сайта.",
+  "update_failed_unverified": "Не удалось проверить это обновление",
+  "update_failed_unverified_hint": "Установщик не совпал с контрольной суммой, опубликованной на offbridge.app, поэтому он не был запущен. Повторите попытку позже или скачайте его с сайта."
 }

@@ -743,13 +743,14 @@ class ClipboardAppController {
                 e.printStackTrace()
                 // A failed DOWNLOAD, not a failed check — classify it so the card doesn't claim the
                 // release was unreadable. A transport failure is the user's network; anything else
-                // (bad status, disk, launch) is on our side and not something retrying will fix.
+                // (bad status, disk, launch) is on our side and not something retrying will fix. A
+                // checksum failure gets its own card: the installer was refused, not unreachable.
                 _updateStatus.value = UpdateStatus.CheckFailed(
                     e.message ?: e.javaClass.simpleName,
-                    if (e is java.io.IOException) {
-                        UpdateStatus.FailureKind.UNREACHABLE
-                    } else {
-                        UpdateStatus.FailureKind.HTTP_ERROR
+                    when (e) {
+                        is UpdateInstaller.InstallerVerificationException -> UpdateStatus.FailureKind.UNVERIFIED
+                        is java.io.IOException -> UpdateStatus.FailureKind.UNREACHABLE
+                        else -> UpdateStatus.FailureKind.HTTP_ERROR
                     },
                 )
             }

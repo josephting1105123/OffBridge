@@ -22,3 +22,9 @@
 
 /js/*
   Cache-Control: public, max-age=86400
+
+# Installer checksums the Windows in-app updater reads before running an update (UpdateInstaller).
+# One immutable file per version, written by the commit-windows-version release skill.
+/checksums/*
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=300

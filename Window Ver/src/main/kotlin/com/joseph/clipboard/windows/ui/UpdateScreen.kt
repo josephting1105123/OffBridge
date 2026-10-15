@@ -324,6 +324,9 @@ private fun UpdateFailedCard(
         UpdateStatus.FailureKind.BAD_RESPONSE ->
             tr("update_check_failed", "Couldn't check for updates") to
                 tr("update_failed_release_hint", "The latest release couldn't be read. Download from the website instead.")
+        UpdateStatus.FailureKind.UNVERIFIED ->
+            tr("update_failed_unverified", "Couldn't verify this update") to
+                tr("update_failed_unverified_hint", "The installer couldn't be matched to the checksum published on offbridge.app, so it wasn't run. Try again later, or download from the website.")
     }
     GlassCard(modifier = Modifier.widthIn(max = 360.dp), contentPadding = PaddingValues(24.dp)) {
         Column(

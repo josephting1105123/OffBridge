@@ -39,5 +39,9 @@ sealed class UpdateStatus {
 
         /** Reached and answered, but the payload wasn't a usable release (no tag, no installer). */
         BAD_RESPONSE,
+
+        /** The downloaded installer couldn't be matched to the checksum published on the website
+         *  (missing or different), so it was deleted instead of run. */
+        UNVERIFIED,
     }
 }
