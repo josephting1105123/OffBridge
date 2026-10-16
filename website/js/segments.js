@@ -13,7 +13,9 @@
   var gate = window.matchMedia("(min-width: 1000px) and (hover: hover) and (pointer: fine)");
   var reduceQ = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  var GAP_MS = 160;      // a pause this long ends one wheel gesture (incl. trackpad momentum)
+  var GAP_MS = 160;      // a pause this long ends one wheel gesture
+  var LOCK_MS = 400;     // after a glide, ignore leftover momentum at most this long
+  var MOMENTUM_WEIGHT = 0.35; // momentum that ran into an edge pulls at this strength
   var RELEASE_MS = 260;  // no input for this long and an unfinished pull lets go
   var IDLE_MS = 180;     // scroll idle time before straddle-settling
 
@@ -25,8 +27,9 @@
   var pull = 0;          // >0 toward the next segment, <0 toward the previous one
   var pullFrom = -1;     // segment the pull started in
   var lastWheel = 0;
-  var arrivedMoving = false; // gesture ran into the edge mid-scroll; it must pause first
-  var lockUntilGap = false;  // swallow the tail of the gesture that just moved us
+  var lastAbs = 0;           // size of the previous wheel delta
+  var arrivedMoving = false; // gesture ran into the edge mid-scroll (likely momentum)
+  var lockUntil = 0;         // swallow the tail of the gesture that just moved us
   var animating = false;
   var releaseTimer = 0;
   var idleTimer = 0;
@@ -34,7 +37,7 @@
   var pill, pillFill, pillLabel;
 
   function threshold() {
-    return Math.max(320, Math.min(600, window.innerHeight * 0.6));
+    return Math.max(100, Math.min(160, window.innerHeight * 0.15));
   }
 
   function padTop() {
@@ -133,9 +136,11 @@
   function goTo(i, fromBelow) {
     i = Math.max(0, Math.min(scenes.length - 1, i));
     resetPull();
-    lockUntilGap = true;
+    lockUntil = Infinity;
     // Moving up lands on the end of the previous segment, so reading stays continuous.
-    scrollToY(fromBelow ? ends[i] : tops[i], true);
+    scrollToY(fromBelow ? ends[i] : tops[i], true, function () {
+      lockUntil = performance.now() + LOCK_MS;
+    });
   }
 
   function scrollableAncestor(el, dy) {
@@ -163,15 +168,16 @@
     if (!dy || scrollableAncestor(e.target, dy)) return;
 
     var now = performance.now();
-    var newGesture = now - lastWheel > GAP_MS;
+    var abs = Math.abs(dy);
+    // A pause, or input speeding up again, means fresh intent. Touchpad momentum
+    // only ever slows down, and a new swipe often starts before it ends.
+    var fresh = now - lastWheel > GAP_MS || (abs > 4 && abs > lastAbs * 1.3);
     lastWheel = now;
-    // The lock outlives the glide: a pause mid-animation is not the end of the gesture.
-    if (newGesture && !animating) {
-      lockUntilGap = false;
-      arrivedMoving = false;
-    }
+    lastAbs = abs;
+    if (fresh) arrivedMoving = false;
+    if (fresh && !animating) lockUntil = 0;
 
-    if (animating || lockUntilGap) {
+    if (animating || now < lockUntil) {
       e.preventDefault();
       return;
     }
@@ -192,12 +198,12 @@
     e.preventDefault();
     var overshoot = down ? y + dy - edge : edge - (y + dy);
     if (Math.abs(y - edge) > 0.5) {
-      // The gesture ran into the edge while moving; hold it there until it pauses.
+      // The gesture ran into the edge while moving: stop at the edge, and let
+      // the rest of this stream pull only weakly.
       window.scrollTo({ top: edge, behavior: "instant" });
-      if (!newGesture) arrivedMoving = true;
-      return;
+      if (!fresh) arrivedMoving = true;
     }
-    if (arrivedMoving) return;
+    if (arrivedMoving) overshoot *= MOMENTUM_WEIGHT;
 
     if (pull !== 0 && (pull > 0) !== down) resetPull();
     if (pull === 0) pullFrom = i;
