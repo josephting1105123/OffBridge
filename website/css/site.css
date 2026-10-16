@@ -43,9 +43,7 @@ html {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  background: radial-gradient(120% 90% at 50% 0%, rgba(45, 212, 191, 0.06), transparent 55%),
-    radial-gradient(90% 70% at 80% 100%, rgba(34, 197, 94, 0.05), transparent 60%),
-    var(--bg-deep);
+  background: var(--bg-deep);
 }
 
 /* --- Top bar ------------------------------------------------------------- */
@@ -259,112 +257,265 @@ html[data-os="android"] .osswitch::before {
   max-width: 36rem;
 }
 
+/* --- Stages: each app screen is drawn at its real dp size inside a .fit
+   box and scaled as a whole (js/site.js sets --k), so a narrow column
+   shrinks the screen instead of squashing its layout. ------------------- */
 .stage {
   display: grid;
-  place-items: center;
+  justify-items: center;
   min-width: 0;
 }
 
+.stage > .fit--win {
+  max-width: 980px;
+}
+
+.stage > .fit--droid {
+  max-width: 340px;
+}
+
+/* Windows screens are landscape, so in Windows mode the copy sits above a
+   full-width window. Android keeps the phone beside the copy. */
 @media (min-width: 1000px) {
-  .scene__grid {
-    grid-template-columns: minmax(0, 1fr) auto;
+  html[data-os="windows"] .scene__copy {
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    column-gap: clamp(2.5rem, 1rem + 4vw, 6rem);
+    align-items: start;
   }
-  .scene__grid--flip {
-    grid-template-columns: auto minmax(0, 1fr);
+  html[data-os="windows"] .scene__copy > h2 {
+    grid-row: 1 / span 12;
   }
-  .scene__grid--flip .stage {
+  html[data-os="windows"] .scene__copy > :not(h2) {
+    grid-column: 2;
+  }
+  html[data-os="windows"] .scene__copy > .lead {
+    margin-top: 6px;
+  }
+  html[data-os="android"] .scene__grid {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+  html[data-os="android"] .scene__grid--flip {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+  html[data-os="android"] .scene__grid--flip .stage {
     order: -1;
   }
-  .scene__grid--flip .scene__copy {
+  html[data-os="android"] .scene__grid--flip .scene__copy {
     justify-self: end;
   }
 }
 
-/* --- Hero: both devices together, the picked one in front --------------- */
+/* --- Hero: the headline, then the desk with both devices ----------------- */
 .scene--hero {
-  padding-top: clamp(2.5rem, 2rem + 3vw, 5rem);
+  padding-top: clamp(2rem, 1rem + 3vw, 4rem);
+  padding-bottom: clamp(3rem, 2rem + 4vw, 6rem);
 }
 
-/* Two devices need more room than one: the hero only goes side by side once
-   the copy column can keep a readable measure next to them. */
-@media (min-width: 1000px) and (max-width: 1239px) {
-  .scene--hero .scene__grid {
-    grid-template-columns: 1fr;
+.hero {
+  max-width: var(--container-wide);
+}
+
+.hero__copy {
+  display: grid;
+  gap: 28px clamp(2.5rem, 1rem + 4vw, 6rem);
+  align-items: start;
+}
+
+.scene--hero h1 {
+  font-size: clamp(2.75rem, 1.4rem + 4vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.hero__side .lead {
+  margin-top: 0;
+}
+
+.hero__main .scene__cta {
+  margin-top: 32px;
+}
+
+@media (min-width: 1000px) {
+  .hero__copy {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
   }
-  .scene--hero .scene__copy {
-    max-width: 40rem;
+  .hero__side {
+    padding-top: 10px;
   }
 }
 
-.duo {
-  position: relative;
+/* The try-it line sits between the headline and the desk, ruled off like
+   a caption, so the instruction is right above the screens it drives. */
+.trycopy {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hairline);
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
 }
 
-.duo > .frame {
-  flex: none;
-  transition: filter 300ms var(--ease);
+.trycopy .snips {
+  margin-top: 0;
 }
 
-html[data-os="windows"] .duo__win,
-html[data-os="android"] .duo__droid {
+.trycopy__note {
+  flex-basis: 100%;
+}
+
+.trycopy__how {
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.trycopy__note {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: var(--text-tertiary);
+  max-width: 34rem;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 6px 2px;
+  border: 1px solid var(--divider);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  font: 600 0.82em/1.3 var(--f-num);
+  text-align: center;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.show-touch {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .show-touch {
+    display: inline;
+  }
+  .hide-touch {
+    display: none;
+  }
+}
+
+.snips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* A snippet reads as quoted text you can lift, not as a button. */
+.snip {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: none;
+  border: 0;
+  padding: 2px 2px 3px;
+  cursor: copy;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent-text) 55%, transparent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+  transition: color var(--dur-fast), text-decoration-color var(--dur-fast);
+}
+
+.snip::before {
+  content: "\201C";
+  color: var(--text-tertiary);
+}
+
+.snip::after {
+  content: "\201D";
+  color: var(--text-tertiary);
+}
+
+.snip:hover,
+.snip:focus-visible {
+  color: var(--accent-text);
+  text-decoration-color: currentColor;
+}
+
+.snip.is-copied {
+  color: var(--accent-text);
+}
+
+.desk {
+  position: relative;
+  margin-top: clamp(4rem, 2.5rem + 3vw, 5.5rem);
+  padding-right: 22%;
+  margin-bottom: 36px;
+}
+
+.desk__phone {
+  position: absolute !important;
+  right: 0;
+  bottom: -36px;
+  width: 27%;
+}
+
+.desk > .fit {
+  transition: filter 400ms var(--ease);
+}
+
+.desk > .fit > .frame {
+  transition: box-shadow 400ms var(--ease);
+}
+
+html[data-os="windows"] .desk__win,
+html[data-os="android"] .desk__phone {
   z-index: 2;
 }
 
-/* The device behind: smaller, pushed back, still legible. */
-html[data-os="windows"] .duo__droid,
-html[data-os="android"] .duo__win {
+html[data-os="windows"] .desk__phone,
+html[data-os="android"] .desk__win {
   z-index: 1;
-  transform: scale(0.84);
-  filter: brightness(0.82) saturate(0.9);
+  filter: brightness(0.8) saturate(0.9);
 }
 
-html[data-os="windows"] .duo__droid {
-  order: 2;
-  margin-left: -80px;
-  transform-origin: bottom left;
-}
-
-html[data-os="android"] .duo__win {
-  order: 2;
-  margin-left: -170px;
-  transform-origin: bottom left;
-}
-
-[data-theme="light"] .duo > .frame {
+[data-theme="light"] .desk > .fit {
   filter: none;
 }
 
+.pushpc {
+  position: absolute;
+  z-index: 3;
+  right: calc(27% + 18px);
+  bottom: 40px;
+}
+
 @media (max-width: 759px) {
-  .duo {
-    display: block;
-    padding-bottom: 40px;
+  .desk {
+    padding-right: 0;
   }
-  .duo > .frame {
-    margin-inline: auto;
+  .desk__phone {
+    position: relative !important;
+    right: auto;
+    bottom: auto;
+    width: 62%;
+    margin: -14% 0 0 auto;
   }
-  html[data-os="windows"] .duo__droid,
-  html[data-os="android"] .duo__win {
-    position: absolute;
-    right: -6px;
-    bottom: 0;
-    margin: 0;
-    z-index: 3;
-    transform: scale(0.42);
-    transform-origin: bottom right;
-    filter: none;
-    box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.8);
+  html[data-os="android"] .desk__phone {
+    width: 80%;
   }
-  html[data-os="android"] .duo__win {
-    width: 500px;
+  .pushpc {
+    left: 0;
+    right: auto;
+    bottom: 24px;
   }
 }
 
-/* The sealed copy in flight between the two devices (js/site.js) */
-.flight {
+/* The copy in flight. It leaves as plain text, travels sealed, and opens
+   on arrival (js/site.js swaps the letters). */
+.packet {
   position: fixed;
   z-index: 50;
   left: 0;
@@ -372,77 +523,46 @@ html[data-os="android"] .duo__win {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: 260px;
+  max-width: 300px;
   padding: 8px 14px 8px 10px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: var(--card);
-  border: 1px solid color-mix(in srgb, var(--accent-text) 50%, transparent);
+  border: 1px solid var(--divider);
   color: var(--text);
   font-size: 15px;
   white-space: nowrap;
   box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.6);
   pointer-events: none;
+  transition: background-color 200ms, border-color 200ms, color 200ms;
 }
 
-.flight span {
+.packet span {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.flight .ic {
+.packet .ic {
   width: 18px;
   height: 18px;
+  flex: none;
+  color: var(--text-tertiary);
+  transition: color 200ms;
+}
+
+.packet.is-sealed {
+  background: color-mix(in srgb, var(--accent) 16%, var(--card));
+  border-color: color-mix(in srgb, var(--accent-text) 60%, transparent);
+}
+
+.packet.is-sealed span {
+  font-family: var(--f-num);
+  font-variant-numeric: tabular-nums;
   color: var(--accent-text);
+  letter-spacing: 0.02em;
 }
 
-.try {
-  margin-top: 32px;
-  padding: 18px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--card) 88%, transparent);
-  border: 1px solid var(--hairline);
-}
-
-.try label {
-  display: block;
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-
-.try__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.try__row .btn {
-  flex: 1 0 auto;
-}
-
-.try input {
-  flex: 999 1 12rem;
-  min-width: 0;
-  height: 48px;
-  padding: 0 14px;
-  border-radius: 12px;
-  border: 1px solid var(--divider);
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 1.05rem;
-  caret-color: var(--accent-text);
-}
-
-.try input:focus-visible {
-  outline: 2px solid var(--accent-text);
-  outline-offset: 1px;
-  border-color: transparent;
-}
-
-.try__note {
-  margin-top: 10px;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+.packet.is-sealed .ic {
+  color: var(--accent-text);
 }
 
 .scene__cta {
@@ -792,14 +912,11 @@ html[data-os="android"] .srow__chev {
   ::view-transition-new(*) {
     animation: none !important;
   }
-  .duo > .frame,
+  .desk > .fit,
+  .desk > .fit > .frame,
   .osswitch::before {
     transition: none;
   }
-}
-
-.scene--hero .scene__grid {
-  max-width: var(--container-wide);
 }
 
 /* Neutral elevation instead of a green halo */
@@ -838,7 +955,7 @@ html[data-os="android"] .srow__chev {
 
 .topbar__subin a {
   color: var(--text-secondary);
-  font-size: .95rem;
+  font-size: clamp(.85rem, .8rem + .3vw, .95rem);
 }
 
 .topbar__subin a[href="#download"] {

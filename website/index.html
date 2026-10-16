@@ -107,6 +107,7 @@
         os = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || "") ? "android" : "windows";
       }
       document.documentElement.setAttribute("data-os", os);
+      document.documentElement.classList.add("js");
     })();
   </script>
 
@@ -153,6 +154,7 @@
     <symbol id="m-public" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></symbol>
     <symbol id="m-upload" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7z"/></symbol>
     <symbol id="m-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></symbol>
+    <symbol id="m-power" viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z"/></symbol>
     <symbol id="m-history" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></symbol>
     <symbol id="m-file" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></symbol>
     <symbol id="m-folder" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></symbol>
@@ -231,100 +233,115 @@
 
     <!-- =============================== HERO =============================== -->
     <section class="scene scene--hero" aria-labelledby="hero-title">
-      <div class="container container--wide scene__grid">
-        <div class="scene__copy">
-          <h1 id="hero-title">Your clipboard and files, off the grid.</h1>
-          <p class="lead">
-            OffBridge moves text and files between your Android phone and Windows PC,
-            device to device. Pair once with a QR code or a 6-digit code, then send over
-            your own Wi-Fi or with no network at all. Everything is sealed with AES-256,
-            and nothing touches a server.
-          </p>
-
-          <form class="try" data-try autocomplete="off">
-            <label for="try-in">
-              <span data-for="windows">Copy something on the PC</span>
-              <span data-for="android">Copy something on the phone</span>
-            </label>
-            <div class="try__row">
-              <input id="try-in" name="t" type="text" maxlength="60" value="Table for two at 7:30" spellcheck="false" />
-              <button class="btn btn--primary" type="submit">
-                <svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg>
-                <span data-for="windows">Copy</span><span data-for="android">Push to PC</span>
-              </button>
+      <div class="container container--wide hero">
+        <div class="hero__copy">
+          <div class="hero__main">
+            <h1 id="hero-title">Your clipboard and files, off the grid.</h1>
+            <p class="scene__cta">
+              <a class="btn btn--primary" href="#download">
+                <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
+                <span data-for="windows">Get it for Windows</span><span data-for="android">Get it for Android</span>
+              </a>
+              <span class="scene__meta">Free. No account. Android 10+ and Windows 10/11.</span>
+            </p>
+          </div>
+          <div class="hero__side">
+            <p class="lead">
+              OffBridge moves text and files between your Android phone and Windows PC,
+              device to device. Pair once with a QR code or a 6-digit code, then send over
+              your own Wi-Fi or with no network at all. Everything is sealed with AES-256,
+              and nothing touches a server.
+            </p>
+            <div class="trycopy" data-try>
+              <p class="trycopy__how">
+                <span class="hide-touch">Try it: select any words on this page and press <kbd>Ctrl</kbd>&thinsp;<kbd>C</kbd>.</span>
+                <span class="show-touch">Try it: select any words on this page and tap Copy.</span>
+                Or copy one of these:
+              </p>
+              <div class="snips">
+                <button type="button" class="snip" data-snip>Table for two at 7:30</button>
+                <button type="button" class="snip" data-snip>Platform 9, coach C</button>
+                <button type="button" class="snip" data-snip>Pick up oat milk</button>
+              </div>
+              <p class="trycopy__note" data-for="windows">On Windows, what you copy reaches your paired phone by itself. Your text stays on this page.</p>
+              <p class="trycopy__note" data-for="android">Android doesn't let apps read the clipboard in the background, so the phone sends with one tap: the Push to PC tile, Share &rarr; OffBridge, or opening the app. Your text stays on this page.</p>
+              <p class="visually-hidden" aria-live="polite" data-try-live></p>
             </div>
-            <p class="try__note" data-for="windows">On Windows, what you copy reaches your paired phone by itself.</p>
-            <p class="try__note" data-for="android">Android doesn't let apps read the clipboard in the background, so the phone sends with one tap: the Push to PC tile, Share &rarr; OffBridge, or opening the app.</p>
-            <p class="visually-hidden" aria-live="polite" data-try-live></p>
-          </form>
-
-          <p class="scene__cta">
-            <a class="btn btn--primary" href="#download">
-              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
-              <span data-for="windows">Get it for Windows</span><span data-for="android">Get it for Android</span>
-            </a>
-            <span class="scene__meta">Free. No account. Android 10+ and Windows 10/11.</span>
-          </p>
+          </div>
         </div>
 
-        <div class="duo" data-duo>
+        <div class="desk" data-duo>
           <!-- Windows: Clipboard screen -->
-          <div class="frame win duo__win" style="view-transition-name: hero-win" role="group" aria-label="OffBridge for Windows, Clipboard screen">
-            <div class="win__bar" aria-hidden="true">
-              <span class="win__bar-rail"></span>
-              <span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span>
-            </div>
-            <div class="win__body">
-              <div class="rail">
-                <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
-                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
-                <a href="#top" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
-                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
-                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
+          <div class="fit fit--win fit--hero desk__win">
+            <div class="frame win" style="view-transition-name: hero-win" role="group" aria-label="OffBridge for Windows, Clipboard screen">
+              <div class="win__bar" aria-hidden="true">
+                <span class="win__bar-rail"></span>
+                <span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span>
               </div>
-              <div class="win__page">
-                <div class="w-head">
-                  <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
-                  <span class="w-title">Clipboard (Auto-Sync)</span>
-                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+              <div class="win__body">
+                <div class="rail">
+                  <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                  <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                  <a href="#top" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                  <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                  <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
                 </div>
-                <div class="togrow"><span>Accept Incoming Clipboard</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Accept Incoming Clipboard" data-toggle></button></div>
-                <div class="divider"></div>
-                <p class="sub1" style="margin-bottom:12px">Recent Copies (Tap to copy)</p>
-                <div class="cliplist" data-cliplist="win">
-                  <div class="clip"><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
-                  <div class="clip"><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
-                  <div class="clip"><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                <div class="win__page">
+                  <div class="w-head">
+                    <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
+                    <span class="w-title">Clipboard (Auto-Sync)</span>
+                    <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                  </div>
+                  <div class="togrow"><span>Accept Incoming Clipboard</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Accept Incoming Clipboard" data-toggle></button></div>
+                  <div class="divider"></div>
+                  <p class="sub1" style="margin-bottom:12px">Recent Copies (Tap to copy)</p>
+                  <div class="cliplist" data-cliplist="win">
+                    <div class="clip"><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                    <div class="clip"><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                    <div class="clip"><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Android: Clipboard screen -->
-          <div class="frame droid duo__droid" style="view-transition-name: hero-droid" role="group" aria-label="OffBridge for Android, Clipboard screen">
-            <div class="droid__screen">
-              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
-              <div class="droid__page">
-                <div class="d-head">
-                  <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
-                  <span class="d-title">Clipboard (Auto-Sync)</span>
-                  <button class="m3sw" type="button" role="switch" aria-checked="true" aria-label="Clipboard auto-sync" data-toggle></button>
-                </div>
-                <div class="strip">Auto-sync on, 1 paired</div>
-                <div class="secrow" style="margin-bottom:10px"><span class="sub1">Recent Copies (Tap to view)</span><span class="countpill" data-clipcount>3</span></div>
-                <div class="tray">
-                  <div class="cliplist" data-cliplist="droid">
-                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
-                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
-                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+          <div class="fit fit--droid desk__phone">
+            <div class="frame droid" style="view-transition-name: hero-droid" role="group" aria-label="OffBridge for Android, Clipboard screen">
+              <div class="droid__screen">
+                <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+                <div class="droid__page">
+                  <div class="d-head">
+                    <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
+                    <span class="d-title">Clipboard (Auto-Sync)</span>
+                    <button class="dmt" type="button" role="switch" aria-checked="true" aria-label="Clipboard auto-sync" data-toggle><i></i></button>
+                  </div>
+                  <div class="strip">Auto-sync on, 1 paired</div>
+                  <div class="secrow" style="margin-bottom:10px"><span class="sub1">Recent Copies (Tap to view)</span><span class="countpill" data-clipcount>3</span></div>
+                  <div class="tray">
+                    <div class="cliplist" data-cliplist="droid">
+                      <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                      <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                      <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                    </div>
                   </div>
                 </div>
+                <div class="dnav" aria-hidden="true">
+                  <span><svg class="ic"><use href="#m-send"></use></svg></span>
+                  <span><svg class="ic"><use href="#m-download"></use></svg></span>
+                  <span class="dnav__fab"><svg class="ic"><use href="#m-power"></use></svg></span>
+                  <span class="is-on"><i><svg class="ic"><use href="#m-paste"></use></svg></i>Clipboard</span>
+                  <span><svg class="ic"><use href="#m-link"></use></svg></span>
+                </div>
+                <div class="droid__gesture" aria-hidden="true"></div>
               </div>
-              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
+          <button class="btn btn--primary pushpc" type="button" data-for="android" data-push hidden>
+            <svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg> Push to PC
+          </button>
         </div>
       </div>
     </section>
@@ -358,55 +375,57 @@
 
         <div class="stage">
           <!-- Windows: Send Files -->
-          <div class="frame win" data-for="windows" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Windows, Send Files screen">
-            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
-            <div class="win__body">
-              <div class="rail">
-                <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
-                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
-                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
-                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
-                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
-              </div>
-              <div class="win__page" data-xfer-root="windows">
-                <div class="w-head">
-                  <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
-                  <span class="w-title">Send Files</span>
-                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
-                  <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-history"></use></svg></span>
+          <div class="fit fit--win" data-for="windows">
+            <div class="frame win" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Windows, Send Files screen">
+              <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+              <div class="win__body">
+                <div class="rail">
+                  <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                  <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                  <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                  <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                  <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
                 </div>
-                <div class="w-types">
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
-                </div>
-                <div class="w-selrow">
-                  <span class="sub1">Selected Files</span>
-                  <span class="sizepill num">600.0 MB</span>
-                  <span class="w-check"><i aria-hidden="true"></i>Select All</span>
-                </div>
-                <div class="w-files">
-                  <span class="card w-file"><svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>Holiday_clip</span>
-                </div>
-                <button class="abtn w-sendbtn" type="button" data-x-start>Send</button>
-
-                <div class="w-scrim" data-x-dialog hidden>
-                  <div class="w-dialog" role="dialog" aria-label="Transfer History">
-                    <div class="w-dialog__top">
-                      <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
-                      <span class="w-title">Transfer History</span>
-                      <span class="redcap" aria-hidden="true">Delete</span>
+                <div class="win__page" data-xfer-root="windows">
+                  <div class="w-head">
+                    <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
+                    <span class="w-title">Send Files</span>
+                    <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                    <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-history"></use></svg></span>
+                  </div>
+                  <div class="w-types">
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                  </div>
+                  <div class="w-selrow">
+                    <span class="sub1">Selected Files</span>
+                    <span class="sizepill num">600.0 MB</span>
+                    <span class="w-check"><i aria-hidden="true"></i>Select All</span>
+                  </div>
+                  <div class="w-files">
+                    <span class="card w-file"><svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>Holiday_clip</span>
+                  </div>
+                  <button class="abtn w-sendbtn" type="button" data-x-start>Send</button>
+  
+                  <div class="w-scrim" data-x-dialog hidden>
+                    <div class="w-dialog" role="dialog" aria-label="Transfer History">
+                      <div class="w-dialog__top">
+                        <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                        <span class="w-title">Transfer History</span>
+                        <span class="redcap" aria-hidden="true">Delete</span>
+                      </div>
+                      <div class="xfer-file">
+                        <svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>
+                        <div><div class="sub1">Holiday_clip.mp4</div><div class="cap">To Pixel 10 &bull; <span class="num">16:34</span></div></div>
+                      </div>
+                      <div class="prog"><i data-x-bar></i></div>
+                      <div class="cap num" data-x-pct>0% (0.0 MB / 600.0 MB)</div>
+                      <div class="xfer-status" data-x-status>&#x2195; Transferring</div>
+                      <button class="abtn abtn--red" type="button" data-x-btn style="height:64px">Cancel</button>
                     </div>
-                    <div class="xfer-file">
-                      <svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>
-                      <div><div class="sub1">Holiday_clip.mp4</div><div class="cap">To Pixel 10 &bull; <span class="num">16:34</span></div></div>
-                    </div>
-                    <div class="prog"><i data-x-bar></i></div>
-                    <div class="cap num" data-x-pct>0% (0.0 MB / 600.0 MB)</div>
-                    <div class="xfer-status" data-x-status>&#x2195; Transferring</div>
-                    <button class="abtn abtn--red" type="button" data-x-btn style="height:64px">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -414,38 +433,40 @@
           </div>
 
           <!-- Android: Send Files (Lite) -->
-          <div class="frame droid" data-for="android" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Android, Send Files screen">
-            <div class="droid__screen">
-              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
-              <div class="droid__page" data-xfer-root="android">
-                <div class="d-head">
-                  <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
-                  <span class="d-title">Send Files</span>
-                </div>
-                <div class="d-types">
-                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
-                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg>Media</span>
-                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
-                </div>
-                <div class="secrow" style="margin-bottom:10px"><span class="sub1">Selected Files (1)</span><span class="countpill">600.0 MB</span></div>
-                <div class="tray" style="margin-bottom:16px">
-                  <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg></span><span class="clip__t">Holiday_clip.mp4</span></div>
-                </div>
-                <button class="abtn" type="button" data-x-start style="height:64px;margin-top:auto">Next</button>
-
-                <div class="sheet" data-x-dialog hidden role="dialog" aria-label="Transaction Details">
-                  <div class="sheet__top"><span class="h6">Transaction Details</span><span class="redpill" aria-hidden="true">Delete</span></div>
-                  <div class="cap"><span class="num">Oct 16, 2026 16:34</span> &bull; 1 files (<span class="num">600.0 MB</span>)</div>
-                  <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
-                    <div class="sub1">Holiday_clip.mp4</div>
-                    <div class="prog prog--droid"><i data-x-bar></i></div>
-                    <div class="cap num" data-x-pct>Transferring: 0% (0.0MB / 600.0MB)</div>
+          <div class="fit fit--droid" data-for="android">
+            <div class="frame droid" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Android, Send Files screen">
+              <div class="droid__screen">
+                <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+                <div class="droid__page" data-xfer-root="android">
+                  <div class="d-head">
+                    <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                    <span class="d-title">Send Files</span>
                   </div>
-                  <div class="xfer-status" data-x-status></div>
-                  <button class="abtn abtn--red" type="button" data-x-btn>Cancel</button>
+                  <div class="d-types">
+                    <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                    <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg>Media</span>
+                    <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                  </div>
+                  <div class="secrow" style="margin-bottom:10px"><span class="sub1">Selected Files (1)</span><span class="countpill">600.0 MB</span></div>
+                  <div class="tray" style="margin-bottom:16px">
+                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg></span><span class="clip__t">Holiday_clip.mp4</span></div>
+                  </div>
+                  <button class="abtn" type="button" data-x-start style="height:64px;margin-top:auto">Next</button>
+  
+                  <div class="sheet" data-x-dialog hidden role="dialog" aria-label="Transaction Details">
+                    <div class="sheet__top"><span class="h6">Transaction Details</span><span class="redpill" aria-hidden="true">Delete</span></div>
+                    <div class="cap"><span class="num">Oct 16, 2026 16:34</span> &bull; 1 files (<span class="num">600.0 MB</span>)</div>
+                    <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                      <div class="sub1">Holiday_clip.mp4</div>
+                      <div class="prog prog--droid"><i data-x-bar></i></div>
+                      <div class="cap num" data-x-pct>Transferring: 0% (0.0MB / 600.0MB)</div>
+                    </div>
+                    <div class="xfer-status" data-x-status></div>
+                    <button class="abtn abtn--red" type="button" data-x-btn>Cancel</button>
+                  </div>
                 </div>
+                <div class="droid__gesture" aria-hidden="true"></div>
               </div>
-              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
         </div>
@@ -480,49 +501,51 @@
 
         <div class="stage">
           <!-- Windows: System Status (nav label "Pairing") -->
-          <div class="frame win" data-for="windows" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Windows, System Status screen">
-            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
-            <div class="win__body">
-              <div class="rail">
-                <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
-                <a href="#pair" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
-                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
-                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
-                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
-              </div>
-              <div class="win__page">
-                <div class="w-head" style="padding-top:12px">
-                  <svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg>
-                  <span class="w-title">System Status</span>
-                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+          <div class="fit fit--win" data-for="windows">
+            <div class="frame win" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Windows, System Status screen">
+              <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+              <div class="win__body">
+                <div class="rail">
+                  <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                  <a href="#pair" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                  <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                  <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                  <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
                 </div>
-                <div class="bento3">
-                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg></span><b>Pair</b><span class="cap">with QR</span></div>
-                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg></span><b class="num" data-paircount>1</b><span class="cap">Paired</span></div>
-                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg></span><b style="color:var(--a-gtext)">Active</b><span class="cap">Status</span></div>
-                </div>
-                <div class="field"><span>Device Name:</span>Windows PC</div>
-                <div class="togrow"><span>Discoverable to other devices</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Discoverable to other devices" data-toggle></button></div>
-                <div class="divider" style="margin-top:12px"></div>
-                <div class="secrow"><span class="h6">Connected Devices</span><span class="spin" aria-hidden="true"></span></div>
-                <div class="card devrow">
-                  <svg class="ic" aria-hidden="true"><use href="#m-phone"></use></svg>
-                  <span class="devrow__txt"><span class="sub1">Pixel 10</span><span class="cap">Android</span></span>
-                  <button class="capsule-btn pairbtn" type="button" data-pair-start>Pair</button>
-                </div>
-                <button class="rescan" type="button"><svg class="ic" aria-hidden="true"><use href="#m-refresh"></use></svg>Rescan</button>
-
-                <div class="pair-modal" data-pair-modal hidden>
-                  <div class="pair-card" role="dialog" aria-label="Requesting Pair">
-                    <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
-                    <p class="pair-title">Requesting Pair</p>
-                    <p class="cap" style="font-size:14px">Waiting for Pixel 10 to accept...</p>
-                    <p class="pair-note">Make sure this code matches on both devices</p>
-                    <div class="sas" data-sas></div>
-                    <span class="spin" style="width:32px;height:32px;margin-bottom:12px" aria-hidden="true"></span>
-                    <button class="abtn abtn--muted-red" type="button" data-pair-cancel>Cancel</button>
+                <div class="win__page">
+                  <div class="w-head" style="padding-top:12px">
+                    <svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg>
+                    <span class="w-title">System Status</span>
+                    <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                  </div>
+                  <div class="bento3">
+                    <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg></span><b>Pair</b><span class="cap">with QR</span></div>
+                    <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg></span><b class="num" data-paircount>1</b><span class="cap">Paired</span></div>
+                    <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg></span><b style="color:var(--a-gtext)">Active</b><span class="cap">Status</span></div>
+                  </div>
+                  <div class="field"><span>Device Name:</span>Windows PC</div>
+                  <div class="togrow"><span>Discoverable to other devices</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Discoverable to other devices" data-toggle></button></div>
+                  <div class="divider" style="margin-top:12px"></div>
+                  <div class="secrow"><span class="h6">Connected Devices</span><span class="spin" aria-hidden="true"></span></div>
+                  <div class="card devrow">
+                    <svg class="ic" aria-hidden="true"><use href="#m-phone"></use></svg>
+                    <span class="devrow__txt"><span class="sub1">Pixel 10</span><span class="cap">Android</span></span>
+                    <button class="capsule-btn pairbtn" type="button" data-pair-start>Pair</button>
+                  </div>
+                  <button class="rescan" type="button"><svg class="ic" aria-hidden="true"><use href="#m-refresh"></use></svg>Rescan</button>
+  
+                  <div class="pair-modal" data-pair-modal hidden>
+                    <div class="pair-card" role="dialog" aria-label="Requesting Pair">
+                      <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
+                      <p class="pair-title">Requesting Pair</p>
+                      <p class="cap" style="font-size:14px">Waiting for Pixel 10 to accept...</p>
+                      <p class="pair-note">Make sure this code matches on both devices</p>
+                      <div class="sas" data-sas></div>
+                      <span class="spin" style="width:32px;height:32px;margin-bottom:12px" aria-hidden="true"></span>
+                      <button class="abtn abtn--muted-red" type="button" data-pair-cancel>Cancel</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -530,28 +553,30 @@
           </div>
 
           <!-- Android: Pairing Request (XML screen, Plex Sans) -->
-          <div class="frame droid" data-for="android" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Android, Pairing Request screen">
-            <div class="droid__screen">
-              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
-              <div class="droid__page">
-                <div class="d-pair" data-dpair="ask">
-                  <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
-                  <p class="pair-title">Pairing Request</p>
-                  <p class="pair-from">From: Windows PC</p>
-                  <p class="pair-note">Make sure this code matches on both devices</p>
-                  <div class="sas" data-sas></div>
-                  <div class="btns">
-                    <button class="abtn" type="button" data-dpair-accept>Accept</button>
-                    <button class="abtn abtn--decline" type="button" data-dpair-decline>Decline</button>
+          <div class="fit fit--droid" data-for="android">
+            <div class="frame droid" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Android, Pairing Request screen">
+              <div class="droid__screen">
+                <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+                <div class="droid__page">
+                  <div class="d-pair" data-dpair="ask">
+                    <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
+                    <p class="pair-title">Pairing Request</p>
+                    <p class="pair-from">From: Windows PC</p>
+                    <p class="pair-note">Make sure this code matches on both devices</p>
+                    <div class="sas" data-sas></div>
+                    <div class="btns">
+                      <button class="abtn" type="button" data-dpair-accept>Accept</button>
+                      <button class="abtn abtn--decline" type="button" data-dpair-decline>Decline</button>
+                    </div>
+                  </div>
+                  <div class="okstate" data-dpair="ok" hidden>
+                    <svg class="ic" aria-hidden="true"><use href="#m-check-circle"></use></svg>
+                    <p class="h6">Paired with Windows PC</p>
+                    <p class="cap" style="font-size:14px">You can now send files and share the clipboard with it.</p>
                   </div>
                 </div>
-                <div class="okstate" data-dpair="ok" hidden>
-                  <svg class="ic" aria-hidden="true"><use href="#m-check-circle"></use></svg>
-                  <p class="h6">Paired with Windows PC</p>
-                  <p class="cap" style="font-size:14px">You can now send files and share the clipboard with it.</p>
-                </div>
+                <div class="droid__gesture" aria-hidden="true"></div>
               </div>
-              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
         </div>
@@ -579,41 +604,43 @@
 
         <div class="stage">
           <!-- Windows: Send Via -> Send via QR -->
-          <div class="frame win" data-for="windows" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Windows, Send Via dialog">
-            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
-            <div class="win__body">
-              <div class="rail">
-                <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
-                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
-                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
-                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
-                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
-                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
-              </div>
-              <div class="win__page">
-                <div class="w-head">
-                  <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
-                  <span class="w-title">Send Files</span>
-                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+          <div class="fit fit--win" data-for="windows">
+            <div class="frame win" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Windows, Send Via dialog">
+              <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+              <div class="win__body">
+                <div class="rail">
+                  <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                  <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                  <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                  <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                  <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                  <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
                 </div>
-                <div class="w-types">
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
-                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
-                </div>
-                <div class="w-scrim" style="animation:none">
-                  <div class="w-dialog" role="dialog" aria-label="Send Via" data-off="via" style="align-items:center;text-align:center">
-                    <p style="font-size:18px;font-weight:700">Send Via</p>
-                    <p class="cap"><span class="num">600.0 MB</span> of files selected</p>
-                    <span class="abtn abtn--plain">Connected Devices</span>
-                    <button class="abtn abtn--plain" type="button" data-off-qr>QR</button>
-                    <p class="cap" style="font-size:11px">QR shows a code for a nearby Android phone to scan and receive over your local network.</p>
+                <div class="win__page">
+                  <div class="w-head">
+                    <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
+                    <span class="w-title">Send Files</span>
+                    <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
                   </div>
-                  <div class="w-dialog" role="dialog" aria-label="Send via QR" data-off="qr" hidden style="align-items:center;text-align:center">
-                    <p style="font-size:18px;font-weight:700">Send via QR</p>
-                    <span class="qr" data-qr aria-hidden="true"></span>
-                    <button class="abtn" type="button" data-off-back style="height:48px">Done</button>
+                  <div class="w-types">
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
+                    <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                  </div>
+                  <div class="w-scrim" style="animation:none">
+                    <div class="w-dialog" role="dialog" aria-label="Send Via" data-off="via" style="align-items:center;text-align:center">
+                      <p style="font-size:18px;font-weight:700">Send Via</p>
+                      <p class="cap"><span class="num">600.0 MB</span> of files selected</p>
+                      <span class="abtn abtn--plain">Connected Devices</span>
+                      <button class="abtn abtn--plain" type="button" data-off-qr>QR</button>
+                      <p class="cap" style="font-size:11px">QR shows a code for a nearby Android phone to scan and receive over your local network.</p>
+                    </div>
+                    <div class="w-dialog" role="dialog" aria-label="Send via QR" data-off="qr" hidden style="align-items:center;text-align:center">
+                      <p style="font-size:18px;font-weight:700">Send via QR</p>
+                      <span class="qr" data-qr aria-hidden="true"></span>
+                      <button class="abtn" type="button" data-off-back style="height:48px">Done</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -621,39 +648,41 @@
           </div>
 
           <!-- Android: network choice -> Send via NFC / QR -->
-          <div class="frame droid" data-for="android" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Android, choose the receiving network">
-            <div class="droid__screen">
-              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
-              <div class="droid__page" data-off="net">
-                <div class="d-head">
-                  <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
-                  <span class="d-title">Send Files</span>
+          <div class="fit fit--droid" data-for="android">
+            <div class="frame droid" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Android, choose the receiving network">
+              <div class="droid__screen">
+                <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+                <div class="droid__page" data-off="net">
+                  <div class="d-head">
+                    <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                    <span class="d-title">Send Files</span>
+                  </div>
+                  <button class="netopt" type="button" aria-pressed="false" data-net="same"><svg class="ic" aria-hidden="true"><use href="#m-wifi"></use></svg>Receiving Device on Same Network</button>
+                  <p class="or">or</p>
+                  <button class="netopt" type="button" aria-pressed="true" data-net="diff"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg>Receiving Device on Different Network</button>
+                  <button class="abtn" type="button" data-net-next style="height:64px;margin-top:auto">Next</button>
                 </div>
-                <button class="netopt" type="button" aria-pressed="false" data-net="same"><svg class="ic" aria-hidden="true"><use href="#m-wifi"></use></svg>Receiving Device on Same Network</button>
-                <p class="or">or</p>
-                <button class="netopt" type="button" aria-pressed="true" data-net="diff"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg>Receiving Device on Different Network</button>
-                <button class="abtn" type="button" data-net-next style="height:64px;margin-top:auto">Next</button>
+                <div class="droid__page" data-off="qr" hidden>
+                  <div class="d-head">
+                    <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
+                    <span class="d-title">Send via NFC / QR</span>
+                  </div>
+                  <span class="qr" data-qr aria-hidden="true"></span>
+                  <p class="cap" style="font-size:14px;text-align:center;margin-top:14px">Your hotspot is on — the other phone scans this to auto-join and receive.</p>
+                </div>
+                <div class="droid__page" data-off="same" hidden>
+                  <div class="d-head">
+                    <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
+                    <span class="d-title">Select Devices</span>
+                  </div>
+                  <div class="card devrow">
+                    <svg class="ic" aria-hidden="true"><use href="#m-computer"></use></svg>
+                    <span class="devrow__txt"><span class="sub1">Windows PC</span><span class="cap">Windows</span></span>
+                    <span class="capsule-btn pairbtn">Send</span>
+                  </div>
+                </div>
+                <div class="droid__gesture" aria-hidden="true"></div>
               </div>
-              <div class="droid__page" data-off="qr" hidden>
-                <div class="d-head">
-                  <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
-                  <span class="d-title">Send via NFC / QR</span>
-                </div>
-                <span class="qr" data-qr aria-hidden="true"></span>
-                <p class="cap" style="font-size:14px;text-align:center;margin-top:14px">Your hotspot is on — the other phone scans this to auto-join and receive.</p>
-              </div>
-              <div class="droid__page" data-off="same" hidden>
-                <div class="d-head">
-                  <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
-                  <span class="d-title">Select Devices</span>
-                </div>
-                <div class="card devrow">
-                  <svg class="ic" aria-hidden="true"><use href="#m-computer"></use></svg>
-                  <span class="devrow__txt"><span class="sub1">Windows PC</span><span class="cap">Windows</span></span>
-                  <span class="capsule-btn pairbtn">Send</span>
-                </div>
-              </div>
-              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
         </div>
@@ -721,10 +750,6 @@
     <section id="download" class="scene scene--download" aria-labelledby="dl-title">
       <div class="container container--wide">
         <div class="dl-head">
-          <span class="dl-hero-chip" aria-hidden="true">
-            <svg class="ic" data-for="windows"><use href="#m-windows"></use></svg>
-            <svg class="ic" data-for="android"><use href="#m-android"></use></svg>
-          </span>
           <h2 id="dl-title">Download OffBridge</h2>
           <p class="lead">Free, with no account. Install it on both devices; your platform is picked out below.</p>
           <p class="dl-note" data-dl-othernote hidden>You're on another platform. OffBridge runs on

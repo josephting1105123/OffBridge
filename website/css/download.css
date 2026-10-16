@@ -76,14 +76,12 @@
   box-shadow: 0 0 0 1px var(--accent) inset, 0 22px 50px -24px rgba(0, 0, 0, 0.7);
   transform: scale(1.02);
 }
+/* The platform mark sits on the name line, not in a tile above it. */
 .dl-card__os {
-  width: 56px;
-  height: 56px;
   display: grid;
   place-items: center;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  color: var(--text);
+  color: var(--accent-text);
+  margin-bottom: -6px;
 }
 .dl-card__os .icon {
   width: 30px;
@@ -180,32 +178,10 @@
 
 
 .dl-head {
-  text-align: center;
   max-width: 40rem;
-  margin: 0 auto clamp(2rem, 1.5rem + 2vw, 3rem);
+  margin: 0 0 clamp(2rem, 1.5rem + 2vw, 3rem);
 }
 
-.dl-head .lead {
-  margin-inline: auto;
-}
-
-/* The Windows app's Android tab opens on a green-tinted hero chip; the page
-   borrows it for whichever platform is showing. */
-.dl-hero-chip {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 20px;
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
-  background: var(--accent-muted);
-  color: var(--accent-text);
-}
-
-.dl-hero-chip .ic {
-  width: 38px;
-  height: 38px;
-}
 
 /* --- Restyle: app card look ----------------------------------------------- */
 .dl-card.glass::before {
@@ -220,12 +196,6 @@
 .dl-card h3 {
   font-weight: 400;
   font-size: 1.7rem;
-}
-
-.dl-card__os {
-  border-radius: 16px;
-  background: var(--accent-muted);
-  color: var(--accent-text);
 }
 
 .dl-card__os .ic {

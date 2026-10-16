@@ -95,7 +95,39 @@
     });
   }
 
-  /* --- Hero: a copy hops to the other device ---------------------------- */
+  /* --- Fit boxes: scale each app screen to its column ------------------- */
+  function initFit() {
+    var boxes = $$(".fit");
+    function measure(box) {
+      var w = parseFloat(getComputedStyle(box).getPropertyValue("--fw")) || 1;
+      var cw = box.clientWidth;
+      if (!cw) return; // the other platform's screen, display:none
+      box.style.setProperty("--k", String(cw / w));
+      box.classList.add("is-fit");
+    }
+    boxes.forEach(measure);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(function (entries) {
+        entries.forEach(function (e) {
+          measure(e.target);
+        });
+      });
+      boxes.forEach(function (b) {
+        ro.observe(b);
+      });
+    } else {
+      var all = function () {
+        boxes.forEach(measure);
+      };
+      window.addEventListener("resize", all);
+      // A platform switch reveals boxes that measured 0 while hidden.
+      if (window.MutationObserver) {
+        new MutationObserver(all).observe(root, { attributes: true, attributeFilter: ["data-os"] });
+      }
+    }
+  }
+
+  /* --- Hero: copy something real and watch it cross, sealed ------------- */
   var ICON = function (id) {
     return '<svg class="ic" aria-hidden="true"><use href="#' + id + '"></use></svg>';
   };
@@ -120,78 +152,208 @@
   function addClip(kind, text) {
     var list = $('[data-cliplist="' + kind + '"]');
     if (!list) return;
+    var rows = Array.prototype.slice.call(list.children);
+    var before = rows.map(function (r) {
+      return r.offsetTop;
+    });
     var row = clipRow(text, kind);
-    row.classList.add("is-new");
     list.insertBefore(row, list.firstChild);
+    if (!reduce && row.animate) {
+      // offsetTop is in the screen's own dp, so the slide is right at any scale.
+      rows.forEach(function (r, i) {
+        var d = before[i] - r.offsetTop;
+        if (d) {
+          r.animate([{ transform: "translateY(" + d + "px)" }, { transform: "none" }], {
+            duration: 460,
+            easing: "cubic-bezier(0.2, 0.8, 0.2, 1)"
+          });
+        }
+      });
+      row.classList.add("is-landing");
+    }
     // The lists are fixed-height app screens; keep the newest five.
     while (list.children.length > 5) list.removeChild(list.lastChild);
     if (kind === "droid") {
       var count = $("[data-clipcount]");
-      if (count) count.textContent = String(Math.min(99, parseInt(count.textContent, 10) + 1));
+      if (count) count.textContent = String(Math.min(99, (parseInt(count.textContent, 10) || 0) + 1));
     }
   }
 
+  var CIPHER = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  function noise() {
+    return CIPHER.charAt(Math.floor(Math.random() * CIPHER.length));
+  }
+
+  // A packet from one point to another. Sealed packets turn their letters
+  // into ciphertext on the way out and back into text on arrival.
+  function fly(text, a, b, sealed, done) {
+    var shown = text.length > 48 ? text.slice(0, 47) + "…" : text;
+    var el = document.createElement("div");
+    el.className = "packet";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = ICON(sealed ? "m-lock" : "m-paste");
+    var span = document.createElement("span");
+    span.textContent = shown;
+    el.appendChild(span);
+    document.body.appendChild(el);
+
+    var dur = sealed ? 1500 : 650;
+    var lift = Math.max(12, Math.min(a.top, b.top) - (sealed ? 110 : 30));
+    var mid = (a.left + b.left) / 2;
+    var anim = el.animate(
+      [
+        { transform: "translate(" + a.left + "px," + a.top + "px) scale(.92)", opacity: 0 },
+        { transform: "translate(" + a.left + "px," + a.top + "px) scale(1)", opacity: 1, offset: 0.1 },
+        { transform: "translate(" + mid + "px," + lift + "px) scale(1.03)", offset: 0.5 },
+        { transform: "translate(" + b.left + "px," + b.top + "px) scale(1)", opacity: 1, offset: 0.9 },
+        { transform: "translate(" + b.left + "px," + b.top + "px) scale(.96)", opacity: 0 }
+      ],
+      { duration: dur, easing: "cubic-bezier(0.45, 0, 0.2, 1)" }
+    );
+
+    var raf = 0;
+    if (sealed) {
+      var n = shown.length;
+      var last = 0;
+      var frame = function (now) {
+        var p = Math.min(1, (anim.currentTime || 0) / dur);
+        if (now - last > 45) {
+          last = now;
+          // 0.10-0.32 sealing left to right, sealed to 0.66, opening to 0.88.
+          var sealedTo = p < 0.1 ? 0 : p < 0.32 ? Math.ceil((n * (p - 0.1)) / 0.22) : n;
+          var openTo = p < 0.66 ? 0 : p < 0.88 ? Math.ceil((n * (p - 0.66)) / 0.22) : n;
+          var out = "";
+          for (var i = 0; i < n; i++) {
+            var c = shown.charAt(i);
+            out += i < openTo || i >= sealedTo || c === " " ? c : noise();
+          }
+          span.textContent = out;
+          el.classList.toggle("is-sealed", p > 0.12 && p < 0.86);
+        }
+        if (p < 1) raf = requestAnimationFrame(frame);
+      };
+      raf = requestAnimationFrame(frame);
+    }
+    anim.onfinish = anim.oncancel = function () {
+      cancelAnimationFrame(raf);
+      el.remove();
+      done();
+    };
+  }
+
   function initHero() {
-    var form = $("[data-try]");
-    if (!form) return;
-    var input = $("#try-in");
+    var desk = $("[data-duo]");
+    if (!desk) return;
     var live = $("[data-try-live]");
-    var busy = false;
+    var push = $("[data-push]");
+    var pending = null;
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var text = (input.value || "").trim();
-      if (!text) return;
-      var from = os() === "windows" ? "win" : "droid";
-      var to = from === "win" ? "droid" : "win";
-      addClip(from, text);
+    function listRect(kind) {
+      var l = $('[data-cliplist="' + kind + '"]');
+      return l ? l.getBoundingClientRect() : null;
+    }
+    function onScreen(r) {
+      return r && r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+    }
+    // The receiving app's own switch decides whether it takes the copy.
+    function accepts(kind) {
+      var t = $((kind === "win" ? ".desk__win" : ".desk__phone") + " [data-toggle]");
+      return !t || t.getAttribute("aria-checked") === "true";
+    }
 
-      var fromEl = $('[data-cliplist="' + from + '"]');
-      var toEl = $('[data-cliplist="' + to + '"]');
-      var visible = function (el) {
-        var r = el.getBoundingClientRect();
-        return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+    function hop(text, src, to, sealed, then) {
+      var dst = listRect(to);
+      var land = function () {
+        if (!sealed || accepts(to)) {
+          addClip(to, text);
+          if (then) then(true);
+        } else if (then) {
+          then(false);
+        }
       };
-      var done = function () {
-        addClip(to, text);
-        say(live, (to === "droid" ? "Pixel 10" : "Windows PC") + " received: " + text);
-      };
-      // A second copy during a flight lands straight away rather than queueing.
-      if (reduce || busy || !fromEl || !toEl || !visible(fromEl) || !visible(toEl) || !Element.prototype.animate) {
-        done();
+      if (reduce || !Element.prototype.animate || !onScreen(src) || !onScreen(dst)) {
+        land();
         return;
       }
+      fly(text, { left: src.left, top: src.top }, { left: dst.left + 12, top: dst.top + 8 }, sealed, land);
+    }
 
-      // A sealed chip leaves the sender's list and lands on the receiver's.
-      busy = true;
-      var a = fromEl.getBoundingClientRect();
-      var b = toEl.getBoundingClientRect();
-      var chip = document.createElement("div");
-      chip.className = "flight";
-      chip.setAttribute("aria-hidden", "true");
-      chip.innerHTML = ICON("m-lock");
-      var s = document.createElement("span");
-      s.textContent = text;
-      chip.appendChild(s);
-      document.body.appendChild(chip);
-      var x0 = a.left + 8, y0 = a.top + 4;
-      var x1 = b.left + 8, y1 = b.top + 4;
-      var lift = Math.max(8, Math.min(y0, y1) - 70);
-      var anim = chip.animate(
-        [
-          { transform: "translate(" + x0 + "px," + y0 + "px) scale(.9)", opacity: 0 },
-          { transform: "translate(" + x0 + "px," + y0 + "px) scale(1)", opacity: 1, offset: 0.12 },
-          { transform: "translate(" + (x0 + x1) / 2 + "px," + lift + "px) scale(1.04)", offset: 0.55 },
-          { transform: "translate(" + x1 + "px," + y1 + "px) scale(1)", opacity: 1, offset: 0.9 },
-          { transform: "translate(" + x1 + "px," + y1 + "px) scale(.96)", opacity: 0 }
-        ],
-        { duration: 1300, easing: "cubic-bezier(0.45, 0, 0.2, 1)" }
-      );
-      anim.onfinish = anim.oncancel = function () {
-        chip.remove();
-        busy = false;
-        done();
-      };
+    // A copy made in the hero brings the desk into view first, so the hop is
+    // seen; a copy from further down the page just updates the lists.
+    var hero = desk.closest("section") || desk;
+    function copied(text, src) {
+      text = String(text || "").replace(/\s+/g, " ").trim().slice(0, 200);
+      if (!text) return;
+      var h = hero.getBoundingClientRect();
+      var first = listRect(os() === "windows" ? "win" : "droid");
+      if (src && src.top >= h.top && src.bottom <= h.bottom && first && first.bottom > window.innerHeight) {
+        var y0 = window.scrollY;
+        desk.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
+        setTimeout(function () {
+          var top = Math.max(72, src.top - (window.scrollY - y0));
+          send(text, { left: src.left, top: top, width: 1, bottom: top + 1 });
+        }, reduce ? 0 : 650);
+        return;
+      }
+      send(text, src);
+    }
+
+    function send(text, src) {
+      if (os() === "windows") {
+        say(live, "Copied on Windows PC.");
+        hop(text, src, "win", false, function () {
+          setTimeout(function () {
+            hop(text, listRect("win"), "droid", true, function (ok) {
+              say(live, ok ? "Pixel 10 received: " + text : "Pixel 10 has auto-sync off, so it didn't take the copy.");
+            });
+          }, reduce ? 0 : 200);
+        });
+      } else {
+        say(live, "Copied on Pixel 10. Press Push to PC to send it.");
+        hop(text, src, "droid", false, function () {
+          pending = text;
+          if (push) push.hidden = false;
+        });
+      }
+    }
+
+    if (push) {
+      push.addEventListener("click", function () {
+        if (!pending) return;
+        var t = pending;
+        pending = null;
+        push.hidden = true;
+        hop(t, listRect("droid"), "win", true, function (ok) {
+          say(live, ok ? "Windows PC received: " + t : "Windows PC has Accept Incoming Clipboard off, so it didn't take the copy.");
+        });
+      });
+    }
+
+    // A real copy anywhere on the page. The text never leaves the page.
+    document.addEventListener("copy", function () {
+      var sel = window.getSelection && window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      var r = null;
+      try {
+        r = sel.getRangeAt(0).getBoundingClientRect();
+      } catch (e) {}
+      copied(String(sel), r);
+    });
+
+    $$("[data-snip]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var text = b.textContent.trim();
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () {});
+          }
+        } catch (e) {}
+        b.classList.add("is-copied");
+        setTimeout(function () {
+          b.classList.remove("is-copied");
+        }, 1200);
+        copied(text, b.getBoundingClientRect());
+      });
     });
   }
 
@@ -478,8 +640,8 @@
         el.hidden = el.getAttribute("data-off") !== name;
       });
     }
-    var win = $('.win[data-for="windows"]', scene);
-    var droid = $('.droid[data-for="android"]', scene);
+    var win = $('[data-for="windows"] .win', scene);
+    var droid = $('[data-for="android"] .droid', scene);
 
     // Both apps follow one step: the QR screen, or the start of the flow.
     // Android's "same network" list has no Windows twin, so Windows stays put.
@@ -517,6 +679,7 @@
 
   function boot() {
     initSwitch();
+    initFit();
     initToggles();
     initHero();
     initTransfer();
