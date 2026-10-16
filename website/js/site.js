@@ -173,6 +173,11 @@
     }
     // The lists are fixed-height app screens; keep the newest five.
     while (list.children.length > 5) list.removeChild(list.lastChild);
+    // Clipped boxes can still be scrolled by a selection drag or find-in-page;
+    // the newest row sits at the top, so bring the top back into view.
+    for (var box = list; box && !box.classList.contains("frame"); box = box.parentElement) {
+      if (box.scrollTop) box.scrollTop = 0;
+    }
     if (kind === "droid") {
       var count = $("[data-clipcount]");
       if (count) count.textContent = String(Math.min(99, (parseInt(count.textContent, 10) || 0) + 1));
@@ -234,11 +239,20 @@
       };
       raf = requestAnimationFrame(frame);
     }
-    anim.onfinish = anim.oncancel = function () {
+    // The row must land even if the animation never reports back: browsers
+    // pause animations in a covered or background window, and a view
+    // transition can swallow the finish event.
+    var landed = false;
+    var finish = function () {
+      if (landed) return;
+      landed = true;
+      clearTimeout(guard);
       cancelAnimationFrame(raf);
       el.remove();
       done();
     };
+    var guard = setTimeout(finish, dur + 400);
+    anim.onfinish = anim.oncancel = finish;
   }
 
   function initHero() {
@@ -360,8 +374,11 @@
   /* --- Send: a transfer that survives a dropped link -------------------- */
   function initTransfer() {
     var TOTAL = 600;
-    var st = { phase: "idle", mb: 0, timer: 0, last: 0 };
+    var st = { phase: "idle", mb: 0, timer: 0, last: 0, cutAt: 0 };
     var drop = $("[data-x-drop]");
+    var dropLabel = $("[data-x-drop-label]");
+    var dropSub = $("[data-x-drop-sub]");
+    var dropIc = $("[data-x-drop-ic]");
     var restart = $("[data-x-restart]");
     var live = $("[data-x-live]");
     var roots = $$("[data-xfer-root]").map(function (r) {
@@ -417,7 +434,31 @@
           btn.textContent = p === "android" ? "Done" : "Close";
         }
       });
-      if (drop) drop.disabled = st.phase !== "run";
+      paintDrop();
+    }
+
+    // The page's own button walks the whole story: start, cut, reconnect.
+    var DROP = {
+      idle: ["Drop the Wi-Fi", "Starts the send, then cuts the link partway", "m-wifi"],
+      run: ["Drop the Wi-Fi", "It's moving. Cut the link now", "m-wifi"],
+      paused: ["Bring the Wi-Fi back", "Link down. It resumes where it stopped", "m-wifi-off"],
+      done: ["Try it again", "All 600 MB arrived, once", "m-refresh"]
+    };
+    function paintDrop() {
+      if (!drop) return;
+      var d = DROP[st.phase];
+      if (dropLabel) dropLabel.textContent = d[0];
+      if (dropSub) dropSub.textContent = d[1];
+      if (dropIc) dropIc.setAttribute("href", "#" + d[2]);
+      drop.setAttribute("data-phase", st.phase);
+    }
+
+    function cut() {
+      cancelAnimationFrame(st.timer);
+      st.cutAt = 0;
+      st.phase = "paused";
+      render();
+      say(live, "Network dropped. Paused at " + Math.floor((st.mb / TOTAL) * 100) + " percent. Press Resume.");
     }
 
     function tick(now) {
@@ -426,6 +467,11 @@
       st.last = now;
       // ~7 s end to end; a full-speed LAN would be quicker, this is for reading.
       st.mb = Math.min(TOTAL, st.mb + dt * 0.086);
+      if (st.cutAt && st.mb >= st.cutAt) {
+        st.mb = st.cutAt;
+        cut();
+        return;
+      }
       if (st.mb >= TOTAL) {
         st.phase = "done";
         say(live, "Transfer complete.");
@@ -454,6 +500,7 @@
 
     function reset() {
       cancelAnimationFrame(st.timer);
+      st.cutAt = 0;
       st.phase = "idle";
       st.mb = 0;
       render();
@@ -471,26 +518,93 @@
           reset();
           say(live, "Transfer cancelled.");
         } else if (st.phase === "paused") {
-          say(live, "Resumed from " + Math.floor((st.mb / TOTAL) * 100) + " percent.");
-          run();
+          resume();
         } else {
           reset();
         }
       });
     });
 
+    function resume() {
+      say(live, "Resumed from " + Math.floor((st.mb / TOTAL) * 100) + " percent.");
+      run();
+    }
+
     if (drop) {
       drop.addEventListener("click", function () {
-        if (st.phase !== "run") return;
-        cancelAnimationFrame(st.timer);
-        st.phase = "paused";
-        render();
-        say(live, "Network dropped. Paused at " + Math.floor((st.mb / TOTAL) * 100) + " percent. Press Resume.");
+        if (st.phase === "run") {
+          cut();
+        } else if (st.phase === "paused") {
+          resume();
+        } else {
+          // Idle or finished: start a fresh send and cut it 30-45% in.
+          reset();
+          st.cutAt = TOTAL * (0.3 + Math.random() * 0.15);
+          say(live, "Sending Holiday_clip.mp4. The Wi-Fi will drop partway.");
+          run();
+          // Reduced motion jumps straight to the mid point instead of ticking.
+          if (reduce && st.phase === "run") cut();
+        }
       });
     }
     if (restart) restart.addEventListener("click", reset);
 
     render();
+  }
+
+  /* --- Security: pick a row, read it in the panel (wide screens) ---------
+     Below 900px the rows stay ordinary open/close details. */
+  function initSpecs() {
+    var root = $("[data-specs]");
+    var panel = $("[data-spec-panel]");
+    if (!root || !panel || !window.matchMedia) return;
+    var wide = window.matchMedia("(min-width: 900px)");
+    var rows = $$(".srow", root);
+    var picked = null;
+
+    function show(row) {
+      if (picked) picked.classList.remove("is-picked");
+      picked = row;
+      row.classList.add("is-picked");
+      rows.forEach(function (r) {
+        $("summary", r).setAttribute("aria-current", r === row ? "true" : "false");
+      });
+      var group = row.closest(".sgroup");
+      $("[data-spec-group]", panel).textContent = group ? $("h3", group).textContent : "";
+      $("[data-spec-value]", panel).textContent = $(".srow__v", row).textContent;
+      $("[data-spec-title]", panel).textContent = $(".srow__t", row).textContent;
+      var body = $("[data-spec-body]", panel);
+      body.innerHTML = "";
+      $$("p", row).forEach(function (para) {
+        body.appendChild(para.cloneNode(true));
+      });
+      // Restart the entrance so each pick visibly lands.
+      panel.classList.remove("is-in");
+      void panel.offsetWidth;
+      panel.classList.add("is-in");
+    }
+
+    function sync() {
+      root.classList.toggle("is-panel", wide.matches);
+      panel.hidden = !wide.matches;
+      rows.forEach(function (r) {
+        var sum = $("summary", r);
+        if (wide.matches) r.open = false;
+        else sum.removeAttribute("aria-current");
+      });
+      if (wide.matches) show(picked || rows[0]);
+    }
+
+    rows.forEach(function (r) {
+      $("summary", r).addEventListener("click", function (e) {
+        if (!wide.matches) return;
+        e.preventDefault();
+        show(r);
+      });
+    });
+    if (wide.addEventListener) wide.addEventListener("change", sync);
+    else if (wide.addListener) wide.addListener(sync);
+    sync();
   }
 
   /* --- Pairing: the same six digits on both screens --------------------- */
@@ -529,6 +643,18 @@
       });
     }
 
+    var acc = $("[data-dpair-accept]");
+    var dec = $("[data-dpair-decline]");
+
+    // Which step the visitor is on: 1 press Pair, 2 accept on the phone,
+    // 3 paired. The next control to press gets a pulse so it's findable.
+    function step(n) {
+      if (peer) peer.setAttribute("data-step", String(n));
+      if (startBtn) startBtn.classList.toggle("nudge", n === 1);
+      if (peerAccept) peerAccept.classList.toggle("nudge", n === 2);
+      if (acc) acc.classList.toggle("nudge", n !== 3);
+    }
+
     // One paired flag drives both apps, so a switch lands on the same moment.
     function setPaired(on) {
       if (startBtn) {
@@ -543,9 +669,11 @@
       if (peerAccept) peerAccept.disabled = true;
       if (peer) peer.classList.remove("is-match");
       if (!on) newCode();
+      step(on ? 3 : 1);
     }
 
     newCode();
+    step(1);
 
     // Windows side
     if (startBtn) {
@@ -558,6 +686,7 @@
         modal.hidden = false;
         if (peerAccept) peerAccept.disabled = false;
         if (peer) peer.classList.add("is-match");
+        step(2);
         say(live, "Requesting pair. Code " + code.split("").join(" ") + ". Check Pixel 10 shows the same.");
       });
     }
@@ -568,6 +697,7 @@
         if (peerAccept) peerAccept.disabled = true;
         if (peer) peer.classList.remove("is-match");
         newCode();
+        step(1);
       });
     }
     if (peerAccept) {
@@ -578,8 +708,6 @@
     }
 
     // Android side
-    var acc = $("[data-dpair-accept]");
-    var dec = $("[data-dpair-decline]");
     if (acc) {
       acc.addEventListener("click", function () {
         setPaired(true);
@@ -684,6 +812,7 @@
     initHero();
     initTransfer();
     initPairing();
+    initSpecs();
     initOffgrid();
     initYear();
   }

@@ -330,6 +330,7 @@
     var ol = document.createElement("ol");
     scenes.forEach(function (s, i) {
       var li = document.createElement("li");
+      li.style.setProperty("--i", String(i));
       var a = document.createElement("a");
       a.href = s.id ? "#" + s.id : "#top";
       var n = document.createElement("span");
@@ -360,7 +361,14 @@
     if (i === current) return;
     current = i;
     if (rail) {
-      Array.prototype.forEach.call(rail.querySelectorAll("a"), function (a, k) {
+      // The rail is a drum: turning it to --at brings this segment to the
+      // front; --d is each face's distance from the front, for its fade.
+      rail.style.setProperty("--at", String(i));
+      Array.prototype.forEach.call(rail.querySelectorAll("li"), function (li, k) {
+        li.style.setProperty("--d", String(Math.abs(k - i)));
+        var a = li.firstChild;
+        // Faces turned to the back are out of sight, so keep focus off them.
+        a.tabIndex = Math.abs(k - i) > 2 ? -1 : 0;
         if (k === i) a.setAttribute("aria-current", "true");
         else a.removeAttribute("aria-current");
       });
