@@ -39,7 +39,10 @@ fun Context.copyPlainText(label: String, text: CharSequence, @StringRes toast: I
 /**
  * Shared scrollable, selectable-text modal with an OK button and a neutral Copy action — the common
  * scaffold behind the history text preview and the transport-diagnostics dialog. [monospace] renders
- * the small fixed-width diag styling; [clipLabel] defaults to the title. Applies [applyModalPolish].
+ * the small fixed-width diag styling; [clipLabel] defaults to the title. [copyText] defaults to the
+ * displayed [text] and exists for callers that append a footer to the display copy (the file
+ * preview's "only the beginning is shown" note) which must not land on the clipboard. Applies
+ * [applyModalPolish].
  */
 fun showSelectableTextDialog(
     context: Context,
@@ -49,6 +52,7 @@ fun showSelectableTextDialog(
     @StringRes copiedToast: Int,
     monospace: Boolean = false,
     clipLabel: CharSequence = title,
+    copyText: CharSequence = text,
 ) {
     val pad = (16 * context.resources.displayMetrics.density).toInt()
     val tv = TextView(context).apply {
@@ -65,7 +69,7 @@ fun showSelectableTextDialog(
         .setTitle(title)
         .setView(scroll)
         .setPositiveButton(android.R.string.ok, null)
-        .setNeutralButton(copyButtonLabel) { _, _ -> context.copyPlainText(clipLabel.toString(), text, copiedToast) }
+        .setNeutralButton(copyButtonLabel) { _, _ -> context.copyPlainText(clipLabel.toString(), copyText, copiedToast) }
         .create()
         .also { it.applyModalPolish() }
         .show()

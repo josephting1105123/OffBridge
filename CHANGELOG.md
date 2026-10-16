@@ -4,6 +4,33 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.7 — Android (build 35) — file preview fixes
+
+### Fixed
+- **Received text files could not be opened.** Tapping "Open" on a `.txt` fired a `text/plain`
+  view intent, and plenty of phones ship no text viewer at all — so the tap fell through to merely
+  revealing the containing folder, and the text was never shown. Worse for `.md`, `.log`, `.kt`,
+  `.properties` and similar: the platform's extension→type map has no entry for them, so they
+  resolved to the wildcard type, matched nothing, and missed the built-in preview too (it was gated
+  on the resolved type starting with `text/`).
+
+  OffBridge now keeps its own table for text extensions, and offers the viewer it is sure of:
+  tapping Open asks, with **Preview** — built in, cannot fail — as the default button and **Open
+  with…** beside it, so anyone with a proper editor still uses their editor. When the device has no
+  other handler at all there is nothing to choose and the preview opens straight away. The preview
+  also no longer gives up on files over 1 MB; it shows the beginning of the file and says so.
+
+  The same choice now covers a queued file tapped on the Send screen, including an added text
+  snippet — that tap previously did nothing whatsoever when no viewer was installed.
+
+- **Crash when a large photo was queued to send.** `Canvas: trying to draw too large(200540160
+  bytes) bitmap`. File previews decoded the picked image at full resolution: a 50 MP photo is
+  ~200 MB of pixels, and a hardware canvas refuses to draw anything over 100 MB — thrown from the
+  draw pass, where nothing can catch it, so the app died just for showing a thumbnail. Every
+  preview surface (the send-queue grid, the send-via sheet, the fullscreen tap-to-view) now decodes
+  through one bounded path — 240 px for a thumbnail, 2048 px fullscreen, clamped even if the
+  decoder ignores the request — and does it off the main thread instead of during layout.
+
 ## 3.7.6 — Android (build 34) — off-grid handshake hotfix
 
 ### Fixed
