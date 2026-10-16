@@ -981,3 +981,64 @@ html[data-os="android"] .srow__chev {
     display: none;
   }
 }
+
+/* --- Segmented scrolling (desktop, js/segments.js) ----------------------- */
+/* Each scene fills at least one screen, so a settled segment never shows the
+   next one's top edge. */
+html.is-segmented main > .scene {
+  min-height: calc(100vh - var(--nav-h) - 16px);
+  min-height: calc(100svh - var(--nav-h) - 16px);
+}
+
+.seg-pull {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+.seg-pull.is-up {
+  bottom: auto;
+  top: calc(var(--nav-h) + 16px);
+  transform: translate(-50%, -12px);
+}
+.seg-pull.is-on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.seg-pull__track {
+  width: 160px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--divider);
+  overflow: hidden;
+}
+.seg-pull__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.08s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seg-pull,
+  .seg-pull__fill {
+    transition: none;
+  }
+}
