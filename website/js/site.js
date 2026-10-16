@@ -552,61 +552,6 @@
     render();
   }
 
-  /* --- Security: pick a row, read it in the panel (wide screens) ---------
-     Below 900px the rows stay ordinary open/close details. */
-  function initSpecs() {
-    var root = $("[data-specs]");
-    var panel = $("[data-spec-panel]");
-    if (!root || !panel || !window.matchMedia) return;
-    var wide = window.matchMedia("(min-width: 900px)");
-    var rows = $$(".srow", root);
-    var picked = null;
-
-    function show(row) {
-      if (picked) picked.classList.remove("is-picked");
-      picked = row;
-      row.classList.add("is-picked");
-      rows.forEach(function (r) {
-        $("summary", r).setAttribute("aria-current", r === row ? "true" : "false");
-      });
-      var group = row.closest(".sgroup");
-      $("[data-spec-group]", panel).textContent = group ? $("h3", group).textContent : "";
-      $("[data-spec-value]", panel).textContent = $(".srow__v", row).textContent;
-      $("[data-spec-title]", panel).textContent = $(".srow__t", row).textContent;
-      var body = $("[data-spec-body]", panel);
-      body.innerHTML = "";
-      $$("p", row).forEach(function (para) {
-        body.appendChild(para.cloneNode(true));
-      });
-      // Restart the entrance so each pick visibly lands.
-      panel.classList.remove("is-in");
-      void panel.offsetWidth;
-      panel.classList.add("is-in");
-    }
-
-    function sync() {
-      root.classList.toggle("is-panel", wide.matches);
-      panel.hidden = !wide.matches;
-      rows.forEach(function (r) {
-        var sum = $("summary", r);
-        if (wide.matches) r.open = false;
-        else sum.removeAttribute("aria-current");
-      });
-      if (wide.matches) show(picked || rows[0]);
-    }
-
-    rows.forEach(function (r) {
-      $("summary", r).addEventListener("click", function (e) {
-        if (!wide.matches) return;
-        e.preventDefault();
-        show(r);
-      });
-    });
-    if (wide.addEventListener) wide.addEventListener("change", sync);
-    else if (wide.addListener) wide.addListener(sync);
-    sync();
-  }
-
   /* --- Pairing: the same six digits on both screens --------------------- */
   function initPairing() {
     var code = "";
@@ -812,7 +757,6 @@
     initHero();
     initTransfer();
     initPairing();
-    initSpecs();
     initOffgrid();
     initYear();
   }

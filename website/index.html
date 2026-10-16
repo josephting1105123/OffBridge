@@ -18,16 +18,16 @@
   <meta property="og:url" content="https://offbridge.app/" />
   <meta property="og:title" content="OffBridge — Off-grid clipboard sync & file transfer" />
   <meta property="og:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted end to end." />
-  <meta property="og:image" content="https://offbridge.app/assets/og-image.png?v=20261016c" />
+  <meta property="og:image" content="https://offbridge.app/assets/og-image.png?v=20261016d" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="OffBridge — off-grid clipboard sync and file transfer for Android and Windows" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="OffBridge — Off-grid clipboard sync & file transfer" />
   <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted end to end." />
-  <meta name="twitter:image" content="https://offbridge.app/assets/og-image.png?v=20261016c" />
+  <meta name="twitter:image" content="https://offbridge.app/assets/og-image.png?v=20261016d" />
 
-  <link rel="icon" href="assets/favicon.svg?v=20261016c" type="image/svg+xml" />
+  <link rel="icon" href="assets/favicon.svg?v=20261016d" type="image/svg+xml" />
   <link rel="preload" href="fonts/ibm_plex_sans_variable.ttf" as="font" type="font/ttf" crossorigin />
 
   <!-- Theme applied before paint to avoid a flash. A byte-for-byte copy of js/theme.js,
@@ -111,15 +111,15 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="css/tokens.css?v=20261016c" />
-  <link rel="stylesheet" href="css/base.css?v=20261016c" />
-  <link rel="stylesheet" href="css/layout.css?v=20261016c" />
-  <link rel="stylesheet" href="css/components.css?v=20261016c" />
-  <link rel="stylesheet" href="css/app.css?v=20261016c" />
-  <link rel="stylesheet" href="css/site.css?v=20261016c" />
-  <link rel="stylesheet" href="css/download.css?v=20261016c" />
-  <link rel="stylesheet" href="css/carousel.css?v=20261016c" />
-  <link rel="stylesheet" href="css/dl-wheel.css?v=20261016c" />
+  <link rel="stylesheet" href="css/tokens.css?v=20261016d" />
+  <link rel="stylesheet" href="css/base.css?v=20261016d" />
+  <link rel="stylesheet" href="css/layout.css?v=20261016d" />
+  <link rel="stylesheet" href="css/components.css?v=20261016d" />
+  <link rel="stylesheet" href="css/app.css?v=20261016d" />
+  <link rel="stylesheet" href="css/site.css?v=20261016d" />
+  <link rel="stylesheet" href="css/download.css?v=20261016d" />
+  <link rel="stylesheet" href="css/carousel.css?v=20261016d" />
+  <link rel="stylesheet" href="css/dl-wheel.css?v=20261016d" />
 
   <link rel="manifest" href="site.webmanifest" />
 
@@ -190,7 +190,7 @@
   <header class="topbar" id="nav">
     <div class="container container--wide topbar__in">
       <a class="brand" href="#top" aria-label="OffBridge — home">
-        <img class="brand__mark" src="assets/favicon.svg?v=20261016c" alt="" width="26" height="26" />
+        <img class="brand__mark" src="assets/favicon.svg?v=20261016d" alt="" width="26" height="26" />
         OffBridge
       </a>
 
@@ -697,67 +697,62 @@
 
     <!-- ============================== SECURITY ============================ -->
     <section class="scene scene--settings" id="security" aria-labelledby="sec-title">
-      <div class="container container--wide specs" data-specs>
-        <div class="specs__intro">
+      <div class="container container--wide sec">
+        <div class="sec__head">
           <div class="settings-head">
             <svg class="ic" aria-hidden="true"><use href="#m-shield"></use></svg>
             <h2 id="sec-title">Security</h2>
           </div>
-          <p class="lead settings-lead">There's no cloud to breach and no account to leak. This is what protects a copy or a file between your two devices. Pick any row for the detail.</p>
+          <p class="lead">There's no cloud to breach and no account to leak. This is everything a copy passes through between your two devices, and it goes nowhere else.</p>
         </div>
 
-        <div class="settings specs__list">
-          <div class="sgroup">
-            <h3>Pairing</h3>
-            <div class="sgroup__card">
-              <details class="srow"><summary><span class="srow__t">Verified pairing</span><span class="srow__v">6-digit code</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>A fresh ECDH exchange on secp256r1 derives the shared key, and both screens show a 6-digit Short Authentication String from it. You confirming the digits match is what stops a man-in-the-middle.</p></details>
-              <details class="srow"><summary><span class="srow__t">QR pairing</span><span class="srow__v">One-time key</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>A pairing QR carries a one-time key and expires. The other device has to prove it holds that key before anything is paired.</p></details>
-              <details class="srow"><summary><span class="srow__t">After the first pairing</span><span class="srow__v">Pinned</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>The peer's key is pinned once you trust it. A later key swap fails closed instead of quietly downgrading.</p></details>
-            </div>
+        <div class="sec__track">
+          <div class="sec__dev"><span class="sec__devic"><svg class="ic" aria-hidden="true"><use href="#m-phone"></use></svg></span><span>Your phone</span></div>
+          <div class="sec__flow">
+            <div class="sec__wire" aria-hidden="true"><span class="sec__packet"><svg class="ic"><use href="#m-lock"></use></svg></span></div>
+            <ol class="sec__steps">
+              <li class="sec__step" style="--k:0">
+                <span class="sec__n" aria-hidden="true">01</span>
+                <h3>Pair</h3>
+                <p class="sec__v">6-digit code</p>
+                <p>A fresh ECDH exchange on secp256r1 makes the shared key, and both screens show six digits drawn from it. Confirming they match is what stops anyone sitting in the middle.</p>
+                <p class="sec__more">A pairing QR carries a one-time key that expires. After that the peer's key is pinned, and a later swap fails closed.</p>
+              </li>
+              <li class="sec__step" style="--k:1">
+                <span class="sec__n" aria-hidden="true">02</span>
+                <h3>Seal</h3>
+                <p class="sec__v"><nobr>AES-256-GCM</nobr></p>
+                <p>Every copy and file is sealed on the device before it leaves, under the key from pairing. GCM is authenticated, so tampering is caught, not hidden.</p>
+                <p class="sec__more">Large files are sealed chunk by chunk.</p>
+              </li>
+              <li class="sec__step" style="--k:2">
+                <span class="sec__n" aria-hidden="true">03</span>
+                <h3>Travel</h3>
+                <p class="sec__v">Sealed on every link</p>
+                <p>Over your Wi-Fi, or with no network at all: QR, NFC, Wi-Fi Direct and hotspot links each use a per-session key.</p>
+                <p class="sec__more">Off-grid sealing needs Android 3.7.3 and Windows 3.7.7. With an older app on either side the link is authenticated but unsealed, so update both.</p>
+              </li>
+              <li class="sec__step" style="--k:3">
+                <span class="sec__n" aria-hidden="true">04</span>
+                <h3>Open</h3>
+                <p class="sec__v">Keys stay home</p>
+                <p>Each pairing's keys are generated on your hardware and kept in the OS keystore. Never uploaded, shared or escrowed.</p>
+                <p class="sec__more">Unpair a device and its keys are wiped.</p>
+              </li>
+            </ol>
           </div>
-
-          <div class="sgroup">
-            <h3>Encryption</h3>
-            <div class="sgroup__card">
-              <details class="srow"><summary><span class="srow__t">Clipboard and files</span><span class="srow__v">AES-256-GCM</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>Every copy and file is sealed before it leaves the device, under the key from pairing. GCM is authenticated, so tampering is detected, not just hidden. Large files are sealed chunk by chunk.</p></details>
-              <details class="srow"><summary><span class="srow__t">Off-grid links</span><span class="srow__v">Sealed too</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>QR, NFC, Wi-Fi Direct and hotspot transfers use a per-session key and are sealed from Android 3.7.3 and Windows 3.7.7. If either device is older, the link falls back to an authenticated but unsealed stream, so update both.</p></details>
-            </div>
-          </div>
-
-          <div class="sgroup">
-            <h3>Keys</h3>
-            <div class="sgroup__card">
-              <details class="srow"><summary><span class="srow__t">Where keys live</span><span class="srow__v">This device only</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>Each paired device gets its own key material, generated on your hardware and kept in the OS keystore. Never uploaded, never shared, never escrowed.</p></details>
-              <details class="srow"><summary><span class="srow__t">When you unpair</span><span class="srow__v">Keys wiped</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>Remove a device and its keys go with it.</p></details>
-            </div>
-          </div>
-
-          <div class="sgroup">
-            <h3>Privacy</h3>
-            <div class="sgroup__card">
-              <details class="srow"><summary><span class="srow__t">Telemetry and ads</span><span class="srow__v">None</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>No analytics SDKs, no ad networks, no crash reporting that phones home.</p></details>
-              <details class="srow"><summary><span class="srow__t">Account</span><span class="srow__v">None</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>No sign-up and no profile, so there's nothing to breach.</p></details>
-              <details class="srow"><summary><span class="srow__t">Network requests</span><span class="srow__v">Version check</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-                <p>Your clipboard and files go to the device you paired and nowhere else. The one other request the app makes is a version check against GitHub, which sends nothing about you.</p></details>
-            </div>
-          </div>
+          <div class="sec__dev"><span class="sec__devic"><svg class="ic" aria-hidden="true"><use href="#m-computer"></use></svg></span><span>Your computer</span></div>
         </div>
 
-        <div class="specs__panel" data-spec-panel aria-live="polite" hidden>
-          <svg class="ic specs__mark" aria-hidden="true"><use href="#m-shield"></use></svg>
-          <p class="specs__group" data-spec-group></p>
-          <p class="specs__value" data-spec-value></p>
-          <h3 class="specs__title" data-spec-title></h3>
-          <div class="specs__body" data-spec-body></div>
+        <div class="sec__none">
+          <p class="sec__none-h">What isn't there</p>
+          <ul>
+            <li><svg class="ic" aria-hidden="true"><use href="#m-close"></use></svg>Cloud servers</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#m-close"></use></svg>Accounts</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#m-close"></use></svg>Analytics or ads</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#m-close"></use></svg>Crash reports that phone home</li>
+          </ul>
+          <p class="sec__note">The app makes one other request: a version check against GitHub, which sends nothing about you.</p>
         </div>
       </div>
     </section>
@@ -876,7 +871,7 @@
   <footer class="footer">
     <div class="container container--wide footer__row">
       <a class="brand" href="#top">
-        <img class="brand__mark" src="assets/favicon.svg?v=20261016c" alt="" width="22" height="22" />
+        <img class="brand__mark" src="assets/favicon.svg?v=20261016d" alt="" width="22" height="22" />
         OffBridge
       </a>
       <nav class="footer__links" aria-label="Footer">
@@ -889,11 +884,11 @@
     </div>
   </footer>
 
-  <script defer src="js/config.js?v=20261016c"></script>
-  <script defer src="js/platform.js?v=20261016c"></script>
-  <script defer src="js/dl-wheel.js?v=20261016c"></script>
-  <script defer src="js/site.js?v=20261016c"></script>
-  <script defer src="js/segments.js?v=20261016c"></script>
-  <script defer src="js/water.js?v=20261016c"></script>
+  <script defer src="js/config.js?v=20261016d"></script>
+  <script defer src="js/platform.js?v=20261016d"></script>
+  <script defer src="js/dl-wheel.js?v=20261016d"></script>
+  <script defer src="js/site.js?v=20261016d"></script>
+  <script defer src="js/segments.js?v=20261016d"></script>
+  <script defer src="js/water.js?v=20261016d"></script>
 </body>
 </html>

@@ -313,7 +313,7 @@
     story = null;
   }
 
-  /* --- Rail: numbered chapters down the left edge ------------------------ */
+  /* --- Rail: chapters orbiting an invisible half ring (desktop) ---------- */
   var rail = null;
 
   function railLabel(i) {
@@ -350,13 +350,6 @@
       ol.appendChild(li);
     });
     rail.appendChild(ol);
-    // The dial's face repeats the section at the marker, large. The links
-    // on the ring already name it, so the face is hidden from readers.
-    var face = document.createElement("div");
-    face.className = "seg-rail__face";
-    face.setAttribute("aria-hidden", "true");
-    face.innerHTML = '<b class="seg-rail__fn"></b><span class="seg-rail__ft"></span>';
-    rail.appendChild(face);
     document.body.appendChild(rail);
   }
 
@@ -368,25 +361,15 @@
     if (i === current) return;
     current = i;
     if (rail) {
-      // The rail is half a watch ring: turning it by --at steps brings this
-      // segment's number round to the marker at 3 o'clock. --d is each
-      // number's distance from the marker; at 3 steps it has turned off
-      // the screen's edge, so it fades and leaves the tab order.
+      // The rows ride an invisible half ring; turning it by --at steps brings
+      // this segment round to 3 o'clock, nearest the page. --d is each row's
+      // distance from there; by 4 steps a row has rounded the screen edge,
+      // so it fades out and leaves the tab order.
       rail.style.setProperty("--at", String(i));
-      var face = rail.querySelector(".seg-rail__face");
-      var num = (i + 1 < 10 ? "0" : "") + (i + 1);
-      // Re-measures repaint too; only a real change replays the entrance.
-      if (face.firstChild.textContent !== num) {
-        face.firstChild.textContent = num;
-        face.lastChild.textContent = railLabel(i);
-        face.classList.remove("is-in");
-        void face.offsetWidth;
-        face.classList.add("is-in");
-      }
       Array.prototype.forEach.call(rail.querySelectorAll("li"), function (li, k) {
         var a = li.firstChild;
         li.style.setProperty("--d", String(Math.abs(k - i)));
-        a.tabIndex = Math.abs(k - i) > 2 ? -1 : 0;
+        a.tabIndex = Math.abs(k - i) > 3 ? -1 : 0;
         if (k === i) a.setAttribute("aria-current", "true");
         else a.removeAttribute("aria-current");
       });
