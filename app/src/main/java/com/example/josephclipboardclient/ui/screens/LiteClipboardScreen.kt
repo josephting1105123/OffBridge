@@ -1,15 +1,12 @@
 package com.EntropicSoftwareLab.ClipboardShare.ui.screens
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,39 +16,39 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.DesignModeToggle
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.SegmentDots
+import com.EntropicSoftwareLab.ClipboardShare.ui.components.SegmentedSnapPager
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -72,6 +69,7 @@ fun LiteClipboardScreen(
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
     var detailEntry by remember { mutableStateOf<String?>(null) }
+    val pagerState = rememberPagerState { 2 }
 
     Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
         Column(
@@ -120,190 +118,106 @@ fun LiteClipboardScreen(
                 )
             }
 
-            // Status strip — a single line summarising sync state + peer count, tinted by state.
-            val syncActive = acceptSync
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(dimens.radiusLg))
-                    .background(if (syncActive) colors.accentMuted else colors.card)
-                    .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusLg))
-                    .padding(horizontal = dimens.spaceLg, vertical = dimens.spaceMd),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimens.spaceMd)
-                        .clip(RoundedCornerShape(dimens.radiusPill))
-                        .background(if (syncActive) colors.green else colors.textSecondary)
-                )
-                Spacer(Modifier.size(dimens.spaceSm))
-                Text(
-                    // Only actually-paired devices sync; the list also holds nearby-unpaired rows.
-                    text = if (syncActive)
-                        stringResource(R.string.lite_clip_sync_on, pairedDevices.count { it.isPaired })
-                    else stringResource(R.string.lite_clip_sync_off),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (syncActive) colors.greenText else colors.textSecondary,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
-            Spacer(Modifier.height(dimens.spaceXl))
-
-            SectionLabel(stringResource(R.string.recent_copies_tap_hint), history.size)
-            Spacer(Modifier.height(dimens.spaceSm))
-
-            // Recent copies tray — the weighted primary, so it absorbs vertical squeeze while the
-            // bounded devices tray below stays visible.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(dimens.radiusLg))
-                    .background(colors.bottomSheet)
-                    .padding(dimens.spaceSm)
-            ) {
-                if (history.isEmpty()) {
-                    EmptyTray(stringResource(R.string.history_empty))
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(dimens.spaceSm)
-                    ) {
-                        // Index in the key so a (theoretically) duplicate copy string can't crash the list.
-                        itemsIndexed(history, key = { i, entry -> "$i:$entry" }) { _, entry ->
-                            LiteCopyCard(
-                                entry = entry,
-                                onOpen = { detailEntry = entry },
-                                onCopy = { onCopy(entry) },
-                                onDelete = { onDelete(entry) }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Add bottom padding so the history tray isn't blocked by the slide-up tray's peek height
-            Spacer(Modifier.height(88.dp))
-        }
-
-        // Custom Slide-Up Tray for Connected Devices
-        val peekHeightDp = 88.dp
-        val expandedHeightDp = 350.dp
-        val density = LocalDensity.current
-        val maxOffsetPx = with(density) { (expandedHeightDp - peekHeightDp).toPx() }
-        
-        val trayOffset = remember { Animatable(maxOffsetPx) }
-        val coroutineScope = rememberCoroutineScope()
-        // Drag sets this; the bounce hint only runs while the user hasn't touched the tray, and stops
-        // for good once they open it. Keying the effect on a stable Boolean (not trayOffset.targetValue,
-        // which changes every drag frame) stops the per-frame restart churn the first pass had.
-        var trayTouched by remember { mutableStateOf(false) }
-
-        // Bounce hint: nudge the collapsed tray up ~40dp a few times so it's discoverable, then rest.
-        LaunchedEffect(trayTouched) {
-            if (trayTouched) return@LaunchedEffect
-            repeat(3) {
-                delay(1500)
-                if (trayTouched) return@LaunchedEffect
-                trayOffset.animateTo(
-                    targetValue = maxOffsetPx - with(density) { 40.dp.toPx() },
-                    animationSpec = tween(250, easing = FastOutSlowInEasing)
-                )
-                trayOffset.animateTo(
-                    targetValue = maxOffsetPx,
-                    animationSpec = tween(300, easing = FastOutSlowInEasing)
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth() // Edge-to-edge slide-up tray
-                .height(expandedHeightDp)
-                .offset { IntOffset(0, trayOffset.value.toInt()) }
-                .clip(RoundedCornerShape(topStart = dimens.radiusXl, topEnd = dimens.radiusXl))
-                .background(colors.background) // Slide-up uses main background color
-                .border(
-                    width = dimens.hairlineWidth,
-                    color = colors.divider,
-                    shape = RoundedCornerShape(topStart = dimens.radiusXl, topEnd = dimens.radiusXl)
-                )
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Draggable Header Area
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectVerticalDragGestures(
-                                onDragStart = { trayTouched = true },
-                                onDragEnd = {
-                                    coroutineScope.launch {
-                                        val target = if (trayOffset.value < maxOffsetPx / 2) 0f else maxOffsetPx
-                                        trayOffset.animateTo(target, tween(300))
-                                    }
-                                },
-                                onVerticalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    coroutineScope.launch {
-                                        val newValue = (trayOffset.value + dragAmount).coerceIn(0f, maxOffsetPx)
-                                        trayOffset.snapTo(newValue)
-                                    }
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                SegmentedSnapPager(
+                    segmentCount = 2,
+                    modifier = Modifier.fillMaxSize(),
+                    state = pagerState
+                ) { segment ->
+                    if (segment == 0) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            stickyHeader {
+                                SegmentTitle {
+                                    SectionLabel(stringResource(R.string.lite_paired_nearby_devices), pairedDevices.size)
                                 }
-                            )
-                        }
-                        .padding(top = dimens.spaceMd, bottom = dimens.spaceLg),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Drag Handle Pill
-                    Box(
-                        modifier = Modifier
-                            .width(36.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(colors.textSecondary.copy(alpha = 0.5f))
-                    )
-                    Spacer(Modifier.height(dimens.spaceMd))
-                    SectionLabel(stringResource(R.string.lite_paired_nearby_devices), pairedDevices.size)
-                }
-
-                // Device list (no inner tray surface — the slide-up panel is the surface).
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = dimens.spaceXl)
-                        .padding(bottom = dimens.spaceMd)
-                ) {
-                    if (pairedDevices.isEmpty()) {
-                        Column {
-                            EmptyTray(stringResource(R.string.paired_devices_empty))
-                            RescanPill(onRescan)
-                        }
-                    } else {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(dimens.spaceMd),
-                            contentPadding = PaddingValues(bottom = 120.dp)
-                        ) {
-                            itemsIndexed(pairedDevices) { index, device ->
-                                DeviceCardRow(
-                                    name = device.name,
-                                    isWindows = device.isWindows,
-                                    isPaired = device.isPaired,
-                                    onPair = { onPair(device.ip) },
-                                    onUnpair = { onUnpair(device.ip) }
-                                )
-                                if (index < pairedDevices.size - 1) {
-                                    Spacer(Modifier.height(dimens.spaceMd))
+                            }
+                            item {
+                                // Status strip — a single line summarising sync state + peer count, tinted by state.
+                                val syncActive = acceptSync
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(dimens.radiusLg))
+                                        .background(if (syncActive) colors.accentMuted else colors.card)
+                                        .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusLg))
+                                        .padding(horizontal = dimens.spaceLg, vertical = dimens.spaceMd),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(dimens.spaceMd)
+                                            .clip(RoundedCornerShape(dimens.radiusPill))
+                                            .background(if (syncActive) colors.green else colors.textSecondary)
+                                    )
+                                    Spacer(Modifier.size(dimens.spaceSm))
+                                    Text(
+                                        // Only actually-paired devices sync; the list also holds nearby-unpaired rows.
+                                        text = if (syncActive)
+                                            stringResource(R.string.lite_clip_sync_on, pairedDevices.count { it.isPaired })
+                                        else stringResource(R.string.lite_clip_sync_off),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (syncActive) colors.greenText else colors.textSecondary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Spacer(Modifier.height(dimens.spaceLg))
+                            }
+                            if (pairedDevices.isEmpty()) {
+                                item {
+                                    EmptyTray(
+                                        stringResource(R.string.paired_devices_empty),
+                                        Modifier.fillParentMaxWidth().fillParentMaxHeight(0.5f)
+                                    )
+                                }
+                            } else {
+                                itemsIndexed(pairedDevices) { index, device ->
+                                    DeviceCardRow(
+                                        name = device.name,
+                                        isWindows = device.isWindows,
+                                        isPaired = device.isPaired,
+                                        onPair = { onPair(device.ip) },
+                                        onUnpair = { onUnpair(device.ip) }
+                                    )
+                                    if (index < pairedDevices.size - 1) {
+                                        Spacer(Modifier.height(dimens.spaceMd))
+                                    }
                                 }
                             }
                             item { RescanPill(onRescan) }
                         }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(dimens.spaceSm),
+                            contentPadding = PaddingValues(bottom = dimens.spaceXl)
+                        ) {
+                            stickyHeader {
+                                SegmentTitle {
+                                    SectionLabel(stringResource(R.string.recent_copies_tap_hint), history.size)
+                                }
+                            }
+                            if (history.isEmpty()) {
+                                item {
+                                    EmptyTray(
+                                        stringResource(R.string.history_empty),
+                                        Modifier.fillParentMaxWidth().fillParentMaxHeight(0.6f)
+                                    )
+                                }
+                            } else {
+                                // Index in the key so a (theoretically) duplicate copy string can't crash the list.
+                                itemsIndexed(history, key = { i, entry -> "$i:$entry" }) { _, entry ->
+                                    LiteCopyRow(
+                                        entry = entry,
+                                        onOpen = { detailEntry = entry },
+                                        onCopy = { onCopy(entry) },
+                                        onDelete = { onDelete(entry) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
+                SegmentDots(pagerState, 2, Modifier.align(Alignment.CenterEnd).offset(x = dimens.spaceLg))
             }
         }
 
@@ -320,6 +234,17 @@ fun LiteClipboardScreen(
             )
         }
     }
+}
+
+/** Pinned segment title: opaque so rows scroll underneath it cleanly. */
+@Composable
+private fun SegmentTitle(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppThemeTokens.colors.background)
+            .padding(vertical = AppThemeTokens.dimens.spaceSm)
+    ) { content() }
 }
 
 /** Hairline capsule with a refresh glyph — flushes discovery and repopulates the device list. */
@@ -388,10 +313,31 @@ private fun SectionLabel(text: String, count: Int) {
     }
 }
 
-/** A single recent-copy card: leading clipboard glyph, the copied text (2 lines), and copy + delete
- *  actions. Tapping the body opens the full detail overlay. */
+private enum class ClipKind { LINK, EMAIL, PHONE, COLOR, CODE, TEXT }
+
+private val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
+private val COLOR_REGEX = Regex("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+private val PHONE_REGEX = Regex("^\\+?[0-9 ()\\-]{7,20}$")
+private val CODE_MARKERS = listOf("{", "}", ";", "=>", "def ", "fun ", "</")
+
+private fun clipKindOf(s: String): ClipKind {
+    val t = s.trim()
+    val isLink = (t.startsWith("http://", true) || t.startsWith("https://", true) || t.startsWith("www.", true)) &&
+        t.none { it.isWhitespace() }
+    return when {
+        isLink -> ClipKind.LINK
+        EMAIL_REGEX.matches(t) -> ClipKind.EMAIL
+        COLOR_REGEX.matches(t) -> ClipKind.COLOR
+        PHONE_REGEX.matches(t) && t.count { it.isDigit() } >= 7 -> ClipKind.PHONE
+        t.contains('\n') && CODE_MARKERS.any { t.contains(it) } -> ClipKind.CODE
+        else -> ClipKind.TEXT
+    }
+}
+
+/** A single dense recent-copy row: type badge, the copied text (2 lines, plus the host for links), and
+ *  copy + delete actions. Tapping the body opens the full detail overlay. */
 @Composable
-private fun LiteCopyCard(
+private fun LiteCopyRow(
     entry: String,
     onOpen: () -> Unit,
     onCopy: () -> Unit,
@@ -399,6 +345,12 @@ private fun LiteCopyCard(
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
+    val t = entry.trim()
+    val kind = clipKindOf(entry)
+    val badgeColor = if (kind == ClipKind.COLOR) {
+        val hex = if (t.length == 4) "#" + t.substring(1).map { "$it$it" }.joinToString("") else t
+        runCatching { Color(android.graphics.Color.parseColor(hex)) }.getOrDefault(colors.accentMuted)
+    } else colors.accentMuted
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -406,32 +358,52 @@ private fun LiteCopyCard(
             .background(colors.card)
             .border(dimens.hairlineWidth, colors.divider, RoundedCornerShape(dimens.radiusMd))
             .clickable { onOpen() }
-            .padding(dimens.spaceMd),
+            .padding(horizontal = dimens.spaceMd, vertical = dimens.spaceSm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(dimens.iconLg + dimens.spaceMd)
+                .size(36.dp)
                 .clip(RoundedCornerShape(dimens.radiusSm))
-                .background(colors.accentMuted),
+                .background(badgeColor),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_clipboard_light),
-                contentDescription = null,
-                tint = colors.greenText,
-                modifier = Modifier.size(dimens.iconMd)
-            )
+            val iconModifier = Modifier.size(dimens.iconSm)
+            when (kind) {
+                ClipKind.LINK -> Icon(Icons.Outlined.Link, null, iconModifier, colors.greenText)
+                ClipKind.EMAIL -> Icon(Icons.Outlined.Email, null, iconModifier, colors.greenText)
+                ClipKind.PHONE -> Icon(Icons.Outlined.Phone, null, iconModifier, colors.greenText)
+                ClipKind.COLOR -> Icon(Icons.Outlined.Palette, null, iconModifier, colors.greenText)
+                ClipKind.CODE -> Icon(Icons.Outlined.Code, null, iconModifier, colors.greenText)
+                ClipKind.TEXT -> Icon(
+                    painterResource(R.drawable.ic_clipboard_light), null, iconModifier, colors.greenText
+                )
+            }
         }
         Spacer(Modifier.size(dimens.spaceMd))
-        Text(
-            entry,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.textPrimary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                entry,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (kind == ClipKind.LINK) {
+                val host = runCatching {
+                    android.net.Uri.parse(if (t.startsWith("www.", true)) "https://$t" else t).host
+                }.getOrNull()
+                if (host != null) {
+                    Text(
+                        host,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
         Spacer(Modifier.size(dimens.spaceSm))
         IconAction(Icons.Outlined.ContentCopy, colors.greenText, onCopy)
         IconAction(Icons.Outlined.DeleteOutline, colors.error, onDelete)
@@ -457,10 +429,10 @@ private fun IconAction(
 }
 
 @Composable
-private fun EmptyTray(text: String) {
+private fun EmptyTray(text: String, modifier: Modifier = Modifier) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text,
             style = MaterialTheme.typography.bodyLarge,
