@@ -71,12 +71,28 @@ internal class GattReassembler(private val onFrame: (ByteArray) -> Unit) {
     /** Index of the last chunk accepted into [buffer]; -1 before the first chunk of a frame. */
     private var lastIdx = -1
 
+    /**
+     * The END chunk that completed the previous frame, until the next chunk arrives. The dedupe by
+     * [lastIdx] cannot see a retransmit of that chunk, because completing a frame resets the index
+     * state — so a re-sent single-chunk frame (START|END, idx 0) looked like a brand-new frame and was
+     * delivered twice. Sealed duplicates then failed the sequence check harmlessly, but a plaintext
+     * one reached the handshake code a second time. Matching bytes exactly keeps this to true
+     * retransmits: two distinct frames never share an END chunk byte for byte, since sealed frames
+     * carry a fresh sequence number and HELLOs never fit in one chunk.
+     */
+    private var lastEndChunk: ByteArray? = null
+
     fun accept(chunk: ByteArray) {
         if (chunk.size < 2) return
         val idx = chunk[0].toInt() and 0xFF
         val flags = chunk[1].toInt()
         val isEnd = flags and 0x01 != 0
         val isStart = flags and 0x02 != 0
+
+        // Exact retransmit of the chunk that just completed a frame: drop it.
+        val previousEnd = lastEndChunk
+        lastEndChunk = null
+        if (previousEnd != null && lastIdx == -1 && !poisoned && chunk.contentEquals(previousEnd)) return
 
         // The peer began a new frame: abandon whatever we were holding and resync here.
         if (isStart && (lastIdx != -1 || poisoned)) resetFrame()
@@ -104,6 +120,7 @@ internal class GattReassembler(private val onFrame: (ByteArray) -> Unit) {
         if (isEnd) {
             val frame = buffer.toByteArray()
             resetFrame()
+            lastEndChunk = chunk.copyOf()
             // Defensive cap: a malformed peer cannot balloon memory.
             if (frame.size <= MAX_FRAME_BYTES) onFrame(frame)
         } else if (buffer.size() > MAX_FRAME_BYTES) {
@@ -112,6 +129,9 @@ internal class GattReassembler(private val onFrame: (ByteArray) -> Unit) {
             lastIdx = -1
         }
     }
+
+    /** Discards any partial frame — the link it came over has gone. Same thread as [accept]. */
+    fun reset() = resetFrame()
 
     private fun resetFrame() {
         buffer.reset()

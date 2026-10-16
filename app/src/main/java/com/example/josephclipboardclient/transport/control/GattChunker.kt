@@ -90,12 +90,28 @@ internal class GattReassembler(
     /** Index of the last chunk accepted into [buffer]; -1 before the first chunk of a frame. */
     private var lastIdx = -1
 
+    /**
+     * The END chunk that completed the previous frame, until the next chunk arrives. The dedupe by
+     * [lastIdx] cannot see a retransmit of that chunk, because completing a frame resets the index
+     * state — so a re-sent single-chunk frame (START|END, idx 0) looked like a brand-new frame and was
+     * delivered twice. Sealed duplicates then failed the sequence check harmlessly, but a plaintext
+     * one reached the handshake code a second time. Matching bytes exactly keeps this to true
+     * retransmits: two distinct frames never share an END chunk byte for byte, since sealed frames
+     * carry a fresh sequence number and HELLOs never fit in one chunk.
+     */
+    private var lastEndChunk: ByteArray? = null
+
     fun accept(chunk: ByteArray) {
         if (chunk.size < 2) return
         val idx = chunk[0].toInt() and 0xFF
         val flags = chunk[1].toInt()
         val isEnd = flags and 0x01 != 0
         val isStart = flags and 0x02 != 0
+
+        // Exact retransmit of the chunk that just completed a frame: drop it.
+        val previousEnd = lastEndChunk
+        lastEndChunk = null
+        if (previousEnd != null && lastIdx == -1 && !poisoned && chunk.contentEquals(previousEnd)) return
 
         // A START chunk is an unconditional frame boundary: the peer has begun a new frame, so
         // whatever we were holding (a poisoned frame, or a half-delivered one whose sender gave up)
@@ -133,6 +149,7 @@ internal class GattReassembler(
         if (isEnd) {
             val frame = buffer.toByteArray()
             resetFrame()
+            lastEndChunk = chunk.copyOf()
             // Defensive cap: a malformed peer cannot balloon memory.
             if (frame.size <= MAX_FRAME_BYTES) onFrame(frame)
             else onDropped?.invoke("frame of ${frame.size} bytes exceeds the $MAX_FRAME_BYTES cap")

@@ -15,7 +15,7 @@ import com.joseph.clipboard.windows.network.control.SessionCrypto
 class FileTransferDaemon(
     private val onOfferReceived: (ip: String, sessionId: String, deviceName: String, manifest: List<Pair<String, Long>>) -> Unit,
     private val onAcceptReceived: (sessionId: String, fgcm: Boolean, useV2: Boolean, socket: Socket) -> Unit,
-    private val onResumeReceived: (sessionId: String, fileIndex: Int, offset: Long, ackExpected: Boolean, fgcm: Boolean, useV2: Boolean, socket: Socket) -> Unit,
+    private val onResumeReceived: (sessionId: String, fileIndex: Int, offset: Long, ackExpected: Boolean, fgcm: Boolean, useV2: Boolean, seal: Boolean, socket: Socket) -> Unit,
     private val onCancelReceived: (sessionId: String) -> Unit = {},
     /** An Android scanner dialed in for off-grid "send via QR"; the handler owns the socket. */
     private val onP2pHelloReceived: (socket: Socket, header: String) -> Unit = { s, _ -> try { s.close() } catch (_: Exception) {} },
@@ -259,13 +259,16 @@ class FileTransferDaemon(
                         val ackExpected = flags.contains("ack")
                         val fgcm2 = flags.contains("fgcm2")
                         val fgcm = flags.contains("fgcm") || fgcm2
+                        // "seal": an off-grid receiver resuming a sealed QR transfer (ECDH key, not
+                        // the pairing key — the controller checks it against the session).
+                        val seal = flags.contains(OffGridQrSender.ACCEPT_FLAG_SEAL)
                         // AEAD resume restarts the file (GCM records aren't byte-seekable), so the
                         // receiver always sends offset 0 with fgcm/fgcm2. A non-zero offset under AEAD
                         // is malformed — reject it here rather than seal from a wrong chunk index that
                         // only fails later at the receiver's tag check. Mirrors the Android guard.
-                        if (fgcm && offset != 0L) { clientSocket.close(); return@thread }
+                        if ((fgcm || seal) && offset != 0L) { clientSocket.close(); return@thread }
                         if (!performAcceptAuth2Challenge(clientSocket, inputStream)) { clientSocket.close(); return@thread }
-                        onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, fgcm2, clientSocket)
+                        onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, fgcm2, seal, clientSocket)
                     } else {
                         clientSocket.close()
                     }

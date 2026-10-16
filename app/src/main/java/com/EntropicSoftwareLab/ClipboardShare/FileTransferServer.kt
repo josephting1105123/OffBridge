@@ -8,6 +8,7 @@ import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -130,7 +131,19 @@ object FileTransferServer {
                     // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
                     // selects the v2 FileSeal (per-session key + session/file-bound AAD).
                     val resumeUseV2: Boolean
-                    val resumeFileKey = try {
+                    val resumeFileKey = if (isOffGridResume) {
+                        // Off-grid: no pairing key exists for this ephemeral IP. The seal key is the
+                        // ECDH secret negotiated at P2P_HELLO, and the session says whether it was
+                        // used. A request that disagrees with it is refused either way — dropping the
+                        // flag would stream a sealed transfer in the clear.
+                        val stored = TransferDaemon.activeSessions[sessionId]?.p2pSealKey
+                        if ((stored != null) != flags.contains(OffGridHandshake.ACCEPT_FLAG_SEAL)) {
+                            TransportDiag.log("TX: off-grid resume refused — seal flag does not match the session")
+                            socket.close(); return
+                        }
+                        resumeUseV2 = stored != null
+                        stored
+                    } else try {
                         val key = TransferKeys.senderFileKey(context, senderIp, flags.contains("fgcm") || flags.contains("fgcm2"))
                         // Gate v2 by the same TOFU pin the receiver enforces: a v2-pinned peer whose
                         // RESUME stripped "fgcm2"→"fgcm" is a downgrade → throw, not seal v1 silently.
@@ -140,7 +153,7 @@ object FileTransferServer {
                         TransportDiag.log("TX: $e — refusing plaintext resume")
                         socket.close(); return
                     }
-                    val resumeAead = flags.contains("fgcm") || flags.contains("fgcm2")
+                    val resumeAead = resumeFileKey != null
 
                     val session = TransferDaemon.activeSessions[sessionId]
                     if (session != null && !session.isIncoming) {
