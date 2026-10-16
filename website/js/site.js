@@ -552,6 +552,35 @@
     render();
   }
 
+  /* --- Security: each step lights as the lock reaches it ---------------
+     The lock crosses the wire in the first 6s of an 8s loop (sec-travel),
+     so a marker lights at 6s times its centre's share of the wire. The
+     markers sit at the left of their columns, so this is measured, not
+     assumed. Without the lock (narrow or reduced motion) the CSS cascade
+     stays. */
+  function initSecRoute() {
+    var wire = $(".sec__wire");
+    var packet = $(".sec__packet");
+    if (!wire || !packet) return;
+    var marks = $$(".sec__n");
+    function sync() {
+      var w = wire.getBoundingClientRect();
+      var on = packet.offsetWidth > 0 && w.width > 0;
+      marks.forEach(function (m) {
+        if (!on) {
+          m.style.animationDelay = "";
+          return;
+        }
+        var r = m.getBoundingClientRect();
+        var f = (r.left + r.width / 2 - w.left) / w.width;
+        m.style.animationDelay = (6 * f).toFixed(3) + "s";
+      });
+    }
+    sync();
+    if (window.ResizeObserver) new ResizeObserver(sync).observe(wire);
+    else window.addEventListener("resize", sync);
+  }
+
   /* --- Pairing: the same six digits on both screens --------------------- */
   function initPairing() {
     var code = "";
@@ -757,6 +786,7 @@
     initHero();
     initTransfer();
     initPairing();
+    initSecRoute();
     initOffgrid();
     initYear();
   }

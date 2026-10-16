@@ -485,11 +485,15 @@ html[data-os="android"] .desk__win {
   filter: none;
 }
 
+/* Push to PC belongs to the phone: it hangs centred under it, outside both
+   devices, so it never sits on the window. */
 .pushpc {
   position: absolute;
   z-index: 3;
-  right: calc(var(--desk-phone) + 4% + 18px);
-  bottom: 18px;
+  top: calc(100% + 16px);
+  right: calc(var(--desk-phone) / 2);
+  transform: translateX(50%);
+  white-space: nowrap;
 }
 
 @media (max-width: 759px) {
@@ -498,9 +502,9 @@ html[data-os="android"] .desk__win {
     column-gap: 3%;
   }
   .pushpc {
-    left: 8px;
-    right: auto;
-    bottom: 8px;
+    top: calc(100% + 12px);
+    right: 0;
+    transform: none;
   }
 }
 
