@@ -220,7 +220,7 @@ html[data-os="android"] .osswitch::before {
 
 /* --- Scenes: copy beside a live app screen ------------------------------ */
 .scene {
-  padding-block: clamp(4rem, 3rem + 5vw, 7.5rem);
+  padding-block: clamp(3.5rem, 2.5rem + 3vw, 5.5rem);
 }
 
 .scene__grid {
@@ -270,28 +270,35 @@ html[data-os="android"] .osswitch::before {
   max-width: 980px;
 }
 
+/* The phone never grows taller than the viewport under the header, so its
+   bottom buttons are reachable without scrolling past the screen. */
 .stage > .fit--droid {
-  max-width: 340px;
+  max-width: clamp(260px, calc((100vh - var(--nav-h) - 48px) * 0.4613), 340px);
+  max-width: clamp(260px, calc((100svh - var(--nav-h) - 48px) * 0.4613), 340px);
 }
 
-/* Windows screens are landscape, so in Windows mode the copy sits above a
-   full-width window. Android keeps the phone beside the copy. */
+/* Copy and screen sit side by side on desktop, so a demo's controls and
+   the screen they drive are on screen together. The landscape window gets
+   the wide column; the screen stays pinned while longer copy scrolls. */
 @media (min-width: 1000px) {
-  html[data-os="windows"] .scene__copy {
-    max-width: none;
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    column-gap: clamp(2.5rem, 1rem + 4vw, 6rem);
+  .scene__grid {
     align-items: start;
   }
-  html[data-os="windows"] .scene__copy > h2 {
-    grid-row: 1 / span 12;
+  .scene__grid .stage {
+    position: sticky;
+    top: calc(var(--nav-h) + 24px);
   }
-  html[data-os="windows"] .scene__copy > :not(h2) {
-    grid-column: 2;
+  html[data-os="windows"] .scene__grid {
+    grid-template-columns: minmax(0, 23rem) minmax(0, 1fr);
   }
-  html[data-os="windows"] .scene__copy > .lead {
-    margin-top: 6px;
+  html[data-os="windows"] .scene__grid--flip {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 23rem);
+  }
+  html[data-os="windows"] .scene__grid--flip .stage {
+    order: -1;
+  }
+  html[data-os="windows"] .scene h2 {
+    font-size: clamp(2rem, 1.2rem + 1.4vw, 2.6rem);
   }
   html[data-os="android"] .scene__grid {
     grid-template-columns: minmax(0, 1fr) 340px;
