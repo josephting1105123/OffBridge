@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB" data-os="windows">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,6 @@
        canonical in sync). Everything else on the page stays relative; see website/README.md. -->
   <link rel="canonical" href="https://offbridge.app/" />
 
-  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="OffBridge" />
   <meta property="og:url" content="https://offbridge.app/" />
@@ -23,25 +22,17 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="OffBridge — off-grid clipboard sync and file transfer for Android and Windows" />
-
-  <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="OffBridge — Off-grid clipboard sync & file transfer" />
   <meta name="twitter:description" content="Sync clipboard and send files between Android and Windows. No cloud, no internet, AES-256 encrypted end to end." />
   <meta name="twitter:image" content="https://offbridge.app/assets/og-image.png" />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preload" href="fonts/ibm_plex_sans_variable.ttf" as="font" type="font/ttf" crossorigin />
 
-  <!-- Preload the one critical font weight -->
-  <link rel="preload" href="fonts/geist_variable.ttf" as="font" type="font/ttf" crossorigin />
-
-  <!-- Theme applied before paint to avoid a flash. Inlined (not an external <script src>)
-       so it runs with zero network round-trip — it's the very first thing on the page
-       and blocking is unavoidable, so at least make it free.
-       This is a byte-for-byte copy of js/theme.js, which privacy.html still loads
-       externally (its own head is small enough that inlining wasn't worth the
-       duplication there). No build step exists to share one source between the two —
-       if you change the theme logic, update BOTH this block and js/theme.js. -->
+  <!-- Theme applied before paint to avoid a flash. A byte-for-byte copy of js/theme.js,
+       which privacy.html still loads externally. If you change the theme logic, update
+       BOTH this block and js/theme.js. -->
   <script>
     (function () {
       "use strict";
@@ -106,29 +97,31 @@
     })();
   </script>
 
+  <!-- Which app to show, before paint: a saved pick, else phones get Android and
+       everything else gets Windows. js/site.js owns the switch after load. -->
+  <script>
+    (function () {
+      var os = null;
+      try { os = localStorage.getItem("ob-os"); } catch (e) {}
+      if (os !== "windows" && os !== "android") {
+        os = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent || "") ? "android" : "windows";
+      }
+      document.documentElement.setAttribute("data-os", os);
+    })();
+  </script>
+
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/layout.css" />
   <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/device.css" />
-  <link rel="stylesheet" href="css/sections.css" />
-  <link rel="stylesheet" href="css/animations.css" />
-  <link rel="stylesheet" href="css/flow.css" />
-
-  <!-- Below-the-fold interactive widgets (mobile card carousel, tile expand overlay) —
-       not needed for first paint, so load without blocking render. -->
-  <link rel="preload" href="css/popout.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <link rel="preload" href="css/carousel.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <link rel="preload" href="css/dl-wheel.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript>
-    <link rel="stylesheet" href="css/popout.css" />
-    <link rel="stylesheet" href="css/carousel.css" />
-    <link rel="stylesheet" href="css/dl-wheel.css" />
-  </noscript>
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/site.css" />
+  <link rel="stylesheet" href="css/download.css" />
+  <link rel="stylesheet" href="css/carousel.css" />
+  <link rel="stylesheet" href="css/dl-wheel.css" />
 
   <link rel="manifest" href="site.webmanifest" />
 
-  <!-- Structured data for search engines -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -142,729 +135,598 @@
     "publisher": { "@type": "Organization", "name": "EntropicSoftwareLab" }
   }
   </script>
-
-  <!-- Gooey page-load overlay: shown until window load, then fades out. Critical CSS is inlined
-       so the overlay paints styled from the first frame instead of flashing unstyled. -->
-  <style>
-    .gooey-loader-overlay {
-      position: fixed; inset: 0; z-index: 10000;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg-deep, #0F0F0F);
-      transition: opacity .5s ease;
-    }
-    /* No visibility:hidden here on purpose — it isn't in the transition list (that's
-       the whole point: visibility can't run on the compositor), so setting it here
-       would snap the element invisible on the very next paint instead of fading with
-       opacity. pointer-events:none blocks interaction immediately; the JS below
-       removes the node from the DOM ~600ms later, which is what finally takes it out
-       of the accessibility tree — visibility doesn't need to do that job too. */
-    .gooey-loader-overlay.is-hidden { opacity: 0; pointer-events: none; }
-    .gooey-loader {
-      font-size: 16px; width: 12em; height: 3em;
-      position: relative; overflow: hidden;
-      border-bottom: 8px solid var(--divider, #303030);
-      filter: url(#gooey-loader-filter);
-    }
-    .gooey-loader::before, .gooey-loader::after { content: ''; position: absolute; border-radius: 50%; }
-    .gooey-loader::before {
-      width: 22em; height: 18em; left: -2em; bottom: -18em;
-      background: var(--accent, #22C55E);
-      animation: gooey-wee1 2s linear infinite;
-    }
-    .gooey-loader::after {
-      width: 16em; height: 12em; left: -4em; bottom: -12em;
-      background: var(--accent-text, #4ADE88);
-      animation: gooey-wee2 2s linear infinite .75s;
-    }
-    @keyframes gooey-wee1 {
-      0%   { transform: translateX(-10em) rotate(0deg); }
-      100% { transform: translateX(7em) rotate(180deg); }
-    }
-    @keyframes gooey-wee2 {
-      0%   { transform: translateX(-8em) rotate(0deg); }
-      100% { transform: translateX(8em) rotate(180deg); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .gooey-loader::before, .gooey-loader::after { animation-duration: 5s; }
-      .gooey-loader-overlay { transition: none; }
-    }
-  </style>
 </head>
 <body>
-  <!-- ===================== Gooey loading overlay ========================== -->
-  <div id="gooey-loader" class="gooey-loader-overlay" role="status" aria-label="Loading">
-    <div class="gooey-loader"></div>
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="gooey-loader-filter">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
-          <feColorMatrix in="blur" mode="matrix"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 48 -7" result="goo" />
-          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-        </filter>
-      </defs>
-    </svg>
-  </div>
-  <script>
-    (function () {
-      var el = document.getElementById('gooey-loader');
-      if (!el) return;
-      var done = false;
-      function hide() {
-        if (done) return;
-        done = true;
-        el.classList.add('is-hidden');
-        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 600);
-      }
-      if (document.readyState === 'complete') hide();
-      else window.addEventListener('load', hide);
-      setTimeout(hide, 4000); // safety: never trap the user behind the loader
-    })();
-  </script>
-
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- ===================== Inline icon sprite (file:// safe) ============== -->
+  <!-- Icon sprite. m-* are the Material filled icons both apps draw with
+       (Compose Icons.Filled.*); paths are Google's, Apache-2.0. -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-    <symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M16 6h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/></symbol>
-    <symbol id="i-clip-check" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M16 6h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
-    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></symbol>
-    <symbol id="i-android" viewBox="0 0 24 24"><path d="M7 11a5 5 0 0 1 10 0"/><path d="M7 11v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-6z"/><path d="m9 8-1-2"/><path d="m15 8 1-2"/><path d="M5 12v3"/><path d="M19 12v3"/><path d="M10 18v2"/><path d="M14 18v2"/></symbol>
-    <symbol id="i-windows" viewBox="0 0 24 24"><rect x="3" y="4" width="7.5" height="7" rx="0.5"/><rect x="13.5" y="4" width="7.5" height="7" rx="0.5"/><rect x="3" y="13" width="7.5" height="7" rx="0.5"/><rect x="13.5" y="13" width="7.5" height="7" rx="0.5"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></symbol>
-    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
-    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
-    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
-    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8"/><path d="m16 7 2 2"/><path d="m18 5 2 2"/></symbol>
-    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 14h6l-1 7 8-11h-6z"/></symbol>
-    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M3 9a15 15 0 0 1 18 0"/><path d="M6.5 12.5a9 9 0 0 1 11 0"/><path d="M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19" r="0.4"/></symbol>
-    <symbol id="i-nfc" viewBox="0 0 24 24"><path d="M8 5a10 10 0 0 1 0 14"/><path d="M12 7a6 6 0 0 1 0 10"/><path d="M16 9a2.5 2.5 0 0 1 0 6"/></symbol>
-    <symbol id="i-bt" viewBox="0 0 24 24"><path d="m7 7 10 10-5 4V3l5 4L7 17"/></symbol>
-    <symbol id="i-hotspot" viewBox="0 0 24 24"><circle cx="12" cy="16" r="2"/><path d="M8.5 13.5a5 5 0 0 1 7 0"/><path d="M6 11a9 9 0 0 1 12 0"/></symbol>
-    <symbol id="i-files" viewBox="0 0 24 24"><path d="M14 3H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7z"/><path d="M14 3v4h4"/></symbol>
-    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3L3 8"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></symbol>
-    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4"/><path d="m8.2 13.2 7.6 4.4"/></symbol>
-    <symbol id="i-tiles" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
-    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.6 0-1.4-1-1.4 0-2.9.5-.7 1.2-.5 2-.5A4.5 4.5 0 0 0 20 11 8 8 0 0 0 12 3z"/><circle cx="8" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="10.5" r="1"/></symbol>
-    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/></symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14a8 8 0 1 1-10-10 6 6 0 0 0 10 10z"/></symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
-    <symbol id="i-cloud-off" viewBox="0 0 24 24"><path d="M5 19h11a4 4 0 0 0 1.5-7.7"/><path d="M8.4 7A5 5 0 0 1 17 9"/><path d="m3 3 18 18"/></symbol>
-    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></symbol>
-    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
-    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
-    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v3"/><path d="M15 4h3a2 2 0 0 1 2 2v3"/><path d="M9 20H6a2 2 0 0 1-2-2v-3"/><path d="M15 20h3a2 2 0 0 0 2-2v-3"/></symbol>
-    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2M20 14v2M14 18v2h2M18 18h2v2"/></symbol>
-    <symbol id="i-send" viewBox="0 0 24 24"><path d="m21 4-9 16-2.5-6.5L3 11z"/></symbol>
+    <symbol id="m-send" viewBox="0 0 24 24"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></symbol>
+    <symbol id="m-link" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></symbol>
+    <symbol id="m-paste" viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/></symbol>
+    <symbol id="m-settings" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></symbol>
+    <symbol id="m-android" viewBox="0 0 24 24"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84 1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A5.84 5.84 0 0 0 12 1c-.96 0-1.86.23-2.66.63L7.850.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31A5.983 5.983 0 0 0 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></symbol>
+    <symbol id="m-update" viewBox="0 0 24 24"><path d="M17 1.01 7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.990zM17 19H7V5h10v14zm-1-6h-3V8h-2v5H8l4 4 4-4z"/></symbol>
+    <symbol id="m-build" viewBox="0 0 24 24"><path d="m22.7 19-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></symbol>
+    <symbol id="m-close" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+    <symbol id="m-public" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></symbol>
+    <symbol id="m-upload" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm0-10h4v6h6v-6h4l-7-7-7 7z"/></symbol>
+    <symbol id="m-download" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></symbol>
+    <symbol id="m-history" viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></symbol>
+    <symbol id="m-file" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></symbol>
+    <symbol id="m-folder" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></symbol>
+    <symbol id="m-message" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></symbol>
+    <symbol id="m-image" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></symbol>
+    <symbol id="m-info" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></symbol>
+    <symbol id="m-back" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></symbol>
+    <symbol id="m-phone" viewBox="0 0 24 24"><path d="M17 1.01 7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></symbol>
+    <symbol id="m-computer" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 5h16v11H4V5z"/></symbol>
+    <symbol id="m-refresh" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+    <symbol id="m-copy" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></symbol>
+    <symbol id="m-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+    <symbol id="m-delete-o" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+    <symbol id="m-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></symbol>
+    <symbol id="m-check-circle" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></symbol>
+    <symbol id="m-help" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></symbol>
+    <symbol id="m-wifi" viewBox="0 0 24 24"><path d="m1 9 2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8 3 3 3-3a4.237 4.237 0 0 0-6 0zm-4-4 2 2a7.074 7.074 0 0 1 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></symbol>
+    <symbol id="m-battery" viewBox="0 0 24 24"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></symbol>
+    <symbol id="m-qr" viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zm-6 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm2 2h2v2h-2zm-4 0h2v2h-2zm2-6h2v2h-2zm2 2h2v2h-2z"/></symbol>
+    <symbol id="m-nfc" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM18 6h-5c-1.1 0-2 .9-2 2v2.28c-.6.35-1 .98-1 1.72 0 1.1.9 2 2 2s2-.9 2-2c0-.74-.4-1.38-1-1.72V8h3v8H8V8h2V6H6v12h12V6z"/></symbol>
+    <symbol id="m-shield" viewBox="0 0 24 24"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></symbol>
+    <symbol id="m-expand" viewBox="0 0 24 24"><path d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"/></symbol>
+    <symbol id="m-windows" viewBox="0 0 24 24"><path d="M3 5.5 10.5 4.4V11.3H3zM11.5 4.3 21 3v8.3h-9.5zM3 12.7h7.5v6.9L3 18.5zM11.5 12.7H21V21l-9.5-1.3z"/></symbol>
+    <symbol id="m-sun" viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM2 13h2a1 1 0 0 0 0-2H2a1 1 0 0 0 0 2zm18 0h2a1 1 0 0 0 0-2h-2a1 1 0 0 0 0 2zM11 2v2a1 1 0 0 0 2 0V2a1 1 0 0 0-2 0zm0 18v2a1 1 0 0 0 2 0v-2a1 1 0 0 0-2 0zM5.99 4.58a1 1 0 0 0-1.41 1.41l1.06 1.06a1 1 0 0 0 1.41-1.41L5.99 4.58zm12.37 12.37a1 1 0 0 0-1.41 1.41l1.06 1.06a1 1 0 0 0 1.41-1.41l-1.06-1.06zm1.06-10.96a1 1 0 0 0-1.41-1.41l-1.06 1.06a1 1 0 0 0 1.41 1.41l1.06-1.06zM7.05 18.36a1 1 0 0 0-1.41-1.41l-1.06 1.06a1 1 0 0 0 1.41 1.41l1.06-1.06z"/></symbol>
+    <symbol id="m-moon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></symbol>
   </svg>
 
-  <!-- ================= Animated water background =========================
-       A full-screen WebGL layer behind all content (js/water.js): a moving
-       water surface plus ripples that spawn under the pointer, so the cursor
-       reads as an object breaking the surface. Sits at z-index:-1; a static
-       CSS gradient shows if WebGL is unavailable or under reduced motion. -->
+  <!-- Animated water background (js/water.js). Fixed behind everything; a static
+       gradient shows without WebGL or under reduced motion. -->
   <canvas class="water-bg" aria-hidden="true"></canvas>
 
-  <!-- ============================== NAV ================================== -->
-  <header class="nav" id="nav">
-    <div class="container container--wide nav__inner">
+  <header class="topbar" id="nav">
+    <div class="container container--wide topbar__in">
       <a class="brand" href="#top" aria-label="OffBridge — home">
-        <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--accent-text)"><use href="#i-clip-check"></use></svg>
+        <img class="brand__mark" src="assets/favicon.svg" alt="" width="26" height="26" />
         OffBridge
       </a>
 
-      <nav class="nav__links" aria-label="Primary">
-        <a href="#features">Features</a>
-        <a href="#how">How it works</a>
+      <nav class="topbar__links" aria-label="Sections">
+        <a href="#send">Send</a>
+        <a href="#pair">Pairing</a>
+        <a href="#offgrid">Off-grid</a>
         <a href="#security">Security</a>
-        <a href="#platforms">Platforms</a>
-        <a href="#download">Download</a>
+        <a href="#help">Help</a>
       </nav>
 
-      <div class="nav__actions">
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle light and dark theme">
-          <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
-          <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+      <div class="osswitch" role="radiogroup" aria-label="Show the app for">
+        <button type="button" role="radio" aria-checked="true" data-os-pick="windows">
+          <svg class="ic" aria-hidden="true"><use href="#m-windows"></use></svg><span>Windows</span>
         </button>
-        <a class="btn btn--primary btn--sm nav__cta" href="#download">
-          <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
-          Get the app
-        </a>
-        <button class="nav__burger" id="nav-burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
-          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        <button type="button" role="radio" aria-checked="false" data-os-pick="android">
+          <svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg><span>Android</span>
         </button>
       </div>
-    </div>
-  </header>
 
-  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-    <ul>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#how">How it works</a></li>
-      <li><a href="#security">Security</a></li>
-      <li><a href="#platforms">Platforms</a></li>
-      <li><a href="#download">Download</a></li>
-    </ul>
-    <a class="btn btn--primary btn--block" href="#download">
-      <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
-      Get the app
-    </a>
-  </div>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Toggle light and dark theme">
+        <svg class="ic icon-moon" aria-hidden="true"><use href="#m-moon"></use></svg>
+        <svg class="ic icon-sun" aria-hidden="true"><use href="#m-sun"></use></svg>
+      </button>
+      <a class="btn btn--primary btn--sm topbar__cta" href="#download">Download</a>
+    </div>
+    <nav class="topbar__sub" aria-label="Sections">
+      <div class="container container--wide topbar__subin">
+        <a href="#send">Send</a>
+        <a href="#pair">Pairing</a>
+        <a href="#offgrid">Off-grid</a>
+        <a href="#security">Security</a>
+        <a href="#help">Help</a>
+        <a href="#download">Download</a>
+      </div>
+    </nav>
+  </header>
 
   <main id="main">
     <span id="top"></span>
 
-    <!-- ============================ HERO ============================== -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="container container--wide hero__grid">
-        <div class="hero__copy">
-          <span class="pill pill--accent" data-reveal="fade"><span class="pill__dot"></span> No cloud · No account · No internet</span>
-          <h1 class="hero__title" id="hero-title">
-            <span class="word" style="--w:0">Your</span>
-            <span class="word" style="--w:1">clipboard</span>
-            <span class="word" style="--w:2">&amp;</span>
-            <span class="word" style="--w:3">files,</span>
-            <span class="word grad" style="--w:4">everywhere</span>
-            <span class="word grad" style="--w:5">—</span>
-            <span class="word grad" style="--w:6">off</span>
-            <span class="word grad" style="--w:7">the</span>
-            <span class="word grad" style="--w:8">grid.</span>
-          </h1>
-          <p class="hero__lead" data-reveal>
-            OffBridge syncs text and sends files between your Android phone and
-            Windows PC, directly, device to device. Pair once by scanning a QR code or
-            confirming a 6-digit code, then move files over your network or completely
-            off-grid via QR or NFC. AES-256 encrypted end to end, and nothing ever touches a server.
+    <!-- =============================== HERO =============================== -->
+    <section class="scene scene--hero" aria-labelledby="hero-title">
+      <div class="container container--wide scene__grid">
+        <div class="scene__copy">
+          <h1 id="hero-title">Your clipboard and files, off the grid.</h1>
+          <p class="lead">
+            OffBridge moves text and files between your Android phone and Windows PC,
+            device to device. Pair once with a QR code or a 6-digit code, then send over
+            your own Wi-Fi or with no network at all. Everything is sealed with AES-256,
+            and nothing touches a server.
           </p>
-          <div class="hero__cta" data-reveal>
-            <a class="btn btn--primary btn--lg" data-cta="android" href="#download">
-              <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
-              Get on Google Play
+
+          <form class="try" data-try autocomplete="off">
+            <label for="try-in">
+              <span data-for="windows">Copy something on the PC</span>
+              <span data-for="android">Copy something on the phone</span>
+            </label>
+            <div class="try__row">
+              <input id="try-in" name="t" type="text" maxlength="60" value="Table for two at 7:30" spellcheck="false" />
+              <button class="btn btn--primary" type="submit">
+                <svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg>
+                <span data-for="windows">Copy</span><span data-for="android">Push to PC</span>
+              </button>
+            </div>
+            <p class="try__note" data-for="windows">On Windows, what you copy reaches your paired phone by itself.</p>
+            <p class="try__note" data-for="android">Android doesn't let apps read the clipboard in the background, so the phone sends with one tap: the Push to PC tile, Share &rarr; OffBridge, or opening the app.</p>
+            <p class="visually-hidden" aria-live="polite" data-try-live></p>
+          </form>
+
+          <p class="scene__cta">
+            <a class="btn btn--primary" href="#download">
+              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
+              <span data-for="windows">Get it for Windows</span><span data-for="android">Get it for Android</span>
             </a>
-            <a class="btn btn--ghost btn--lg" data-cta="windows" href="#download">
-              <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
-              Windows installer
-            </a>
-          </div>
-          <div class="hero__meta" data-reveal>
-            <span><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg> AES-256 encrypted</span>
-            <span><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg> Zero telemetry</span>
-            <span><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg> Multi-GB transfers</span>
-          </div>
+            <span class="scene__meta">Free. No account. Android 10+ and Windows 10/11.</span>
+          </p>
         </div>
 
-        <div class="hero__media" data-reveal="scale">
-          <div class="device-stage">
-            <div class="device device--phone" data-parallax style="--par:36px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.webp" alt="OffBridge on Android — Clipboard tab with auto-sync on and recent copies" width="591" height="1280" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.webp" alt="OffBridge on Android — Clipboard tab with auto-sync on and recent copies" width="591" height="1280" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+        <div class="duo" data-duo>
+          <!-- Windows: Clipboard screen -->
+          <div class="frame win duo__win" style="view-transition-name: hero-win" role="group" aria-label="OffBridge for Windows, Clipboard screen">
+            <div class="win__bar" aria-hidden="true">
+              <span class="win__bar-rail"></span>
+              <span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span>
+            </div>
+            <div class="win__body">
+              <div class="rail">
+                <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                <a href="#top" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
+              </div>
+              <div class="win__page">
+                <div class="w-head">
+                  <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
+                  <span class="w-title">Clipboard (Auto-Sync)</span>
+                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                </div>
+                <div class="togrow"><span>Accept Incoming Clipboard</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Accept Incoming Clipboard" data-toggle></button></div>
+                <div class="divider"></div>
+                <p class="sub1" style="margin-bottom:12px">Recent Copies (Tap to copy)</p>
+                <div class="cliplist" data-cliplist="win">
+                  <div class="clip"><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                  <div class="clip"><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                  <div class="clip"><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete"></use></svg></span></div>
+                </div>
               </div>
             </div>
-            <div class="device device--desktop" data-parallax style="--par:18px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-main-dark.webp" alt="OffBridge on Windows — System Status showing paired devices" width="1200" height="636" loading="eager" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-main-light.webp" alt="OffBridge on Windows — System Status showing paired devices" width="1200" height="636" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+          </div>
+
+          <!-- Android: Clipboard screen -->
+          <div class="frame droid duo__droid" style="view-transition-name: hero-droid" role="group" aria-label="OffBridge for Android, Clipboard screen">
+            <div class="droid__screen">
+              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+              <div class="droid__page">
+                <div class="d-head">
+                  <svg class="ic" aria-hidden="true"><use href="#m-history"></use></svg>
+                  <span class="d-title">Clipboard (Auto-Sync)</span>
+                  <button class="m3sw" type="button" role="switch" aria-checked="true" aria-label="Clipboard auto-sync" data-toggle></button>
+                </div>
+                <div class="strip">Auto-sync on, 1 paired</div>
+                <div class="secrow" style="margin-bottom:10px"><span class="sub1">Recent Copies (Tap to view)</span><span class="countpill" data-clipcount>3</span></div>
+                <div class="tray">
+                  <div class="cliplist" data-cliplist="droid">
+                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">https://offbridge.app/#download</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Flat 4, 21 Elm Road</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                    <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg></span><span class="clip__t">Gate code 4471</span><span class="ib"><svg class="ic" aria-hidden="true"><use href="#m-copy"></use></svg></span><span class="ib ib--del"><svg class="ic" aria-hidden="true"><use href="#m-delete-o"></use></svg></span></div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <!-- A copy hopping PC -> phone, sealed in flight. Decorative; js/flow.js drives it. -->
-            <span class="hop" aria-hidden="true" data-hop>
-              <span class="hop__chip">
-                <svg class="icon hop__lock"><use href="#i-lock"></use></svg>
-                <svg class="icon hop__check"><use href="#i-check"></use></svg>
-                <span class="hop__text">meet at 6pm</span>
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= TRUST STRIP ========================== -->
-    <section class="trust" aria-label="At a glance">
-      <div class="container container--wide">
-        <div class="trust__grid" data-stagger>
-          <div class="trust__cell" data-reveal>
-            <div class="trust__num"><span data-countup="0">0</span></div>
-            <div class="trust__label">Cloud servers</div>
-          </div>
-          <div class="trust__cell" data-reveal>
-            <div class="trust__num"><span data-countup="0">0</span></div>
-            <div class="trust__label">Trackers &amp; ads</div>
-          </div>
-          <div class="trust__cell" data-reveal>
-            <div class="trust__num"><span class="tnum" data-countup="256">256</span><span class="unit">-bit</span></div>
-            <div class="trust__label">AES encryption</div>
-          </div>
-          <div class="trust__cell" data-reveal>
-            <div class="trust__num"><span class="tnum" data-countup="5">5</span></div>
-            <div class="trust__label">Ways to connect</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== FEATURE: CLIPBOARD ======================= -->
-    <section id="clipboard" aria-labelledby="clip-title">
-      <div class="container container--wide split">
-        <div class="split__copy">
-          <span class="eyebrow">Clipboard sync</span>
-          <h2 id="clip-title">Copy here. Paste there. Instantly.</h2>
-          <p class="section-lead">Copy a link, a code snippet or an address on your PC and it's
-            ready to paste on your phone. Going the other way takes one tap, because Android
-            doesn't let any app read your clipboard from the background.</p>
-          <ul class="feat-list">
-            <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>PC to phone, automatically.</strong> Copy on Windows and it lands on your paired phones.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Phone to PC in one tap.</strong> The Push to PC quick-settings tile, or Share &rarr; OffBridge from any app.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>History you keep.</strong> Saved on the device, and restorable from a backup folder after a reinstall.</span></li>
-          </ul>
-        </div>
-
-        <div class="split__media" data-reveal="left">
-          <div class="device-stage">
-            <div class="device device--phone" data-parallax style="--par:42px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-clipboard-dark.webp" alt="Android Clipboard screen: auto-sync toggle and recent copies" width="591" height="1280" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-clipboard-light.webp" alt="Android Clipboard screen: auto-sync toggle and recent copies" width="591" height="1280" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
-              </div>
+              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===================== FEATURE: FILE TRANSFER =================== -->
-    <section id="transfer" aria-labelledby="xfer-title">
-      <div class="container container--wide split split--reverse">
-        <div class="split__copy">
-          <span class="eyebrow">File transfer</span>
-          <h2 id="xfer-title">Send anything. Even when there's no network.</h2>
-          <p class="section-lead">Photos, videos, documents, whole folders, even APKs. Multi-gigabyte
-            transfers move device to device, and pick up right where they left off if the link drops.</p>
-          <ul class="feat-list">
-            <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Any file, any size.</strong> Manifest-based batches with live progress.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg><span><strong>Resume on drop.</strong> Connection blips don't restart the transfer.</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Two-way.</strong> Send and receive on either device.</span></li>
-          </ul>
-        </div>
-
-        <div class="split__media" data-reveal="right">
-          <div class="device-stage">
-            <div class="device device--desktop" data-parallax style="--par:18px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/windows-transfer-dark.webp" alt="OffBridge on Windows — Send Files with a transfer in progress" width="1200" height="638" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/windows-transfer-light.webp" alt="OffBridge on Windows — Send Files with a transfer in progress" width="1200" height="638" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
-              </div>
-            </div>
-            <div class="device device--phone" data-parallax style="--par:40px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-transfer-dark.webp" alt="Android transfer in progress showing percentage and size transferred" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-transfer-light.webp" alt="Android transfer in progress showing percentage and size transferred" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= BENTO FEATURES ======================= -->
-    <section id="features" aria-labelledby="features-title">
-      <div class="container container--wide">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Connectivity</span>
-          <h2 id="features-title">One app. Every way to connect.</h2>
-          <p class="section-lead">OffBridge automatically finds the fastest link between your
-            devices, and falls back gracefully when there's no router in sight.</p>
-        </div>
-
-        <div class="bento" data-stagger>
-          <!-- Transport ladder (big, animated) -->
-          <div class="glass tile tile--ladder col-6 row-2" data-reveal data-ladder>
-            <div>
-              <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg></div>
-              <h3>The transport ladder</h3>
-              <p>Tries the fastest path first and steps down only if needed, with no settings to fiddle with.</p>
-            </div>
-            <div class="ladder">
-              <div class="ladder-step"><span class="ladder-dot"></span> LAN (same Wi-Fi) <span class="speed">fastest</span></div>
-              <div class="ladder-step"><span class="ladder-dot"></span> Wi-Fi Direct / Hotspot <span class="speed">no router</span></div>
-              <div class="ladder-step"><span class="ladder-dot"></span> QR / NFC off-grid <span class="speed">no network</span></div>
-            </div>
-            <div class="card-more">
-              <p class="card-more__lead">Every send starts at the top rung and only steps down when a faster path isn't available. You never pick a mode; the app probes and commits in under a second.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-wifi"></use></svg><span><strong>LAN.</strong> Same router, direct over your Wi-Fi at full local speed.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Wi-Fi Direct / hotspot.</strong> A peer link or a hosted hotspot when there's no router.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>QR / NFC.</strong> Bootstraps a private two-device link from nothing, with no network at all. A short Bluetooth channel carries the handshake; the files go over Wi-Fi.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-3" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg></div>
-            <h3>NFC tap to send</h3>
-            <p>Tap two phones to start an off-grid file transfer, no network needed. <span class="badge">Android</span></p>
-            <div class="card-more">
-              <p class="card-more__lead">Hold two Android phones back-to-back and the bump hands off the connection details, so the transfer starts without a pairing screen or a shared network.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap to begin.</strong> The NFC bump seeds an off-grid handshake between the two phones.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Then the fastest link.</strong> Bytes move over the quickest path the phones can form.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Only the phone you tapped.</strong> The bump keys an ECDH handshake, so no other device can join the link, and the files are sealed with AES-256-GCM.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-3" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg></div>
-            <h3>QR off-grid</h3>
-            <p>Scan a QR to send or receive files with no shared Wi-Fi. Both platforms.</p>
-            <div class="card-more">
-              <p class="card-more__lead">When there's no network to join, one device shows a QR that carries the link details and the other scans it to connect. No typing, no router.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Show, then scan.</strong> The code holds everything the two devices need to meet.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Both platforms.</strong> Windows presents the code; Android scans it with the camera.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Verified, sealed session.</strong> An ECDH handshake proves the scan, so only the scanning device connects, and the files are sealed with AES-256-GCM.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-3" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg></div>
-            <h3>Hotspot bridge</h3>
-            <p>One device hosts and the other joins, with no shared network required.</p>
-            <div class="card-more">
-              <p class="card-more__lead">One device raises a local hotspot and the other joins it, forming a private two-device network. It's the fallback when there's no LAN and Wi-Fi Direct isn't available.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-hotspot"></use></svg><span><strong>Host and join.</strong> A short-lived local access point that only the pair sees.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>No router, no internet.</strong> The bridge is entirely between your two devices.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>Cleaned up after.</strong> The hotspot is torn down when the transfer is done.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-3" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg></div>
-            <h3>Share-sheet</h3>
-            <p>Send straight from any Android app's share button. <span class="badge">Android</span></p>
-            <div class="card-more">
-              <p class="card-more__lead">OffBridge registers as a share target, so a photo, PDF or link goes to your PC straight from whatever app you're already in. No need to open the app first.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-share"></use></svg><span><strong>From anywhere.</strong> Gallery, browser, files, chat; if it can share, it can send.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>One or many.</strong> Batch-select several items and they queue as one transfer.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Straight to the PC.</strong> Picks the same transport ladder as an in-app send.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-4" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg></div>
-            <h3>Filtered history</h3>
-            <p>Browse past transfers and copies.</p>
-            <div class="cluster" style="gap:6px;margin-top:4px">
-              <span class="capsule capsule--on">All</span><span class="capsule">Sent</span>
-              <span class="capsule">Received</span><span class="capsule">Completed</span>
-              <span class="capsule">Pending</span><span class="capsule">Cancelled</span>
-            </div>
-            <div class="card-more">
-              <p class="card-more__lead">Every copy and transfer is logged on the device, so you can find a file later or pick up a transfer that stopped part-way.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-history"></use></svg><span><strong>Filter fast.</strong> Narrow to Sent, Received, Completed, Pending or Cancelled in a tap.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Stored locally.</strong> The log lives only on your device, never a server.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-bolt"></use></svg><span><strong>Open or resume.</strong> Open a received file where it was saved, or ask the sender to resume a paused transfer.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-4" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg></div>
-            <h3>Quick-settings tile</h3>
-            <p>“Push to PC” from the Android pull-down, without opening the app. <span class="badge">Android</span></p>
-            <div class="card-more">
-              <p class="card-more__lead">Drop a Push to PC tile into the Android quick-settings panel and your current clipboard lands on the paired PC in one tap, without ever leaving what you're doing.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>One tap from the shade.</strong> Pull down, tap, done; no app switch.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-clip-check"></use></svg><span><strong>Current clipboard.</strong> Sends whatever you last copied to the PC.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Only to paired devices.</strong> The tile respects your verified pairings.</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="glass tile col-4" data-reveal>
-            <div class="tile__icon"><svg class="icon" aria-hidden="true"><use href="#i-palette"></use></svg></div>
-            <h3>Light &amp; dark</h3>
-            <p>A considered theme on both platforms. Try the toggle up top.</p>
-            <div class="card-more">
-              <p class="card-more__lead">Both apps ship a hand-tuned light and dark theme that follows your system by default and flips on demand, so OffBridge looks at home wherever it runs.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-sun"></use></svg><span><strong>Follows the system.</strong> Matches your OS light or dark setting out of the box.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg><span><strong>Or flip it yourself.</strong> A manual toggle overrides when you want the other.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Consistent across both.</strong> The same considered palette on Android and Windows.</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================== HOW IT WORKS ======================== -->
-    <section id="how" aria-labelledby="how-title">
-      <div class="container container--wide">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">How it works</span>
-          <h2 id="how-title">Paired in seconds, sealed all the way</h2>
-          <p class="section-lead">Follow one copy from your PC to your phone. Four things happen, and none of them involve a server.</p>
-        </div>
-
-        <div class="howviz" data-howviz data-stage="1">
-          <!-- The diagram. Purely visual; the step list beside it carries the same
-               information as text, so the stage is aria-hidden. -->
-          <div class="flow" aria-hidden="true">
-            <div class="flow__nocloud"><svg class="icon"><use href="#i-cloud-off"></use></svg> No server in between</div>
-
-            <div class="flow__node flow__node--pc">
-              <span class="flow__ring"></span><span class="flow__ring flow__ring--late"></span>
-              <div class="flow__screen">
-                <div class="scr scr--1"><span class="scr__dots"><i></i><i></i><i></i></span> Looking for devices</div>
-                <div class="scr scr--2"><svg class="icon"><use href="#i-key"></use></svg><span>Shared key</span></div>
-                <div class="scr scr--3"><span class="scr__code tnum">482 913</span><svg class="icon scr__ok"><use href="#i-check-circle"></use></svg></div>
-                <div class="scr scr--4"><span class="scr__label">Copied</span><span class="scr__text">meet at 6pm</span></div>
-              </div>
-              <span class="flow__name"><svg class="icon"><use href="#i-monitor"></use></svg> Windows PC</span>
-            </div>
-
-            <div class="flow__channel">
-              <div class="flow__wire"></div>
-              <div class="flow__rider flow__rider--pka"><span class="flow__chip flow__chip--key"><svg class="icon"><use href="#i-key"></use></svg> public key</span></div>
-              <div class="flow__rider flow__rider--pkb"><span class="flow__chip flow__chip--key"><svg class="icon"><use href="#i-key"></use></svg> public key</span></div>
-              <div class="flow__rider flow__rider--data">
-                <span class="flow__chip flow__chip--data">
-                  <span class="flow__plain">meet at 6pm</span>
-                  <span class="flow__sealed"><svg class="icon"><use href="#i-lock"></use></svg><span class="flow__cipher" data-cipher>9f3a c17e 04b2</span></span>
-                </span>
-              </div>
-            </div>
-
-            <div class="flow__node flow__node--phone">
-              <span class="flow__ring"></span><span class="flow__ring flow__ring--late"></span>
-              <div class="flow__screen">
-                <div class="scr scr--1"><span class="scr__dots"><i></i><i></i><i></i></span> Looking</div>
-                <div class="scr scr--2"><svg class="icon"><use href="#i-key"></use></svg><span>Shared key</span></div>
-                <div class="scr scr--3"><span class="scr__code tnum">482 913</span><svg class="icon scr__ok"><use href="#i-check-circle"></use></svg></div>
-                <div class="scr scr--4"><span class="scr__label">Ready to paste</span><span class="scr__text">meet at 6pm</span></div>
-              </div>
-              <span class="flow__name"><svg class="icon"><use href="#i-phone"></use></svg> Android</span>
-            </div>
-            <div class="flow__note">
-              <span class="note note--1">Same Wi-Fi, or a hotspot one device raises</span>
-              <span class="note note--2">Only the public halves cross</span>
-              <span class="note note--3">Codes match, so nobody is in the middle</span>
-              <span class="note note--4">AES-256-GCM, checked on arrival</span>
-            </div>
-          </div>
-
-          <div class="howviz__steps">
-            <ol class="hsteps">
-              <li>
-                <button class="hstep" type="button" data-step="1" aria-pressed="true">
-                  <span class="hstep__num">1</span>
-                  <span class="hstep__body">
-                    <span class="hstep__title">Find each other</span>
-                    <span class="hstep__more"><span class="hstep__text">On the same Wi-Fi the two devices discover each other on their own. No shared network? Pair by QR and one device raises a hotspot.</span></span>
-                  </span>
-                  <span class="hstep__bar"></span>
-                </button>
-              </li>
-              <li>
-                <button class="hstep" type="button" data-step="2" aria-pressed="false">
-                  <span class="hstep__num">2</span>
-                  <span class="hstep__body">
-                    <span class="hstep__title">Agree a key</span>
-                    <span class="hstep__more"><span class="hstep__text">Each device makes a key pair and sends only the public half (ECDH on secp256r1). Both work out the same secret key, which never crosses the network.</span></span>
-                  </span>
-                  <span class="hstep__bar"></span>
-                </button>
-              </li>
-              <li>
-                <button class="hstep" type="button" data-step="3" aria-pressed="false">
-                  <span class="hstep__num">3</span>
-                  <span class="hstep__body">
-                    <span class="hstep__title">Check the code</span>
-                    <span class="hstep__more"><span class="hstep__text">Both screens show a 6-digit code from that exchange. If they match and you accept, nobody is sitting in the middle. Scanning a pairing QR does the same check for you.</span></span>
-                  </span>
-                  <span class="hstep__bar"></span>
-                </button>
-              </li>
-              <li>
-                <button class="hstep" type="button" data-step="4" aria-pressed="false">
-                  <span class="hstep__num">4</span>
-                  <span class="hstep__body">
-                    <span class="hstep__title">Seal and send</span>
-                    <span class="hstep__more"><span class="hstep__text">Every copy and file is sealed with AES-256-GCM before it leaves, and off-grid transfers over QR or NFC are sealed too. The receiver checks the seal and rejects anything altered.</span></span>
-                  </span>
-                  <span class="hstep__bar"></span>
-                </button>
-              </li>
-            </ol>
-            <button class="howviz__play" type="button" data-howviz-toggle hidden>
-              <span class="howviz__play-pause">Pause</span><span class="howviz__play-play">Play</span> the walkthrough
+    <!-- =============================== SEND =============================== -->
+    <section class="scene" id="send" aria-labelledby="send-title">
+      <div class="container container--wide scene__grid scene__grid--flip">
+        <div class="scene__copy">
+          <h2 id="send-title">Send a 600&nbsp;MB video. Pull the <span class="nobr">Wi-Fi</span> halfway.</h2>
+          <p class="lead">
+            Photos, videos, documents, whole folders. Big transfers go device to device and
+            pick up where they stopped if the link drops, instead of starting again.
+          </p>
+          <div class="demo-ctl">
+            <button class="btn btn--ghost" type="button" data-x-drop disabled>
+              <svg class="ic" aria-hidden="true"><use href="#m-wifi"></use></svg> Drop the Wi-Fi
+            </button>
+            <button class="btn btn--quiet" type="button" data-x-restart>
+              <svg class="ic" aria-hidden="true"><use href="#m-refresh"></use></svg> Start over
             </button>
           </div>
+          <p class="demo-hint" data-for="windows">Press <b>Send</b> in the window to start.</p>
+          <p class="demo-hint" data-for="android">Press <b>Next</b> on the phone to start.</p>
+          <p class="visually-hidden" aria-live="polite" data-x-live></p>
+          <ul class="facts">
+            <li><b>Any file, any size.</b> Multi-gigabyte batches with live per-file progress.</li>
+            <li><b>Both ways.</b> Either device sends, either device receives.</li>
+            <li><b>History you keep.</b> Filter by Sent, Received, Completed, Pending or Cancelled.</li>
+          </ul>
         </div>
-      </div>
-    </section>
 
-    <!-- ============================ SECURITY ========================== -->
-    <section id="security" aria-labelledby="sec-title">
-      <div class="container container--wide security__grid">
-        <div>
-          <span class="eyebrow">Private by design</span>
-          <h2 id="sec-title">Your data never leaves your devices.</h2>
-          <p class="section-lead">There is no cloud to breach and no account to leak. Pairing is verified
-            face-to-face with a 6-digit code or a QR scan, and everything in flight is encrypted with keys
-            that exist only on your hardware.</p>
-          <a class="btn btn--ghost" href="#faq">Read the FAQ <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
-          <div class="security__media">
-            <div class="device device--phone" data-parallax style="--par:30px">
-              <div class="device__screen">
-                <img class="shot shot--dark" src="assets/screenshots/android-sas-verify-dark.webp" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('shot-missing')">
-                <img class="shot shot--light" src="assets/screenshots/android-sas-verify-light.webp" alt="Android pairing request showing a 6-digit code to verify on both devices, with Accept and Decline" width="800" height="1733" loading="lazy" decoding="async" onerror="this.closest('.device').classList.add('no-light')">
+        <div class="stage">
+          <!-- Windows: Send Files -->
+          <div class="frame win" data-for="windows" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Windows, Send Files screen">
+            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+            <div class="win__body">
+              <div class="rail">
+                <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
+              </div>
+              <div class="win__page" data-xfer-root="windows">
+                <div class="w-head">
+                  <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
+                  <span class="w-title">Send Files</span>
+                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                  <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-history"></use></svg></span>
+                </div>
+                <div class="w-types">
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                </div>
+                <div class="w-selrow">
+                  <span class="sub1">Selected Files</span>
+                  <span class="sizepill num">600.0 MB</span>
+                  <span class="w-check"><i aria-hidden="true"></i>Select All</span>
+                </div>
+                <div class="w-files">
+                  <span class="card w-file"><svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>Holiday_clip</span>
+                </div>
+                <button class="abtn w-sendbtn" type="button" data-x-start>Send</button>
+
+                <div class="w-scrim" data-x-dialog hidden>
+                  <div class="w-dialog" role="dialog" aria-label="Transfer History">
+                    <div class="w-dialog__top">
+                      <span class="w-iconbtn" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                      <span class="w-title">Transfer History</span>
+                      <span class="redcap" aria-hidden="true">Delete</span>
+                    </div>
+                    <div class="xfer-file">
+                      <svg class="ic" aria-hidden="true"><use href="#m-info"></use></svg>
+                      <div><div class="sub1">Holiday_clip.mp4</div><div class="cap">To Pixel 10 &bull; <span class="num">16:34</span></div></div>
+                    </div>
+                    <div class="prog"><i data-x-bar></i></div>
+                    <div class="cap num" data-x-pct>0% (0.0 MB / 600.0 MB)</div>
+                    <div class="xfer-status" data-x-status>&#x2195; Transferring</div>
+                    <button class="abtn abtn--red" type="button" data-x-btn style="height:64px">Cancel</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="assure-grid">
-          <div class="glass assure" data-reveal>
-            <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg></div>
-            <h3>Verified pairing (SAS)</h3>
-            <p>A 6-digit code from an ECDH key exchange. You confirm it matches, which stops man-in-the-middle attacks.</p>
-            <div class="card-more">
-              <p class="card-more__lead">Pairing runs an ECDH key exchange, then shows a 6-digit Short Authentication String on both screens. If the numbers match, no one is sitting in the middle.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg><span><strong>ECDH on the curve.</strong> A fresh secp256r1 exchange derives the shared key.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-check-circle"></use></svg><span><strong>You are the check.</strong> Confirming the six digits is what defeats an impostor.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg><span><strong>Or scan to pair.</strong> A pairing QR carries a one-time key and expires; the other device must prove it holds that key before anything is paired.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Pinned after first trust.</strong> A later key swap fails closed instead of silently downgrading.</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="glass assure" data-reveal>
-            <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg></div>
-            <h3>AES-256 encryption</h3>
-            <p>Every clipboard payload and file is sealed with authenticated AES-256-GCM before it leaves the device, on your network or off it.</p>
-            <div class="card-more">
-              <p class="card-more__lead">What you send is sealed with AES-256-GCM, under the key from pairing on a shared network or a per-session key off-grid. GCM is authenticated, so tampering is detected, not just hidden.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span><strong>Authenticated.</strong> AES-GCM verifies integrity, not only confidentiality.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-files"></use></svg><span><strong>Files too.</strong> Large transfers are sealed the same way, chunk by chunk.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>Off-grid too.</strong> QR, NFC, Wi-Fi Direct and hotspot transfers are sealed from Android 3.7.3 and Windows 3.7.7. If either device is older, the link falls back to an authenticated but unsealed stream, so update both.</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="glass assure" data-reveal>
-            <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg></div>
-            <h3>Keys stay local</h3>
-            <p>Per-pairing keys live only on your devices, never uploaded or shared.</p>
-            <div class="card-more">
-              <p class="card-more__lead">The keys that protect your data are generated on your devices and kept in the OS keystore. They're never uploaded, never shared, and never escrowed anywhere.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-key"></use></svg><span><strong>Per pairing.</strong> Each paired device gets its own key material.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>In the keystore.</strong> Stored encrypted on-device, tied to your hardware.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg><span><strong>Gone on unpair.</strong> Remove a device and its keys are wiped with it.</span></li>
-              </ul>
-            </div>
-          </div>
-          <div class="glass assure" data-reveal>
-            <div class="assure__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg></div>
-            <h3>Zero telemetry</h3>
-            <p>No analytics, no ads, no third parties. Nothing about you is ever sent anywhere.</p>
-            <div class="card-more">
-              <p class="card-more__lead">There are no analytics SDKs, no ad networks and no crash-reporting that phones home. The app has nothing to send about you and nowhere to send it.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-cloud-off"></use></svg><span><strong>No third parties.</strong> No trackers, no ad libraries, no hidden SDKs.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-phone"></use></svg><span><strong>Only your devices.</strong> Your clipboard and files go to the device you paired, nowhere else. The one other request the app makes is a version check against GitHub, which sends nothing about you.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg><span><strong>Nothing to leak.</strong> No account and no profile means nothing to breach.</span></li>
-              </ul>
+          <!-- Android: Send Files (Lite) -->
+          <div class="frame droid" data-for="android" style="view-transition-name: st-send" role="group" aria-label="OffBridge for Android, Send Files screen">
+            <div class="droid__screen">
+              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+              <div class="droid__page" data-xfer-root="android">
+                <div class="d-head">
+                  <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                  <span class="d-title">Send Files</span>
+                </div>
+                <div class="d-types">
+                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg>Media</span>
+                  <span class="card d-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                </div>
+                <div class="secrow" style="margin-bottom:10px"><span class="sub1">Selected Files (1)</span><span class="countpill">600.0 MB</span></div>
+                <div class="tray" style="margin-bottom:16px">
+                  <div class="clip clip--droid"><span class="clip__tile"><svg class="ic" aria-hidden="true"><use href="#m-image"></use></svg></span><span class="clip__t">Holiday_clip.mp4</span></div>
+                </div>
+                <button class="abtn" type="button" data-x-start style="height:64px;margin-top:auto">Next</button>
+
+                <div class="sheet" data-x-dialog hidden role="dialog" aria-label="Transaction Details">
+                  <div class="sheet__top"><span class="h6">Transaction Details</span><span class="redpill" aria-hidden="true">Delete</span></div>
+                  <div class="cap"><span class="num">Oct 16, 2026 16:34</span> &bull; 1 files (<span class="num">600.0 MB</span>)</div>
+                  <div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                    <div class="sub1">Holiday_clip.mp4</div>
+                    <div class="prog prog--droid"><i data-x-bar></i></div>
+                    <div class="cap num" data-x-pct>Transferring: 0% (0.0MB / 600.0MB)</div>
+                  </div>
+                  <div class="xfer-status" data-x-status></div>
+                  <button class="abtn abtn--red" type="button" data-x-btn>Cancel</button>
+                </div>
+              </div>
+              <div class="droid__gesture" aria-hidden="true"></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ======================== PLATFORM COMPARE ====================== -->
-    <section id="platforms" aria-labelledby="plat-title">
+    <!-- ============================== PAIRING ============================= -->
+    <section class="scene" id="pair" aria-labelledby="pair-title">
+      <div class="container container--wide scene__grid">
+        <div class="scene__copy">
+          <h2 id="pair-title">Six digits that have to match.</h2>
+          <p class="lead">
+            Pairing runs a key exchange, then both screens show the same 6-digit code. If the
+            numbers match, nobody is sitting in the middle. Or skip the digits and scan a
+            one-time QR code that expires.
+          </p>
+          <div class="peer" data-peer>
+            <p class="peer__label">
+              <svg class="ic" aria-hidden="true" data-for="windows"><use href="#m-phone"></use></svg>
+              <svg class="ic" aria-hidden="true" data-for="android"><use href="#m-computer"></use></svg>
+              <span data-for="windows">Meanwhile, on Pixel 10</span>
+              <span data-for="android">Meanwhile, on Windows PC</span>
+            </p>
+            <div class="sas sas--page" data-sas aria-label="Pairing code"></div>
+            <p class="peer__note" data-for="windows" data-peer-note>Press <b>Pair</b> next to Pixel 10 in the window.</p>
+            <p class="peer__note" data-for="android">Same digits? Press <b>Accept</b> on the phone.</p>
+            <button class="btn btn--ghost" type="button" data-for="android" data-dpair-again hidden>Send a new request</button>
+            <button class="btn btn--primary" type="button" data-for="windows" data-peer-accept disabled>Accept on Pixel 10</button>
+          </div>
+          <p class="visually-hidden" aria-live="polite" data-pair-live></p>
+        </div>
+
+        <div class="stage">
+          <!-- Windows: System Status (nav label "Pairing") -->
+          <div class="frame win" data-for="windows" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Windows, System Status screen">
+            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+            <div class="win__body">
+              <div class="rail">
+                <a href="#send"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                <a href="#pair" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
+              </div>
+              <div class="win__page">
+                <div class="w-head" style="padding-top:12px">
+                  <svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg>
+                  <span class="w-title">System Status</span>
+                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                </div>
+                <div class="bento3">
+                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg></span><b>Pair</b><span class="cap">with QR</span></div>
+                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg></span><b class="num" data-paircount>1</b><span class="cap">Paired</span></div>
+                  <div class="card btile"><span class="btile__chip"><svg class="ic" aria-hidden="true"><use href="#m-public"></use></svg></span><b style="color:var(--a-gtext)">Active</b><span class="cap">Status</span></div>
+                </div>
+                <div class="field"><span>Device Name:</span>Windows PC</div>
+                <div class="togrow"><span>Discoverable to other devices</span><button class="gsw" type="button" role="switch" aria-checked="true" aria-label="Discoverable to other devices" data-toggle></button></div>
+                <div class="divider" style="margin-top:12px"></div>
+                <div class="secrow"><span class="h6">Connected Devices</span><span class="spin" aria-hidden="true"></span></div>
+                <div class="card devrow">
+                  <svg class="ic" aria-hidden="true"><use href="#m-phone"></use></svg>
+                  <span class="devrow__txt"><span class="sub1">Pixel 10</span><span class="cap">Android</span></span>
+                  <button class="capsule-btn pairbtn" type="button" data-pair-start>Pair</button>
+                </div>
+                <button class="rescan" type="button"><svg class="ic" aria-hidden="true"><use href="#m-refresh"></use></svg>Rescan</button>
+
+                <div class="pair-modal" data-pair-modal hidden>
+                  <div class="pair-card" role="dialog" aria-label="Requesting Pair">
+                    <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
+                    <p class="pair-title">Requesting Pair</p>
+                    <p class="cap" style="font-size:14px">Waiting for Pixel 10 to accept...</p>
+                    <p class="pair-note">Make sure this code matches on both devices</p>
+                    <div class="sas" data-sas></div>
+                    <span class="spin" style="width:32px;height:32px;margin-bottom:12px" aria-hidden="true"></span>
+                    <button class="abtn abtn--muted-red" type="button" data-pair-cancel>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Android: Pairing Request (XML screen, Plex Sans) -->
+          <div class="frame droid" data-for="android" style="view-transition-name: st-pair" role="group" aria-label="OffBridge for Android, Pairing Request screen">
+            <div class="droid__screen">
+              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+              <div class="droid__page">
+                <div class="d-pair" data-dpair="ask">
+                  <svg class="ic" aria-hidden="true"><use href="#m-lock"></use></svg>
+                  <p class="pair-title">Pairing Request</p>
+                  <p class="pair-from">From: Windows PC</p>
+                  <p class="pair-note">Make sure this code matches on both devices</p>
+                  <div class="sas" data-sas></div>
+                  <div class="btns">
+                    <button class="abtn" type="button" data-dpair-accept>Accept</button>
+                    <button class="abtn abtn--decline" type="button" data-dpair-decline>Decline</button>
+                  </div>
+                </div>
+                <div class="okstate" data-dpair="ok" hidden>
+                  <svg class="ic" aria-hidden="true"><use href="#m-check-circle"></use></svg>
+                  <p class="h6">Paired with Windows PC</p>
+                  <p class="cap" style="font-size:14px">You can now send files and share the clipboard with it.</p>
+                </div>
+              </div>
+              <div class="droid__gesture" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== OFF-GRID ============================ -->
+    <section class="scene" id="offgrid" aria-labelledby="off-title">
+      <div class="container container--wide scene__grid scene__grid--flip">
+        <div class="scene__copy">
+          <h2 id="off-title">No shared <span class="nobr">Wi-Fi</span>? Scan instead.</h2>
+          <p class="lead">
+            OffBridge tries the fastest link first and only steps down when it has to. When
+            there's no network to share, one device shows a QR code and the other scans it to
+            build a private link between just the two of them.
+          </p>
+          <ol class="ladder">
+            <li><b>Same Wi-Fi</b><span>Direct over your own network, at full local speed.</span></li>
+            <li><b>Wi-Fi Direct or hotspot</b><span>One device hosts, the other joins. No router.</span></li>
+            <li><b>QR or NFC</b><span>Scan a code, or tap two phones together. No network at all.</span></li>
+          </ol>
+          <p class="demo-hint" data-for="windows">Windows shows the code; an Android phone scans it with the camera. Try <b>QR</b> in the window.</p>
+          <p class="demo-hint" data-for="android">NFC tap and camera scanning are Android-only. Pick a network on the phone, then <b>Next</b>.</p>
+        </div>
+
+        <div class="stage">
+          <!-- Windows: Send Via -> Send via QR -->
+          <div class="frame win" data-for="windows" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Windows, Send Via dialog">
+            <div class="win__bar" aria-hidden="true"><span class="win__bar-rail"></span><span class="win__caps"><span class="win__min"></span><span class="win__max"></span><span><svg class="ic"><use href="#m-close"></use></svg></span></span></div>
+            <div class="win__body">
+              <div class="rail">
+                <a href="#send" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#m-send"></use></svg>Send</a>
+                <a href="#pair"><svg class="ic" aria-hidden="true"><use href="#m-link"></use></svg>Pairing</a>
+                <a href="#top"><svg class="ic" aria-hidden="true"><use href="#m-paste"></use></svg>Clipboard</a>
+                <a href="#security"><svg class="ic" aria-hidden="true"><use href="#m-settings"></use></svg>Settings</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Android</a>
+                <a href="#download"><svg class="ic" aria-hidden="true"><use href="#m-update"></use></svg>Updates (Beta)</a>
+                <span class="rail__tool" aria-hidden="true"><svg class="ic"><use href="#m-build"></use></svg></span>
+              </div>
+              <div class="win__page">
+                <div class="w-head">
+                  <svg class="ic" aria-hidden="true" style="width:28px;height:28px"><use href="#m-upload"></use></svg>
+                  <span class="w-title">Send Files</span>
+                  <span class="howto"><svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>How to use</span>
+                </div>
+                <div class="w-types">
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-file"></use></svg>File</span>
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-folder"></use></svg>Folder</span>
+                  <span class="card w-type"><svg class="ic" aria-hidden="true"><use href="#m-message"></use></svg>Text</span>
+                </div>
+                <div class="w-scrim" style="animation:none">
+                  <div class="w-dialog" role="dialog" aria-label="Send Via" data-off="via" style="align-items:center;text-align:center">
+                    <p style="font-size:18px;font-weight:700">Send Via</p>
+                    <p class="cap"><span class="num">600.0 MB</span> of files selected</p>
+                    <span class="abtn abtn--plain">Connected Devices</span>
+                    <button class="abtn abtn--plain" type="button" data-off-qr>QR</button>
+                    <p class="cap" style="font-size:11px">QR shows a code for a nearby Android phone to scan and receive over your local network.</p>
+                  </div>
+                  <div class="w-dialog" role="dialog" aria-label="Send via QR" data-off="qr" hidden style="align-items:center;text-align:center">
+                    <p style="font-size:18px;font-weight:700">Send via QR</p>
+                    <span class="qr" data-qr aria-hidden="true"></span>
+                    <button class="abtn" type="button" data-off-back style="height:48px">Done</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Android: network choice -> Send via NFC / QR -->
+          <div class="frame droid" data-for="android" style="view-transition-name: st-off" role="group" aria-label="OffBridge for Android, choose the receiving network">
+            <div class="droid__screen">
+              <div class="droid__status" aria-hidden="true"><span>12:30</span><span><svg class="ic"><use href="#m-wifi"></use></svg><svg class="ic"><use href="#m-battery"></use></svg></span></div>
+              <div class="droid__page" data-off="net">
+                <div class="d-head">
+                  <span class="d-back" aria-hidden="true"><svg class="ic"><use href="#m-back"></use></svg></span>
+                  <span class="d-title">Send Files</span>
+                </div>
+                <button class="netopt" type="button" aria-pressed="false" data-net="same"><svg class="ic" aria-hidden="true"><use href="#m-wifi"></use></svg>Receiving Device on Same Network</button>
+                <p class="or">or</p>
+                <button class="netopt" type="button" aria-pressed="true" data-net="diff"><svg class="ic" aria-hidden="true"><use href="#m-qr"></use></svg>Receiving Device on Different Network</button>
+                <button class="abtn" type="button" data-net-next style="height:64px;margin-top:auto">Next</button>
+              </div>
+              <div class="droid__page" data-off="qr" hidden>
+                <div class="d-head">
+                  <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
+                  <span class="d-title">Send via NFC / QR</span>
+                </div>
+                <span class="qr" data-qr aria-hidden="true"></span>
+                <p class="cap" style="font-size:14px;text-align:center;margin-top:14px">Your hotspot is on — the other phone scans this to auto-join and receive.</p>
+              </div>
+              <div class="droid__page" data-off="same" hidden>
+                <div class="d-head">
+                  <button class="d-back" type="button" data-off-back aria-label="Back"><svg class="ic" aria-hidden="true"><use href="#m-back"></use></svg></button>
+                  <span class="d-title">Select Devices</span>
+                </div>
+                <div class="card devrow">
+                  <svg class="ic" aria-hidden="true"><use href="#m-computer"></use></svg>
+                  <span class="devrow__txt"><span class="sub1">Windows PC</span><span class="cap">Windows</span></span>
+                  <span class="capsule-btn pairbtn">Send</span>
+                </div>
+              </div>
+              <div class="droid__gesture" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== SECURITY ============================ -->
+    <section class="scene scene--settings" id="security" aria-labelledby="sec-title">
       <div class="container container--wide">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Cross-platform</span>
-          <h2 id="plat-title">Built for Android and Windows</h2>
-          <p class="section-lead">Clipboard sync, file transfer, QR pairing, off-grid QR transfer and AES-256
-            work on both, in the same 10 languages. A few abilities depend on the hardware each platform has.</p>
+        <div class="settings-head">
+          <svg class="ic" aria-hidden="true"><use href="#m-shield"></use></svg>
+          <h2 id="sec-title">Security</h2>
         </div>
+        <p class="lead settings-lead">There's no cloud to breach and no account to leak. This is what protects a copy or a file between your two devices. Open any row for the detail.</p>
 
-        <div class="compare">
-          <div class="glass plat-card" data-reveal="left">
-            <div class="plat-card__head">
-              <svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg>
-              <h3>Android</h3>
-              <span class="badge">v3.7.6</span>
-            </div>
-            <ul class="cap-list">
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> NFC &amp; QR off-grid file transfer</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Scan &amp; receive via camera</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR pairing (show or scan)</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Wi-Fi Direct &amp; hotspot bridge</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Quick-settings tile &amp; share-sheet</li>
-              <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> System-tray (desktop only)</li>
-            </ul>
-            <div class="card-more">
-              <p class="card-more__lead">On phones, OffBridge is the full toolkit: every off-grid path plus the OS hooks only Android exposes.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg><span><strong>On Google Play.</strong> Installs and updates from the Play Store; runs on Android 10 (API 29) and up.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-nfc"></use></svg><span><strong>Tap, scan, share.</strong> NFC hand-off, camera QR scanning and the system share-sheet are Android-only.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Push from the shade.</strong> A quick-settings tile sends your clipboard to the PC without opening the app.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-tiles"></use></svg><span><strong>Lite or Pro.</strong> Lite keeps things simple; Pro unlocks the full interface, with pairing, clipboard sync, transfer history and every option. Switch any time.</span></li>
-              </ul>
+        <div class="settings">
+          <div class="sgroup">
+            <h3>Pairing</h3>
+            <div class="sgroup__card">
+              <details class="srow"><summary><span class="srow__t">Verified pairing</span><span class="srow__v">6-digit code</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>A fresh ECDH exchange on secp256r1 derives the shared key, and both screens show a 6-digit Short Authentication String from it. You confirming the digits match is what stops a man-in-the-middle.</p></details>
+              <details class="srow"><summary><span class="srow__t">QR pairing</span><span class="srow__v">One-time key</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>A pairing QR carries a one-time key and expires. The other device has to prove it holds that key before anything is paired.</p></details>
+              <details class="srow"><summary><span class="srow__t">After the first pairing</span><span class="srow__v">Pinned</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>The peer's key is pinned once you trust it. A later key swap fails closed instead of quietly downgrading.</p></details>
             </div>
           </div>
 
-          <div class="glass plat-card" data-reveal="right">
-            <div class="plat-card__head">
-              <svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg>
-              <h3>Windows</h3>
-              <span class="badge">v3.7.10</span>
+          <div class="sgroup">
+            <h3>Encryption</h3>
+            <div class="sgroup__card">
+              <details class="srow"><summary><span class="srow__t">Clipboard and files</span><span class="srow__v">AES-256-GCM</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>Every copy and file is sealed before it leaves the device, under the key from pairing. GCM is authenticated, so tampering is detected, not just hidden. Large files are sealed chunk by chunk.</p></details>
+              <details class="srow"><summary><span class="srow__t">Off-grid links</span><span class="srow__v">Sealed too</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>QR, NFC, Wi-Fi Direct and hotspot transfers use a per-session key and are sealed from Android 3.7.3 and Windows 3.7.7. If either device is older, the link falls back to an authenticated but unsealed stream, so update both.</p></details>
             </div>
-            <ul class="cap-list">
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> Clipboard sync &amp; file transfer</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR off-grid sender</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> QR pairing (shows the code)</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> System-tray background app</li>
-              <li><svg class="icon cap-mark cap-yes" aria-hidden="true"><use href="#i-check"></use></svg> AES-256 &amp; verified pairing</li>
-              <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> NFC tap (no hardware)</li>
-              <li class="is-no"><svg class="icon cap-mark cap-no" aria-hidden="true"><use href="#i-x"></use></svg> Camera scan-to-receive</li>
-            </ul>
-            <div class="card-more">
-              <p class="card-more__lead">The desktop build runs quietly from the system tray and ships its own runtime, so there's no Java to install.</p>
-              <ul class="detail-list">
-                <li><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg><span><strong>Installer, bundled runtime.</strong> A standard .exe for Windows 10/11 (64-bit); nothing else to set up.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-monitor"></use></svg><span><strong>Lives in the tray.</strong> Stays in the background, sends what you copy to your phone, and shows a QR code for off-grid sends.</span></li>
-                <li><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg><span><strong>Same crypto.</strong> AES-256 and verified 6-digit pairing, identical to the Android client.</span></li>
-              </ul>
+          </div>
+
+          <div class="sgroup">
+            <h3>Keys</h3>
+            <div class="sgroup__card">
+              <details class="srow"><summary><span class="srow__t">Where keys live</span><span class="srow__v">This device only</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>Each paired device gets its own key material, generated on your hardware and kept in the OS keystore. Never uploaded, never shared, never escrowed.</p></details>
+              <details class="srow"><summary><span class="srow__t">When you unpair</span><span class="srow__v">Keys wiped</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>Remove a device and its keys go with it.</p></details>
+            </div>
+          </div>
+
+          <div class="sgroup">
+            <h3>Privacy</h3>
+            <div class="sgroup__card">
+              <details class="srow"><summary><span class="srow__t">Telemetry and ads</span><span class="srow__v">None</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>No analytics SDKs, no ad networks, no crash reporting that phones home.</p></details>
+              <details class="srow"><summary><span class="srow__t">Account</span><span class="srow__v">None</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>No sign-up and no profile, so there's nothing to breach.</p></details>
+              <details class="srow"><summary><span class="srow__t">Network requests</span><span class="srow__v">Version check</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+                <p>Your clipboard and files go to the device you paired and nowhere else. The one other request the app makes is a version check against GitHub, which sends nothing about you.</p></details>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============================ DOWNLOAD =========================== -->
-    <section id="download" aria-labelledby="dl-title">
+    <!-- ============================== DOWNLOAD ============================ -->
+    <section id="download" class="scene scene--download" aria-labelledby="dl-title">
       <div class="container container--wide">
         <div class="dl-head">
-          <span class="eyebrow">Get it</span>
+          <span class="dl-hero-chip" aria-hidden="true">
+            <svg class="ic" data-for="windows"><use href="#m-windows"></use></svg>
+            <svg class="ic" data-for="android"><use href="#m-android"></use></svg>
+          </span>
           <h2 id="dl-title">Download OffBridge</h2>
-          <p class="section-lead">It's free, with no account. Pick your platform; your device is highlighted below.</p>
+          <p class="lead">Free, with no account. Install it on both devices; your platform is picked out below.</p>
           <p class="dl-note" data-dl-othernote hidden>You're on another platform. OffBridge runs on
             Android and Windows. Grab a build below and install it on a supported device.</p>
         </div>
@@ -872,7 +734,7 @@
         <div class="dl-grid">
           <article class="glass dl-card" data-dl-card="android">
             <div class="dl-detected-tag" data-dl-detected></div>
-            <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg></div>
+            <div class="dl-card__os"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg></div>
             <h3>Android</h3>
             <div class="dl-card__badges">
               <span class="badge" data-dl-version>v3.7.5</span>
@@ -880,16 +742,16 @@
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
             <a class="btn btn--primary btn--lg btn--block" data-dl-link href="https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare" rel="nofollow noopener">
-              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
               <span data-dl-label>Download for Android</span>
             </a>
-            <p class="text-secondary" style="font-size:var(--t-small)" data-dl-note></p>
+            <p class="dl-card__note" data-dl-note></p>
             <details class="dl-verify" data-dl-sha><summary>Verify checksum</summary><code></code></details>
           </article>
 
           <article class="glass dl-card" data-dl-card="apk">
             <div class="dl-detected-tag" data-dl-detected></div>
-            <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-android"></use></svg></div>
+            <div class="dl-card__os"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg></div>
             <h3>Direct APK</h3>
             <div class="dl-card__badges">
               <span class="badge" data-dl-version>v3.7.6</span>
@@ -897,16 +759,16 @@
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
             <a class="btn btn--primary btn--lg btn--block" data-dl-link href="https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk" rel="nofollow noopener">
-              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
               <span data-dl-label>Download APK</span>
             </a>
-            <p class="text-secondary" style="font-size:var(--t-small)" data-dl-note></p>
+            <p class="dl-card__note" data-dl-note></p>
             <details class="dl-verify" data-dl-sha><summary>Verify checksum</summary><code></code></details>
           </article>
 
           <article class="glass dl-card" data-dl-card="windows">
             <div class="dl-detected-tag" data-dl-detected></div>
-            <div class="dl-card__os"><svg class="icon" aria-hidden="true"><use href="#i-windows"></use></svg></div>
+            <div class="dl-card__os"><svg class="ic" aria-hidden="true"><use href="#m-windows"></use></svg></div>
             <h3>Windows</h3>
             <div class="dl-card__badges">
               <span class="badge" data-dl-version>v3.7.10</span>
@@ -914,118 +776,82 @@
               <span class="badge badge--muted" data-dl-size>—</span>
             </div>
             <a class="btn btn--primary btn--lg btn--block is-disabled" data-dl-link href="#download" rel="nofollow noopener" aria-disabled="true">
-              <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>
+              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
               <span data-dl-label>Coming soon</span>
             </a>
-            <p class="text-secondary" style="font-size:var(--t-small)" data-dl-note></p>
+            <p class="dl-card__note" data-dl-note></p>
             <details class="dl-verify" data-dl-sha><summary>Verify checksum</summary><code></code></details>
           </article>
         </div>
 
         <p class="dl-todo">Builds are published for Android and Windows.</p>
+
+        <div class="only">
+          <div>
+            <h3><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg>Only on Android</h3>
+            <p>NFC tap to send, camera QR scanning, the Push to PC quick-settings tile, Share &rarr; OffBridge from any app, and a Lite or Pro layout.</p>
+          </div>
+          <div>
+            <h3><svg class="ic" aria-hidden="true"><use href="#m-windows"></use></svg>Only on Windows</h3>
+            <p>Runs from the system tray so it can receive in the background, and ships its own runtime, so there's no Java to install.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ============================== FAQ ============================= -->
-    <section id="faq" aria-labelledby="faq-title">
-      <div class="container container--wide">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Questions</span>
-          <h2 id="faq-title">Good to know</h2>
+    <!-- =============================== HELP =============================== -->
+    <section id="help" class="scene scene--help" aria-labelledby="help-title">
+      <div class="container">
+        <div class="settings-head">
+          <svg class="ic" aria-hidden="true"><use href="#m-help"></use></svg>
+          <h2 id="help-title">How to use</h2>
         </div>
-        <div class="faq">
-          <details class="faq__item" data-reveal>
-            <summary>Does it need an internet connection?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>No. On the same Wi-Fi it goes direct over your LAN; with no network at all it creates its own link via QR, NFC, Wi-Fi Direct or a hotspot bridge. Your clipboard and files never route through the internet. The app does reach out for one thing, and only if it can: a version check that asks GitHub whether a newer build exists.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>Does it use my mobile data?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>It only reaches devices on your local Wi-Fi, and that traffic never crosses onto the internet, so it doesn't count against a data plan. It also can't discover devices over cellular &mdash; you need the same Wi-Fi, or an off-grid QR / NFC link.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>Is my data uploaded anywhere?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Never. There are no servers and no account. Clipboard contents and files move straight between your devices, with keys stored only on your hardware. Those bytes are sealed with AES-256-GCM whether they cross your Wi-Fi or an off-grid QR or NFC link. Off-grid sealing needs Android 3.7.3 or later and Windows 3.7.7 or later on both ends; with an older device the off-grid link is still direct and authenticated, but the file bytes are not sealed.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>What is the 6-digit code?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>It's a Short Authentication String derived from a secure key exchange. Both devices show the same number, and confirming they match proves you're connected to the right device and not an impostor.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>Does copying on my phone sync to my PC by itself?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Not on its own. Since Android 10, apps can't read the clipboard while they're in the background, and OffBridge doesn't try to get around that. What you copy on Windows reaches the phone automatically; to send from the phone, tap the Push to PC quick-settings tile, use Share &rarr; OffBridge, or open the app, which sends whatever you last copied.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>Which languages does it support?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Both apps ship in English, German, Spanish, French, Indonesian, Japanese, Portuguese, Russian, and Simplified and Traditional Chinese.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>How large a file can I send?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Multi-gigabyte transfers are supported, with live per-file progress. If the connection drops mid-transfer it resumes rather than starting over.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>How do I install it?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>Android installs from Google Play, or as a direct APK from the card above if you'd rather not use Play; the APK usually gets a new release a little before the store does. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></div></div>
-          </details>
-          <details class="faq__item" data-reveal>
-            <summary>Windows blocked the installer or can't verify the publisher?<svg class="faq__chev" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
-            <div class="faq__body"><div><p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p><p>OffBridge is off-grid and has no account; it's simply an unsigned indie build with no reputation yet. It does sit in the system tray so it can receive transfers, which is the app doing its job rather than anything hidden. You can confirm any download against the SHA-256 on the Windows card above.</p><p>Two honest caveats. Smart App Control decides per file hash, so clearing one build does nothing for the next one. And the app is not code-signed yet, so we can't promise a date when a given release stops being flagged. If SmartScreen is all that's in your way, More info then Run anyway gets you through. If Smart App Control is on, there's no per-app override, and we'd rather you skip the install than switch the feature off.</p></div></div>
-          </details>
+        <div class="sgroup__card helplist">
+          <details class="srow"><summary><span class="srow__t">Does it need an internet connection?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>No. On the same Wi-Fi it goes direct over your LAN; with no network at all it creates its own link via QR, NFC, Wi-Fi Direct or a hotspot bridge. Your clipboard and files never route through the internet. The app does reach out for one thing, and only if it can: a version check that asks GitHub whether a newer build exists.</p></details>
+          <details class="srow"><summary><span class="srow__t">Does it use my mobile data?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>It only reaches devices on your local Wi-Fi, and that traffic never crosses onto the internet, so it doesn't count against a data plan. It also can't discover devices over cellular. You need the same Wi-Fi, or an off-grid QR or NFC link.</p></details>
+          <details class="srow"><summary><span class="srow__t">Is my data uploaded anywhere?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>Never. There are no servers and no account. Clipboard contents and files move straight between your devices, with keys stored only on your hardware. Those bytes are sealed with AES-256-GCM whether they cross your Wi-Fi or an off-grid QR or NFC link. Off-grid sealing needs Android 3.7.3 or later and Windows 3.7.7 or later on both ends; with an older device the off-grid link is still direct and authenticated, but the file bytes are not sealed.</p></details>
+          <details class="srow"><summary><span class="srow__t">What is the 6-digit code?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>It's a Short Authentication String derived from a secure key exchange. Both devices show the same number, and confirming they match proves you're connected to the right device and not an impostor.</p></details>
+          <details class="srow"><summary><span class="srow__t">Does copying on my phone sync to my PC by itself?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>Not on its own. Since Android 10, apps can't read the clipboard while they're in the background, and OffBridge doesn't try to get around that. What you copy on Windows reaches the phone automatically; to send from the phone, tap the Push to PC quick-settings tile, use Share &rarr; OffBridge, or open the app, which sends whatever you last copied.</p></details>
+          <details class="srow"><summary><span class="srow__t">Which languages does it support?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>Both apps ship in English, German, Spanish, French, Indonesian, Japanese, Portuguese, Russian, and Simplified and Traditional Chinese.</p></details>
+          <details class="srow"><summary><span class="srow__t">How large a file can I send?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>Multi-gigabyte transfers are supported, with live per-file progress. If the connection drops mid-transfer it resumes rather than starting over.</p></details>
+          <details class="srow"><summary><span class="srow__t">How do I install it?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>Android installs from Google Play, or as a direct APK from the download section if you'd rather not use Play; the APK usually gets a new release a little before the store does. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></details>
+          <details class="srow"><summary><span class="srow__t">Windows blocked the installer or can't verify the publisher?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
+            <p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p>
+            <p>OffBridge is off-grid and has no account; it's simply an unsigned indie build with no reputation yet. It does sit in the system tray so it can receive transfers, which is the app doing its job rather than anything hidden. You can confirm any download against the SHA-256 on the Windows card.</p>
+            <p>Two honest caveats. Smart App Control decides per file hash, so clearing one build does nothing for the next one. And the app is not code-signed yet, so we can't promise a date when a given release stops being flagged. If SmartScreen is all that's in your way, More info then Run anyway gets you through. If Smart App Control is on, there's no per-app override, and we'd rather you skip the install than switch the feature off.</p></details>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- ============================== FOOTER ========================== -->
   <footer class="footer">
-    <div class="container container--wide">
-      <div class="footer__grid">
-        <div class="footer__brand">
-          <a class="brand" href="#top">
-            <svg class="brand__mark" viewBox="0 0 24 24" aria-hidden="true" style="color:var(--accent-text)"><use href="#i-clip-check"></use></svg>
-            OffBridge
-          </a>
-          <p>Off-grid clipboard sync and file transfer for Android and Windows. No cloud, no internet, no telemetry. Built by EntropicSoftwareLab.</p>
-        </div>
-        <div class="footer__col">
-          <h3>Product</h3>
-          <ul>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how">How it works</a></li>
-            <li><a href="#security">Security</a></li>
-            <li><a href="#download">Download</a></li>
-          </ul>
-        </div>
-        <div class="footer__col">
-          <h3>Versions</h3>
-          <ul>
-            <li><a href="#download">Android 3.7.6</a></li>
-            <li><a href="#download">Windows 3.7.10</a></li>
-            <li><a href="#faq">FAQ</a></li>
-          </ul>
-        </div>
-        <div class="footer__col">
-          <h3>Legal</h3>
-          <ul>
-            <li><a href="privacy.html">Privacy Policy</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="footer__bottom">
-        <span>© <span id="year">2026</span> EntropicSoftwareLab · OffBridge</span>
-        <span>Made for people who'd rather not use the cloud.</span>
-      </div>
+    <div class="container container--wide footer__row">
+      <a class="brand" href="#top">
+        <img class="brand__mark" src="assets/favicon.svg" alt="" width="22" height="22" />
+        OffBridge
+      </a>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="#download">Android 3.7.6</a>
+        <a href="#download">Windows 3.7.10</a>
+        <a href="#help">Help</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </nav>
+      <p class="footer__note">&copy; <span id="year">2026</span> EntropicSoftwareLab. Made for people who'd rather not use the cloud.</p>
     </div>
   </footer>
 
-  <!-- Scripts: config first, then enhancers (all deferred) -->
   <script defer src="js/config.js"></script>
-  <script defer src="js/main.js"></script>
-  <script defer src="js/reveal.js"></script>
-  <script defer src="js/flow.js"></script>
   <script defer src="js/platform.js"></script>
-  <script defer src="js/popout.js"></script>
-  <script defer src="js/carousel.js"></script>
   <script defer src="js/dl-wheel.js"></script>
+  <script defer src="js/site.js"></script>
   <script defer src="js/water.js"></script>
 </body>
 </html>

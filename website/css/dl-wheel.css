@@ -1,7 +1,7 @@
 /* ==========================================================================
    dl-wheel.css — "wheel" carousel for the Download section
    (#download .dl-grid), active at every viewport width (dl-wheel.js wraps
-   the grid and poses the cards; the grid rules in sections.css remain as
+   the grid and poses the cards; the grid rules in download.css remain as
    the no-JS fallback). Same wrapping technique as carousel.css's card deck
    but a different pose model: cards fan out on a shallow rotateY arc, so
    the center card reads as a spotlighted pick and the side cards peek in

@@ -6,7 +6,7 @@
    ring/glow), and its neighbors peek in from either side, rotated away and
    dimmed. (Originally mobile-only; promoted to all viewports — the CSS in
    dl-wheel.css sizes the deck per breakpoint, and the grid layout in
-   sections.css remains as the no-JS fallback.)
+   download.css remains as the no-JS fallback.)
 
    - Scrolling over the wheel turns it: one card per notch, throttled so a
      fast trackpad flick steps card-by-card instead of flying past.
