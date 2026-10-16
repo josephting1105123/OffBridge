@@ -985,7 +985,7 @@ html[data-os="android"] .srow__chev {
 /* --- Segmented scrolling (desktop, js/segments.js) ----------------------- */
 /* Each scene fills at least one screen, so a settled segment never shows the
    next one's top edge. */
-html.is-segmented main > .scene {
+html.is-segmented main .scene {
   min-height: calc(100vh - var(--nav-h) - 16px);
   min-height: calc(100svh - var(--nav-h) - 16px);
 }
@@ -1039,6 +1039,183 @@ html.is-segmented main > .scene {
 @media (prefers-reduced-motion: reduce) {
   .seg-pull,
   .seg-pull__fill {
+    transition: none;
+  }
+}
+
+/* --- One screen per segment (desktop) ---------------------------------
+   Sections drop the long-scroll padding and centre in their screen. */
+html.is-segmented main .scene {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(1.25rem, 0.5rem + 2vh, 2.5rem);
+}
+
+/* Hero: copy on the left, the desk on the right, sized by the screen's
+   height so both devices stay fully in view. */
+html.is-segmented .hero {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+  gap: clamp(2rem, 1rem + 3vw, 4rem);
+  align-items: center;
+}
+html.is-segmented .hero__copy {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+html.is-segmented .scene--hero h1 {
+  font-size: clamp(2.4rem, 1.1rem + 2.6vw, 3.6rem);
+}
+html.is-segmented .hero__main .scene__cta {
+  margin-top: 22px;
+}
+html.is-segmented .hero__side {
+  padding-top: 0;
+}
+html.is-segmented .hero__side .lead {
+  font-size: 1.05rem;
+}
+html.is-segmented .trycopy {
+  margin-top: 14px;
+  padding-top: 12px;
+}
+html.is-segmented .desk {
+  width: 100%;
+  margin: 0 0 36px;
+  justify-self: end;
+  /* window height is ~0.496 of the desk width (880x560 at 78% of it) */
+  max-width: calc((100vh - var(--nav-h) - 16px - 5rem - 36px) / 0.496);
+  max-width: calc((100svh - var(--nav-h) - 16px - 5rem - 36px) / 0.496);
+}
+
+/* --- Story: Send, Pair, Off-grid around one pinned stage (desktop) -------
+   js/segments.js moves the three scenes into .story and their app screens
+   into one sticky pane; the screen for the scene in view is the one shown. */
+html.is-segmented .story {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  gap: clamp(2.5rem, 2rem + 3vw, 4.5rem);
+}
+html.is-segmented[data-os="android"] .story {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+html.is-segmented .story__copy {
+  min-width: 0;
+}
+html.is-segmented .story .scene__grid {
+  display: block;
+  width: 100%;
+  max-width: none;
+  padding-inline: 0;
+}
+html.is-segmented .story .scene__copy {
+  justify-self: start;
+}
+html.is-segmented .story__stage {
+  position: relative;
+  min-width: 0;
+}
+html.is-segmented .story__pin {
+  position: sticky;
+  overflow-anchor: none;
+  top: calc(var(--nav-h) + 16px);
+  height: calc(100vh - var(--nav-h) - 32px);
+  height: calc(100svh - var(--nav-h) - 32px);
+  display: grid;
+  align-items: center;
+}
+html.is-segmented .story__pin > .stage {
+  grid-area: 1 / 1;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0s linear 0.35s;
+}
+html.is-segmented .story__pin > .stage.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+/* The window is sized by the pane's height too, so it is always fully in view. */
+html.is-segmented .story__pin > .stage > .fit--win {
+  width: 100%;
+  max-width: min(980px, calc((100vh - var(--nav-h) - 48px) * 1.4667));
+  max-width: min(980px, calc((100svh - var(--nav-h) - 48px) * 1.4667));
+}
+
+/* --- Rail: numbered chapters on the left edge (desktop) ----------------- */
+.seg-rail {
+  position: fixed;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+}
+.seg-rail ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.seg-rail a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+.seg-rail a:hover {
+  color: var(--text);
+}
+.seg-rail__n {
+  font-family: var(--f-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.seg-rail__t {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.25s ease, opacity 0.2s ease;
+}
+.seg-rail a[aria-current] {
+  color: var(--text);
+}
+.seg-rail a[aria-current] .seg-rail__n {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.seg-rail a[aria-current] .seg-rail__t,
+.seg-rail a:hover .seg-rail__t,
+.seg-rail a:focus-visible .seg-rail__t {
+  max-width: 7rem;
+  opacity: 1;
+}
+/* Keep page content clear of the rail where the side margins are thin. */
+@media (max-width: 1439px) {
+  html.is-segmented main {
+    padding-left: 96px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.is-segmented .story__pin > .stage,
+  .seg-rail__t {
     transition: none;
   }
 }

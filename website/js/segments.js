@@ -247,6 +247,7 @@
   // segments; once user scrolling stops, settle into whichever shows more.
   function onScroll() {
     if (!enabled) return;
+    paintActive();
     clearTimeout(idleTimer);
     idleTimer = setTimeout(settle, IDLE_MS);
   }
@@ -262,12 +263,132 @@
     scrollToY(toEnd <= toNext ? ends[i] : tops[i + 1], true);
   }
 
+  /* --- Story: Send, Pair and Off-grid share one pinned stage -------------
+     On desktop the three scenes' app screens move into a single sticky pane
+     beside their copy, and the screen follows whichever scene is in view.
+     Below the breakpoint everything goes back where the markup put it. */
+  var STORY = ["send", "pair", "offgrid"];
+  var story = null; // { wrap, pin, moved: [{ stage, parent, next, sec }], secs }
+  var current = -1;
+
+  function buildStory() {
+    var secs = STORY.map(function (id) { return document.getElementById(id); });
+    if (secs.some(function (s) { return !s || !s.querySelector(".stage"); })) return;
+    var wrap = document.createElement("div");
+    wrap.className = "story";
+    var copy = document.createElement("div");
+    copy.className = "story__copy";
+    var pane = document.createElement("div");
+    pane.className = "story__stage";
+    var pin = document.createElement("div");
+    pin.className = "story__pin";
+    pane.appendChild(pin);
+    secs[0].parentNode.insertBefore(wrap, secs[0]);
+    wrap.appendChild(copy);
+    wrap.appendChild(pane);
+    var moved = secs.map(function (sec, i) {
+      var stage = sec.querySelector(".stage");
+      var rec = { stage: stage, parent: stage.parentNode, next: stage.nextSibling, sec: sec };
+      stage.setAttribute("data-story", STORY[i]);
+      copy.appendChild(sec);
+      pin.appendChild(stage);
+      return rec;
+    });
+    story = { wrap: wrap, pin: pin, moved: moved, secs: secs };
+  }
+
+  function unbuildStory() {
+    if (!story) return;
+    var anchor = story.wrap;
+    story.secs.forEach(function (sec) {
+      anchor.parentNode.insertBefore(sec, anchor);
+    });
+    story.moved.forEach(function (m) {
+      m.parent.insertBefore(m.stage, m.next);
+      m.stage.removeAttribute("data-story");
+      m.stage.classList.remove("is-active");
+      m.stage.removeAttribute("inert");
+    });
+    anchor.parentNode.removeChild(anchor);
+    story = null;
+  }
+
+  /* --- Rail: numbered chapters down the left edge ------------------------ */
+  var rail = null;
+
+  function railLabel(i) {
+    var s = scenes[i];
+    if (s.classList.contains("scene--hero")) return "Intro";
+    var link = document.querySelector('.topbar__sub a[href="#' + s.id + '"]');
+    return (link && link.textContent.trim()) || titleOf(i);
+  }
+
+  function buildRail() {
+    rail = document.createElement("nav");
+    rail.className = "seg-rail";
+    rail.setAttribute("aria-label", "Page sections");
+    var ol = document.createElement("ol");
+    scenes.forEach(function (s, i) {
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = s.id ? "#" + s.id : "#top";
+      var n = document.createElement("span");
+      n.className = "seg-rail__n";
+      n.textContent = (i + 1 < 10 ? "0" : "") + (i + 1);
+      var t = document.createElement("span");
+      t.className = "seg-rail__t";
+      t.textContent = railLabel(i);
+      a.appendChild(n);
+      a.appendChild(t);
+      a.addEventListener("click", function (e) {
+        if (!enabled) return;
+        e.preventDefault();
+        goTo(i, false);
+      });
+      li.appendChild(a);
+      ol.appendChild(li);
+    });
+    rail.appendChild(ol);
+    document.body.appendChild(rail);
+  }
+
+  // The segment holding the middle of the viewport drives the rail and the
+  // story stage, so the screen swaps while the glide is halfway, not after.
+  function paintActive() {
+    if (!enabled) return;
+    var i = indexAt(window.scrollY + window.innerHeight / 2);
+    if (i === current) return;
+    current = i;
+    if (rail) {
+      Array.prototype.forEach.call(rail.querySelectorAll("a"), function (a, k) {
+        if (k === i) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      });
+    }
+    if (story) {
+      var id = scenes[i] && scenes[i].id;
+      var at = STORY.indexOf(id);
+      // Before the story, show its first screen; after it, keep its last.
+      if (at < 0) at = i < scenes.indexOf(story.secs[0]) ? 0 : STORY.length - 1;
+      story.moved.forEach(function (m, k) {
+        var on = k === at;
+        m.stage.classList.toggle("is-active", on);
+        if (on) m.stage.removeAttribute("inert");
+        else m.stage.setAttribute("inert", "");
+      });
+    }
+  }
+
   function enable() {
     if (enabled) return;
     enabled = true;
     root.classList.add("is-segmented");
+    buildStory();
     measure();
     if (!pill) buildPill();
+    if (!rail) buildRail();
+    current = -1;
+    paintActive();
   }
 
   function disable() {
@@ -275,6 +396,12 @@
     enabled = false;
     root.classList.remove("is-segmented");
     resetPull();
+    unbuildStory();
+    if (rail) {
+      rail.parentNode.removeChild(rail);
+      rail = null;
+    }
+    current = -1;
   }
 
   function sync() {
@@ -283,7 +410,7 @@
   }
 
   function init() {
-    scenes = Array.prototype.slice.call(document.querySelectorAll("main > section.scene"));
+    scenes = Array.prototype.slice.call(document.querySelectorAll("main section.scene"));
     sync();
     if (gate.addEventListener) gate.addEventListener("change", sync);
     else if (gate.addListener) gate.addListener(sync);
@@ -297,12 +424,42 @@
     // Late layout shifts (fonts, images, demo state) move segment edges.
     if (window.ResizeObserver) {
       new ResizeObserver(function () {
-        if (enabled) measure();
+        if (enabled) {
+          measure();
+          current = -1;
+          paintActive();
+        }
       }).observe(document.querySelector("main") || document.body);
     }
     window.addEventListener("load", function () {
       if (enabled) measure();
     });
+
+    // Switching Windows/Android swaps every screen and reflows the page, and
+    // scroll anchoring then lands somewhere else. Stay on the same segment.
+    var osHold = -1, osHoldTimer;
+    document.addEventListener("click", function (e) {
+      if (!enabled || !e.target.closest || !e.target.closest("[data-os-pick]")) return;
+      osHold = current;
+      // Picking the OS already shown changes nothing; don't leave the hold armed.
+      clearTimeout(osHoldTimer);
+      osHoldTimer = setTimeout(function () { osHold = -1; }, 1000);
+    }, true);
+    if (window.MutationObserver) {
+      new MutationObserver(function () {
+        if (!enabled || osHold < 0) return;
+        var i = osHold;
+        osHold = -1;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            measure();
+            window.scrollTo({ top: tops[i], behavior: "instant" });
+            current = -1;
+            paintActive();
+          });
+        });
+      }).observe(root, { attributes: true, attributeFilter: ["data-os"] });
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
