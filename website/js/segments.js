@@ -350,6 +350,13 @@
       ol.appendChild(li);
     });
     rail.appendChild(ol);
+    // The dial's face repeats the section at the marker, large. The links
+    // on the ring already name it, so the face is hidden from readers.
+    var face = document.createElement("div");
+    face.className = "seg-rail__face";
+    face.setAttribute("aria-hidden", "true");
+    face.innerHTML = '<b class="seg-rail__fn"></b><span class="seg-rail__ft"></span>';
+    rail.appendChild(face);
     document.body.appendChild(rail);
   }
 
@@ -361,13 +368,24 @@
     if (i === current) return;
     current = i;
     if (rail) {
-      // The rail is a drum: turning it to --at brings this segment to the
-      // front; --d is each face's distance from the front, for its fade.
+      // The rail is half a watch ring: turning it by --at steps brings this
+      // segment's number round to the marker at 3 o'clock. --d is each
+      // number's distance from the marker; at 3 steps it has turned off
+      // the screen's edge, so it fades and leaves the tab order.
       rail.style.setProperty("--at", String(i));
+      var face = rail.querySelector(".seg-rail__face");
+      var num = (i + 1 < 10 ? "0" : "") + (i + 1);
+      // Re-measures repaint too; only a real change replays the entrance.
+      if (face.firstChild.textContent !== num) {
+        face.firstChild.textContent = num;
+        face.lastChild.textContent = railLabel(i);
+        face.classList.remove("is-in");
+        void face.offsetWidth;
+        face.classList.add("is-in");
+      }
       Array.prototype.forEach.call(rail.querySelectorAll("li"), function (li, k) {
-        li.style.setProperty("--d", String(Math.abs(k - i)));
         var a = li.firstChild;
-        // Faces turned to the back are out of sight, so keep focus off them.
+        li.style.setProperty("--d", String(Math.abs(k - i)));
         a.tabIndex = Math.abs(k - i) > 2 ? -1 : 0;
         if (k === i) a.setAttribute("aria-current", "true");
         else a.removeAttribute("aria-current");

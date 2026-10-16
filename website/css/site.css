@@ -1504,26 +1504,51 @@ html.is-segmented .story__pin > .stage > .fit--win {
   max-width: min(980px, calc((100svh - var(--nav-h) - 48px) * 1.4667));
 }
 
-/* --- Rail: the page's chapters on a turning drum (desktop) --------------
-   Each section is a face on a cylinder; js/segments.js sets --at to the
-   section in view and the drum rotates to bring it to the front, on a
-   solid pill, larger than the rest. --i is a face's slot, --d its distance
-   from the front. Face height 76px, 26deg apart, so the radius is
-   38 / tan(13deg) = 165px. */
+/* --- Rail: the page's sections on half a watch ring (desktop) ---------
+   The dial is centred on the screen's left edge, so only its right half
+   shows. Section numbers sit 30deg apart round the bezel; js/segments.js
+   sets --at (in steps) and the ring turns until the section in view
+   reaches the marker at 3 o'clock, pointing at the page. The face repeats
+   the current section in the visible half. */
 .seg-rail {
-  --face: 76px;
-  --step: 26deg;
-  --radius: 165px;
+  --dial: 420px;
+  --orbit: 170px;
+  --step: 30deg;
   position: fixed;
-  left: 20px;
+  left: calc(var(--dial) / -2);
   top: 50%;
   z-index: 30;
-  width: 300px;
-  height: 420px;
-  margin-top: -210px;
-  perspective: 1100px;
-  perspective-origin: 20% 50%;
-  pointer-events: none;
+  width: var(--dial);
+  height: var(--dial);
+  margin-top: calc(var(--dial) / -2);
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--hairline-strong), 0 24px 48px -28px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 10px color-mix(in srgb, var(--text) 4%, transparent);
+}
+/* The marker: a notch on the bezel at 3 o'clock. */
+.seg-rail::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  margin-top: -8px;
+  border: 8px solid transparent;
+  border-right: 12px solid var(--accent);
+  border-left: 0;
+  transform: scaleX(-1);
+}
+/* Minute ticks on the bezel, turning with the ring. */
+.seg-rail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from -1deg, var(--hairline-strong) 0 2deg, transparent 2deg 12deg);
+  -webkit-mask: radial-gradient(circle, transparent calc(70.7% - 10px), #000 calc(70.7% - 9px));
+  mask: radial-gradient(circle, transparent calc(70.7% - 10px), #000 calc(70.7% - 9px));
+  transform: rotate(calc(var(--at, 0) * -1 * var(--step)));
+  transition: transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .seg-rail ol {
   position: absolute;
@@ -1531,90 +1556,113 @@ html.is-segmented .story__pin > .stage > .fit--win {
   margin: 0;
   padding: 0;
   list-style: none;
-  transform-style: preserve-3d;
-  transform: translateZ(calc(-1 * var(--radius))) rotateX(calc(var(--at, 0) * var(--step)));
-  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+/* Each number sits at its own angle minus the ring's turn, then turns back
+   by the same amount so it reads upright. */
 .seg-rail li {
   position: absolute;
-  left: 0;
+  left: 50%;
   top: 50%;
-  height: var(--face);
-  margin-top: calc(var(--face) / -2);
-  display: flex;
-  align-items: center;
-  transform: rotateX(calc(var(--i) * -1 * var(--step))) translateZ(var(--radius));
-  backface-visibility: hidden;
-  opacity: max(0, 1 - var(--d, 0) * 0.3);
-  transition: opacity 500ms var(--ease-std);
+  width: 0;
+  height: 0;
+  transform: rotate(calc((var(--i) - var(--at, 0)) * var(--step))) translateX(var(--orbit))
+    rotate(calc((var(--at, 0) - var(--i)) * var(--step)));
+  /* 0-2 steps away: shown; from 3 (the screen edge) on: gone */
+  opacity: clamp(0, 3 - var(--d, 0), 1);
+  transition: transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 500ms var(--ease-std);
 }
 .seg-rail a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 10px 18px;
-  border-radius: 16px;
-  color: var(--text-tertiary);
-  text-decoration: none;
-  font-size: 2rem;
-  line-height: 1;
-  white-space: nowrap;
-  pointer-events: auto;
-  background: transparent;
-  box-shadow: 0 0 0 1px transparent;
-  transition: color 280ms var(--ease-std), background-color 360ms var(--ease-std),
-    box-shadow 360ms var(--ease-std), font-size 360ms var(--ease), padding 360ms var(--ease);
-}
-.seg-rail a::before {
-  content: "";
   position: absolute;
   left: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 4px;
-  border-radius: 4px;
-  background: var(--accent);
-  transform: scaleY(0);
-  transition: transform 360ms var(--ease);
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  font: 500 1.35rem/1 var(--f-num);
+  font-variant-numeric: tabular-nums;
+  transition: color 280ms var(--ease-std), background-color 360ms var(--ease-std),
+    font-size 360ms var(--ease), width 360ms var(--ease), height 360ms var(--ease);
 }
 .seg-rail a:hover {
   color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
-.seg-rail__n {
-  font-family: var(--f-num);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+.seg-rail a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .seg-rail a[aria-current] {
+  width: 58px;
+  height: 58px;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent-on);
+  background: var(--accent);
+  box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--accent) 80%, black);
+}
+/* Each link keeps its section name for screen readers; the face shows it. */
+.seg-rail__t {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.seg-rail__face {
+  position: absolute;
+  left: calc(50% + 14px);
+  top: 50%;
+  width: 120px;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: none;
+}
+.seg-rail__fn {
+  font: 700 2.9rem/1 var(--f-num);
+  font-variant-numeric: tabular-nums;
   color: var(--text);
-  font-size: 2.5rem;
-  padding: 12px 22px;
-  background: var(--card);
-  box-shadow: 0 0 0 1px var(--hairline-strong), 0 16px 34px -18px rgba(0, 0, 0, 0.55);
+  letter-spacing: -0.02em;
 }
-.seg-rail a[aria-current]::before {
-  transform: scaleY(1);
+.seg-rail__ft {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
-.seg-rail a[aria-current] .seg-rail__n {
-  color: var(--accent-text);
-  font-weight: 600;
+.seg-rail__face.is-in > * {
+  animation: dial-face 520ms var(--ease) both;
 }
-.seg-rail a[aria-current] .seg-rail__t {
-  font-weight: 600;
+.seg-rail__face.is-in > .seg-rail__ft {
+  animation-delay: 60ms;
 }
-/* Keep page content clear of the drum where the side margins are thin. */
-@media (max-width: 1879px) {
+@keyframes dial-face {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+/* Keep page content clear of the dial where the side margins are thin. */
+@media (max-width: 1719px) {
   html.is-segmented main {
-    padding-left: 300px;
+    padding-left: 236px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   html.is-segmented .story__pin > .stage,
-  .seg-rail ol,
+  .seg-rail::before,
   .seg-rail li,
-  .seg-rail a,
-  .seg-rail a::before {
+  .seg-rail a {
     transition: none;
+  }
+  .seg-rail__face.is-in > * {
+    animation: none;
   }
 }
