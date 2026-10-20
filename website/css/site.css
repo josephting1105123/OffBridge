@@ -64,6 +64,55 @@ html {
   gap: 16px;
 }
 
+/* Full-width row so the ESL mark sits at the gutter, same as entropicsoftwarelabs.com. */
+.topbar__in--full {
+  max-width: none;
+}
+
+.esl-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  white-space: nowrap;
+  font-size: 17px;
+  flex: none;
+}
+
+.esl-brand:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.esl-brand__mark {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  color: var(--accent-text);
+}
+
+.esl-brand__mark svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.topbar__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--hairline-strong, var(--hairline));
+  flex: none;
+}
+
 .brand {
   font-weight: 700;
   font-size: 1.2rem;
@@ -178,16 +227,48 @@ html[data-os="android"] .osswitch::before {
   }
 }
 
-@media (max-width: 420px) {
-  .topbar__in {
-    gap: 10px;
+/* Breakpoints measured with Playwright: the row must never overflow or run into
+   the right gutter. The ESL name shrinks to the icon, then the OffBridge word goes. */
+@media (max-width: 1399px) {
+  .esl-brand__rest {
+    display: none;
   }
+}
+
+@media (max-width: 760px), (min-width: 1000px) and (max-width: 1119px) {
+  .esl-brand__text {
+    display: none;
+  }
+  .esl-brand {
+    gap: 0;
+  }
+}
+
+@media (max-width: 499px) {
   .brand {
     font-size: 0;
     gap: 0;
   }
+}
+
+@media (max-width: 420px) {
+  .topbar__in {
+    gap: 10px;
+  }
   .osswitch button {
     padding: 0 10px;
+  }
+}
+
+@media (max-width: 359px) {
+  .topbar__in {
+    gap: 6px;
+  }
+  .topbar__divider {
+    display: none;
+  }
+  .osswitch button {
+    padding: 0 6px;
   }
 }
 
