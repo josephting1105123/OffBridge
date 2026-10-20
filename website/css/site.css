@@ -127,18 +127,46 @@ html {
 
 .topbar__links {
   display: none;
-  gap: 22px;
-  margin-left: 12px;
+  gap: 2px;
+  margin-left: 2px;
 }
 
 .topbar__links a {
-  color: var(--text-secondary);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  color: color-mix(in srgb, var(--text-secondary) 70%, var(--text));
   font-size: 1rem;
+  transition: color var(--dur-fast), background-color var(--dur-fast);
 }
 
 .topbar__links a:hover {
   color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
   text-decoration: none;
+}
+
+.topbar__links a:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.topbar__links a[aria-current] {
+  color: var(--text);
+}
+
+.topbar__links a[aria-current]::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent-text);
 }
 
 .osswitch {
@@ -1596,8 +1624,26 @@ html[data-os="android"] .srow__chev {
 }
 
 .topbar__subin a {
-  color: var(--text-secondary);
+  color: color-mix(in srgb, var(--text-secondary) 70%, var(--text));
   font-size: clamp(.85rem, .8rem + .3vw, .95rem);
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+.topbar__subin a:hover {
+  color: var(--text);
+}
+
+.topbar__subin a[aria-current] {
+  color: var(--text);
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent-text);
+}
+
+.topbar__subin a:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 4px;
 }
 
 .topbar__subin a[href="#download"] {

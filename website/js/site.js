@@ -779,6 +779,58 @@
     if (y) y.textContent = String(new Date().getFullYear());
   }
 
+  /* --- Header: mark the section being read ------------------------------ */
+  function initNavSpy() {
+    var links = $$('.topbar__links a[href^="#"], .topbar__subin a[href^="#"]');
+    var subin = $(".topbar__subin");
+    var secs = [];
+    links.forEach(function (a) {
+      var id = a.getAttribute("href").slice(1);
+      var el = id && document.getElementById(id);
+      if (el && !secs.some(function (s) { return s.id === id; })) secs.push({ id: id, el: el });
+    });
+    if (!secs.length) return;
+    var current;
+    var pending = false;
+
+    function paint() {
+      pending = false;
+      var y = window.innerHeight / 2;
+      var id = null;
+      for (var i = 0; i < secs.length; i++) {
+        var r = secs[i].el.getBoundingClientRect();
+        if (r.top <= y && r.bottom > y) { id = secs[i].id; break; }
+      }
+      if (id === current) return;
+      current = id;
+      var active = null;
+      links.forEach(function (a) {
+        if (id && a.getAttribute("href") === "#" + id) {
+          a.setAttribute("aria-current", "location");
+          if (subin && subin.contains(a)) active = a;
+        } else {
+          a.removeAttribute("aria-current");
+        }
+      });
+      if (active && subin.scrollWidth > subin.clientWidth) {
+        var left = subin.scrollLeft;
+        if (active.offsetLeft < left || active.offsetLeft + active.offsetWidth > left + subin.clientWidth) {
+          subin.scrollTo({ left: active.offsetLeft - 16, behavior: reduce ? "auto" : "smooth" });
+        }
+      }
+    }
+
+    function schedule() {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(paint);
+    }
+
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    paint();
+  }
+
   function boot() {
     initSwitch();
     initFit();
@@ -789,6 +841,7 @@
     initSecRoute();
     initOffgrid();
     initYear();
+    initNavSpy();
   }
 
   if (document.readyState === "loading") {
