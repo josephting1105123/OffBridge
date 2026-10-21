@@ -79,6 +79,7 @@ html {
   font-weight: 700;
   white-space: nowrap;
   font-size: 17px;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, "Liberation Serif", serif;
   flex: none;
 }
 
@@ -243,7 +244,7 @@ html[data-os="android"] .osswitch::before {
   display: none;
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1200px) {
   .topbar__links {
     display: flex;
   }
@@ -257,34 +258,53 @@ html[data-os="android"] .osswitch::before {
 
 /* Breakpoints measured with Playwright: the row must never overflow or run into
    the right gutter. The ESL name shrinks to the icon, then the OffBridge word goes. */
-@media (max-width: 1399px) {
+@media (max-width: 419px), (min-width: 720px) and (max-width: 899px) {
   .esl-brand__rest {
     display: none;
   }
 }
 
-@media (max-width: 760px), (min-width: 1000px) and (max-width: 1119px) {
-  .esl-brand__text {
+/* Below 730px the Windows/Android labels go (icons stay, buttons keep aria-labels). */
+@media (max-width: 729px) {
+  .osswitch button span {
     display: none;
-  }
-  .esl-brand {
-    gap: 0;
   }
 }
 
-@media (max-width: 499px) {
+/* Download lives in the second row too, so the top row drops it below 720px. */
+@media (max-width: 719px) {
+  .topbar__cta {
+    display: none;
+  }
+}
+
+/* The OffBridge word collapses to its icon only where the full ESL name leaves no room. */
+@media (max-width: 609px) {
   .brand {
     font-size: 0;
     gap: 0;
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 499px) {
   .topbar__in {
     gap: 10px;
   }
   .osswitch button {
     padding: 0 10px;
+  }
+}
+
+/* 420-469px: the full ESL name is back, so squeeze like the tiniest phones do. */
+@media (min-width: 420px) and (max-width: 469px) {
+  .topbar__in {
+    gap: 6px;
+  }
+  .topbar__divider {
+    display: none;
+  }
+  .osswitch button {
+    padding: 0 6px;
   }
 }
 
@@ -1651,13 +1671,13 @@ html[data-os="android"] .srow__chev {
   font-weight: 700;
 }
 
-@media (max-width: 999px) {
+@media (max-width: 1199px) {
   html {
     scroll-padding-top: calc(var(--nav-h) + 56px);
   }
 }
 
-@media (min-width: 1000px) {
+@media (min-width: 1200px) {
   .topbar__sub {
     display: none;
   }
