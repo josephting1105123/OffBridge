@@ -107,6 +107,13 @@ class ControlSession(
         }
     }
 
+    /**
+     * Feeds a frame that reached the controller's pre-session handler after this session formed —
+     * e.g. a HELLO_RX retry queued on [executor] behind the first one, which is exactly the frame
+     * that must reach [onPlaintextHello]. Run on [executor]; queue order is preserved.
+     */
+    fun deliver(raw: ByteArray) = handleRaw(raw)
+
     private fun handleRaw(raw: ByteArray) {
         if (dead) return
         val frame = ControlProtocol.parse(raw) ?: return

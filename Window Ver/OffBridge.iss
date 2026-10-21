@@ -1,5 +1,5 @@
 #define MyAppName "OffBridge"
-#define MyAppVersion "3.7.10"
+#define MyAppVersion "3.7.11"
 #define MyAppPublisher "EntropicSoftwareLab"
 #define MyAppExeName "OffBridge.exe"
 

@@ -261,4 +261,43 @@ class GattChunkerTest {
         assertEquals(1, out.size)
         assertArrayEquals(frame, out[0])
     }
+
+    @Test
+    fun aRetransmittedSingleChunkFrameIsDeliveredOnce() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val frame = ByteArray(12) { (it + 1).toByte() }
+        val chunks = GattChunker.split(frame, mtu = 247)
+        assertEquals(1, chunks.size)
+        r.accept(chunks[0])
+        r.accept(chunks[0]) // the write watchdog re-sent it after a lost completion callback
+        assertEquals(1, out.size)
+        assertArrayEquals(frame, out[0])
+    }
+
+    @Test
+    fun aRetransmittedEndChunkOfAMultiChunkFrameIsDroppedAndTheNextFrameStillLands() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val first = ByteArray(60) { it.toByte() }
+        val second = ByteArray(30) { (100 + it).toByte() }
+        val chunks = GattChunker.split(first, mtu = 23)
+        chunks.forEach { r.accept(it) }
+        r.accept(chunks.last())
+        GattChunker.split(second, mtu = 23).forEach { r.accept(it) }
+        assertEquals(2, out.size)
+        assertArrayEquals(first, out[0])
+        assertArrayEquals(second, out[1])
+    }
+
+    @Test
+    fun identicalFramesSeparatedByAnotherFrameAreBothDelivered() {
+        val out = ArrayList<ByteArray>()
+        val r = GattReassembler { out.add(it) }
+        val a = ByteArray(8) { 7 }
+        val b = ByteArray(8) { 9 }
+        listOf(a, b, a).forEach { f -> GattChunker.split(f, mtu = 247).forEach { r.accept(it) } }
+        assertEquals(3, out.size)
+        assertArrayEquals(a, out[2])
+    }
 }

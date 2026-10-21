@@ -127,6 +127,58 @@ class PcQrSenderControllerTest {
     }
 
     @Test
+    fun `a HELLO retry queued behind the first one still gets the ACK replayed`() {
+        val channel = FakeChannel()
+        val pcEcdh = EcdhSession()
+        val executor = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+        val controller = PcQrSenderController(
+            channel, token, pcEcdh, "192.168.49.1", "OffBridge-1234", "pass12345678",
+            executor = executor
+        )
+        controller.begin()
+        val phone = Phone(pcEcdh.getPublicKey(), token)
+        // Hold the executor so both HELLOs queue on the pre-session handler before either runs —
+        // the phone's retry landing while the PC is still busy with the first.
+        val gate = java.util.concurrent.CountDownLatch(1)
+        executor.execute { gate.await() }
+        channel.deliver(phone.helloRx())
+        channel.deliver(phone.helloRx())
+        gate.countDown()
+
+        assertEquals(ControlProtocol.HELLO_ACK, nextFrame(channel).type)
+        assertEquals(ControlProtocol.DATA_READY, nextOpened(channel, phone).first)
+        expectTry(channel, phone, "OffBridge-1234")
+        // The retry is answered from the live session, not discarded.
+        assertEquals(ControlProtocol.HELLO_ACK, nextFrame(channel).type)
+        assertEquals(ControlProtocol.DATA_READY, nextOpened(channel, phone).first)
+        expectTry(channel, phone, "OffBridge-1234")
+        executor.shutdownNow()
+    }
+
+    @Test
+    fun `a pre-HELLO unsubscribe keeps the channel, a post-HELLO one does not`() {
+        val channel = FakeChannel()
+        val pcEcdh = EcdhSession()
+        val controller = PcQrSenderController(
+            channel, token, pcEcdh, "192.168.49.1", "OffBridge-1234", "pass12345678"
+        )
+        controller.begin()
+        controller.onCentralSubscribed()
+        awaitState(controller) { it == QrControlState.CentralConnected }
+        // The phone's first connect collapsed before HELLO: keep listening, back to Advertising.
+        assertTrue(controller.onCentralUnsubscribed())
+        awaitState(controller) { it == QrControlState.Advertising }
+
+        // It reconnects and links; from now on a drop is real.
+        controller.onCentralSubscribed()
+        val phone = Phone(pcEcdh.getPublicKey(), token)
+        channel.deliver(phone.helloRx())
+        assertEquals(ControlProtocol.HELLO_ACK, nextFrame(channel).type)
+        awaitState(controller) { it is QrControlState.Linked || it is QrControlState.Joining }
+        assertTrue(!controller.onCentralUnsubscribed())
+    }
+
+    @Test
     fun `a bad HELLO hmac is ignored`() {
         val channel = FakeChannel()
         val pcEcdh = EcdhSession()

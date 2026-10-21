@@ -48,10 +48,10 @@ window.CS_CONFIG = {
     label: "Download APK",
     os: "Android",
     fileType: "APK (direct)",
-    version: "3.7.6",
+    version: "3.7.8",
     size: "29 MB",
     url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
-    sha256: "0fee13955fe3407ec8f9d6f2a7c02b00dce192f98f6204d452d12f1c49293b40",
+    sha256: "42c649efc627cc7c97bae4d75f4d3a9ff6e7214b9bce9de7733792d3a4f9fa52",
     note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
   },
 

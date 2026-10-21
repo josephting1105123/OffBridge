@@ -9,23 +9,31 @@ Pages (or any static host) as-is.
 
 ```
 website/
-├── index.html          # the whole page (inline icon sprite + all sections)
-├── css/                # tokens → base → layout → components → device → sections → animations
+├── index.html          # the whole page: icon sprite, both app renders per section
+├── css/                # tokens → base → layout → components (shared with privacy.html)
+│                       # app.css       the app screens, rebuilt from the apps' own tokens
+│                       # site.css      page chrome, platform switch, scene layout
+│                       # download.css, carousel.css, dl-wheel.css  the Download section
 ├── js/
 │   ├── config.js       # ← EDIT THIS to wire the download links (see below)
-│   ├── theme.js        # light/dark toggle (loaded early to avoid flash)
-│   ├── main.js         # nav, mobile menu, decorative QR, transport-ladder loop
-│   ├── reveal.js       # IntersectionObserver scroll-reveal + count-ups
-│   └── platform.js     # OS auto-detect + download-card wiring from config.js
-├── fonts/geist_variable.ttf
-├── assets/favicon.svg · assets/og-image.png · assets/screenshots/
-├── site.webmanifest · robots.txt · sitemap.xml · .nojekyll
+│   ├── theme.js        # light/dark toggle (privacy.html; index.html inlines a copy)
+│   ├── site.js         # Windows | Android switch + the live demos
+│   ├── platform.js     # OS auto-detect + download-card wiring from config.js
+│   ├── dl-wheel.js     # the Download card wheel
+│   └── water.js        # animated water background
+├── fonts/              # IBM Plex Sans (numerals, Android pairing screen); Geist (privacy.html)
+├── assets/favicon.svg · assets/og-image.png
+├── site.webmanifest · robots.txt · sitemap.xml
 ```
 
-The app UI shown in the page uses **real screenshots** (light + dark variants
-under `assets/screenshots/`), framed in CSS device mockups and animated with
-compositor-only properties (parallax + IntersectionObserver scroll-reveal).
-Everything respects `prefers-reduced-motion`.
+The page shows the apps by rebuilding their screens in HTML, not with
+screenshots. Every section holds a Windows render and an Android render;
+`html[data-os]` picks one, and the switch in the top bar flips it (with a View
+Transition where supported). Colours, radii, type and strings come from the
+apps' own theme files and string tables, so when the apps change, update
+`css/app.css` and the copy in `index.html` to match. Demo device names are
+always "Pixel 10" and "Windows PC". Everything respects
+`prefers-reduced-motion`.
 
 ## 1. Wire the download buttons (the only required edit)
 

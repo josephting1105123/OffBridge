@@ -108,7 +108,11 @@ data class OutgoingFileSession(
     val transport: String = "lan",
     // p2p only: the raw ECDH secret from P2P_HELLO, which an off-grid RESUME_REQUEST must prove
     // (OffGridResumeAuth) before FileTransferDaemon hands the socket to onResumeReceived.
-    val p2pAuthKey: ByteArray? = null
+    val p2pAuthKey: ByteArray? = null,
+    // Off-grid only: the raw ECDH secret when the phone asked for the sealed stream at ACCEPT_OFFER,
+    // else null. A resume arrives from a never-paired IP with no pairing key, so this is the only
+    // key it can be sealed with.
+    val p2pSealKey: ByteArray? = null
 )
 
 data class IncomingFileSession(
@@ -367,12 +371,26 @@ class ClipboardAppController {
                 try { socket.close() } catch(e:Exception){}
             }
         },
-        onResumeReceived = { sessionId, fileIndex, offset, ackExpected, fgcm, useV2, socket ->
+        onResumeReceived = { sessionId, fileIndex, offset, ackExpected, fgcm, useV2, seal, socket ->
             val session = activeOutgoingFileSessions[sessionId]
             // Bounds-check the network-supplied resume position before trusting it, so a bad
             // (fileIndex, offset) can't make the sender skip past or re-send file data (mirrors the
             // Android TransferDaemon RESUME_REQUEST guard). A malformed position closes the socket.
-            if (session != null && fileIndex >= 0 && fileIndex < session.files.size && offset >= 0L) {
+            if (session != null && session.transport == "p2p" &&
+                fileIndex >= 0 && fileIndex < session.files.size && offset >= 0L) {
+                // Off-grid resume: seal with the ECDH secret from the handshake, never the (absent)
+                // pairing key. A request that disagrees with how the session was negotiated is
+                // refused — dropping the flag would stream a sealed transfer in the clear, and a
+                // plaintext resume into a phone that still unseals fails every chunk anyway.
+                val sealKey = session.p2pSealKey
+                if ((sealKey != null) != seal || (sealKey != null && offset != 0L)) {
+                    System.err.println("TX: off-grid resume refused — seal flag does not match the session")
+                    try { socket.close() } catch (e: Exception) {}
+                } else {
+                    streamFilesToSocket(session, socket, fileIndex, offset, ackExpected,
+                        fileKey = sealKey, useV2 = sealKey != null)
+                }
+            } else if (session != null && fileIndex >= 0 && fileIndex < session.files.size && offset >= 0L) {
                 try {
                     val fileKey = senderFileKey(session.targetIp, fgcm)
                     val gatedV2 = senderUseFileV2(session.targetIp, useV2)
@@ -998,7 +1016,9 @@ class ClipboardAppController {
                 // SOFTAP_JOIN or its own direct join, since the TCP dial is the ground truth.
                 qrHost.notifyTransferStarted()
 
-                activeOutgoingFileSessions[session.sessionId] = outSession
+                // Record the negotiated seal so a later off-grid RESUME_REQUEST can honour it.
+                val liveSession = outSession.copy(p2pSealKey = handshake.sealKey)
+                activeOutgoingFileSessions[session.sessionId] = liveSession
 
                 val record = TransferRecord(
                     sessionId = session.sessionId,
@@ -1024,7 +1044,7 @@ class ClipboardAppController {
                 // same FileSeal v2 path the LAN transfers use runs here too (useV2 is implied — the
                 // off-grid seal has no v1 form, it was introduced already at v2).
                 streamFilesToSocket(
-                    outSession, socket, 0, 0L, handshake.ackExpected,
+                    liveSession, socket, 0, 0L, handshake.ackExpected,
                     fileKey = handshake.sealKey,
                     useV2 = handshake.sealKey != null,
                 )

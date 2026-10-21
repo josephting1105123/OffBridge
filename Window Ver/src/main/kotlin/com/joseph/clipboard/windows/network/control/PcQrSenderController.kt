@@ -110,6 +110,13 @@ class PcQrSenderController(
     /** Bounds [resendHelloAck] — the phone only retries HELLO_RX twice. */
     private var ackResends = 0
 
+    /**
+     * Read off the executor by [onCentralUnsubscribed] (the helper's reader thread), hence volatile.
+     * [everLinked]: a HELLO has built a session. [done]: finished, transferring or closed.
+     */
+    @Volatile private var everLinked = false
+    @Volatile private var done = false
+
     /** Wire the channel callbacks. Call once, after the peripheral's advertising verdict is in. */
     fun begin() {
         channel.onMessage = { raw -> executor.execute { handlePreSessionFrame(raw) } }
@@ -134,8 +141,30 @@ class PcQrSenderController(
         }
     }
 
+    /**
+     * The phone unsubscribed. Before any HELLO that is usually its first connect collapsing, and it
+     * reconnects: return true so the peripheral keeps advertising, and drop back to Advertising until
+     * it subscribes again. Once a session has formed the drop is real — return false and let the
+     * channel close, which [handleControlLost] reports as before.
+     */
+    fun onCentralUnsubscribed(): Boolean {
+        if (everLinked || done) return false
+        try {
+            executor.execute {
+                if (session == null && !finished && !transferring) {
+                    helloWatchdog?.cancel(false)
+                    _state.value = QrControlState.Advertising
+                }
+            }
+        } catch (_: Exception) {
+            return false // executor already shut down: the window is closing anyway
+        }
+        return true
+    }
+
     /** The TCP P2P_HELLO handshake was accepted — the data plane owns the session now. */
     fun notifyTransferStarted() {
+        done = true
         executor.execute {
             transferring = true
             helloWatchdog?.cancel(false)
@@ -150,6 +179,7 @@ class PcQrSenderController(
      * notify flush before the helper dies.
      */
     fun closeWithAbort() {
+        done = true
         try {
             executor.execute {
                 finished = true
@@ -167,7 +197,10 @@ class PcQrSenderController(
     // ----------------------------------------------------------- HELLO phase
 
     private fun handlePreSessionFrame(raw: ByteArray) {
-        if (finished || session != null) return // one session per QR window; later HELLOs ignored
+        if (finished) return
+        // One session per QR window. A frame queued here before the first HELLO built the session
+        // (a HELLO_RX retry, most likely) belongs to that session, not the bin.
+        session?.let { it.deliver(raw); return }
         val frame = ControlProtocol.parse(raw) ?: return
         if (frame.type != ControlProtocol.HELLO_RX) return
         val body = try {
@@ -212,6 +245,7 @@ class PcQrSenderController(
         val v2 = (phoneCaps and OffGridQrSender.CAP_CTRL_AAD) != 0
         val s = ControlSession(channel, SessionCrypto(key, isSender = true, bindHeader = v2), executor)
         session = s
+        everLinked = true
         s.onFrame = { type, payload -> handleFrame(type, payload) }
         s.onDead = { handleControlLost() }
         s.onPlaintextHello = { resendHelloAck() }
@@ -341,6 +375,7 @@ class PcQrSenderController(
 
     private fun finish(terminal: QrControlState) {
         finished = true
+        done = true
         resultWatchdog?.cancel(false)
         helloWatchdog?.cancel(false)
         session?.send(ControlProtocol.ABORT, JsonObject().apply { addProperty("reason", ABORT_GENERIC) })

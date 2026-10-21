@@ -138,6 +138,7 @@ class QrHostCoordinator(
                     }
                 )
                 peripheral.onSubscribed = { controller.onCentralSubscribed() }
+                peripheral.onUnsubscribed = { controller.onCentralUnsubscribed() }
                 controller.begin()
                 qrPeripheral = peripheral
                 qrControl = controller

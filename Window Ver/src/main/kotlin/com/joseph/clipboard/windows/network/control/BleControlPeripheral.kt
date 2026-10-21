@@ -45,6 +45,13 @@ class BleControlPeripheral : ControlChannel {
     /** A phone subscribed to the TX characteristic (link forming) — reports the ATT MTU. */
     var onSubscribed: ((mtu: Int) -> Unit)? = null
 
+    /**
+     * Asked when the phone unsubscribes. True keeps the helper running so the phone can reconnect
+     * (its first connect often collapses before the handshake); false, or no handler, closes the
+     * channel for good as before. Called on the helper's reader thread.
+     */
+    var onUnsubscribed: (() -> Boolean)? = null
+
     override var onMessage: ((ByteArray) -> Unit)? = null
     override var onClosed: (() -> Unit)? = null
 
@@ -156,9 +163,11 @@ class BleControlPeripheral : ControlChannel {
                 }
                 reassembler.accept(chunk)
             }
-            // The linked phone dropped the GATT connection. Before its HELLO verified that only
-            // frees the slot (the helper already unlocked it); after, the session is gone.
-            "unsub" -> if (authenticated) fireClosed() else resetLink()
+            // The linked phone dropped the GATT connection. After its HELLO verified, the session is
+            // gone. Before that, the owner may keep the channel open (the phone's first connect often
+            // collapses before the handshake): forget the dropped link's partial frame and MTU so the
+            // slot is free for the next subscriber; otherwise close.
+            "unsub" -> if (authenticated) fireClosed() else if (onUnsubscribed?.invoke() != false) resetLink() else fireClosed()
             "err" -> System.err.println("BleControlPeripheral helper: ${ev.get("msg")?.asString}")
         }
     }
@@ -459,15 +468,21 @@ class BleControlPeripheral : ControlChannel {
                         var request = Await(args.GetRequestAsync());
                         var data = new byte[request.Value.Length];
                         DataReader.FromBuffer(request.Value).ReadBytes(data);
-                        if (request.Option == GattWriteOption.WriteWithResponse) request.Respond();
                         string client = args.Session != null ? args.Session.DeviceId.Id : "?";
+                        bool accepted;
                         lock (Sync)
                         {
                             // Chunks from anyone other than the locked (first-subscribed) client are dropped,
                             // and a released client stays dropped even while nobody holds the lock.
-                            if (_lockedId != null ? client != _lockedId : _released.Contains(client)) return;
+                            accepted = _lockedId != null ? client == _lockedId : !_released.Contains(client);
                         }
-                        Emit("{\"ev\":\"rx\",\"client\":\"" + J(client) + "\",\"d\":\"" + Convert.ToBase64String(data) + "\"}");
+                        // Emit BEFORE responding. The phone sends its next chunk as soon as the response
+                        // lands, and this handler runs on the thread pool, so responding first let the
+                        // next chunk's handler emit ahead of this one — an out-of-order index that the
+                        // reassembler (correctly) treats as a lost chunk, discarding the whole frame.
+                        if (accepted)
+                            Emit("{\"ev\":\"rx\",\"client\":\"" + J(client) + "\",\"d\":\"" + Convert.ToBase64String(data) + "\"}");
+                        if (request.Option == GattWriteOption.WriteWithResponse) request.Respond();
                     }
                     catch (Exception e)
                     {
@@ -544,19 +559,30 @@ class BleControlPeripheral : ControlChannel {
                                 lostLocked = true;
                                 lostId = _lockedId;
                                 _locked = null;
-                                // Unlock too: before the HELLO verified, the next subscriber (or this
-                                // phone re-subscribing) may take the slot. After it, the JVM side
-                                // tears the whole session down on "unsub" anyway.
+                                // Unlock and hand the slot to another subscriber that isn't banned, so the
+                                // phone can subscribe again. The host decides whether to keep listening (no
+                                // session yet) or shut down (it had one).
                                 _lockedId = null;
+                                foreach (var c in sender.SubscribedClients)
+                                {
+                                    string cid = c.Session.DeviceId.Id;
+                                    if (_released.Contains(cid)) continue;
+                                    _locked = c;
+                                    _lockedId = cid;
+                                    gained = c;
+                                    break;
+                                }
                             }
                         }
-                        if (gained != null)
-                        {
-                            Emit("{\"ev\":\"sub\",\"client\":\"" + J(_lockedId) + "\",\"mtu\":" + gained.Session.MaxPduSize + "}");
-                        }
+                        // unsub before sub, so a client that takes over the lock in the same event
+                        // is announced after the loss rather than before it.
                         if (lostLocked)
                         {
                             Emit("{\"ev\":\"unsub\",\"client\":\"" + J(lostId) + "\"}");
+                        }
+                        if (gained != null)
+                        {
+                            Emit("{\"ev\":\"sub\",\"client\":\"" + J(gained.Session.DeviceId.Id) + "\",\"mtu\":" + gained.Session.MaxPduSize + "}");
                         }
                     }
                     catch (Exception e)

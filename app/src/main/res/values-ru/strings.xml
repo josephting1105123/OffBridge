@@ -493,6 +493,12 @@
     <string name="history_chooser_open_file">Открыть файл</string>
     <string name="history_file_not_found">Файл не найден</string>
     <string name="history_cannot_open_file">Не удалось открыть файл</string>
+    <string name="open_choice_message">OffBridge может показать этот файл сам. Его также можно открыть в другом приложении.</string>
+    <string name="open_choice_preview">Просмотр</string>
+    <string name="open_choice_other_app">Открыть в другом приложении</string>
+    <string name="open_choice_no_app">На этом устройстве нет приложения, способного открыть этот файл</string>
+    <string name="preview_truncated">Показано только начало файла. Откройте его в другом приложении, чтобы увидеть всё.</string>
+    <string name="preview_empty_file">(Файл пуст)</string>
     <string name="history_waiting_zero">Ожидание (0%)</string>
     <string name="history_detail_subtitle">%1$s • %2$d файлов (%3$s МБ)</string>
     <string name="history_file_summary">%1$s%2$s (%3$s МБ)</string>

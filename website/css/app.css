@@ -1,0 +1,1592 @@
+/* ==========================================================================
+   app.css — the app screens, rebuilt in HTML.
+   Values come from the apps, not from the site: Android ui/theme/*.kt and
+   Windows "Window Ver" theme/*.kt. 1 CSS px = 1 dp, so sizes read straight
+   across from the Kotlin. If a value here disagrees with the app, the app
+   wins.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Plex";
+  src: url("../fonts/ibm_plex_sans_variable.ttf") format("truetype-variations");
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Both apps set FontFamily.Serif on every type slot. On Windows that
+     resolves to Times New Roman, on Android to Noto Serif. */
+  --f-win: "Times New Roman", Times, "Liberation Serif", serif;
+  --f-droid: "Noto Serif", Georgia, "Droid Serif", serif;
+  --f-num: "Plex", "Segoe UI", system-ui, sans-serif;
+
+  /* App palette, dark (AppColors.kt / theme/Color.kt) */
+  --a-bg: #141414;
+  --a-card: #1f1f1f;
+  --a-elev: #2a2a2a;
+  --a-rail: #262626;
+  --a-text: #f5f5f5;
+  --a-text2: #a3a3a3;
+  --a-div: #303030;
+  --a-hair: rgba(255, 255, 255, 0.08);
+  --a-green: #22c55e;
+  --a-gtext: #4ade88;
+  --a-muted: rgba(34, 197, 94, 0.14);
+  --a-onp: #141414;
+  --a-err: #ef4444;
+  --a-errtext: #f87171;
+  --a-errmuted: #3a1f22;
+  --a-warn: #fbbf24;
+  --a-scrim: rgba(0, 0, 0, 0.72);
+  --a-bezel: #0a0a0a;
+}
+
+[data-theme="light"] {
+  --a-bg: #f8fafc;
+  --a-card: #ffffff;
+  --a-elev: #f1f5f9;
+  --a-rail: #ffffff;
+  --a-text: #0f172a;
+  --a-text2: #475569;
+  --a-div: #e2e8f0;
+  --a-hair: rgba(15, 23, 42, 0.06);
+  --a-green: #34d399;
+  --a-gtext: #047857;
+  --a-muted: rgba(52, 211, 153, 0.12);
+  --a-onp: #06281c;
+  --a-err: #dc2626;
+  --a-errtext: #dc2626;
+  --a-errmuted: #fdecec;
+  --a-warn: #b45309;
+  --a-scrim: rgba(15, 23, 42, 0.4);
+  --a-bezel: #1c1c1e;
+}
+
+/* --- Platform switch: one attribute decides which render shows ----------- */
+html[data-os="windows"] [data-for="android"],
+html[data-os="android"] [data-for="windows"] {
+  display: none !important;
+}
+
+/* --- Shared frame -------------------------------------------------------- */
+.ic {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  flex: none;
+}
+
+.frame {
+  position: relative;
+  color: var(--a-text);
+  background: var(--a-bg);
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  line-height: 1.35;
+  letter-spacing: 0;
+  isolation: isolate;
+}
+
+.frame button {
+  font: inherit;
+  color: inherit;
+}
+
+.frame :focus-visible {
+  outline: 2px solid var(--a-gtext);
+  outline-offset: 2px;
+}
+
+.num {
+  font-family: var(--f-num);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ======================= WINDOWS: the window ============================ */
+.win {
+  font-family: var(--f-win);
+  width: min(500px, 100%);
+  height: 720px;
+  display: grid;
+  grid-template-rows: 40px 1fr;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--a-hair);
+  box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.75),
+    0 12px 30px -12px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .win {
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 40px 90px -30px rgba(15, 23, 42, 0.35),
+    0 12px 30px -12px rgba(15, 23, 42, 0.18);
+}
+
+/* Title bar: 40dp, no title, an 80dp elevated block over the rail, then
+   drawn caption buttons (a bar, a square, a cross). */
+.win__bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--a-bg);
+}
+
+.win__bar-rail {
+  width: 80px;
+  background: var(--a-rail);
+}
+
+.win__caps {
+  margin-left: auto;
+  display: flex;
+}
+
+.win__caps span {
+  width: 40px;
+  display: grid;
+  place-items: center;
+}
+
+.win__min::before {
+  content: "";
+  width: 12px;
+  height: 2px;
+  background: var(--a-text);
+}
+
+.win__max::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--a-text);
+}
+
+.win__caps .ic {
+  width: 18px;
+  height: 18px;
+}
+
+.win__body {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  min-height: 0;
+}
+
+/* Material 2 NavigationRail, 80dp. Selected tint = primary, no pill. */
+.rail {
+  background: var(--a-rail);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-top: 8px;
+}
+
+.rail a,
+.rail span.rail__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 2px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--a-text) 60%, transparent);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-std);
+}
+
+.rail a:hover {
+  color: var(--a-text);
+  text-decoration: none;
+}
+
+.rail [aria-current="page"] {
+  color: var(--a-green);
+}
+
+.rail [aria-current="page"] .ic {
+  filter: drop-shadow(0 0 0 transparent);
+}
+
+.rail__tool {
+  margin-top: auto;
+  padding-bottom: 16px;
+  display: grid;
+  place-items: center;
+  height: 64px;
+  color: color-mix(in srgb, var(--a-text) 60%, transparent);
+}
+
+.win__page {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header: icon, h5 title, "How to use" chip */
+.w-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0 24px;
+}
+
+.w-head > .ic {
+  width: 32px;
+  height: 32px;
+  color: var(--a-green);
+}
+
+.w-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 500;
+}
+
+.howto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--a-muted);
+  color: var(--a-gtext);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex: none;
+}
+
+.howto .ic {
+  width: 18px;
+  height: 18px;
+}
+
+.w-iconbtn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--a-text) 70%, transparent);
+  flex: none;
+}
+
+/* Glass card: surface fill, 1dp hairline, no shadow */
+.card {
+  background: var(--a-card);
+  border: 1px solid var(--a-hair);
+  border-radius: 16px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--a-div);
+  margin: 8px 0 16px;
+  flex: none;
+}
+
+.sub1 {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 500;
+}
+
+.h6 {
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 500;
+}
+
+.cap {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--a-text2);
+}
+
+/* GlassSwitch: 64x30, radius 8, half-width outlined thumb. Red when off,
+   green when on. Not a Material switch. */
+.gsw {
+  position: relative;
+  width: 64px;
+  height: 30px;
+  padding: 3px;
+  border-radius: 8px;
+  background: var(--a-card);
+  border: 1px solid var(--a-div);
+  flex: none;
+  cursor: pointer;
+}
+
+.gsw::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  height: calc(100% - 6px);
+  border-radius: 8px;
+  border: 1.5px solid var(--a-err);
+  background: color-mix(in srgb, var(--a-err) 12%, transparent);
+  transition: transform 300ms var(--ease), border-color 300ms, background-color 300ms;
+}
+
+.gsw[aria-checked="true"]::after {
+  transform: translateX(calc(100% - 0px));
+  border-color: var(--a-gtext);
+  background: color-mix(in srgb, var(--a-gtext) 12%, transparent);
+}
+
+.togrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.togrow > span {
+  flex: 1;
+}
+
+/* Buttons */
+.abtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--a-green);
+  color: var(--a-onp) !important;
+  font-weight: 700;
+  font-size: 15px;
+  flex: none;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-std), filter var(--dur-fast);
+}
+
+.abtn:active {
+  transform: scale(0.97);
+}
+
+.abtn:hover {
+  filter: brightness(1.06);
+}
+
+.abtn--red {
+  background: var(--a-err);
+  color: #fff !important;
+}
+
+.abtn--muted-red {
+  background: var(--a-errmuted);
+  color: var(--a-errtext) !important;
+}
+
+.abtn--off {
+  background: var(--a-card);
+  color: color-mix(in srgb, var(--a-text) 50%, transparent) !important;
+  cursor: default;
+}
+
+.abtn--off:hover {
+  filter: none;
+}
+
+.capsule-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  min-width: 96px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--a-div);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: none;
+}
+
+/* --- Windows: Send ------------------------------------------------------- */
+.w-types {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.w-type {
+  flex: 1;
+  max-width: 120px;
+  height: 80px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.w-type .ic {
+  width: 32px;
+  height: 32px;
+  color: color-mix(in srgb, var(--a-text) 70%, transparent);
+}
+
+.w-selrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.sizepill {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--a-card);
+  border: 1px solid var(--a-hair);
+  color: color-mix(in srgb, var(--a-text) 70%, transparent);
+}
+
+.w-check {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--a-green);
+  font-size: 15px;
+}
+
+.w-check i {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in srgb, var(--a-text) 55%, transparent);
+  border-radius: 2px;
+}
+
+.w-files {
+  display: flex;
+  gap: 12px;
+  height: 120px;
+  align-items: flex-start;
+  padding-top: 8px;
+}
+
+.w-file {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.w-file .ic {
+  width: 40px;
+  height: 40px;
+  color: color-mix(in srgb, var(--a-text) 70%, transparent);
+}
+
+.w-sendbtn {
+  margin-top: auto;
+  height: 64px;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* In-window modal (Transfer History detail, Send Via, Send via QR) */
+.w-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--a-scrim);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: a-fade var(--dur-med) var(--ease) both;
+}
+
+.w-dialog {
+  width: 100%;
+  max-width: 380px;
+  background: var(--a-bg);
+  border-radius: 16px;
+  border: 1px solid var(--a-hair);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.7);
+  animation: a-rise var(--dur-slow) var(--ease) both;
+}
+
+.w-dialog__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.w-dialog__top .w-title {
+  font-size: 20px;
+}
+
+.redcap,
+.redpill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.redcap {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--a-err);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.prog {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--a-div);
+  overflow: hidden;
+}
+
+.prog > i {
+  display: block;
+  height: 100%;
+  width: var(--p, 0%);
+  background: var(--a-green);
+  border-radius: inherit;
+}
+
+.prog--droid {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.prog--droid > i {
+  background: var(--a-warn);
+}
+
+.is-paused .prog > i {
+  background: var(--a-text2);
+}
+
+.is-done .prog > i {
+  background: var(--a-green);
+}
+
+.xfer-status {
+  font-size: 13px;
+  color: var(--a-text2);
+  min-height: 18px;
+}
+
+.is-paused .xfer-status {
+  color: var(--a-warn);
+}
+
+.is-done .xfer-status {
+  color: var(--a-gtext);
+}
+
+.xfer-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.xfer-file > .ic {
+  width: 40px;
+  height: 40px;
+  color: color-mix(in srgb, var(--a-text) 70%, transparent);
+}
+
+/* --- Windows: System Status -------------------------------------------- */
+.bento3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.btile {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.btile__chip {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--a-muted);
+  color: var(--a-green);
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+}
+
+.btile__chip .ic {
+  width: 18px;
+  height: 18px;
+}
+
+.btile b {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 500;
+}
+
+.field {
+  position: relative;
+  border: 1px solid var(--a-div);
+  border-radius: 4px;
+  padding: 16px 14px 14px;
+  font-size: 16px;
+  margin: 8px 0 16px;
+}
+
+.field > span {
+  position: absolute;
+  top: -9px;
+  left: 10px;
+  padding: 0 4px;
+  background: var(--a-bg);
+  font-size: 12px;
+  color: var(--a-text2);
+}
+
+.secrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.spin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--a-green);
+  border-right-color: transparent;
+  animation: a-spin 0.9s linear infinite;
+}
+
+.devrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 8px;
+}
+
+.devrow > .ic {
+  width: 36px;
+  height: 36px;
+  color: var(--a-green);
+}
+
+.devrow__txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.devrow__txt .sub1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pairbtn {
+  color: var(--a-gtext);
+}
+
+.pairbtn.is-unpair {
+  color: var(--a-errtext);
+}
+
+.rescan {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--a-div);
+  background: var(--a-card);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.rescan .ic {
+  width: 18px;
+  height: 18px;
+}
+
+/* Pairing modals are hard-coded dark in both apps' light themes too. */
+.pair-modal {
+  --a-text: #f5f5f5;
+  --a-text2: #a3a3a3;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+  animation: a-fade var(--dur-med) var(--ease) both;
+}
+
+.pair-card {
+  width: 100%;
+  max-width: 300px;
+  background: #1f1f1f;
+  color: #f5f5f5;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 28px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  animation: a-rise var(--dur-slow) var(--ease) both;
+}
+
+.pair-card > .ic {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+}
+
+.pair-card .pair-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0;
+}
+
+.pair-from {
+  color: #22c55e;
+  font-size: 16px;
+}
+
+.pair-note {
+  font-size: 13px;
+  color: #a3a3a3;
+  margin-top: 12px;
+}
+
+.sas {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.sas b {
+  width: 34px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #22c55e;
+  border-radius: 10px;
+  font: 700 22px/1 var(--f-num);
+  color: #fff;
+}
+
+.pair-card .abtn {
+  height: 48px;
+  border-radius: 8px;
+}
+
+/* ======================= ANDROID: the phone ============================= */
+.droid {
+  font-family: var(--f-droid);
+  width: min(340px, 100%);
+  height: 720px;
+  padding: 9px;
+  border-radius: 46px;
+  background: var(--a-bezel);
+  box-shadow: inset 0 0 0 1.5px #2b2b2b, 0 40px 90px -30px rgba(0, 0, 0, 0.75),
+    0 12px 30px -12px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .droid {
+  box-shadow: inset 0 0 0 1.5px #3a3a3c, 0 40px 90px -30px rgba(15, 23, 42, 0.4),
+    0 12px 30px -12px rgba(15, 23, 42, 0.2);
+}
+
+.droid__screen {
+  position: relative;
+  height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: var(--a-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.droid__status {
+  height: 34px;
+  padding: 10px 26px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 500 13px/1 var(--f-num);
+  flex: none;
+}
+
+/* camera punch-hole */
+.droid__status::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border-radius: 50%;
+  background: #000;
+}
+
+.droid__status .ic {
+  width: 15px;
+  height: 15px;
+}
+
+.droid__status span:last-child {
+  display: flex;
+  gap: 4px;
+}
+
+.droid__page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 0 22px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.droid__gesture {
+  height: 22px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.droid__gesture::before {
+  content: "";
+  width: 108px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--a-text) 45%, transparent);
+}
+
+/* Header: 36dp icon + headlineSmall */
+.d-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0 20px;
+}
+
+.d-head > .ic {
+  width: 36px;
+  height: 36px;
+  color: var(--a-green);
+}
+
+.d-back {
+  width: 40px;
+  height: 40px;
+  margin-left: -8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.d-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+/* M3 switch 52x32 */
+.m3sw {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--a-elev);
+  border: 2px solid var(--a-text2);
+  flex: none;
+  cursor: pointer;
+  transition: background-color var(--dur-med), border-color var(--dur-med);
+}
+
+.m3sw::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--a-text2);
+  transition: transform var(--dur-med) var(--ease), width var(--dur-med),
+    height var(--dur-med), margin var(--dur-med), background-color var(--dur-med);
+}
+
+.m3sw[aria-checked="true"] {
+  background: var(--a-green);
+  border-color: var(--a-green);
+}
+
+.m3sw[aria-checked="true"]::after {
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  transform: translateX(18px);
+  background: var(--a-onp);
+}
+
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--a-muted);
+  color: var(--a-gtext);
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.strip::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--a-green);
+  flex: none;
+}
+
+.countpill {
+  font: 500 12px/1 var(--f-num);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--a-elev);
+  color: var(--a-text2);
+}
+
+.tray {
+  background: var(--a-card);
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Clipboard rows (both platforms share the list behaviour) */
+.cliplist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.clip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px 10px 14px;
+  border-radius: 16px;
+  background: var(--a-card);
+  border: 1px solid var(--a-hair);
+  font-size: 15px;
+  line-height: 20px;
+  flex: none;
+}
+
+.clip__t {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip .ib {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--a-green);
+  flex: none;
+}
+
+.clip .ib--del {
+  color: var(--a-err);
+}
+
+.clip .ib .ic {
+  width: 20px;
+  height: 20px;
+}
+
+.clip--droid {
+  border-radius: 12px;
+  background: var(--a-bg);
+  padding-left: 8px;
+}
+
+.clip__tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--a-muted);
+  color: var(--a-green);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.clip__tile .ic {
+  width: 22px;
+  height: 22px;
+}
+
+.clip.is-new {
+  animation: a-arrive 900ms var(--ease) both;
+}
+
+/* Lite hub action cards */
+.hubcard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--a-div);
+  background: var(--a-card);
+}
+
+.hubcard__ic {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--a-muted);
+  color: var(--a-green);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+/* Android Send */
+.d-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.d-type {
+  height: 84px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.d-type .ic {
+  width: 30px;
+  height: 30px;
+  color: var(--a-green);
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  background: var(--a-card);
+  border-radius: 24px 24px 0 0;
+  border-top: 1px solid var(--a-hair);
+  padding: 10px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 -20px 50px -20px rgba(0, 0, 0, 0.6);
+  animation: a-sheet var(--dur-slow) var(--ease) both;
+}
+
+.sheet::before {
+  content: "";
+  align-self: center;
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--a-text) 35%, transparent);
+  margin-bottom: 6px;
+}
+
+.sheet__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sheet__top .h6 {
+  flex: 1;
+}
+
+.redpill {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--a-err);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.netopt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 2px solid var(--a-div);
+  background: var(--a-card);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.netopt .ic {
+  color: var(--a-green);
+}
+
+.netopt[aria-pressed="true"] {
+  background: var(--a-muted);
+  border-color: var(--a-green);
+}
+
+.or {
+  text-align: center;
+  color: var(--a-text2);
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+/* Android pairing confirmation: an XML screen, so IBM Plex Sans */
+.d-pair {
+  font-family: var(--f-num);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 48px;
+  gap: 6px;
+}
+
+.d-pair > .ic {
+  width: 80px;
+  height: 80px;
+  color: var(--a-text);
+  margin-bottom: 12px;
+}
+
+.d-pair .pair-title {
+  font: 700 24px/1.2 var(--f-num);
+  color: var(--a-text);
+  letter-spacing: 0;
+}
+
+.d-pair .pair-from {
+  color: var(--a-gtext);
+}
+
+.d-pair .pair-note {
+  color: var(--a-text2);
+  margin-top: 20px;
+}
+
+.d-pair .sas b {
+  width: 38px;
+  height: 50px;
+  border-color: var(--a-green);
+  color: var(--a-text);
+}
+
+.d-pair .btns {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.d-pair .abtn--decline {
+  background: var(--a-card);
+  color: var(--a-errtext) !important;
+  border: 1px solid var(--a-div);
+}
+
+.okstate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  animation: a-rise var(--dur-slow) var(--ease) both;
+}
+
+.okstate > .ic {
+  width: 64px;
+  height: 64px;
+  color: var(--a-green);
+  margin-bottom: 8px;
+}
+
+/* QR art: a drawn code, decorative, not scannable to anything */
+.qr {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  margin: 4px auto;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  color: #0b0b0b;
+}
+
+.qr svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Settings-style groups (Security section) */
+.sgroup + .sgroup {
+  margin-top: 24px;
+}
+
+.sgroup h3 {
+  font-size: 15px;
+  color: var(--a-gtext);
+  font-weight: 600;
+  margin: 0 0 10px 4px;
+}
+
+.sgroup__card {
+  background: var(--a-card);
+  border: 1px solid var(--a-hair);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Keyframes */
+@keyframes a-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes a-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+@keyframes a-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes a-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes a-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    box-shadow: 0 0 0 2px var(--a-green);
+  }
+  40% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Send Via choices: colors.surface fill, onSurface text, 48dp */
+.abtn--plain {
+  height: 48px;
+  background: var(--a-card);
+  border: 1px solid var(--a-hair);
+  color: var(--a-text) !important;
+  font-weight: 500;
+}
+
+/* Components above set display; the hidden attribute must still win. */
+[hidden] {
+  display: none !important;
+}
+
+/* The window can be narrower than the real app's on a phone-sized page.
+   Below the app's own minimum, the "How to use" chip keeps only its icon so
+   the screen title has room. */
+.win__page {
+  container-type: inline-size;
+}
+
+@container (max-width: 330px) {
+  .howto {
+    font-size: 0;
+    gap: 0;
+    padding: 0 7px;
+  }
+  .w-title {
+    font-size: 22px;
+  }
+}
+
+/* ======================= Fit boxes ===================================== */
+/* The frame keeps its dp size; the box scales it to the column. */
+.fit {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--fw) / var(--fh);
+}
+
+.fit--win {
+  --fw: 880;
+  --fh: 600;
+}
+
+.fit--hero {
+  --fh: 560;
+}
+
+.fit--droid {
+  --fw: 393;
+  --fh: 852;
+}
+
+.fit > .frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--fw) * 1px);
+  height: calc(var(--fh) * 1px);
+  transform: scale(var(--k, 1));
+  transform-origin: 0 0;
+}
+
+/* Until js/site.js has measured, don't flash a full-size screen. */
+.js .fit:not(.is-fit) > .frame {
+  visibility: hidden;
+}
+
+/* ======================= Android Lite clipboard ======================== */
+/* DesignModeToggle as the auto-sync switch: 56x32, rounded track, square-ish
+   thumb; off = red on the left, on = green on the right. */
+.dmt {
+  position: relative;
+  width: 56px;
+  height: 32px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--a-hair);
+  background: var(--a-elev);
+  cursor: pointer;
+}
+
+.dmt i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 2px solid var(--a-err);
+  background: color-mix(in srgb, var(--a-err) 18%, transparent);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), border-color 300ms, background-color 300ms;
+}
+
+.dmt[aria-checked="true"] i {
+  transform: translateX(24px);
+  border-color: var(--a-gtext);
+  background: color-mix(in srgb, var(--a-gtext) 18%, transparent);
+}
+
+.desk__phone .d-head {
+  padding-top: 64px;
+}
+
+.desk__phone .d-head > .ic {
+  width: 26px;
+  height: 26px;
+  margin-right: 4px;
+}
+
+.desk__phone .d-title {
+  font-weight: 400;
+  font-size: 23px;
+  white-space: nowrap;
+}
+
+.desk__phone .tray {
+  flex: 1;
+  margin-bottom: 8px;
+}
+
+.countpill {
+  background: var(--a-muted);
+  color: var(--a-gtext);
+}
+
+/* LiteClipboardScreen rows: two lines, then an ellipsis. */
+.clip--droid {
+  padding: 12px 6px 12px 12px;
+  border-color: var(--a-hair);
+}
+
+.clip--droid .clip__t {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Bottom navigation with the centre power button. */
+.dnav {
+  flex: none;
+  height: 84px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  justify-items: center;
+  padding: 0 8px;
+  background: color-mix(in srgb, var(--a-card) 70%, var(--a-bg));
+  color: color-mix(in srgb, var(--a-text) 60%, transparent);
+}
+
+.dnav > span {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  font: 500 12px/1 var(--f-num);
+}
+
+.dnav .ic {
+  width: 24px;
+  height: 24px;
+}
+
+.dnav .is-on {
+  color: var(--a-text);
+}
+
+.dnav .is-on i {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 32px;
+  border-radius: 16px;
+  background: color-mix(in srgb, #8b86b8 38%, transparent);
+}
+
+.dnav__fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--a-green);
+  color: var(--a-onp);
+  place-items: center;
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.6);
+}
+
+.dnav__fab .ic {
+  width: 30px;
+  height: 30px;
+}
+
+/* Rows that arrive slide the others down (js/site.js animates the move). */
+.clip.is-landing {
+  animation: a-land 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes a-land {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--a-green) 70%, transparent);
+  }
+  to {
+    transform: none;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}

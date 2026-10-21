@@ -495,6 +495,12 @@
     <string name="history_chooser_open_file">Buka File</string>
     <string name="history_file_not_found">File tidak ditemukan</string>
     <string name="history_cannot_open_file">Tidak dapat membuka file</string>
+    <string name="open_choice_message">OffBridge bisa menampilkan file ini sendiri. Anda juga bisa membukanya dengan aplikasi lain.</string>
+    <string name="open_choice_preview">Pratinjau</string>
+    <string name="open_choice_other_app">Buka dengan aplikasi lain</string>
+    <string name="open_choice_no_app">Tidak ada aplikasi di perangkat ini yang bisa membuka file ini</string>
+    <string name="preview_truncated">Hanya bagian awal file ini yang ditampilkan. Buka dengan aplikasi lain untuk melihat semuanya.</string>
+    <string name="preview_empty_file">(File ini kosong)</string>
     <string name="history_waiting_zero">Menunggu (0%)</string>
     <string name="history_detail_subtitle">%1$s • %2$d file (%3$s MB)</string>
     <string name="history_file_summary">%1$s%2$s (%3$s MB)</string>

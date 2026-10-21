@@ -1,0 +1,254 @@
+/* ==========================================================================
+   download.css — the Download section. Card and grid rules moved here from
+   the old sections.css unchanged (dl-wheel.js and platform.js depend on
+   them), then restyled at the bottom to match the app cards.
+   ========================================================================== */
+
+/* --- Download ------------------------------------------------------------- */
+.dl-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-24);
+  max-width: 760px;
+  margin-inline: auto;
+}
+@media (min-width: 720px) {
+  .dl-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* Odd card out (3 cards over 2 columns) spans both instead of sitting
+   half-width under column 1 — centers itself as its own row. Upper bound keeps
+   this from fighting the 3-column rule below on specificity (it would
+   otherwise win: it's the more specific selector). The 3-column band starts at
+   1160px — measured, not guessed: each card's min-content is its nowrap
+   button label (the Play card's is ~368px), and three of those plus gaps and
+   gutters only genuinely fit from ~1150px; below that the grid overflowed and
+   the page clipped the third card. */
+@media (min-width: 720px) and (max-width: 1159px) {
+  .dl-grid:has(.dl-card:nth-child(3)):not(:has(.dl-card:nth-child(4)))
+    .dl-card:nth-child(3) {
+    grid-column: 1 / -1;
+    max-width: 380px;
+    margin-inline: auto;
+    width: 100%;
+  }
+}
+@media (min-width: 1160px) {
+  .dl-grid:has(.dl-card:nth-child(3)) {
+    /* minmax(0, …) drops the min-content floor so the three tracks stay EQUAL
+       (plain 1fr floors each track at its card's nowrap-label width, which
+       rendered lopsided 368/332/332 columns). Cards can't clip: their buttons
+       wrap instead (see .dl-card .btn below). */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 1080px;
+  }
+}
+
+.dl-card {
+  padding: var(--s-32);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-16);
+  /* Sizing context for the CTA label below. The card's width comes from the
+     wheel (a percentage of the deck), not from the viewport, so viewport units
+     would mis-size the label on the way down. */
+  container-type: inline-size;
+  transition: transform var(--dur-med) var(--ease),
+    border-color var(--dur-med) var(--ease-std),
+    box-shadow var(--dur-med) var(--ease-std);
+}
+/* Phones: 32px of side padding out of a ~266px card is a third of the width.
+   Give it back to the CTA so its label stays on one line. */
+@media (max-width: 520px) {
+  .dl-card {
+    padding-inline: var(--s-16);
+  }
+}
+/* The green neon ring is interactive: it follows whichever card the pointer or
+   keyboard last landed on (see platform.js), so it's decoupled from .is-detected
+   — which only drives the "Detected — recommended for you" tag. On load the
+   detected card starts highlighted. */
+.dl-card.is-highlight {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 1px var(--accent) inset, 0 22px 50px -24px rgba(0, 0, 0, 0.7);
+  transform: scale(1.02);
+}
+/* The platform mark sits on the name line, not in a tile above it. */
+.dl-card__os {
+  display: grid;
+  place-items: center;
+  color: var(--accent-text);
+  margin-bottom: -6px;
+}
+.dl-card__os .icon {
+  width: 30px;
+  height: 30px;
+}
+.dl-card h3 {
+  font-size: var(--t-h3);
+}
+.dl-card__badges {
+  display: flex;
+  gap: var(--s-8);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.dl-card .btn {
+  margin-top: var(--s-4);
+  /* .btn--lg's 32px side padding does nothing on a full-width button whose
+     content is already centered — it only eats label room. Measured, that was
+     the whole reason "Download for Windows" broke onto a second line: the
+     label needed 225px and the padding left it 222px. */
+  padding-inline: var(--s-8);
+  /* Below ~400px even the trimmed padding isn't enough, so the label scales
+     with the CARD (cqi resolves against the container above — its CONTENT box,
+     hence 6.5 rather than the ~5.6 the full width would suggest). 6.5cqi clears
+     --t-lead at every card width down to 430px, so the clamp pins to --t-lead
+     and the CTA keeps full size; it steps down only on small phones. */
+  font-size: clamp(0.95rem, 6.5cqi, var(--t-lead));
+  /* Safety net, not the plan: a label that still can't fit — a long localized
+     one — wraps rather than clipping or overflowing the grid. */
+  white-space: normal;
+}
+.dl-detected-tag {
+  font-size: var(--t-caption);
+  font-weight: 600;
+  color: var(--accent-text);
+  min-height: 1em;
+}
+.dl-verify {
+  margin-top: var(--s-4);
+  font-size: var(--t-caption);
+  color: var(--text-tertiary);
+}
+.dl-verify summary {
+  cursor: pointer;
+}
+.dl-verify code {
+  display: block;
+  margin-top: var(--s-4);
+  word-break: break-all;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.dl-note {
+  margin: 0 auto var(--s-32);
+  max-width: 540px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--t-small);
+}
+
+/* The explicit display below would otherwise defeat the UA's [hidden] rule —
+   platform.js hides this banner once every download card is wired. */
+.dl-todo[hidden] {
+  display: none;
+}
+.dl-todo {
+  display: block;
+  margin: var(--s-16) auto 0;
+  max-width: 620px;
+  padding: var(--s-12) var(--s-16);
+  text-align: center;
+  font-size: var(--t-small);
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+  border-radius: var(--r-md);
+}
+
+.dl-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-12);
+  margin-top: var(--s-32);
+}
+.dl-qr {
+  width: 120px;
+  height: 120px;
+  background: #fff;
+  border-radius: var(--r-md);
+  padding: 10px;
+}
+
+
+.dl-head {
+  max-width: 40rem;
+  margin: 0 0 clamp(2rem, 1.5rem + 2vw, 3rem);
+}
+
+
+/* --- Restyle: app card look ----------------------------------------------- */
+.dl-card.glass::before {
+  display: none;
+}
+
+.dl-card {
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.dl-card h3 {
+  font-weight: 400;
+  font-size: 1.7rem;
+}
+
+.dl-card__os .ic {
+  width: 30px;
+  height: 30px;
+}
+
+.dl-card .btn .ic {
+  width: 22px;
+  height: 22px;
+}
+
+.badge {
+  font-family: var(--f-num);
+}
+
+.dl-card__note {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.dl-detected-tag {
+  font-family: var(--f-num);
+}
+
+.only {
+  margin: clamp(2.5rem, 2rem + 2vw, 3.5rem) auto 0;
+  max-width: 920px;
+  display: grid;
+  gap: 16px 40px;
+}
+
+@media (min-width: 760px) {
+  .only {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.only h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.only h3 .ic {
+  width: 22px;
+  height: 22px;
+  color: var(--accent-text);
+}
+
+.only p {
+  color: var(--text-secondary);
+}

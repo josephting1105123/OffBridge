@@ -1377,7 +1377,15 @@ class QrScannerFragment : Fragment() {
                     // the session alive until we confirm, mirroring the initial ACCEPT_OFFER.
                     val ackSuffix = if (session.completionAckRequired) "|ack" else ""
                     val authKey = session.p2pAuthKey ?: throw java.io.IOException("no handshake key to prove on resume")
-                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$ackSuffix|${OffGridResumeAuth.FLAG}\n"
+                    // A sealed session must resume sealed. Without the flag the sender resumed in
+                    // plaintext while we still unsealed with p2pSealKey, so every chunk failed its tag
+                    // and a sealed off-grid transfer could never be resumed. FileSeal records are not
+                    // byte-seekable, so the in-progress file restarts from 0 (the LAN resume does the
+                    // same); offset 0 makes executeDownloadStream overwrite the .part.
+                    val sealed = session.p2pSealKey != null
+                    if (sealed) session.currentOffset = 0L
+                    val sealSuffix = if (sealed) "|${OffGridHandshake.ACCEPT_FLAG_SEAL}" else ""
+                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$sealSuffix$ackSuffix|${OffGridResumeAuth.FLAG}\n"
                     connection.output.run {
                         write(cmd.toByteArray(Charsets.UTF_8))
                         flush()

@@ -111,6 +111,9 @@ object P2pHelloHandler {
         TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' → sending P2P_WELCOME + OFFER")
 
         val sessionId = UUID.randomUUID().toString()
+        // Set once the session is registered; lets the outer catch unregister a session that never
+        // got as far as streaming.
+        var registered: TransferSession? = null
 
         TransferDaemon.daemonScope.launch(Dispatchers.IO) {
             try {
@@ -146,6 +149,7 @@ object P2pHelloHandler {
                     p2pAuthKey = sharedKey
                 )
                 TransferDaemon.putActiveSession(sessionId, session)
+                registered = session
 
                 TransferHistoryManager.addRecord(context, TransferRecord(
                     sessionId = sessionId,
@@ -186,6 +190,10 @@ object P2pHelloHandler {
                 val replyFlags = replyParts.drop(2)
                 val ackExpected = replyFlags.contains("ack")
                 val sealKey = if (replyFlags.contains(OffGridHandshake.ACCEPT_FLAG_SEAL)) sharedKey else null
+                // Kept for an off-grid RESUME_REQUEST, which arrives from a never-paired IP and so
+                // has no pairing key to seal with — FileTransferServer resumes with this instead.
+                session.p2pSealKey = sealKey
+                session.fileV2Negotiated = sealKey != null
 
                 // See OffGridHandshake's twin line: a plaintext fallback is externally
                 // indistinguishable from a sealed transfer, so the outcome must be stated.
@@ -232,6 +240,14 @@ object P2pHelloHandler {
             } catch (e: Exception) {
                 e.printStackTrace()
                 TransportDiag.log("TX: P2P handshake error after WELCOME: ${e.javaClass.simpleName} ${e.message ?: ""}")
+                // Reached only when the socket died before ACCEPT_OFFER (streaming errors are caught
+                // inside). The session was registered and recorded as pending but can never run:
+                // left behind, it lingered in activeSessions — where the next transfer's hand-off
+                // could pick it up as "the" outgoing p2p session — and in history as pending forever.
+                registered?.let {
+                    TransferDaemon.removeActiveSession(it.sessionId)
+                    TransferHistoryManager.updateStatus(context, it.sessionId, "failed")
+                }
                 ctx.onTransferError(false)
             } finally {
                 try { connection.close() } catch (_: Exception) {}
@@ -244,4 +260,3 @@ object P2pHelloHandler {
         }
     }
 }
-
