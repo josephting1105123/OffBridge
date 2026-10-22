@@ -4,6 +4,8 @@ import android.content.Context
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportDiag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -498,13 +500,17 @@ object DownloadEngine {
         TransferDaemon.daemonScope.launch(Dispatchers.IO) {
             var socket: Socket? = null
             try {
-                val fileKey = TransferKeys.fileKeyIfAead(context, session.targetIp)
-                if (fileKey != null) session.fileGcmNegotiated = true
+                // Off-grid (p2p) sessions carry their own keys from the P2P_HELLO: the IP was never
+                // paired, so there is no pairing-derived file key. The seal key is the negotiated
+                // outcome (null = plaintext stream) and the handshake already set the v2 flag.
+                val offGrid = session.p2pAuthKey != null
+                val fileKey = if (offGrid) session.p2pSealKey else TransferKeys.fileKeyIfAead(context, session.targetIp)
+                if (fileKey != null && !offGrid) session.fileGcmNegotiated = true
                 // v2 only when BOTH peers advertise FGCM2; else fall back to the v1 "fgcm" flag. Pinned
                 // via TOFU so a later FGCM2-strip forcing v1 is blocked (XP-DEF-01) — throws
                 // DowngradeBlockedException, caught below like the FGCM1 gate.
-                val useV2 = TransferKeys.useFileV2(context, session.targetIp, fileKey != null)
-                if (useV2) session.fileV2Negotiated = true
+                val useV2 = if (offGrid) fileKey != null else TransferKeys.useFileV2(context, session.targetIp, fileKey != null)
+                if (useV2 && !offGrid) session.fileV2Negotiated = true
                 // Bounded connect so a peer that vanished mid-transfer can't hang the resume on the
                 // OS default SYN timeout (tens of seconds); mirrors Net.sendBytes.
                 socket = Socket().apply { connect(InetSocketAddress(session.targetIp, Ports.FILE_TRANSFER), 8000) }
@@ -570,14 +576,27 @@ object DownloadEngine {
                 // offset are order-independent on both receivers, and a legacy sender ignores the extra
                 // field. Mirrors the initial off-grid accept (QrScannerFragment ackSuffix).
                 val ackSuffix = if (session.completionAckRequired) "|ack" else ""
-                val resumeCmd = if (fileKey != null)
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}|${if (useV2) "fgcm2" else "fgcm"}$ackSuffix\n"
-                else
-                    "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}$ackSuffix\n"
+                // Off-grid session: the sender wants proof of the HELLO's ECDH secret, not a pairing key.
+                val p2pAuthKey = session.p2pAuthKey
+                val authSuffix = if (p2pAuthKey != null) "|${OffGridResumeAuth.FLAG}" else ""
+                // A sealed off-grid session resumes with "seal" (its ECDH key), never the LAN "fgcm"/
+                // "fgcm2" flags, which would make the sender look for a pairing key.
+                val aeadSuffix = when {
+                    fileKey == null -> ""
+                    offGrid -> "|${OffGridHandshake.ACCEPT_FLAG_SEAL}"
+                    else -> "|${if (useV2) "fgcm2" else "fgcm"}"
+                }
+                val resumeCmd = "RESUME_REQUEST|${session.sessionId}|${session.currentFileIndex}|${session.currentOffset}$aeadSuffix$ackSuffix$authSuffix\n"
                 outStream.write(resumeCmd.toByteArray(Charsets.UTF_8))
                 outStream.flush()
 
-                answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                if (p2pAuthKey != null) {
+                    if (!OffGridResumeAuth.answer(connection.input, connection.output, p2pAuthKey, session.sessionId)) {
+                        throw java.io.IOException("sender refused the off-grid resume")
+                    }
+                } else {
+                    answerAcceptChallengeIfExpected(context, connection, session.targetIp)
+                }
                 executeDownloadStream(context, connection, session, fileKey)
             } catch (e: DowngradeBlockedException) {
                 // The sender's FileSeal capability vanished after a prior sealed transfer — refuse the

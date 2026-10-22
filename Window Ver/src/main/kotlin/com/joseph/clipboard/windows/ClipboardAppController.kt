@@ -106,6 +106,9 @@ data class OutgoingFileSession(
     // ephemeral, never-paired IP, so the trust gate exempts a RESUME_REQUEST that names a live p2p
     // outgoing session (XP-05) — mirrors the Android FileTransferServer exemption.
     val transport: String = "lan",
+    // p2p only: the raw ECDH secret from P2P_HELLO, which an off-grid RESUME_REQUEST must prove
+    // (OffGridResumeAuth) before FileTransferDaemon hands the socket to onResumeReceived.
+    val p2pAuthKey: ByteArray? = null,
     // Off-grid only: the raw ECDH secret when the phone asked for the sealed stream at ACCEPT_OFFER,
     // else null. A resume arrives from a never-paired IP with no pairing key, so this is the only
     // key it can be sealed with.
@@ -179,7 +182,9 @@ class ClipboardAppController {
         val ip: String,
         val deviceName: String,
         val status: String,
-        val visualPin: String? = null
+        val visualPin: String? = null,
+        /** The user tapped "Codes match"; the overlay drops the button and waits for the peer. */
+        val userConfirmed: Boolean = false,
     )
 
     // SupervisorJob so one child coroutine's uncaught exception can't cancel the whole scope's Job
@@ -202,6 +207,8 @@ class ClipboardAppController {
      */
     private val updateCheckInProgress = java.util.concurrent.atomic.AtomicBoolean(false)
 
+    @Volatile private var lastResumeNotifyAt = 0L
+
     // Daemons
     private val transferDaemon = TransferDaemon(
         deviceNameProvider = { SecurityVault.getDeviceName() },
@@ -209,11 +216,17 @@ class ClipboardAppController {
         // reconnect; previously unhandled here, so an Android→Windows resume looked "sent" on the
         // Android side but silently vanished. See requestPeerResumeOutgoing for the mirror (Windows
         // sending the same nudge when Windows is the outgoing side).
-        onResumeRequested = { _, _ ->
-            SystemTrayManager.showNotification(
-                "Resume Request",
-                "A peer is requesting to resume a transfer. Open OffBridge to continue."
-            )
+        // UDP is unauthenticated, so only a paired peer's nudge raises the tray toast, and at most
+        // once per 30 s, so a LAN host can't spam notifications with forged packets.
+        onResumeRequested = { _, fromIp ->
+            val now = System.currentTimeMillis()
+            if (SecurityVault.getAesKey(fromIp) != null && now - lastResumeNotifyAt >= 30_000L) {
+                lastResumeNotifyAt = now
+                SystemTrayManager.showNotification(
+                    "Resume Request",
+                    "A peer is requesting to resume a transfer. Open OffBridge to continue."
+                )
+            }
         }
     )
     
@@ -416,7 +429,8 @@ class ClipboardAppController {
         supportsAcceptAuth2Provider = { ip -> transferDaemon.getDiscoveredNodes().any { it.ip == ip && it.supportsAuth2Accept } },
         // XP-05: admit an off-grid receiver's RESUME_REQUEST past the LAN trust gate when its sessionId
         // names a live outgoing p2p session (registered in handleP2pHello with transport="p2p").
-        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" }
+        isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" },
+        offGridResumeKey = { sid -> activeOutgoingFileSessions[sid]?.takeIf { it.transport == "p2p" }?.p2pAuthKey }
     )
 
     // UI State
@@ -815,6 +829,12 @@ class ClipboardAppController {
         _discoveredDevices.value = emptyList()
     }
     
+    /** The user compared the PIN with the other screen and tapped "Codes match". */
+    fun confirmOutgoingPairing() {
+        PairingClient.confirm()
+        _outgoingPairingState.value = _outgoingPairingState.value?.copy(userConfirmed = true)
+    }
+
     fun cancelOutgoingPairing() {
         // Close the handshake socket so the blocking read unwinds and can't finish pairing in the
         // background; nulling the state alone would only hide the overlay while the pair completed.
@@ -973,7 +993,7 @@ class ClipboardAppController {
                 // ONE length snapshot drives the wire MANIFEST, the streamer's committed byte
                 // counts, and the history record — three separate file.length() reads let a file
                 // change size between them and desync the receiver's positional read (XP-DEF-04).
-                val outSession = OutgoingFileSession(
+                val snapshot = OutgoingFileSession(
                     session.sessionId,
                     socket.inetAddress.hostAddress ?: "",
                     session.files,
@@ -981,8 +1001,10 @@ class ClipboardAppController {
                 )
                 val handshake = OffGridQrSender.runHandshake(
                     socket, header, session,
-                    outSession.files.mapIndexed { i, f -> f.name to outSession.fileSizes[i] }
+                    snapshot.files.mapIndexed { i, f -> f.name to snapshot.fileSizes[i] }
                 )
+                // Same snapshot, plus the handshake key a later off-grid resume has to prove.
+                val outSession = snapshot.copy(p2pAuthKey = handshake.authKey)
                 if (!handshake.accepted) {
                     // Restore the window (only if no newer QR replaced it) so a genuine retry works.
                     qrHost.restorePendingSession(session)

@@ -176,6 +176,7 @@ class SenderSessionController(
         cap = cap or TransportCaps.LOHS // declared; runtime denial is a ladder outcome, not a cap
         cap = cap or TransportCaps.COMPLETION_ACK // build-level: this generation waits for the delivery ack
         cap = cap or TransportCaps.SEALED_STREAM // build-level: this generation can FileSeal the off-grid stream
+        cap = cap or TransportCaps.CTRL_AAD // build-level: control frames can use SessionCrypto v2
         return cap
     }
 
@@ -298,14 +299,18 @@ class SenderSessionController(
 
         val sharedKey = try { ecdh.deriveSecrets(receiverPub).first } catch (_: Exception) {
             TransportDiag.log("TX: HELLO_RX dropped — ECDH failed on the receiver's key")
+            bleServer?.releaseClient("HELLO carried an unusable public key")
             return
         }
         val expected = SessionCrypto.hmacSha256(sharedKey, token)
         if (!MessageDigest.isEqual(helloHmac, expected)) {
             // Wrong token: a stale QR/NFC payload, or a different session's receiver.
             TransportDiag.log("TX: HELLO_RX REJECTED — token HMAC mismatch (stale code?)")
+            // This central can't prove the QR token, so it must not keep the only control slot.
+            bleServer?.releaseClient("HELLO token HMAC mismatch")
             return
         }
+        bleServer?.markAuthenticated()
         // Valid HELLO arrived — the control channel is forming, so cancel the no-HELLO watchdog.
         mainHandler.removeCallbacksAndMessages(helloWatchdogToken)
 
@@ -361,7 +366,8 @@ class SenderSessionController(
         helloAckFrame = ackFrame
         channel.send(ackFrame)
 
-        val s = ControlSession(channel, SessionCrypto(sharedKey, isSender = true))
+        // v2 (header-bound AAD) iff the receiver asked for it; see TransportCaps.CTRL_AAD.
+        val s = ControlSession(channel, SessionCrypto(sharedKey, isSender = true, bindHeader = (receiverCaps and TransportCaps.CTRL_AAD) != 0))
         session = s
         s.onFrame = { type, payload -> handleFrame(type, payload) }
         s.onDead = { handleControlLost() }

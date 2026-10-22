@@ -408,7 +408,11 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                 }
 
                 outgoingPairing?.let { data ->
-                    SenderPairingOverlay(data, onCancel = { appController.cancelOutgoingPairing() })
+                    SenderPairingOverlay(
+                        data,
+                        onConfirm = { appController.confirmOutgoingPairing() },
+                        onCancel = { appController.cancelOutgoingPairing() },
+                    )
                 }
             }
         }
@@ -553,7 +557,11 @@ fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
 }
 
 @Composable
-fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCancel: () -> Unit) {
+fun SenderPairingOverlay(
+    data: ClipboardAppController.OutgoingPairingState,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
     BackdropEffect()
     Box(
         modifier = Modifier
@@ -588,23 +596,45 @@ fun SenderPairingOverlay(data: ClipboardAppController.OutgoingPairingState, onCa
                 Spacer(modifier = Modifier.height(8.dp))
                 
 
-                Text(data.status, color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+                val pin = data.visualPin?.takeIf { it.isNotEmpty() }
+                // Until the user vouches for the PIN, ask them to compare codes: the handshake won't
+                // save trust on the peer's accept alone.
+                val awaitingMatch = pin != null && !data.userConfirmed
+                val statusText = if (awaitingMatch) {
+                    (TranslationManager.getString("pairing_confirm_hint")
+                        .takeIf { it != "pairing_confirm_hint" }
+                        ?: "Tap Codes match only if %s shows the same code.").format(data.deviceName)
+                } else {
+                    data.status
+                }
+                Text(statusText, color = Color.Gray, fontSize = 14.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
 
-                data.visualPin?.takeIf { it.isNotEmpty() }?.let { pin ->
+                pin?.let {
                     Spacer(modifier = Modifier.height(24.dp))
                     PairingVerifyLabel()
                     Spacer(modifier = Modifier.height(12.dp))
-                    PinCodeBoxes(pin)
+                    PinCodeBoxes(it)
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                CircularProgressIndicator(
-                    color = GreenPrimary,
-                    modifier = Modifier.size(32.dp)
-                )
+                if (awaitingMatch) {
+                    Button(
+                        onClick = { onConfirm() },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = GreenPrimary),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(TranslationManager.getString("pairing_codes_match").takeIf { it != "pairing_codes_match" } ?: "Codes match", color = Color.Black)
+                    }
+                } else {
+                    CircularProgressIndicator(
+                        color = GreenPrimary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(if (awaitingMatch) 12.dp else 32.dp))
 
                 // The requester isn't fully dependent on the other side: if the peer never responds
                 // (or never received the request), Cancel aborts the handshake instead of leaving it

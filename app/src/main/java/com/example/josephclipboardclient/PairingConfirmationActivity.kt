@@ -30,10 +30,8 @@ class PairingConfirmationActivity : AppCompatActivity() {
 
         val senderName = intent.getStringExtra("SENDER_NAME") ?: getString(R.string.pairing_unknown_device)
         val senderIp = intent.getStringExtra("SENDER_IP")
-        val aesKey = intent.getByteArrayExtra("AES_KEY")
         val visualPin = intent.getStringExtra("VISUAL_PIN")
         val expiresAt = intent.getLongExtra(PairingDaemon.EXTRA_EXPIRES_AT, 0L)
-        val senderDeviceId = intent.getStringExtra(PairingDaemon.EXTRA_SENDER_DEVICE_ID)
 
         val deviceNameTextView = findViewById<TextView>(R.id.tv_pairing_device_name)
         val acceptButton = findViewById<Button>(R.id.btn_accept_pairing)
@@ -55,8 +53,8 @@ class PairingConfirmationActivity : AppCompatActivity() {
         }
 
         acceptButton.setOnClickListener {
-            if (senderIp != null && aesKey != null) {
-                completePairing(senderIp, aesKey, senderName, expiresAt, senderDeviceId)
+            if (senderIp != null) {
+                completePairing(senderIp, senderName, expiresAt)
             } else {
                 clearNotification()
                 finish()
@@ -66,7 +64,7 @@ class PairingConfirmationActivity : AppCompatActivity() {
         declineButton.setOnClickListener { declinePairing(senderIp, senderName) }
     }
 
-    private fun completePairing(senderIp: String, aesKey: ByteArray, senderName: String, expiresAt: Long, senderDeviceId: String?) {
+    private fun completePairing(senderIp: String, senderName: String, expiresAt: Long) {
         // finish() flips isFinishing synchronously, so this also blocks an Accept double-tap
         // from re-saving trust and re-broadcasting.
         if (isFinishing) return
@@ -79,12 +77,11 @@ class PairingConfirmationActivity : AppCompatActivity() {
             finish()
             return
         }
-        SecurityVault.saveTrustedNode(applicationContext, senderIp, aesKey, senderDeviceId, senderName)
+        // The daemon saves trust, not this screen: a current initiator must first send PAIR_CONFIRM
+        // (its user compared the PINs too), and the daemon reports the result with a toast.
         sendBroadcast(Intent(PairingDaemon.ACTION_PAIRING_ACCEPTED).apply {
             putExtra("SENDER_IP", senderIp); setPackage(packageName)
         })
-        Toast.makeText(applicationContext, getString(R.string.pairing_paired_with, senderName), Toast.LENGTH_SHORT).show()
-        sendBroadcast(Intent("com.example.josephclipboardclient.PAIRING_SUCCESSFUL").setPackage(packageName))
         clearNotification()
         finish()
     }

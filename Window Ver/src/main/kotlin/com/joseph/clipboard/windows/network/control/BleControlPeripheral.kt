@@ -28,10 +28,13 @@ import java.util.UUID
  *  - helper → Kotlin: `{"ev":"init","peripheral":bool}` · `{"ev":"adv","status":...}` ·
  *    `{"ev":"sub","client":id,"mtu":n}` · `{"ev":"rx","client":id,"d":b64}` ·
  *    `{"ev":"unsub","client":id}` · `{"ev":"err","msg":...}`
- *  - Kotlin → helper: `{"cmd":"tx","d":b64}` (notifies the locked client only).
+ *  - Kotlin → helper: `{"cmd":"tx","d":b64}` (notifies the locked client only) ·
+ *    `{"cmd":"release"}` (bans the locked client and locks the next subscriber, if any).
  * The helper locks to the FIRST subscribed phone and drops chunks from any other
  * (single-client rule, mirroring the phone's `BleControlServer`); it exits on stdin EOF,
- * so a dead JVM or a [close] always brings the advertisement down.
+ * so a dead JVM or a [close] always brings the advertisement down. The lock is provisional
+ * until [markAuthenticated]: a failed HELLO ([releaseClient]) or an unsubscribe before it frees
+ * the slot, so a nearby device that subscribed first can't hold the real phone out.
  *
  * Fail-soft: [start] returning false (no adapter, no peripheral role, csc missing, PowerShell
  * blocked, advertising aborted) means the caller simply doesn't set the QR's BLE cap bit and
@@ -62,7 +65,10 @@ class BleControlPeripheral : ControlChannel {
     private val writeLock = Any()
 
     // Confined to the reader thread (the only caller of accept()).
-    private val reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
+    @Volatile private var reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
+
+    /** Set once the locked phone's HELLO verified; from then on an unsubscribe ends the session. */
+    @Volatile private var authenticated = false
 
     /**
      * Compiles + launches the helper and blocks (≤ [BLE_START_TIMEOUT_MS]) until the
@@ -157,10 +163,11 @@ class BleControlPeripheral : ControlChannel {
                 }
                 reassembler.accept(chunk)
             }
-            // The linked phone dropped the GATT connection. Before a session exists it may well be
-            // back in a moment, so let the owner keep the channel open; any half-received frame
-            // belongs to the dropped connection and is discarded.
-            "unsub" -> if (onUnsubscribed?.invoke() == true) reassembler.reset() else fireClosed()
+            // The linked phone dropped the GATT connection. After its HELLO verified, the session is
+            // gone. Before that, the owner may keep the channel open (the phone's first connect often
+            // collapses before the handshake): forget the dropped link's partial frame and MTU so the
+            // slot is free for the next subscriber; otherwise close.
+            "unsub" -> if (authenticated) fireClosed() else if (onUnsubscribed?.invoke() != false) resetLink() else fireClosed()
             "err" -> System.err.println("BleControlPeripheral helper: ${ev.get("msg")?.asString}")
         }
     }
@@ -173,6 +180,37 @@ class BleControlPeripheral : ControlChannel {
         // obliged to call close(), so tear down here too — otherwise the compiled exe and
         // its .cs/.ps1 sources outlive the session on every post-start helper death.
         close()
+    }
+
+    override fun markAuthenticated() {
+        authenticated = true
+    }
+
+    override fun releaseClient(why: String) {
+        if (closed || authenticated) return
+        System.err.println("BleControlPeripheral: releasing BLE control slot ($why)")
+        writeCommand(JsonObject().apply { addProperty("cmd", "release") })
+        resetLink()
+    }
+
+    /** Forget the old phone's partial frame and MTU so nothing leaks into the next link. */
+    private fun resetLink() {
+        reassembler = GattReassembler { frame -> onMessage?.invoke(frame) }
+        mtu = DEFAULT_MTU
+    }
+
+    private fun writeCommand(cmd: JsonObject) {
+        val w = writer ?: return
+        if (closed) return
+        try {
+            synchronized(writeLock) {
+                w.write(gson.toJson(cmd))
+                w.newLine()
+                w.flush()
+            }
+        } catch (_: Exception) {
+            // Broken pipe = helper died; the reader thread's EOF fires onClosed.
+        }
     }
 
     override fun send(frame: ByteArray) {
@@ -288,6 +326,7 @@ class BleControlPeripheral : ControlChannel {
          */
         private val HELPER_CS = """
             using System;
+            using System.Collections.Generic;
             using System.Threading;
             using Windows.Devices.Bluetooth;
             using Windows.Devices.Bluetooth.GenericAttributeProfile;
@@ -302,6 +341,8 @@ class BleControlPeripheral : ControlChannel {
                 static GattLocalCharacteristic _tx;
                 static GattSubscribedClient _locked;
                 static string _lockedId;
+                // Clients released after a failed HELLO; never locked again this session.
+                static readonly HashSet<string> _released = new HashSet<string>();
 
                 static T Await<T>(IAsyncOperation<T> op)
                 {
@@ -397,6 +438,7 @@ class BleControlPeripheral : ControlChannel {
                 {
                     try
                     {
+                        if (line.IndexOf("\"cmd\":\"release\"", StringComparison.Ordinal) >= 0) { Release(); return; }
                         if (line.IndexOf("\"cmd\":\"tx\"", StringComparison.Ordinal) < 0) return;
                         int i = line.IndexOf("\"d\":\"", StringComparison.Ordinal);
                         if (i < 0) return;
@@ -430,8 +472,9 @@ class BleControlPeripheral : ControlChannel {
                         bool accepted;
                         lock (Sync)
                         {
-                            // Chunks from anyone other than the locked (first-subscribed) client are dropped.
-                            accepted = _lockedId == null || client == _lockedId;
+                            // Chunks from anyone other than the locked (first-subscribed) client are dropped,
+                            // and a released client stays dropped even while nobody holds the lock.
+                            accepted = _lockedId != null ? client == _lockedId : !_released.Contains(client);
                         }
                         // Emit BEFORE responding. The phone sends its next chunk as soon as the response
                         // lands, and this handler runs on the thread pool, so responding first let the
@@ -451,6 +494,39 @@ class BleControlPeripheral : ControlChannel {
                     }
                 }
 
+                // JVM said the locked client failed its HELLO: ban it and hand the slot to the next
+                // subscriber, if one is waiting. WinRT gives a GATT server no way to disconnect a
+                // client, so the ban (enforced in OnWriteRequested and the lock pick) is the release.
+                static void Release()
+                {
+                    GattSubscribedClient gained = null;
+                    string gainedId = null;
+                    lock (Sync)
+                    {
+                        if (_lockedId != null) _released.Add(_lockedId);
+                        _locked = null;
+                        _lockedId = null;
+                        var tx = _tx;
+                        if (tx != null)
+                        {
+                            foreach (var c in tx.SubscribedClients)
+                            {
+                                string id = c.Session.DeviceId.Id;
+                                if (_released.Contains(id)) continue;
+                                _locked = c;
+                                _lockedId = id;
+                                gained = c;
+                                gainedId = id;
+                                break;
+                            }
+                        }
+                    }
+                    if (gained != null)
+                    {
+                        Emit("{\"ev\":\"sub\",\"client\":\"" + J(gainedId) + "\",\"mtu\":" + gained.Session.MaxPduSize + "}");
+                    }
+                }
+
                 static void OnSubscribedClientsChanged(GattLocalCharacteristic sender, object args)
                 {
                     try
@@ -464,7 +540,7 @@ class BleControlPeripheral : ControlChannel {
                             foreach (var c in sender.SubscribedClients)
                             {
                                 string id = c.Session.DeviceId.Id;
-                                if (_lockedId == null)
+                                if (_lockedId == null && !_released.Contains(id))
                                 {
                                     // Lock to the first subscriber for the session's lifetime.
                                     _locked = c;
@@ -483,13 +559,16 @@ class BleControlPeripheral : ControlChannel {
                                 lostLocked = true;
                                 lostId = _lockedId;
                                 _locked = null;
-                                // Release the lock so the phone can subscribe again. The host decides
-                                // whether to keep listening (no session yet) or shut down (it had one).
+                                // Unlock and hand the slot to another subscriber that isn't banned, so the
+                                // phone can subscribe again. The host decides whether to keep listening (no
+                                // session yet) or shut down (it had one).
                                 _lockedId = null;
                                 foreach (var c in sender.SubscribedClients)
                                 {
+                                    string cid = c.Session.DeviceId.Id;
+                                    if (_released.Contains(cid)) continue;
                                     _locked = c;
-                                    _lockedId = c.Session.DeviceId.Id;
+                                    _lockedId = cid;
                                     gained = c;
                                     break;
                                 }

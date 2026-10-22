@@ -354,10 +354,43 @@ object TransferUtils {
     fun sanitizeIncomingFileName(rawName: String): String {
         val leaf = rawName.replace('\\', '/').substringAfterLast('/').trim()
         if (leaf.isEmpty() || leaf == "." || leaf == "..") return "received_file"
-        val cleaned = leaf.filterNot { it in "<>:\"/\\|?*" || it.code < 0x20 }.ifBlank { "received_file" }
-        val stem = cleaned.substringBeforeLast('.')
+        // Bidi controls (U+202A-202E, U+2066-2069) are dropped too: "invoice\u202Efdp.exe" would
+        // otherwise display as "invoiceexe.pdf". Trailing dots/spaces go because Windows silently
+        // drops them ("evil.exe." is opened as evil.exe), so the name on disk would differ from this one.
+        val cleaned = capLeafLength(
+            leaf.filterNot { it in "<>:\"/\\|?*" || it.code < 0x20 || it in '\u202A'..'\u202E' || it in '\u2066'..'\u2069' }
+                .trimEnd('.', ' ')
+        ).ifBlank { "received_file" }
+        // Windows matches the device name against the text before the FIRST dot, ignoring trailing
+        // spaces, so "NUL.tar.gz" and "CON .txt" also hit the device; the last-dot stem missed both.
+        val stem = cleaned.substringBefore('.').trimEnd(' ')
         val reserved = Regex("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOption.IGNORE_CASE)
         return if (reserved.matches(stem)) "_$cleaned" else cleaned
+    }
+
+    /**
+     * Caps a sanitized leaf at [maxBytes] UTF-8 bytes, keeping a short extension, so a hostile
+     * manifest name can't exceed the 255-byte filesystem limit (plus ".part" and a dedupe suffix)
+     * and fail the write on every resume attempt. Cuts on a code-point boundary.
+     */
+    fun capLeafLength(name: String, maxBytes: Int = 200): String {
+        if (name.toByteArray(Charsets.UTF_8).size <= maxBytes) return name
+        val dot = name.lastIndexOf('.')
+        val ext = if (dot > 0 && name.length - dot <= 16) name.substring(dot) else ""
+        val budget = maxBytes - ext.toByteArray(Charsets.UTF_8).size
+        val stem = name.substring(0, name.length - ext.length)
+        val out = StringBuilder()
+        var used = 0
+        var i = 0
+        while (i < stem.length) {
+            val cp = stem.codePointAt(i)
+            val n = String(Character.toChars(cp)).toByteArray(Charsets.UTF_8).size
+            if (used + n > budget) break
+            out.appendCodePoint(cp)
+            used += n
+            i += Character.charCount(cp)
+        }
+        return out.toString().trimEnd('.', ' ') + ext
     }
 
     /**

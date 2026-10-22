@@ -16,6 +16,33 @@ object Ports {
     const val PAIRING = 65435
 }
 
+/** Longest line accepted on the pairing port. Real lines (a base64 P-256 key, a sealed confirmation,
+ *  a device name) are well under 1 KiB; the cap is what keeps a hostile peer from streaming bytes
+ *  with no newline until OutOfMemoryError, before any authentication has happened. */
+const val PAIRING_LINE_MAX_CHARS = 64 * 1024
+
+/**
+ * [BufferedReader.readLine] with a length cap: returns the line without its terminator, or null at
+ * EOF with nothing read, and throws [java.io.IOException] once a line passes [maxChars]. The stock
+ * readLine() has no limit and the socket read timeout resets on every byte, so it never trips on a
+ * peer that keeps trickling data. A trailing '\r' is dropped so CRLF senders still match.
+ */
+fun java.io.BufferedReader.readLineCapped(maxChars: Int = PAIRING_LINE_MAX_CHARS): String? {
+    val sb = StringBuilder()
+    while (true) {
+        val c = read()
+        if (c == -1) {
+            if (sb.isEmpty()) return null
+            break
+        }
+        if (c == '\n'.code) break
+        if (sb.length >= maxChars) throw java.io.IOException("Line exceeded $maxChars chars")
+        sb.append(c.toChar())
+    }
+    if (sb.isNotEmpty() && sb[sb.length - 1] == '\r') sb.setLength(sb.length - 1)
+    return sb.toString()
+}
+
 /**
  * Per-thread cap on how long a daemon's `stop()` waits for its worker to leave its loop before
  * giving up on it. Every worker is either sleeping (interrupted by stop) or blocked in

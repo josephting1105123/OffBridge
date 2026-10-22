@@ -78,6 +78,44 @@ class ControlPlaneVectorTest {
         assertEquals(PLAIN_HEADER_HEX, SessionCrypto.header(0x01, 0L, 7).toHex())
     }
 
+    // ---- SessionCrypto v2 (TransportCaps.CTRL_AAD): header bound as GCM AAD, "ctrl-v2" label ----
+
+    @Test
+    fun `v2 HKDF label matches the canonical vector`() {
+        assertEquals(
+            HKDF_V2_VECTOR_HEX,
+            SessionCrypto.hkdfSha256(ikm, "ctrl-v2".toByteArray(Charsets.UTF_8), 32).toHex()
+        )
+    }
+
+    @Test
+    fun `first sealed v2 sender frame matches the canonical vector`() {
+        val sealed = SessionCrypto(ikm, isSender = true, bindHeader = true)
+            .seal(0x03, """{"t":7}""".toByteArray(Charsets.UTF_8))
+        assertEquals(SEALED_FRAME_V2_HEX, sealed.toHex())
+    }
+
+    @Test
+    fun `v2 receiver rejects a relabelled frame type, then opens the real one`() {
+        val frame = ControlProtocol.parse(SEALED_FRAME_V2_HEX.hexToBytes())!!
+        val receiver = SessionCrypto(ikm, isSender = false, bindHeader = true)
+        // TRY_TRANSPORT relabelled as DATA_READY: the tag covers the header now, so it fails...
+        assertNull(receiver.open(ControlProtocol.DATA_READY, frame.seq, frame.body))
+        // ...without burning the sequence number for the genuine frame.
+        assertArrayEquals(
+            """{"t":7}""".toByteArray(Charsets.UTF_8),
+            receiver.open(frame.type, frame.seq, frame.body)
+        )
+    }
+
+    @Test
+    fun `v1 and v2 frames never open under the other version`() {
+        val v1 = ControlProtocol.parse(SEALED_FRAME_HEX.hexToBytes())!!
+        val v2 = ControlProtocol.parse(SEALED_FRAME_V2_HEX.hexToBytes())!!
+        assertNull(SessionCrypto(ikm, isSender = false, bindHeader = true).open(v1.type, v1.seq, v1.body))
+        assertNull(SessionCrypto(ikm, isSender = false).open(v2.type, v2.seq, v2.body))
+    }
+
     private fun ByteArray.toHex() = joinToString("") { "%02x".format(it) }
     private fun String.hexToBytes() = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
@@ -92,6 +130,12 @@ class ControlPlaneVectorTest {
             "67815a6e0f59cc5f9838316284872dea8c5cc8543e1251393dd576c8b7a05b14"
         const val SEALED_FRAME_HEX =
             "0300000001001723af2fee319aed2a3ebda805f19797678a0cdddfa1c1b2"
+        // v2 vectors cross-checked against an independent Node crypto implementation that also
+        // reproduces the v1 HKDF and frame vectors above.
+        const val HKDF_V2_VECTOR_HEX =
+            "2c44bd76a6cb5bddc73f44ee3c91716a20fd456a64afc3122fc9849d08a4a81f"
+        const val SEALED_FRAME_V2_HEX =
+            "030000000100171beebc4865cb6cadbdd6a5d4c01d745bb3bfce3e4cea8f"
         // Chunk header = [rolling idx][flags: bit0 END, bit1 START]. The first chunk carries 0x02,
         // the last 0x01, a single-chunk frame 0x03. Older builds mask bit0 only, so START is
         // invisible to them — the vector changed, the interop did not.

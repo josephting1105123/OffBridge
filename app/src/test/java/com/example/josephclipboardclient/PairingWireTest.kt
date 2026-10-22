@@ -15,12 +15,12 @@ class PairingWireTest {
 
     @Test
     fun pairReqKeepsPositionalFieldsAndAppendsDeviceId() {
-        assertEquals("PAIR_REQ|My PC|cGs=|pv2|did:$id", PairingWire.pairReq("My PC", "cGs=", id))
+        assertEquals("PAIR_REQ|My PC|cGs=|pv2|did:$id|pc1", PairingWire.pairReq("My PC", "cGs=", id))
     }
 
     @Test
     fun pairAckKeepsPositionalFieldsAndAppendsDeviceId() {
-        assertEquals("PAIR_ACK|cGs=|pv2|did:$id", PairingWire.pairAck("cGs=", id))
+        assertEquals("PAIR_ACK|cGs=|pv2|did:$id|pc1", PairingWire.pairAck("cGs=", id))
     }
 
     /**
@@ -39,6 +39,24 @@ class PairingWireTest {
         assertEquals("PAIR_ACK", ack[0])
         assertEquals("cGs=", ack[1])
         assertEquals(true, ack.drop(2).contains("pv2"))
+    }
+
+    /**
+     * pc1 rides the unordered tail too: both sides find it with contains, and the device id still
+     * parses with it sitting after the did token.
+     */
+    @Test
+    fun confirmTokenRidesTheTailWithoutDisturbingTheDeviceId() {
+        val reqTail = PairingWire.pairReq("My PC", "cGs=", id).split("|").drop(3)
+        assertEquals(true, reqTail.contains(PairingWire.CONFIRM_TOKEN))
+        assertEquals(id, PairingWire.parseDeviceId(reqTail))
+
+        val ackTail = PairingWire.pairAck("cGs=", id).split("|").drop(2)
+        assertEquals(true, ackTail.contains(PairingWire.CONFIRM_TOKEN))
+        assertEquals(id, PairingWire.parseDeviceId(ackTail))
+
+        // An older peer's frame has no pc1, so neither side sends or waits for PAIR_CONFIRM.
+        assertEquals(false, "PAIR_ACK|cGs=|pv2|did:$id".split("|").drop(2).contains(PairingWire.CONFIRM_TOKEN))
     }
 
     /** An older peer's frame has no did token — parsing must yield null, not a crash or a stray value. */

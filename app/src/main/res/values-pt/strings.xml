@@ -639,6 +639,9 @@
     <string name="receive_tut_qr">Leitura de QR — toque em Abrir Câmera para ler o código QR do remetente e puxar o arquivo por qualquer rede.</string>
     <string name="pairing_verify_code">Verifique se este código coincide nos dois dispositivos:\n%1$s</string>
     <string name="pairing_verify_label">Verifique se este código coincide nos dois dispositivos</string>
+    <string name="pairing_codes_match">Os códigos coincidem</string>
+    <string name="pairing_confirm_hint">Toque em \"Os códigos coincidem\" apenas se %1$s mostrar o mesmo código.</string>
+    <string name="pairing_peer_cancelled">%1$s cancelou o pareamento</string>
     <string name="perm_nearby_title">Dispositivos próximos &amp; Wi-Fi</string>
     <string name="perm_nearby_desc">Permite que o app encontre e se conecte a outros telefones via Wi-Fi Direct para transferências off-grid. Sem isso, as transferências só funcionam quando os dois dispositivos estão na mesma rede Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Permissão de dispositivos próximos concedida.</string>

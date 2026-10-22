@@ -636,6 +636,9 @@
     <string name="receive_tut_qr">Scan QR — appuyez sur Ouvrir la caméra pour scanner le code QR de l\'expéditeur et récupérer le fichier sur n\'importe quel réseau.</string>
     <string name="pairing_verify_code">Vérifiez que ce code correspond sur les deux appareils :\n%1$s</string>
     <string name="pairing_verify_label">Assurez-vous que ce code correspond sur les deux appareils</string>
+    <string name="pairing_codes_match">Les codes correspondent</string>
+    <string name="pairing_confirm_hint">Touchez « Les codes correspondent » uniquement si %1$s affiche le même code.</string>
+    <string name="pairing_peer_cancelled">%1$s a annulé l\'association</string>
     <string name="perm_nearby_title">Appareils à proximité &amp; Wi-Fi</string>
     <string name="perm_nearby_desc">Permet à l\'application de trouver et de se connecter à d\'autres téléphones via Wi-Fi Direct pour les transferts hors ligne. Sans cela, les transferts ne fonctionnent que lorsque les deux appareils sont sur le même réseau Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Autorisation d\'accès aux appareils à proximité accordée.</string>

@@ -639,6 +639,9 @@
     <string name="receive_tut_qr">Escaneo de QR: toca Abrir Cámara para escanear el código QR del remitente y traer el archivo a través de cualquier red.</string>
     <string name="pairing_verify_code">Verifica que este código coincida en ambos dispositivos:\n%1$s</string>
     <string name="pairing_verify_label">Asegúrate de que este código coincida en ambos dispositivos</string>
+    <string name="pairing_codes_match">Los códigos coinciden</string>
+    <string name="pairing_confirm_hint">Toca «Los códigos coinciden» solo si %1$s muestra el mismo código.</string>
+    <string name="pairing_peer_cancelled">%1$s canceló el emparejamiento</string>
     <string name="perm_nearby_title">Dispositivos cercanos y Wi-Fi</string>
     <string name="perm_nearby_desc">Permite que la app encuentre y se conecte a otros teléfonos por Wi-Fi Direct para transferencias sin conexión. Sin esto, las transferencias solo funcionan cuando ambos dispositivos están en la misma red Wi-Fi.</string>
     <string name="perm_nearby_granted_toast">Permiso de dispositivos cercanos concedido.</string>

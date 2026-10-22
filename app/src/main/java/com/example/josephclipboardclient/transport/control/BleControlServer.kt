@@ -33,7 +33,12 @@ import java.util.UUID
  *   TX (notify, server→client)            — [ControlProtocol.CHAR_TX_UUID]
  *
  * Single client: the first central to connect owns the session; later
- * centrals are disconnected. All public callbacks fire on the main thread.
+ * centrals are disconnected. Until the controller vouches for it with
+ * [markAuthenticated], that ownership is provisional: a failed HELLO
+ * ([releaseClient]), a disconnect, or [PRE_AUTH_TIMEOUT_MS] of silence frees
+ * the slot. Otherwise any nearby central that connected first — the session
+ * UUID is visible in the advertisement — could lock the real receiver out.
+ * All public callbacks fire on the main thread.
  */
 @SuppressLint("MissingPermission")
 class BleControlServer(context: Context) : ControlChannel {
@@ -59,12 +64,20 @@ class BleControlServer(context: Context) : ControlChannel {
     @Volatile var clientDevice: BluetoothDevice? = null
         private set
 
+    /** Guards pin/release of [clientDevice] (binder-thread connects vs main-thread releases). */
+    private val pinLock = Any()
+    /** Set by [markAuthenticated] once the owner's HELLO verified; ownership is final from then on. */
+    @Volatile private var authenticated = false
+    private val preAuthToken = Any()
+
     var onClientConnected: ((BluetoothDevice) -> Unit)? = null
     override var onMessage: ((ByteArray) -> Unit)? = null
     override var onClosed: (() -> Unit)? = null
 
     /** Fed only from the main thread (see [onCharacteristicWriteRequest]), as its contract requires. */
-    private val reassembler = GattReassembler(
+    private var reassembler = newReassembler()
+
+    private fun newReassembler() = GattReassembler(
         onDropped = { why -> TransportDiag.log("TX: control chunk dropped — $why") }
     ) { frame -> onMessage?.invoke(frame) }
 
@@ -101,6 +114,11 @@ class BleControlServer(context: Context) : ControlChannel {
         /** Back-off between congestion re-posts, and the cap on how many times to retry one chunk. */
         private const val NOTIFY_RETRY_DELAY_MS = 30L
         private const val MAX_NOTIFY_RETRIES = 200
+        /**
+         * How long a central may hold the slot without a verified HELLO. The receiver re-sends
+         * HELLO_RX for up to 5 s before it degrades, so 10 s never cuts off a slow but real one.
+         */
+        private const val PRE_AUTH_TIMEOUT_MS = 10_000L
         /** Hardware peripheral-mode availability — checked BEFORE building the payload `cap` bit. */
         fun canAdvertise(context: Context): Boolean {
             val mgr = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
@@ -139,17 +157,27 @@ class BleControlServer(context: Context) : ControlChannel {
             if (closed) return
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    val current = clientDevice
-                    if (current == null) {
-                        clientDevice = device
+                    val pinned = synchronized(pinLock) {
+                        val current = clientDevice
+                        if (current == null) { clientDevice = device; true }
+                        else if (current.address != device.address) false
+                        else return // same owner reconnecting at the stack level
+                    }
+                    if (pinned) {
                         mainHandler.post { onClientConnected?.invoke(device) }
-                    } else if (current.address != device.address) {
+                        mainHandler.postDelayed({
+                            releasePinned(device, "no verified HELLO within ${PRE_AUTH_TIMEOUT_MS / 1000}s")
+                        }, preAuthToken, PRE_AUTH_TIMEOUT_MS)
+                    } else {
                         try { gattServer?.cancelConnection(device) } catch (_: Exception) {}
                     }
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     if (clientDevice?.address == device.address) {
-                        mainHandler.post { closeOnce() }
+                        // Before the HELLO verified, a drop just frees the slot; after, the session is gone.
+                        mainHandler.post {
+                            if (authenticated) closeOnce() else releasePinned(device, "central disconnected before HELLO")
+                        }
                     }
                 }
             }
@@ -383,6 +411,39 @@ class BleControlServer(context: Context) : ControlChannel {
         mainHandler.postDelayed({ pumpQueue() }, NOTIFY_RETRY_TOKEN, NOTIFY_RETRY_DELAY_MS)
     }
 
+    /** The owner's HELLO verified: keep this central for the rest of the session. Main thread. */
+    fun markAuthenticated() {
+        authenticated = true
+        mainHandler.removeCallbacksAndMessages(preAuthToken)
+    }
+
+    /** The owner failed the HELLO: drop it and accept the next central. No-op once authenticated. Main thread. */
+    fun releaseClient(why: String) = releasePinned(null, why)
+
+    /** Frees the slot if it is still held by [only] (or by anyone, when null) and not yet authenticated. */
+    private fun releasePinned(only: BluetoothDevice?, why: String) {
+        if (closed || authenticated) return
+        val dropped = synchronized(pinLock) {
+            val current = clientDevice ?: return
+            if (only != null && current.address != only.address) return
+            clientDevice = null
+            current
+        }
+        mainHandler.removeCallbacksAndMessages(preAuthToken)
+        mainHandler.removeCallbacksAndMessages(NOTIFY_RETRY_TOKEN)
+        TransportDiag.log("TX: BLE control slot released ($why) — next central may connect")
+        try { gattServer?.cancelConnection(dropped) } catch (_: Exception) {}
+        // Nothing from the old central may leak into the next one's session.
+        reassembler = newReassembler()
+        chunksIn = 0
+        notificationsEnabled = false
+        mtu = 23
+        notifyInFlight = false
+        inFlightChunk = null
+        notifyRetries = 0
+        synchronized(sendQueue) { sendQueue.clear() }
+    }
+
     private fun closeOnce() {
         if (closed) return
         close()
@@ -393,6 +454,7 @@ class BleControlServer(context: Context) : ControlChannel {
         closed = true
         mainHandler.removeCallbacksAndMessages(advFallbackToken)
         mainHandler.removeCallbacksAndMessages(NOTIFY_RETRY_TOKEN)
+        mainHandler.removeCallbacksAndMessages(preAuthToken)
         try { advertiser?.stopAdvertising(advertiseCallback) } catch (_: Exception) {}
         advertiser = null
         try { gattServer?.close() } catch (_: Exception) {}

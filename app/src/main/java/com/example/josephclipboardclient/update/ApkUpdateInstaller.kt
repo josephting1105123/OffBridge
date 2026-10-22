@@ -26,13 +26,20 @@ object ApkUpdateInstaller {
     // against a tampered API response pointing the installer at some other binary.
     private val ALLOWED_HOST_SUFFIXES = listOf("github.com", "githubusercontent.com")
 
-    /** Downloads [url] to a private cache file. Throws on a bad host, non-2xx, or truncated body. */
-    suspend fun download(context: Context, url: String): File = withContext(Dispatchers.IO) {
-        val parsed = URL(url)
-        val host = parsed.host ?: throw IOException("No host in download URL")
+    /** HTTPS only, and only GitHub's release hosts. Checked on the API-supplied URL and again on the
+     *  post-redirect URL, so neither a tampered response nor a redirect can swap in another server. */
+    private fun requireTrusted(url: URL) {
+        if (!url.protocol.equals("https", ignoreCase = true)) throw IOException("Refusing non-HTTPS download: ${url.protocol}")
+        val host = url.host?.lowercase() ?: throw IOException("No host in download URL")
         if (ALLOWED_HOST_SUFFIXES.none { host == it || host.endsWith(".$it") }) {
             throw IOException("Untrusted download host: $host")
         }
+    }
+
+    /** Downloads [url] to a private cache file. Throws on a bad host, non-2xx, or truncated body. */
+    suspend fun download(context: Context, url: String): File = withContext(Dispatchers.IO) {
+        val parsed = URL(url)
+        requireTrusted(parsed)
         val conn = (parsed.openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = CONNECT_TIMEOUT_MS
@@ -45,6 +52,8 @@ object ApkUpdateInstaller {
         try {
             val code = conn.responseCode
             if (code !in 200..299) throw IOException("HTTP $code")
+            // Redirects were followed by now; conn.url is where the bytes actually come from.
+            requireTrusted(conn.url)
             conn.inputStream.use { input -> target.outputStream().use { input.copyTo(it) } }
             val expected = conn.getHeaderField("Content-Length")?.toLongOrNull()
             if (expected != null && expected > 0 && target.length() != expected) {

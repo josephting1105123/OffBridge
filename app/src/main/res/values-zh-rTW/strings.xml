@@ -623,6 +623,9 @@
     <string name="receive_tut_qr">QR 掃描——點擊「開啟相機」以掃描傳送方的 QR code，並跨任何網路接收檔案。</string>
     <string name="pairing_verify_code">請確認此代碼在兩台裝置上相符：\n%1$s</string>
     <string name="pairing_verify_label">請確認此代碼在兩台裝置上相符</string>
+    <string name="pairing_codes_match">代碼相符</string>
+    <string name="pairing_confirm_hint">僅在 %1$s 顯示相同代碼時，才點按「代碼相符」。</string>
+    <string name="pairing_peer_cancelled">%1$s 已取消配對</string>
     <string name="perm_nearby_title">附近裝置與 Wi-Fi</string>
     <string name="perm_nearby_desc">讓應用程式可透過 Wi-Fi Direct 尋找並連接其他手機以進行離網傳輸。若沒有它，只有在兩台裝置位於同一 Wi-Fi 網路時才能傳輸。</string>
     <string name="perm_nearby_granted_toast">已允許附近裝置權限。</string>

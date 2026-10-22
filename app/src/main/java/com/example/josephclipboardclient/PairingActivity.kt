@@ -68,14 +68,26 @@ class PairingActivity : AppCompatActivity() {
             finish()
         }
 
+        // Pairing completes only once this user confirms the PIN matches the other screen AND the
+        // peer accepts. Without this tap, a rogue host that answers with an instant accept would be
+        // trusted without anyone comparing codes.
+        val btnConfirm = findViewById<Button>(R.id.btnPairingConfirm)
+        btnConfirm.setOnClickListener {
+            PairingDaemon.confirmInitiatePairing()
+            btnConfirm.visibility = View.GONE
+            tvPairingSubtitle.text = getString(R.string.pairing_waiting_subtitle, targetName)
+        }
+
         activityScope.launch {
             val result = PairingDaemon.initiatePairing(
                 applicationContext, targetIp, TransferDaemon.customDeviceName, targetName,
                 onPin = { pin ->
                     runOnUiThread {
                         PinBox.bind(this@PairingActivity, pin)
+                        tvPairingSubtitle.text = getString(R.string.pairing_confirm_hint, targetName)
                         findViewById<View>(R.id.tvPairingVerifyLabel).visibility = View.VISIBLE
                         findViewById<View>(R.id.pin_code_container).visibility = View.VISIBLE
+                        btnConfirm.visibility = View.VISIBLE
                     }
                 }
             )

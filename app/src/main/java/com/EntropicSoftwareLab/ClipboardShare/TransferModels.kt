@@ -97,6 +97,12 @@ data class TransferSession(
      */
     @Volatile var p2pSealKey: ByteArray? = null,
     /**
+     * Off-grid (p2p) sessions only, BOTH ends: the raw ECDH secret from P2P_HELLO, kept whether or not
+     * the stream is sealed. A resume proves possession of it ([transport.OffGridResumeAuth]) because the
+     * receiver comes back from an IP the LAN trust gate has never seen. Null on LAN sessions.
+     */
+    @Volatile var p2pAuthKey: ByteArray? = null,
+    /**
      * Receive-side destination snapshot, resolved from the "save_location_uri"/"save_media_to"
      * prefs ONCE when the session's first download stream opens and pinned here for every later
      * write pass and resume-offset probe. Each pass used to re-read the prefs live, so flipping
@@ -138,10 +144,36 @@ class P2pAdvertisingContext(
     val fileUris: List<String>,
     val manifest: List<Pair<String, Long>>,
     val totalFiles: Int,
-    @Volatile var busy: Boolean = false,
     /** Receiver authenticated and handshake completed. */
     val onPeerConnected: (deviceName: String) -> Unit = {},
     val onTransferComplete: (sessionId: String) -> Unit = {},
     /** paused=true means the resume machinery still holds the session. */
     val onTransferError: (paused: Boolean) -> Unit = {}
-)
+) {
+    /**
+     * One-shot admission. The QR token is a bearer secret: anyone who photographs the code can complete
+     * the HELLO, so it has to stop working once the intended receiver is in. OPEN → CLAIMED is a CAS
+     * (two concurrent HELLOs used to both pass a plain busy check); CLAIMED → CONSUMED once the
+     * receiver accepts the offer, after which every later HELLO gets P2P_BUSY. A handshake that dies
+     * before ACCEPT_OFFER goes back to OPEN so a genuine retry still works. Mirrors Windows
+     * QrHostCoordinator.claimPendingSession/restorePendingSession.
+     */
+    private val admission = AtomicInteger(OPEN)
+
+    /** True while a peer holds the token or after it was spent; new HELLOs get P2P_BUSY. */
+    val busy: Boolean get() = admission.get() != OPEN
+
+    fun tryClaim(): Boolean = admission.compareAndSet(OPEN, CLAIMED)
+
+    /** The receiver accepted: the token is spent for this advertising window. */
+    fun consume() { admission.set(CONSUMED) }
+
+    /** Handshake failed before ACCEPT_OFFER: re-open for a retry. No-op once consumed. */
+    fun releaseIfUnconsumed() { admission.compareAndSet(CLAIMED, OPEN) }
+
+    private companion object {
+        const val OPEN = 0
+        const val CLAIMED = 1
+        const val CONSUMED = 2
+    }
+}

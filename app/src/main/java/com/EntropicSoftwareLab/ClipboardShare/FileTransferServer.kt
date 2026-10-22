@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import com.EntropicSoftwareLab.ClipboardShare.transport.DowngradePolicy
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridHandshake
@@ -18,14 +19,13 @@ import kotlinx.coroutines.CoroutineScope
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
-import java.util.UUID
 import android.util.Base64
 import android.widget.Toast
 
 /**
  * The LAN TCP file-transfer server: binds 0.0.0.0:[Ports.FILE_TRANSFER], accepts connections, and
  * dispatches each control frame (RESUME_REQUEST / ACCEPT_OFFER / DECLINE_OFFER / CANCEL_TRANSFER /
- * BATCH|OFFER) after the paired-peer LAN trust gate and the AUTH2 admission proof. Off-grid
+ * OFFER) after the paired-peer LAN trust gate and the AUTH2 admission proof. Off-grid
  * P2P_HELLO is recognised first and handed to [P2pHelloHandler] (its ECDH+HMAC admission is stronger
  * than IP pairing and it arrives from an ephemeral, never-paired IP), so it bypasses the gate.
  *
@@ -91,11 +91,11 @@ object FileTransferServer {
             // ECDH + QR-token P2P_HELLO handshake, not by IP pairing, and on a mid-transfer drop its
             // receiver reconnects to resume from an ephemeral, never-paired IP — the same reason
             // P2P_HELLO above bypasses this gate. A RESUME_REQUEST whose sessionId matches a live
-            // *outgoing off-grid* session is that already-authenticated peer resuming, so admit it. The
-            // sessionId was issued over the ECDH-authenticated channel (P2P_WELCOME), making it an
-            // unguessable per-session token; and off-grid streams plaintext by construction, so no
-            // pairing key is needed here. Scoped to transport=="p2p": LAN resumes are unaffected — their
-            // peer IP is paired and still runs the full gate. Without this, off-grid resume always failed.
+            // *outgoing off-grid* session may be that peer resuming, so let it past the IP gate. It is
+            // NOT trusted yet: the sessionId travels in the clear in P2P_WELCOME, so the RESUME branch
+            // below makes it prove the session's ECDH secret ([OffGridResumeAuth]) before any byte
+            // flows. Scoped to transport=="p2p": LAN resumes are unaffected — their peer IP is paired
+            // and still runs the full gate. Without this, off-grid resume always failed.
             val isOffGridResume = batchHeader.startsWith("RESUME_REQUEST|") && run {
                 val sid = batchHeader.split('|').getOrNull(1)
                 val s = sid?.let { TransferDaemon.activeSessions[it] }
@@ -123,10 +123,14 @@ object FileTransferServer {
                     val fileIndex = parts[2].toIntOrNull()
                     val offset = parts[3].toLongOrNull()
                     if (fileIndex == null || offset == null) { socket.close(); return }
-                    if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) { socket.close(); return }
                     // Receiver flags after the offset, order-independent: "ack" → wait for the delivery
                     // confirmation before declaring complete; "fgcm" → the bulk stream is FileSeal-sealed.
                     val flags = parts.drop(4)
+                    if (isOffGridResume) {
+                        if (!performOffGridResumeChallenge(socket, inputStream, sessionId, flags)) { socket.close(); return }
+                    } else if (!performAcceptAuth2Challenge(context, socket, inputStream, senderIp)) {
+                        socket.close(); return
+                    }
                     val ackExpected = flags.contains("ack")
                     // Both "fgcm" and "fgcm2" request an authenticated stream; "fgcm2" additionally
                     // selects the v2 FileSeal (per-session key + session/file-bound AAD).
@@ -327,21 +331,22 @@ object FileTransferServer {
                 return
             }
 
-            if (!batchHeader.startsWith("BATCH|") && !batchHeader.startsWith("OFFER|")) {
+            // OFFER is the only admission frame. The legacy BATCH header (no sender emits it any more)
+            // streamed straight to disk with no AUTH2 proof and no accept prompt, so it is refused here.
+            if (!batchHeader.startsWith("OFFER|")) {
                 socket.close()
                 return
             }
 
-            val isOffer = batchHeader.startsWith("OFFER|")
+            // OFFER|sessionId|senderName|totalFiles. The sender needs its own sessionId back for
+            // ACCEPT/RESUME, so an offer without one can never complete; reject it outright.
             val parts = batchHeader.split('|')
-            val sessionId = if (parts.size > 3) parts[1] else UUID.randomUUID().toString()
-            val senderNameIdx = if (parts.size > 3) 2 else 1
-            val totalFilesIdx = if (parts.size > 3) 3 else 2
-
-            val senderName = parts[senderNameIdx]
+            if (parts.size < 4) { socket.close(); return }
+            val sessionId = parts[1]
+            val senderName = parts[2]
             // Network-supplied count: bail out of this connection on malformed input
             // rather than throwing NumberFormatException.
-            val totalFiles = parts[totalFilesIdx].toIntOrNull() ?: run { socket.close(); return }
+            val totalFiles = parts[3].toIntOrNull() ?: run { socket.close(); return }
 
             val manifestHeader = TransferUtils.readUntilNewline(inputStream)
             // Shared parser (skips empty-name ":size" entries via lastColonIndex > 0) so a
@@ -358,139 +363,100 @@ object FileTransferServer {
                 targetIp = socket.inetAddress.hostAddress ?: "",
                 isIncoming = true
             )
-            TransferDaemon.putActiveSession(sessionId, newSession)
 
-            if (isOffer) {
-                val outStream = socket.getOutputStream()
+            val outStream = socket.getOutputStream()
 
-                // AUTH2 admission proof: the plain trust gate above only checks that senderIp has a
-                // stored pairing key, so a host spoofing a paired peer's IP (without the key) could still
-                // raise this popup. If the sender advertises AUTH2, require it to PROVE possession of the
-                // shared pairing key via an HMAC challenge-response BEFORE we ack the offer or show the
-                // popup. A sender that doesn't advertise AUTH2 (old build) skips this — byte-identical to
-                // before. senderIp is the same source address the trust gate validated above.
-                //
-                // Anti-downgrade (XP-DEF-01): supportsAuth2 rides the unauthenticated discovery, so a
-                // spoofed advert could strip it and re-open the IP-spoof hole. TOFU: once a peer has
-                // proven AUTH2 we pin it (below), and a later strip is a downgrade — fail closed here.
-                val auth2Decision = DowngradePolicy.decide(
-                    peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2 == true,
-                    pinned = SecurityVault.isAuth2Pinned(context, senderIp)
-                )
-                if (auth2Decision == DowngradePolicy.Decision.BLOCK) {
-                    TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 downgrade blocked")
-                    TransferDaemon.removeActiveSession(sessionId)
+            // AUTH2 admission proof: the plain trust gate above only checks that senderIp has a
+            // stored pairing key, so a host spoofing a paired peer's IP (without the key) could still
+            // raise this popup. If the sender advertises AUTH2, require it to PROVE possession of the
+            // shared pairing key via an HMAC challenge-response BEFORE we ack the offer or show the
+            // popup. A sender that doesn't advertise AUTH2 (old build) skips this — byte-identical to
+            // before. senderIp is the same source address the trust gate validated above.
+            //
+            // Anti-downgrade (XP-DEF-01): supportsAuth2 rides the unauthenticated discovery, so a
+            // spoofed advert could strip it and re-open the IP-spoof hole. TOFU: once a peer has
+            // proven AUTH2 we pin it (below), and a later strip is a downgrade — fail closed here.
+            val auth2Decision = DowngradePolicy.decide(
+                peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2 == true,
+                pinned = SecurityVault.isAuth2Pinned(context, senderIp)
+            )
+            if (auth2Decision == DowngradePolicy.Decision.BLOCK) {
+                TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 downgrade blocked")
+                socket.close()
+                return
+            }
+            if (auth2Decision == DowngradePolicy.Decision.SEAL) {
+                val pairingKey = SecurityVault.getKeyForNode(context, senderIp)
+                if (pairingKey == null) {
+                    // Trust gate said we hold a key for this IP; if it vanished, fail closed.
                     socket.close()
                     return
                 }
-                if (auth2Decision == DowngradePolicy.Decision.SEAL) {
-                    val pairingKey = SecurityVault.getKeyForNode(context, senderIp)
-                    if (pairingKey == null) {
-                        // Trust gate said we hold a key for this IP; if it vanished, fail closed.
-                        TransferDaemon.removeActiveSession(sessionId)
-                        socket.close()
-                        return
-                    }
-                    val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
-                    outStream.write("OFFER_CHALLENGE|${android.util.Base64.encodeToString(nonce, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
-                    outStream.flush()
-                    val proofLine = TransferUtils.readUntilNewline(inputStream)
-                    val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
-                        try { Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), Base64.NO_WRAP) } catch (_: Exception) { null }
-                    } else null
-                    val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
-                    if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
-                        // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key. Drop
-                        // the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer lands here.)
-                        TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 proof failed")
-                        TransferDaemon.removeActiveSession(sessionId)
-                        socket.close()
-                        return
-                    }
-                    // Proof valid → pin AUTH2 so a later strip on the unauthenticated discovery is caught.
-                    SecurityVault.pinAuth2(context, senderIp)
-                }
-                // DowngradePolicy.Decision.PLAINTEXT → legacy peer that never advertised AUTH2: skip the
-                // challenge, exactly as before.
-
-                outStream.write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))
+                val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
+                outStream.write("OFFER_CHALLENGE|${android.util.Base64.encodeToString(nonce, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
                 outStream.flush()
-                socket.close()
-
-                val requestIntent = Intent(context, TransferRequestActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    putExtra("SESSION_ID", sessionId)
-                    putExtra("SENDER_NAME", senderName)
-                    putExtra("TOTAL_FILES", totalFiles)
+                val proofLine = TransferUtils.readUntilNewline(inputStream)
+                val proof = if (proofLine.startsWith("OFFER_PROOF|")) {
+                    try { Base64.decode(proofLine.removePrefix("OFFER_PROOF|"), Base64.NO_WRAP) } catch (_: Exception) { null }
+                } else null
+                val expected = SessionCrypto.hmacSha256(pairingKey, nonce)
+                if (proof == null || !java.security.MessageDigest.isEqual(proof, expected)) {
+                    // Missing/malformed/wrong proof ⇒ the sender can't prove it holds the key. Drop
+                    // the offer silently: no OFFER_RECEIVED, no popup. (An IP-spoofer lands here.)
+                    TransportDiag.log("TX: OFFER from $senderIp dropped — AUTH2 proof failed")
+                    socket.close()
+                    return
                 }
-
-                // App open → pop the accept/decline screen right away instead of burying the request
-                // in a notification. App backgrounded → raise a high-priority notification (with a
-                // full-screen intent so it can still surface on the lock screen). Background activity
-                // starts are restricted on API 29+, so only start directly when we are genuinely in
-                // the foreground; on any refusal, fall through to the notification.
-                if (AppForeground.isForeground) {
-                    try {
-                        context.startActivity(requestIntent)
-                        return
-                    } catch (_: Exception) {
-                        // fall through to the notification path below
-                    }
-                }
-
-                val pendingRequest = PendingIntent.getActivity(context, sessionId.hashCode(), requestIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(context.getString(R.string.transfer_incoming_title))
-                    .setContentText(context.getString(R.string.transfer_incoming_text, senderName, totalFiles))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setDefaults(NotificationCompat.DEFAULT_ALL)
-                    .setContentIntent(pendingRequest)
-                    .setFullScreenIntent(pendingRequest, true)
-                    .setAutoCancel(true)
-                    .build()
-
-                notificationManager.notify(sessionId.hashCode(), notification)
-                return
+                // Proof valid → pin AUTH2 so a later strip on the unauthenticated discovery is caught.
+                SecurityVault.pinAuth2(context, senderIp)
             }
+            // DowngradePolicy.Decision.PLAINTEXT → legacy peer that never advertised AUTH2: skip the
+            // challenge, exactly as before.
 
-            TransferHistoryManager.addRecord(context, TransferRecord(
-                sessionId = sessionId,
-                deviceName = senderName,
-                direction = "incoming",
-                fileNames = fileList.map { TransferUtils.manifestDisplayLeaf(it.first) },
-                totalBytes = fileList.sumOf { it.second },
-                timestamp = System.currentTimeMillis(),
-                status = "transferring",
-                filesCompleted = 0,
-                totalFiles = totalFiles,
-                fileSizes = fileList.map { it.second },
-                currentFileOffset = 0L
-            ))
+            // Register only after AUTH2 passed: the sessionId is sender-chosen, so registering earlier let an
+            // unproven offer overwrite (and, on a failed proof, remove) a live session with the same id.
+            TransferDaemon.putActiveSession(sessionId, newSession)
 
-            val intent = Intent(context, com.EntropicSoftwareLab.ClipboardShare.MainActivity::class.java).apply {
+            outStream.write("OFFER_RECEIVED\n".toByteArray(Charsets.UTF_8))
+            outStream.flush()
+            socket.close()
+
+            val requestIntent = Intent(context, TransferRequestActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                putExtra("SHOW_HISTORY", true)
-                putExtra("HISTORY_SESSION_ID", sessionId)
+                putExtra("SESSION_ID", sessionId)
+                putExtra("SENDER_NAME", senderName)
+                putExtra("TOTAL_FILES", totalFiles)
             }
 
-            val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            // App open → pop the accept/decline screen right away instead of burying the request
+            // in a notification. App backgrounded → raise a high-priority notification (with a
+            // full-screen intent so it can still surface on the lock screen). Background activity
+            // starts are restricted on API 29+, so only start directly when we are genuinely in
+            // the foreground; on any refusal, fall through to the notification.
+            if (AppForeground.isForeground) {
+                try {
+                    context.startActivity(requestIntent)
+                    return
+                } catch (_: Exception) {
+                    // fall through to the notification path below
+                }
+            }
+
+            val pendingRequest = PendingIntent.getActivity(context, sessionId.hashCode(), requestIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val notification = NotificationCompat.Builder(context, NotificationChannels.TRANSFER_REQUEST)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle(context.getString(R.string.transfer_receiving_title))
-                .setContentText(context.getString(R.string.transfer_receiving_text, senderName, totalFiles))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent)
+                .setContentTitle(context.getString(R.string.transfer_incoming_title))
+                .setContentText(context.getString(R.string.transfer_incoming_text, senderName, totalFiles))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setContentIntent(pendingRequest)
+                .setFullScreenIntent(pendingRequest, true)
                 .setAutoCancel(true)
                 .build()
 
             notificationManager.notify(sessionId.hashCode(), notification)
-
-            DownloadEngine.executeDownloadStream(context, socket, newSession)
-
         } catch (e: Exception) {
             // close() can itself throw (already-reset socket); swallow so the handler exits cleanly.
             runCatching { socket.close() }
@@ -513,6 +479,28 @@ object FileTransferServer {
      * from exactly where header parsing left off. Returns false ⇒ caller must close the socket and
      * stop; no popup, no bytes, no state mutated on this session.
      */
+    /**
+     * Off-grid RESUME_REQUEST admission: the receiver must prove the ECDH secret from this session's
+     * P2P_HELLO (see [OffGridResumeAuth]). A receiver that didn't send the flag is too old to answer,
+     * so it is refused outright rather than sent a challenge line it would write into its .part file.
+     */
+    private fun performOffGridResumeChallenge(socket: Socket, inputStream: java.io.InputStream, sessionId: String, flags: List<String>): Boolean {
+        val key = TransferDaemon.activeSessions[sessionId]?.p2pAuthKey
+        if (key == null) {
+            TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — session holds no handshake key")
+            return false
+        }
+        if (OffGridResumeAuth.FLAG !in flags) {
+            TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — receiver can't prove the session key (update it, or re-scan)")
+            return false
+        }
+        val ok = try {
+            OffGridResumeAuth.challenge(inputStream, socket.getOutputStream(), key, sessionId)
+        } catch (_: Exception) { false }
+        if (!ok) TransportDiag.log("TX: off-grid RESUME for $sessionId dropped — resume proof failed")
+        return ok
+    }
+
     private fun performAcceptAuth2Challenge(context: Context, socket: Socket, inputStream: java.io.InputStream, senderIp: String): Boolean {
         val decision = DowngradePolicy.decide(
             peerOffersAead = TransferDaemon.discoveredNodes[senderIp]?.supportsAuth2Accept == true,

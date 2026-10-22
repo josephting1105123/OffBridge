@@ -633,6 +633,9 @@
     <string name="receive_tut_qr">QR スキャン — 「カメラを開く」をタップして送信側の QR コードをスキャンすると、どのネットワークでもファイルを取得できます。</string>
     <string name="pairing_verify_code">このコードが両方のデバイスで一致していることを確認してください：\n%1$s</string>
     <string name="pairing_verify_label">このコードが両方のデバイスで一致していることを確認してください</string>
+    <string name="pairing_codes_match">コードが一致</string>
+    <string name="pairing_confirm_hint">%1$s に同じコードが表示されている場合のみ「コードが一致」をタップしてください。</string>
+    <string name="pairing_peer_cancelled">%1$s がペアリングをキャンセルしました</string>
     <string name="perm_nearby_title">近くのデバイスと Wi-Fi</string>
     <string name="perm_nearby_desc">アプリが Wi-Fi Direct 経由で他のスマホを検出して接続し、オフグリッド転送できるようにします。これがないと、両方のデバイスが同じ Wi-Fi ネットワークにあるときのみ転送できます。</string>
     <string name="perm_nearby_granted_toast">近くのデバイスの権限が許可されました。</string>

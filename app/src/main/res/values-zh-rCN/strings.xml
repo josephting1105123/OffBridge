@@ -623,6 +623,9 @@
     <string name="receive_tut_qr">QR 扫描——点击“打开相机”扫描发送方的 QR 码，即可跨任意网络拉取文件。</string>
     <string name="pairing_verify_code">请确认此代码在两台设备上一致：\n%1$s</string>
     <string name="pairing_verify_label">请确认此代码在两台设备上一致</string>
+    <string name="pairing_codes_match">代码一致</string>
+    <string name="pairing_confirm_hint">仅当 %1$s 显示相同代码时，才点按“代码一致”。</string>
+    <string name="pairing_peer_cancelled">%1$s 已取消配对</string>
     <string name="perm_nearby_title">附近设备和 Wi-Fi</string>
     <string name="perm_nearby_desc">让应用能够通过 Wi-Fi Direct 查找并连接到其他手机以进行离网传输。没有此权限，传输仅在两台设备处于同一 Wi-Fi 网络时有效。</string>
     <string name="perm_nearby_granted_toast">已允许附近设备权限。</string>

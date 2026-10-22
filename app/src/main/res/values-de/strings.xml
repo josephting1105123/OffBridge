@@ -636,6 +636,9 @@
     <string name="receive_tut_qr">QR-Scan — tippen Sie auf Kamera öffnen, um den QR-Code des Senders zu scannen und die Datei über jedes Netzwerk zu übertragen.</string>
     <string name="pairing_verify_code">Überprüfen Sie, ob dieser Code auf beiden Geräten übereinstimmt:\n%1$s</string>
     <string name="pairing_verify_label">Stellen Sie sicher, dass dieser Code auf beiden Geräten übereinstimmt</string>
+    <string name="pairing_codes_match">Codes stimmen überein</string>
+    <string name="pairing_confirm_hint">Tippen Sie nur auf „Codes stimmen überein“, wenn %1$s denselben Code anzeigt.</string>
+    <string name="pairing_peer_cancelled">%1$s hat die Kopplung abgebrochen</string>
     <string name="perm_nearby_title">Geräte in der Nähe &amp; Wi-Fi</string>
     <string name="perm_nearby_desc">Ermöglicht der App, andere Telefone über Wi-Fi Direct für Off-Grid-Übertragungen zu finden und sich mit ihnen zu verbinden. Ohne sie funktionieren Übertragungen nur, wenn sich beide Geräte im selben Wi-Fi-Netzwerk befinden.</string>
     <string name="perm_nearby_granted_toast">Berechtigung für Geräte in der Nähe erteilt.</string>

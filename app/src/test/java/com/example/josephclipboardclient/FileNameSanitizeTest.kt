@@ -45,4 +45,29 @@ class FileNameSanitizeTest {
         assertEquals("photo.jpg", TransferUtils.sanitizeIncomingFileName("photo.jpg"))
         assertEquals("My Report (1).pdf", TransferUtils.sanitizeIncomingFileName("My Report (1).pdf"))
     }
+
+    @Test
+    fun reservedNameCheckUsesTextBeforeFirstDot() {
+        assertEquals("_NUL.tar.gz", TransferUtils.sanitizeIncomingFileName("NUL.tar.gz"))
+        assertEquals("_CON .txt", TransferUtils.sanitizeIncomingFileName("CON .txt"))
+        assertEquals("CONSOLE.txt", TransferUtils.sanitizeIncomingFileName("CONSOLE.txt"))
+    }
+
+    @Test
+    fun stripsTrailingDotsSpacesAndBidiControls() {
+        assertEquals("evil.exe", TransferUtils.sanitizeIncomingFileName("evil.exe. . "))
+        assertEquals("received_file", TransferUtils.sanitizeIncomingFileName("..."))
+        assertEquals("invoicefdp.exe", TransferUtils.sanitizeIncomingFileName("invoice‮fdp.exe"))
+    }
+
+    @Test
+    fun capsLongNamesAndKeepsExtension() {
+        val out = TransferUtils.sanitizeIncomingFileName("a".repeat(400) + ".pdf")
+        assertEquals(200, out.toByteArray(Charsets.UTF_8).size)
+        assertEquals(true, out.endsWith(".pdf"))
+        // 3-byte CJK chars must not be split mid-code-point.
+        val cjk = TransferUtils.sanitizeIncomingFileName("文".repeat(100) + ".txt")
+        assertEquals(true, cjk.toByteArray(Charsets.UTF_8).size <= 200)
+        assertEquals(true, cjk.endsWith(".txt") && cjk.removeSuffix(".txt").all { it == '文' })
+    }
 }

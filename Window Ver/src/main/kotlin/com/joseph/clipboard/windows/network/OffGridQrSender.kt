@@ -81,6 +81,15 @@ object OffGridQrSender {
      */
     const val CAP_SEALED_STREAM = 1 shl 6
 
+    /**
+     * `cap` bit: BLE control frames use SessionCrypto v2 (frame header bound as GCM AAD, own HKDF
+     * label) — identical to Android `TransportCaps.CTRL_AAD`. Set together with
+     * [CAP_BLE_ADVERTISE]; the phone then always uses v2, and [PcQrSenderController] uses v2 iff the
+     * phone's HELLO_RX carries the bit too. A stripped HELLO bit leaves the two ends on different
+     * keys, so the session fails closed rather than downgrading.
+     */
+    const val CAP_CTRL_AAD = 1 shl 7
+
     /** Flag a sealing-capable receiver appends to ACCEPT_OFFER, mirroring the LAN path's "fgcm2". */
     const val ACCEPT_FLAG_SEAL = "seal"
 
@@ -159,6 +168,9 @@ object OffGridQrSender {
          *  ends would never agree. Null means a legacy receiver that can't unseal, and the caller
          *  streams plaintext as before. */
         val sealKey: ByteArray? = null,
+        /** The RAW ECDH secret, sealed or not. A later off-grid RESUME_REQUEST must prove it
+         *  ([OffGridResumeAuth]), since the phone comes back from an IP nothing has paired. */
+        val authKey: ByteArray? = null,
     ) {
         companion object { val REJECTED = HandshakeResult(false, false) }
     }
@@ -237,7 +249,7 @@ object OffGridQrSender {
             if (sealKey != null) "QR send: off-grid stream SEALED (AES-256-GCM, FileSeal v2 off the ECDH secret)"
             else "QR send: off-grid stream PLAINTEXT — the phone did not request the seal; update the phone to encrypt off-grid transfers"
         )
-        return HandshakeResult(true, flags.contains("ack"), sealKey)
+        return HandshakeResult(true, flags.contains("ack"), sealKey, authKey = sharedKey)
     }
 
     /** Reject an inbound off-grid dial when no QR is being shown (or one is in flight). */

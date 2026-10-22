@@ -12,16 +12,27 @@ package com.EntropicSoftwareLab.ClipboardShare
  */
 object PairingWire {
 
+    /**
+     * Tail token: "I take part in the initiator confirm step". The initiator sends it to say it will
+     * send [PAIR_CONFIRM] once its own user has compared PINs, so the responder holds trust until
+     * that line arrives. The responder sends it to say it waits for that line. Either side missing
+     * it means an older peer, and the initiator neither sends nor expects the extra line.
+     */
+    const val CONFIRM_TOKEN = "pc1"
+
+    /** Initiator -> responder, after PAIR_ACCEPT and after its user tapped "Codes match". */
+    const val PAIR_CONFIRM = "PAIR_CONFIRM"
+
     /** Prefix marking the stable device-id token in both the pairing tail and the discovery frame. */
     const val DEVICE_ID_TOKEN = "did:"
 
-    /** `PAIR_REQ|name|pubkeyB64|pv2|did:<hex>` */
+    /** `PAIR_REQ|name|pubkeyB64|pv2|did:<hex>|pc1` */
     fun pairReq(deviceName: String, pubKeyB64: String, deviceId: String): String =
-        "PAIR_REQ|$deviceName|$pubKeyB64|pv2|$DEVICE_ID_TOKEN$deviceId"
+        "PAIR_REQ|$deviceName|$pubKeyB64|pv2|$DEVICE_ID_TOKEN$deviceId|$CONFIRM_TOKEN"
 
-    /** `PAIR_ACK|pubkeyB64|pv2|did:<hex>` */
+    /** `PAIR_ACK|pubkeyB64|pv2|did:<hex>|pc1` */
     fun pairAck(pubKeyB64: String, deviceId: String): String =
-        "PAIR_ACK|$pubKeyB64|pv2|$DEVICE_ID_TOKEN$deviceId"
+        "PAIR_ACK|$pubKeyB64|pv2|$DEVICE_ID_TOKEN$deviceId|$CONFIRM_TOKEN"
 
     /**
      * Peer device id from a frame's token tail (the fields after the positional ones), or null when

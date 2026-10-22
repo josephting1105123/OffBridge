@@ -31,10 +31,13 @@ class FileTransferDaemon(
     private val supportsAcceptAuth2Provider: (ip: String) -> Boolean = { false },
     /** True iff [sessionId] names a live OUTGOING off-grid (p2p) session. An off-grid receiver resumes
      * from an ephemeral, never-paired IP, so a matching RESUME_REQUEST is exempt from the LAN trust
-     * gate below (XP-05) — the sessionId was issued over the ECDH-authenticated P2P_WELCOME, so it is
-     * an unguessable per-session token. Mirrors the Android FileTransferServer exemption. Defaults to
-     * "no p2p session" so a caller that doesn't wire it keeps LAN-only behavior. */
-    private val isOffGridResumeSession: (sessionId: String) -> Boolean = { false }
+     * gate below (XP-05). Exempt is not trusted: the RESUME branch then requires proof of
+     * [offGridResumeKey]. Mirrors the Android FileTransferServer exemption. Defaults to "no p2p
+     * session" so a caller that doesn't wire it keeps LAN-only behavior. */
+    private val isOffGridResumeSession: (sessionId: String) -> Boolean = { false },
+    /** The raw ECDH secret from [sessionId]'s P2P_HELLO, which an off-grid resume must prove
+     * ([OffGridResumeAuth]) — the sessionId alone travels in the clear in P2P_WELCOME. */
+    private val offGridResumeKey: (sessionId: String) -> ByteArray? = { null }
 ) {
     private val FILE_TRANSFER_PORT = Ports.FILE_TRANSFER
     @Volatile private var isRunning = false
@@ -153,9 +156,9 @@ class FileTransferDaemon(
                 // Off-grid resume exemption (XP-05, mirrors Android FileTransferServer): an off-grid
                 // receiver whose Wi-Fi dropped mid-transfer reconnects from its ephemeral hotspot IP
                 // (never paired) and sends RESUME_REQUEST. If the sessionId names a live outgoing p2p
-                // session — a token issued over the ECDH-authenticated P2P_WELCOME — admit it; the
-                // stream is plaintext by construction, so no pairing key is needed. LAN resumes are
-                // unaffected (their session is transport="lan", so the provider returns false).
+                // session, let it past this gate; the RESUME branch then makes it prove the session's
+                // ECDH secret before any byte flows. LAN resumes are unaffected (their session is
+                // transport="lan", so the provider returns false).
                 val isOffGridResume = header.startsWith("RESUME_REQUEST|") &&
                     header.split("|").getOrNull(1)?.let(isOffGridResumeSession) == true
                 if (!isOffGridResume && !header.startsWith("P2P_HELLO|") && !header.startsWith("P2P_BUSY")) {
@@ -267,7 +270,11 @@ class FileTransferDaemon(
                         // is malformed — reject it here rather than seal from a wrong chunk index that
                         // only fails later at the receiver's tag check. Mirrors the Android guard.
                         if ((fgcm || seal) && offset != 0L) { clientSocket.close(); return@thread }
-                        if (!performAcceptAuth2Challenge(clientSocket, inputStream)) { clientSocket.close(); return@thread }
+                        if (isOffGridResume) {
+                            if (!performOffGridResumeChallenge(clientSocket, inputStream, sessionId, flags)) { clientSocket.close(); return@thread }
+                        } else if (!performAcceptAuth2Challenge(clientSocket, inputStream)) {
+                            clientSocket.close(); return@thread
+                        }
                         onResumeReceived(sessionId, fileIndex, offset, ackExpected, fgcm, fgcm2, seal, clientSocket)
                     } else {
                         clientSocket.close()
@@ -314,6 +321,30 @@ class FileTransferDaemon(
      * from, so the proof-line read continues from exactly where header parsing left off. Returns
      * false ⇒ caller must close the socket and stop; no callback, no bytes.
      */
+    /**
+     * Off-grid RESUME_REQUEST admission (mirrors Android FileTransferServer): the receiver must prove
+     * the ECDH secret from this session's P2P_HELLO. A receiver that didn't send
+     * [OffGridResumeAuth.FLAG] is too old to answer, so it is refused rather than sent a challenge
+     * line it would write into its .part file.
+     */
+    private fun performOffGridResumeChallenge(clientSocket: Socket, inputStream: java.io.InputStream, sessionId: String, flags: List<String>): Boolean {
+        val ip = clientSocket.inetAddress?.hostAddress
+        val key = offGridResumeKey(sessionId)
+        if (key == null) {
+            DiagLog.w("DROP $ip: off-grid RESUME for $sessionId — session holds no handshake key.")
+            return false
+        }
+        if (OffGridResumeAuth.FLAG !in flags) {
+            DiagLog.w("DROP $ip: off-grid RESUME for $sessionId — the phone can't prove the session key (update it, or re-scan the QR).")
+            return false
+        }
+        val ok = try {
+            OffGridResumeAuth.challenge(inputStream, clientSocket.getOutputStream(), key, sessionId)
+        } catch (_: Exception) { false }
+        if (!ok) DiagLog.w("DROP $ip: off-grid RESUME for $sessionId — resume proof failed.")
+        return ok
+    }
+
     private fun performAcceptAuth2Challenge(clientSocket: Socket, inputStream: java.io.InputStream): Boolean {
         val senderIp = clientSocket.inetAddress?.hostAddress ?: return false
         val decision = DowngradePolicy.decide(

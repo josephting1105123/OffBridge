@@ -20,6 +20,20 @@ import java.util.UUID
 import android.util.Base64
 
 object P2pHelloHandler {
+    private fun replyBusy(connection: TransportConnection) {
+        TransferDaemon.daemonScope.launch(Dispatchers.IO) {
+            try {
+                connection.output.run {
+                    write("P2P_BUSY\n".toByteArray(Charsets.UTF_8))
+                    flush()
+                }
+            } catch (_: Exception) {
+            } finally {
+                try { connection.close() } catch (_: Exception) {}
+            }
+        }
+    }
+
     internal fun handleP2pHello(context: Context, connection: TransportConnection, header: String) {
         TransportDiag.log("TX: P2P_HELLO received from ${connection.remoteIdentifier} — validating")
         val ctx = TransferDaemon.p2pContext
@@ -44,6 +58,8 @@ object P2pHelloHandler {
         }
 
         if (ctx.busy) {
+            // A peer is already in HANDSHAKE/TRANSFERRING (edge case 9), or this QR's token was spent.
+            TransportDiag.log("TX: P2P_HELLO — token in use or already spent → sent P2P_BUSY")
             replyBusy(connection)
             return
         }
@@ -85,17 +101,15 @@ object P2pHelloHandler {
             try { connection.close() } catch (_: Exception) {}
             return
         }
-        TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' → sending P2P_WELCOME + OFFER")
-
-        // Claim atomically: the check above is a fast path, but two dials validated in parallel (a
-        // receiver retrying while its first attempt is still in flight) both passed it, and each
-        // then ran a session — one of which waited out its 30 s ACCEPT_OFFER read and reported an
-        // error to the sender's screen while the real transfer was running.
-        val claimed = synchronized(ctx) { if (ctx.busy) false else { ctx.busy = true; true } }
-        if (!claimed) {
+        // Claim AFTER the HMAC check so an unauthenticated dial can't lock the window, and with a CAS
+        // so two valid HELLOs racing here can't both get through.
+        if (!ctx.tryClaim()) {
+            TransportDiag.log("TX: P2P_HELLO from '$receiverName' lost the claim race → sent P2P_BUSY")
             replyBusy(connection)
             return
         }
+        TransportDiag.log("TX: P2P_HELLO OK from '$receiverName' → sending P2P_WELCOME + OFFER")
+
         val sessionId = UUID.randomUUID().toString()
         // Set once the session is registered; lets the outer catch unregister a session that never
         // got as far as streaming.
@@ -131,7 +145,8 @@ object P2pHelloHandler {
                     fileUris = ctx.fileUris,
                     targetIp = connection.remoteIdentifier,
                     isIncoming = false,
-                    transport = "p2p"
+                    transport = "p2p",
+                    p2pAuthKey = sharedKey
                 )
                 TransferDaemon.putActiveSession(sessionId, session)
                 registered = session
@@ -165,6 +180,9 @@ object P2pHelloHandler {
                     ctx.onTransferError(false)
                     return@launch
                 }
+                // The intended receiver is in. Spend the token so a photo of the QR is worthless from
+                // here on; a dropped transfer comes back through the authenticated RESUME_REQUEST path.
+                ctx.consume()
                 // Trailing flags are order-independent ("ack" and/or "seal"), so match by membership
                 // rather than by position — positional indexing broke the moment a second optional
                 // flag existed. "seal" is only ever sent by a receiver that saw our SEALED_STREAM
@@ -233,27 +251,11 @@ object P2pHelloHandler {
                 ctx.onTransferError(false)
             } finally {
                 try { connection.close() } catch (_: Exception) {}
-                ctx.busy = false
+                ctx.releaseIfUnconsumed()
                 // If the sender backgrounded this transfer (left the QR/NFC screen), release the
                 // Wi-Fi Direct group it held now that the upload reached a terminal state. No-op when
                 // the screen is still resident (never handed off).
                 com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridLiveTransfer.finishIfArmed(sessionId)
-            }
-        }
-    }
-
-    /** A peer is already in HANDSHAKE/TRANSFERRING (edge case 9). */
-    private fun replyBusy(connection: TransportConnection) {
-        TransportDiag.log("TX: P2P_HELLO — already busy with another peer → sent P2P_BUSY")
-        TransferDaemon.daemonScope.launch(Dispatchers.IO) {
-            try {
-                connection.output.run {
-                    write("P2P_BUSY\n".toByteArray(Charsets.UTF_8))
-                    flush()
-                }
-            } catch (_: Exception) {
-            } finally {
-                try { connection.close() } catch (_: Exception) {}
             }
         }
     }

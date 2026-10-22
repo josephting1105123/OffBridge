@@ -3,6 +3,7 @@ package com.joseph.clipboard.windows.network.control
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.joseph.clipboard.windows.network.OffGridQrSender
 import com.joseph.clipboard.windows.network.Ports
 import com.joseph.clipboard.windows.storage.EcdhSession
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -132,6 +133,8 @@ class PcQrSenderController(
                 if (session == null && !finished && !transferring) {
                     // Central linked but HELLO never completed — same verdict as the phone's
                     // HELLO_WATCHDOG: the control channel failed; the QR/direct join stays valid.
+                    // Free the slot too, so a silent subscriber can't hold the phone out.
+                    channel.releaseClient("no verified HELLO within ${helloWatchdogMs / 1000}s")
                     _state.value = QrControlState.Advertising
                 }
             }, helloWatchdogMs, TimeUnit.MILLISECONDS)
@@ -210,12 +213,21 @@ class PcQrSenderController(
         val receiverPub = try { decoder.decode(body.get("pk")?.asString ?: return) } catch (_: Exception) { return }
         val helloHmac = try { decoder.decode(body.get("hm")?.asString ?: return) } catch (_: Exception) { return }
 
-        val key = try { ecdh.deriveSecrets(receiverPub).first } catch (_: Exception) { return }
-        if (!MessageDigest.isEqual(helloHmac, SessionCrypto.hmacSha256(key, token))) return
+        val key = try { ecdh.deriveSecrets(receiverPub).first } catch (_: Exception) {
+            channel.releaseClient("HELLO carried an unusable public key")
+            return
+        }
+        if (!MessageDigest.isEqual(helloHmac, SessionCrypto.hmacSha256(key, token))) {
+            // Can't prove the QR token, so it must not keep the only control slot.
+            channel.releaseClient("HELLO token HMAC mismatch")
+            return
+        }
+        channel.markAuthenticated()
         sharedKey = key
         helloWatchdog?.cancel(false)
 
         val phoneName = (body.get("name")?.asString ?: "").take(32).ifEmpty { "Unknown Device" }
+        val phoneCaps = try { body.get("cap")?.asInt ?: 0 } catch (_: Exception) { 0 }
 
         // HELLO_ACK travels plaintext (it completes the bootstrap), then the session seals.
         val ack = SessionCrypto.hmacSha256(key, token + "ack".toByteArray(Charsets.UTF_8))
@@ -229,7 +241,9 @@ class PcQrSenderController(
         helloAckFrame = ackFrame
         channel.send(ackFrame)
 
-        val s = ControlSession(channel, SessionCrypto(key, isSender = true), executor)
+        // v2 (header-bound AAD) iff the phone asked for it; see OffGridQrSender.CAP_CTRL_AAD.
+        val v2 = (phoneCaps and OffGridQrSender.CAP_CTRL_AAD) != 0
+        val s = ControlSession(channel, SessionCrypto(key, isSender = true, bindHeader = v2), executor)
         session = s
         everLinked = true
         s.onFrame = { type, payload -> handleFrame(type, payload) }
@@ -382,8 +396,8 @@ class PcQrSenderController(
         /** Android `TransportDescriptor.SOFTAP_JOIN.id` — the only tier a PC can offer. */
         const val SOFTAP_JOIN_ID = 7
 
-        /** Android `TransportCaps.BLE_ADVERTISE or COMPLETION_ACK` (1 | 32). */
-        const val CAP_BITS = 33
+        /** Android `TransportCaps.BLE_ADVERTISE or COMPLETION_ACK or CTRL_AAD` (1 | 32 | 128). */
+        const val CAP_BITS = 161
 
         const val TRANSFER_PORT = Ports.FILE_TRANSFER
 

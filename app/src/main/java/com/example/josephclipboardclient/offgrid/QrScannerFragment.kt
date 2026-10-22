@@ -47,6 +47,7 @@ import com.EntropicSoftwareLab.ClipboardShare.tuneForBulkTransfer
 import com.EntropicSoftwareLab.ClipboardShare.transport.LanRoute
 import com.EntropicSoftwareLab.ClipboardShare.transport.ReceiverSessionController
 import com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto
+import com.EntropicSoftwareLab.ClipboardShare.transport.OffGridResumeAuth
 import com.EntropicSoftwareLab.ClipboardShare.transport.SocketConnection
 import com.EntropicSoftwareLab.ClipboardShare.transport.control.BleControlClient
 import com.EntropicSoftwareLab.ClipboardShare.transport.TransportCaps
@@ -1375,6 +1376,7 @@ class QrScannerFragment : Fragment() {
                     // Re-assert the delivery-ack contract on the resumed leg so the sender keeps
                     // the session alive until we confirm, mirroring the initial ACCEPT_OFFER.
                     val ackSuffix = if (session.completionAckRequired) "|ack" else ""
+                    val authKey = session.p2pAuthKey ?: throw java.io.IOException("no handshake key to prove on resume")
                     // A sealed session must resume sealed. Without the flag the sender resumed in
                     // plaintext while we still unsealed with p2pSealKey, so every chunk failed its tag
                     // and a sealed off-grid transfer could never be resumed. FileSeal records are not
@@ -1383,10 +1385,14 @@ class QrScannerFragment : Fragment() {
                     val sealed = session.p2pSealKey != null
                     if (sealed) session.currentOffset = 0L
                     val sealSuffix = if (sealed) "|${OffGridHandshake.ACCEPT_FLAG_SEAL}" else ""
-                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$sealSuffix$ackSuffix\n"
+                    val cmd = "RESUME_REQUEST|$sessionId|${session.currentFileIndex}|${session.currentOffset}$sealSuffix$ackSuffix|${OffGridResumeAuth.FLAG}\n"
                     connection.output.run {
                         write(cmd.toByteArray(Charsets.UTF_8))
                         flush()
+                    }
+                    // The sender streams only after we prove the ECDH secret from the original HELLO.
+                    if (!OffGridResumeAuth.answer(connection.input, connection.output, authKey, sessionId)) {
+                        throw java.io.IOException("sender refused the off-grid resume")
                     }
                     TransferHistoryManager.updateStatus(appContext, sessionId, "transferring")
                     activeConnection = connection

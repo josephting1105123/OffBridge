@@ -83,6 +83,30 @@ class FileStreamerTest {
         assertEquals("ab.txt", FileStreamer.sanitizeIncomingFileName("a<b>.txt"))
     }
 
+    @Test
+    fun sanitizeReservedNameUsesTextBeforeFirstDot() {
+        assertEquals("_NUL.tar.gz", FileStreamer.sanitizeIncomingFileName("NUL.tar.gz"))
+        assertEquals("_CON .txt", FileStreamer.sanitizeIncomingFileName("CON .txt"))
+        assertEquals("CONSOLE.txt", FileStreamer.sanitizeIncomingFileName("CONSOLE.txt"))
+    }
+
+    @Test
+    fun sanitizeStripsTrailingDotsSpacesAndBidiControls() {
+        assertEquals("evil.exe", FileStreamer.sanitizeIncomingFileName("evil.exe. . "))
+        assertEquals("received_file", FileStreamer.sanitizeIncomingFileName("..."))
+        assertEquals("invoicefdp.exe", FileStreamer.sanitizeIncomingFileName("invoice‮fdp.exe"))
+    }
+
+    @Test
+    fun sanitizeCapsLongNamesAndKeepsExtension() {
+        val out = FileStreamer.sanitizeIncomingFileName("a".repeat(400) + ".pdf")
+        assertEquals(200, out.toByteArray(Charsets.UTF_8).size)
+        assertEquals(true, out.endsWith(".pdf"))
+        val cjk = FileStreamer.sanitizeIncomingFileName("文".repeat(100) + ".txt")
+        assertEquals(true, cjk.toByteArray(Charsets.UTF_8).size <= 200)
+        assertEquals(true, cjk.endsWith(".txt") && cjk.removeSuffix(".txt").all { it == '文' })
+    }
+
     // ---------- awaitCompletionAck ----------
 
     @Test
