@@ -699,9 +699,5 @@
     <string name="update_check_again">Vérifier à nouveau</string>
     <string name="update_check_failed">Impossible de rechercher les mises à jour</string>
     <string name="update_try_again">Réessayer</string>
-    <string name="update_download_button">Télécharger et installer</string>
-    <string name="update_downloading">Téléchargement de la mise à jour…</string>
-    <string name="update_download_failed">Échec du téléchargement de la mise à jour</string>
-    <string name="update_allow_install_hint">Autorisez l\'installation d\'applications, puis appuyez de nouveau sur Télécharger</string>
 </resources>
 
