@@ -696,9 +696,5 @@
     <string name="update_check_again">再確認</string>
     <string name="update_check_failed">アップデートを確認できませんでした</string>
     <string name="update_try_again">再試行</string>
-    <string name="update_download_button">ダウンロードしてインストール</string>
-    <string name="update_downloading">アップデートをダウンロードしています…</string>
-    <string name="update_download_failed">アップデートのダウンロードに失敗しました</string>
-    <string name="update_allow_install_hint">アプリのインストールを許可してから、もう一度「ダウンロード」をタップしてください</string>
 </resources>
 

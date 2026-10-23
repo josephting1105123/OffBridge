@@ -32,7 +32,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,12 +49,9 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.components.AppCard
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.AppSecondaryButton
 import com.EntropicSoftwareLab.ClipboardShare.ui.components.LiquidCapsuleLoader
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
-import com.EntropicSoftwareLab.ClipboardShare.update.ApkUpdateInstaller
-import com.EntropicSoftwareLab.ClipboardShare.update.InstallSource
 import com.EntropicSoftwareLab.ClipboardShare.update.UpdateRepository
 import com.EntropicSoftwareLab.ClipboardShare.update.UpdateStatus
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /** Reveal/collapse duration for the result card (and the loader glide it drives). */
 private const val REVEAL_MS = 420
@@ -66,15 +62,13 @@ private const val PLAY_URL =
 
 /**
  * "Updates" screen — checks the latest GitHub release for a newer Android build (pre-warmed at launch
- * via [UpdateRepository]). When one exists, the action routes on how this build was installed: a Play
- * install opens the Play listing; a sideloaded install downloads the release APK and hands it to the
- * system installer in-app. Same liquid-capsule loader and checking / up-to-date / available / failed
+ * via [UpdateRepository]). When one exists, the action opens the Play listing; there is no in-app
+ * download or install. Same liquid-capsule loader and checking / up-to-date / available / failed
  * states as the Windows client.
  */
 @Composable
 fun UpdateScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     // Shared, process-wide status — a silent check runs at app launch (SplashActivity) to pre-warm it.
     val status by UpdateRepository.status.collectAsState()
 
@@ -91,46 +85,11 @@ fun UpdateScreen(modifier: Modifier = Modifier) {
         minLoadElapsed = true
     }
 
-    // True while the sideloaded APK is downloading — the loader keeps flowing with a "Downloading…"
-    // label and the result card steps aside until the system installer is launched.
-    var downloading by remember { mutableStateOf(false) }
-    val startApkUpdate: (String) -> Unit = start@{ apkUrl ->
-        // Guard against a double-tap firing two overlapping downloads that would truncate-write the
-        // same cache file — mirrors the atomic guard the Windows client uses around its own
-        // download-and-install (see ClipboardAppController.downloadAndInstallUpdate). Setting
-        // `downloading` synchronously here (before launching) rather than as the coroutine's first
-        // line closes the gap regardless of dispatcher timing.
-        if (downloading) return@start
-        downloading = true
-        scope.launch {
-            try {
-                val apk = ApkUpdateInstaller.download(context, apkUrl)
-                val launched = ApkUpdateInstaller.install(context, apk)
-                if (!launched) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.update_allow_install_hint),
-                        Toast.LENGTH_LONG,
-                    ).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.update_download_failed),
-                    Toast.LENGTH_SHORT,
-                ).show()
-            } finally {
-                downloading = false
-            }
-        }
-    }
-
     val resolved = status is UpdateStatus.UpToDate ||
         status is UpdateStatus.UpdateAvailable ||
         status is UpdateStatus.CheckFailed
-    // Reveal the result once the 1s minimum has passed, the check has resolved, and we're not mid-
-    // download (during a download the loader takes over with the "Downloading…" label).
-    val showResult = minLoadElapsed && resolved && !downloading
+    // Reveal the result once the 1s minimum has passed and the check has resolved.
+    val showResult = minLoadElapsed && resolved
     // Hold the last resolved status so the card keeps its content while it animates back out.
     var lastResult by remember { mutableStateOf<UpdateStatus?>(null) }
     LaunchedEffect(status) { if (resolved) lastResult = status }
@@ -166,9 +125,7 @@ fun UpdateScreen(modifier: Modifier = Modifier) {
                 shrinkVertically(tween(REVEAL_MS, easing = FastOutLinearInEasing)),
         ) {
             Text(
-                text = stringResource(
-                    if (downloading) R.string.update_downloading else R.string.update_checking,
-                ),
+                text = stringResource(R.string.update_checking),
                 color = AppThemeTokens.colors.textPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
@@ -197,19 +154,12 @@ fun UpdateScreen(modifier: Modifier = Modifier) {
                     onCheckAgain = { checkCycle++ },
                 )
                 is UpdateStatus.UpdateAvailable -> {
-                    // Play install → Play listing (matching signature). Sideloaded install with a
-                    // release APK available → in-app download+install. Sideloaded but no APK yet →
-                    // fall back to the Play listing (the only actionable target until one is published).
-                    val useApk = remember(s.apkUrl) { !InstallSource.isFromPlay(context) && s.apkUrl != null }
+                    // Updates always go through the Play listing.
                     UpdateResultCard(
                         version = s.version,
                         upToDate = false,
-                        primaryText = stringResource(
-                            if (useApk) R.string.update_download_button else R.string.update_play_button,
-                        ),
-                        onPrimary = {
-                            if (useApk) startApkUpdate(s.apkUrl!!) else openPlayStore(context)
-                        },
+                        primaryText = stringResource(R.string.update_play_button),
+                        onPrimary = { openPlayStore(context) },
                         onCheckAgain = null,
                     )
                 }

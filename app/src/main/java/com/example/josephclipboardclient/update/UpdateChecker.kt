@@ -27,11 +27,6 @@ object UpdateChecker {
     private const val CONNECT_TIMEOUT_MS = 2_000
     private const val READ_TIMEOUT_MS = 4_000
 
-    // Stable asset name for the sideloadable APK on the release (no version in the name, so the
-    // "latest" asset URL always resolves). Absent until the first APK is published — the Updates page
-    // then falls back to the Play listing for sideloaded installs.
-    private const val APK_ASSET_NAME = "OffBridge-android.apk"
-
     private val ANDROID_VERSION_IN_TITLE = Regex("""Android\s+([0-9][0-9.]*)""")
 
     suspend fun check(currentVersion: String): UpdateStatus = withContext(Dispatchers.IO) {
@@ -57,7 +52,7 @@ object UpdateChecker {
                     return@withContext UpdateStatus.CheckFailed("Latest release has no Android version")
                 }
                 if (VersionCompare.isNewer(latest, currentVersion)) {
-                    UpdateStatus.UpdateAvailable(latest, apkAssetUrl(json))
+                    UpdateStatus.UpdateAvailable(latest)
                 } else {
                     UpdateStatus.UpToDate(currentVersion)
                 }
@@ -67,17 +62,5 @@ object UpdateChecker {
         } catch (e: Exception) {
             UpdateStatus.CheckFailed(e.message ?: e.javaClass.simpleName)
         }
-    }
-
-    /** The [APK_ASSET_NAME] asset's download URL on the release, or null if the release has none. */
-    private fun apkAssetUrl(release: JSONObject): String? {
-        val assets = release.optJSONArray("assets") ?: return null
-        for (i in 0 until assets.length()) {
-            val asset = assets.optJSONObject(i) ?: continue
-            if (asset.optString("name") == APK_ASSET_NAME) {
-                return asset.optString("browser_download_url").takeIf { it.isNotBlank() }
-            }
-        }
-        return null
     }
 }

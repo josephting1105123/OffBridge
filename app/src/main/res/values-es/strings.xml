@@ -703,9 +703,5 @@
     <string name="update_check_again">Volver a comprobar</string>
     <string name="update_check_failed">No se pudieron buscar actualizaciones</string>
     <string name="update_try_again">Reintentar</string>
-    <string name="update_download_button">Descargar e instalar</string>
-    <string name="update_downloading">Descargando actualización…</string>
-    <string name="update_download_failed">Error al descargar la actualización</string>
-    <string name="update_allow_install_hint">Permite instalar apps y vuelve a tocar Descargar</string>
 </resources>
 
