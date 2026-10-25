@@ -3,16 +3,17 @@
    Edit ONLY this file when you cut a new release.
 
    How to get the URLs (no GitHub browsing for your visitors):
-   1. Create a GitHub Release and attach the two binaries, keeping the asset
-      filenames STABLE across releases (don't put the version in the name) so
-      the "latest" link always resolves:
-        OffBridge-android.apk
+   1. Create a GitHub Release and attach the Windows installer, keeping the
+      asset filename STABLE across releases (don't put the version in the name)
+      so the "latest" link always resolves:
         OffBridge-windows-setup.exe
+      (Android is offered only through its Google Play listing, so there is no
+      Android binary to attach.)
    2. The stable direct-download URL pattern is:
         https://github.com/<owner>/<repo>/releases/latest/download/<asset-name>
       Clicking it downloads the file instantly — the visitor never sees a
       GitHub page.
-   3. Paste those two URLs below, set the real file sizes, and (optionally) the
+   3. Paste that URL below, set the real file size, and (optionally) the
       SHA-256 for the privacy-minded. Leaving url as "#" shows a "coming soon"
       notice and disables the button.
    ========================================================================== */
@@ -29,30 +30,13 @@ window.CS_CONFIG = {
     label: "Get it on Google Play",
     os: "Android",
     fileType: "Google Play",
-    // Tracks what Play actually SERVES, which lags the direct APK: a build has to clear review and
-    // finish rollout before this may move. Bump it only once the new version is live on the store
-    // listing, never at the same time as androidApk below.
+    // Tracks what Play actually SERVES: a build has to clear review and finish rollout before
+    // this may move. Bump it only once the new version is live on the store listing.
     version: "3.7.5",
     size: "TBD", // store link — no size/sha shown
-    // PERMANENT — never revert to "#". The APK asset may 404 until the user
-    // uploads the first build (testing phase, accepted). The link must stay
-    // url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
     url: "https://play.google.com/store/apps/details?id=com.EntropicSoftwareLab.ClipboardShare",
     sha256: "",
     note: "Android 10+ (API 29). Free.",
-  },
-
-  // Secondary Android path: sideload the release APK directly, no Play account
-  // needed. Tracks Android's own version — independent of the Windows track.
-  androidApk: {
-    label: "Download APK",
-    os: "Android",
-    fileType: "APK (direct)",
-    version: "3.7.8",
-    size: "29 MB",
-    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk",
-    sha256: "42c649efc627cc7c97bae4d75f4d3a9ff6e7214b9bce9de7733792d3a4f9fa52",
-    note: "Android 10+ (API 29). Installs outside Google Play — allow “Unknown apps” when prompted.",
   },
 
   windows: {

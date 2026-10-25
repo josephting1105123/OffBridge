@@ -11,14 +11,13 @@
     if (!cfg) return;
 
     var aReady = wireCard("android", cfg.android);
-    var apkReady = wireCard("apk", cfg.androidApk);
     var wReady = wireCard("windows", cfg.windows);
 
     // Hide the "builds being published" banner once all downloads are wired.
     var todo = document.querySelector(".dl-todo");
-    if (todo && aReady && apkReady && wReady) todo.hidden = true;
+    if (todo && aReady && wReady) todo.hidden = true;
     // Developer reminder — console only, never shown to visitors.
-    if (!aReady || !apkReady || !wReady) {
+    if (!aReady || !wReady) {
       console.info(
         "[OffBridge] Download links not wired yet — set repo or url/size in js/config.js (see website/README.md)."
       );
@@ -66,14 +65,12 @@
     // Resolve URL: explicit url wins, and an explicit "#" is the documented
     // "coming soon" opt-in (config.js) — it must stay disabled, not be replaced
     // by a repo-built link to an asset that may not exist. Only build the
-    // repo+stable-filename fallback when no url was given at all.
+    // repo+stable-filename fallback when no url was given at all, and only for
+    // Windows: Android always carries an explicit Google Play url and must never
+    // fall back to a repo-hosted binary.
     var url = data.url;
-    if (!url && window.CS_CONFIG.latestUrl) {
-      var asset =
-        key === "android"
-          ? "OffBridge-android.apk"
-          : "OffBridge-windows-setup.exe";
-      var built = window.CS_CONFIG.latestUrl(asset);
+    if (!url && key === "windows" && window.CS_CONFIG.latestUrl) {
+      var built = window.CS_CONFIG.latestUrl("OffBridge-windows-setup.exe");
       if (built) url = built;
     }
 

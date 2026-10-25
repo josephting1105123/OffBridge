@@ -797,23 +797,6 @@
             <details class="dl-verify" data-dl-sha><summary>Verify checksum</summary><code></code></details>
           </article>
 
-          <article class="glass dl-card" data-dl-card="apk">
-            <div class="dl-detected-tag" data-dl-detected></div>
-            <div class="dl-card__os"><svg class="ic" aria-hidden="true"><use href="#m-android"></use></svg></div>
-            <h3>Direct APK</h3>
-            <div class="dl-card__badges">
-              <span class="badge" data-dl-version>v3.7.8</span>
-              <span class="badge badge--muted" data-dl-type>APK (direct)</span>
-              <span class="badge badge--muted" data-dl-size>—</span>
-            </div>
-            <a class="btn btn--primary btn--lg btn--block" data-dl-link href="https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridge-android.apk" rel="nofollow noopener">
-              <svg class="ic" aria-hidden="true"><use href="#m-download"></use></svg>
-              <span data-dl-label>Download APK</span>
-            </a>
-            <p class="dl-card__note" data-dl-note></p>
-            <details class="dl-verify" data-dl-sha><summary>Verify checksum</summary><code></code></details>
-          </article>
-
           <article class="glass dl-card" data-dl-card="windows">
             <div class="dl-detected-tag" data-dl-detected></div>
             <div class="dl-card__os"><svg class="ic" aria-hidden="true"><use href="#m-windows"></use></svg></div>
@@ -870,7 +853,7 @@
           <details class="srow"><summary><span class="srow__t">How large a file can I send?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
             <p>Multi-gigabyte transfers are supported, with live per-file progress. If the connection drops mid-transfer it resumes rather than starting over.</p></details>
           <details class="srow"><summary><span class="srow__t">How do I install it?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
-            <p>Android installs from Google Play, or as a direct APK from the download section if you'd rather not use Play; the APK usually gets a new release a little before the store does. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></details>
+            <p>Android installs from Google Play. The Windows version is a standard installer with a bundled runtime, so there's no Java to set up. It isn't code-signed yet, so Windows may flag it the first time; the next question covers what to do.</p></details>
           <details class="srow"><summary><span class="srow__t">Windows blocked the installer or can't verify the publisher?</span><svg class="ic srow__chev" aria-hidden="true"><use href="#m-expand"></use></svg></summary>
             <p>That's Windows reacting to the missing code signature, not to anything the app does. It shows up two ways. SmartScreen displays a blue &ldquo;unknown publisher&rdquo; notice you can pass with More info, then Run anyway. Smart App Control, a stricter Windows 11 feature that's switched on for some machines, can block it outright with &ldquo;couldn't verify the publisher,&rdquo; and by design it has no per-app override.</p>
             <p>OffBridge is off-grid and has no account; it's simply an unsigned indie build with no reputation yet. It does sit in the system tray so it can receive transfers, which is the app doing its job rather than anything hidden. You can confirm any download against the SHA-256 on the Windows card.</p>
@@ -896,8 +879,8 @@
     </div>
   </footer>
 
-  <script defer src="js/config.js?v=20261020b"></script>
-  <script defer src="js/platform.js?v=20261020b"></script>
+  <script defer src="js/config.js?v=20261025a"></script>
+  <script defer src="js/platform.js?v=20261025a"></script>
   <script defer src="js/dl-wheel.js?v=20261020b"></script>
   <script defer src="js/site.js?v=20261020b"></script>
   <script defer src="js/segments.js?v=20261020b"></script>
