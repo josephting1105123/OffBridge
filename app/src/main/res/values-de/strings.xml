@@ -699,9 +699,5 @@
     <string name="update_check_again">Erneut prüfen</string>
     <string name="update_check_failed">Update-Suche fehlgeschlagen</string>
     <string name="update_try_again">Erneut versuchen</string>
-    <string name="update_download_button">Herunterladen &amp; Installieren</string>
-    <string name="update_downloading">Update wird heruntergeladen…</string>
-    <string name="update_download_failed">Update-Download fehlgeschlagen</string>
-    <string name="update_allow_install_hint">Erlaube das Installieren von Apps und tippe erneut auf Herunterladen</string>
 </resources>
 
