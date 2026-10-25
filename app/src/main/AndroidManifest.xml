@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- In-app update: sideloaded/GitHub builds download the release APK and hand it to the system
-         installer (Play builds route to the Play listing instead). -->
+    <!-- Lets the user, with explicit confirmation, install an APK they received through a file transfer. The app never downloads or installs anything on its own. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />

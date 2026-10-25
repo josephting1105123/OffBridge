@@ -686,9 +686,5 @@
     <string name="update_check_again">重新检查</string>
     <string name="update_check_failed">无法检查更新</string>
     <string name="update_try_again">重试</string>
-    <string name="update_download_button">下载并安装</string>
-    <string name="update_downloading">正在下载更新…</string>
-    <string name="update_download_failed">更新下载失败</string>
-    <string name="update_allow_install_hint">请允许安装应用，然后再次点按“下载”</string>
 </resources>
 
