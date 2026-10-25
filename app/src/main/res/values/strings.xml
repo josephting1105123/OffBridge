@@ -698,9 +698,5 @@
     <string name="update_check_again">Check again</string>
     <string name="update_check_failed">Couldn\'t check for updates</string>
     <string name="update_try_again">Try again</string>
-    <string name="update_download_button">Download &amp; Install</string>
-    <string name="update_downloading">Downloading update…</string>
-    <string name="update_download_failed">Update download failed</string>
-    <string name="update_allow_install_hint">Allow installing apps, then tap Download again</string>
 </resources>
 
