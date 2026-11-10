@@ -1,5 +1,6 @@
 package com.joseph.clipboard.windows.network
 
+import com.joseph.clipboard.windows.os.MarkOfTheWeb
 import com.joseph.clipboard.windows.storage.FileSeal
 import java.io.File
 import java.io.FileInputStream
@@ -121,6 +122,8 @@ object FileStreamer {
                 if (!partFile.renameTo(finalFile)) {
                     throw Exception("Failed to finalize ${finalFile.name} (rename from .part failed)")
                 }
+                // Peer-supplied file: mark it as Internet-zone so SmartScreen/Protected View apply.
+                MarkOfTheWeb.tag(finalFile)
 
                 listener.onFileComplete(i)
             } else {
