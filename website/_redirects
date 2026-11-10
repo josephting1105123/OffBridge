@@ -1,0 +1,8 @@
+# The OffBridge site moved to https://entropicsoftwarelabs.com/offbridge/ on 2026-11-10.
+# Every path on this Pages project (offbridge.app and clipboard-share-a8e.pages.dev)
+# now redirects there. Older app builds open clipboard-share-a8e.pages.dev/#download;
+# browsers carry the #fragment across the redirect, so that still lands on Download.
+# The Play listing's privacy policy URL (offbridge.app/privacy.html) redirects too.
+/privacy.html https://entropicsoftwarelabs.com/offbridge/privacy 301
+/privacy https://entropicsoftwarelabs.com/offbridge/privacy 301
+/* https://entropicsoftwarelabs.com/offbridge/:splat 301
