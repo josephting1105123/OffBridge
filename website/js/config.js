@@ -23,7 +23,7 @@ window.CS_CONFIG = {
   // URLs below if you prefer; you can also paste full URLs directly.
   repo: {
     owner: "josephting1105123",
-    name: "OffBridge-Showcase",
+    name: "OffBridge",
   },
 
   android: {
@@ -43,11 +43,11 @@ window.CS_CONFIG = {
     label: "Download for Windows",
     os: "Windows",
     fileType: "Installer (.exe)",
-    version: "3.7.10",
+    version: "3.7.12",
     size: "81 MB",
     // Direct release asset — downloads instantly, hosted free on GitHub.
-    url: "https://github.com/josephting1105123/OffBridge-Showcase/releases/latest/download/OffBridgeSetup.exe",
-    sha256: "f50b42e8c2a63e1d8ca56a879d2355736e096588b5ee6e26894009b64c2f2a85",
+    url: "https://github.com/josephting1105123/OffBridge/releases/latest/download/OffBridgeSetup.exe",
+    sha256: "1f24afe4fd7ad3abb5ada23ea55038a3ad00b7e27018f63baa841f0507a040fb",
     note: "Windows 10/11 (64-bit). Bundled runtime — no Java needed.",
   },
 

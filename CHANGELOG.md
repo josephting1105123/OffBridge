@@ -4,6 +4,34 @@ Notable changes leading into the **3.0** releases (Android `3.0.2` / Windows `3.
 
 ---
 
+## 3.7.12 — Windows (window size, prompts above dialogs, received-file safety)
+
+### Fixed
+- **The window opened too narrow on common screens.** It sized itself as a phone-shaped portrait,
+  about 381 wide on a 1080p screen, which wrapped the "Send Files" title a letter or two per line
+  and pushed the Text card off the edge. It now opens at least 520 wide, enough for the Send
+  screen's three cards. You can still drag it down to the old 340 minimum; the title then
+  shortens with "…" instead of wrapping.
+- **An incoming file or pairing request could be hidden behind an open dialog** (for example the
+  QR or Send Via window), so it looked like nothing had arrived. Both prompts now open as their
+  own dialogs on top.
+
+### Security
+- **Received files are tagged as downloaded from the internet** (Mark-of-the-Web), so Office opens
+  them in Protected View and SmartScreen checks them before they run. More file types (macro-enabled
+  Office files, app packages, shell handler files, `.chm`, `.rdp`, disk images) now open
+  their folder instead of launching directly.
+- Fixes from the October security audit: pairing reads are capped before authentication, the
+  clipboard daemon checks the pairing key before reading the payload, received file names are
+  sanitised more strictly, the self-updater requires HTTPS and re-checks the host after redirects,
+  and interrupted off-grid
+  transfers must prove the original handshake before they can resume.
+
+### Changed
+- **Updates now come from the OffBridge GitHub repo.** The OffBridge-Showcase repo that 3.7.11 and
+  older check is gone, so those versions can't find this update in the app. Install 3.7.12 once from
+  the website and later updates show up again.
+
 ## 3.7.8 — Android (build 36) — file previews, off-grid reliability and resume
 
 > Two fixes developed in parallel as 3.7.7 (build 35), merged and shipped together as 3.7.8.

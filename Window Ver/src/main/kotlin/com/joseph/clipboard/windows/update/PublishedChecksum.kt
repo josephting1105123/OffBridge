@@ -13,10 +13,10 @@ import java.time.Duration
  * Checks a downloaded installer against the SHA-256 the release process publishes in the website's
  * `js/config.js` (the "Verify checksum" value on the download card).
  *
- * The installer comes from the OffBridge-Showcase release; the checksum is read from the code repo's
- * `main` branch, which is a separate repository. Someone who can swap a release asset (a leaked upload
- * token, a tampered release) can't also make the hashes agree without pushing to the code repo. It is
- * read from raw.githubusercontent.com rather than the website so a website or DNS outage can't block it.
+ * The installer comes from a GitHub release on the OffBridge repo, and the checksum is read from that
+ * repo's `main` branch via raw.githubusercontent.com, so a website or DNS outage can't block it.
+ * Since 3.7.12 both live in the same repo, so this catches a swapped or corrupted asset uploaded
+ * without a matching commit to main, but not someone who controls the repo account outright.
  */
 object PublishedChecksum {
     private const val CONFIG_URL =

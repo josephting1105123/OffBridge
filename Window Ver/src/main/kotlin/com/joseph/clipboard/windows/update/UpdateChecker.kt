@@ -12,17 +12,19 @@ import java.net.http.HttpTimeoutException
 import java.time.Duration
 
 /**
- * Checks the OffBridge-Showcase GitHub repo's latest release for a newer Windows build.
+ * Checks the OffBridge GitHub repo's latest release for a newer Windows build.
  * Reads directly off the release the existing manual RUNBOOK process already publishes — no
  * separate manifest file, no extra release-day step. See release/RUNBOOK.md for the publish flow
  * (tag vX.Y.Z, attach a stably-named OffBridgeSetup.exe asset).
  */
 object UpdateChecker {
-    // Same owner/repo the website's download button targets — see the CS_CONFIG.windows block in
-    // website/js/config.js. The two are independent copies with nothing enforcing agreement; if the
-    // releases repo is ever renamed, update both.
+    // Releases moved from OffBridge-Showcase to the OffBridge code repo in 3.7.12. The website
+    // download button (CS_CONFIG.windows.url, in website/js/config.js here and offbridge/js/config.js
+    // in the entropic-site repo) must point at the same repo. Nothing enforces agreement, so update
+    // all of them if it moves again. Builds 3.7.11 and older still poll OffBridge-Showcase and
+    // won't see releases published here.
     private const val OWNER = "josephting1105123"
-    private const val REPO = "OffBridge-Showcase"
+    private const val REPO = "OffBridge"
     private const val LATEST_RELEASE_URL = "https://api.github.com/repos/$OWNER/$REPO/releases/latest"
     private const val INSTALLER_ASSET_NAME = "OffBridgeSetup.exe"
 
