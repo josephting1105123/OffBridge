@@ -722,8 +722,21 @@ fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: Clipbo
     }
 }
 
-/** Minimum usable width (dp) for the floating portrait window: the 80.dp nav rail plus content. */
-private const val MIN_FLOATING_WIDTH_DP = 340f
+/**
+ * Minimum usable width (dp) for the floating portrait window: the 80.dp nav rail plus content.
+ * The Send screen's action row is the widest fixed content: 24.dp padding + three 120.dp cards +
+ * two 12.dp gaps + 24.dp padding = 432.dp, so 80 + 432 = 512.dp, rounded up to 520. At the old 340
+ * floor a 1080p screen opened ~381.dp wide (9:19.5 of 80% height), wrapping the "Send Files" title
+ * one or two letters per line and clipping the "Text" card off the right edge.
+ */
+private const val MIN_FLOATING_WIDTH_DP = 520f
+
+/**
+ * Resize floor (dp) for the floating window, kept apart from MIN_FLOATING_WIDTH_DP. The window is
+ * aspect-locked, so a 520.dp floor would make the minimum size equal the default size and the user
+ * could never shrink it. Below 520.dp the Send title ellipsizes and the action row scrolls.
+ */
+private const val MIN_RESIZE_WIDTH_DP = 340f
 
 fun main() = application {
     // The floating (non-maximized) window is a tall, phone-shaped portrait: ~80% of the current
@@ -733,8 +746,10 @@ fun main() = application {
     // cross-launch position persistence — so it's what Compose would resolve to anyway, and doing it
     // statically avoids a startup flash from Compose's stock 800x600 box.
     //
-    // Usability floor: a pure 9:19.5 window is narrow, so width is coerced to at least
-    // MIN_FLOATING_WIDTH_DP (nav rail + content) and never wider than the work area (small screens).
+    // Usability floor: a pure 9:19.5 window is too narrow for the Send screen's action row, so width
+    // is coerced to at least MIN_FLOATING_WIDTH_DP (nav rail + widest content row) and never wider
+    // than the work area (small screens). On a typical 1080p screen the floor wins, so the window
+    // opens wider than 9:19.5 but stays portrait.
     val defaultFloatingSize = remember {
         val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
         val insets = java.awt.Toolkit.getDefaultToolkit().getScreenInsets(gc)
@@ -756,7 +771,7 @@ fun main() = application {
     // can't be dragged narrow enough to crush the nav rail + content.
     val minFloatingWidthPx = remember {
         val gc = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
-        val floorDp = maxOf(defaultFloatingSize.width.value * 0.5f, MIN_FLOATING_WIDTH_DP)
+        val floorDp = maxOf(defaultFloatingSize.width.value * 0.5f, MIN_RESIZE_WIDTH_DP)
         (floorDp * gc.defaultTransform.scaleX).toInt()
     }
     val windowState = rememberWindowState(size = defaultFloatingSize)
