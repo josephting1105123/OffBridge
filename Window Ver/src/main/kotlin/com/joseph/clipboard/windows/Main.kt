@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
@@ -396,7 +397,8 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
                     }
                 }
 
-                // Modal Overlays (Moved to be inside the content box so they don't cover the sidebar)
+                // Incoming-request prompts. Each one renders as a Dialog (see ReceiverPairingOverlay), so it
+                // covers the whole window and stacks above any dialog that is already open.
                 val incomingFileOffer by appController.incomingFileOffer.collectAsState()
                 
                 incomingFileOffer?.let { session ->
@@ -487,15 +489,14 @@ private fun PairingVerifyLabel() {
 @Composable
 fun ReceiverPairingOverlay(data: ClipboardAppController.IncomingPairingData) {
     BackdropEffect()
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackdropScrim)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { /* Block clicks */ },
-        contentAlignment = Alignment.Center
+    // A Dialog, not an in-window Box: Compose draws every Dialog on a layer above the window's
+    // content, so a Box here was hidden behind any dialog already open (Transfer History, transfer
+    // details, Send To). A newer Dialog stacks above older ones, so the request always lands on top.
+    // Back and click-outside dismissal stay off: the request must be answered with a button, never
+    // dropped silently.
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -655,15 +656,11 @@ fun SenderPairingOverlay(
 @Composable
 fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: ClipboardAppController) {
     BackdropEffect()
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackdropScrim)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { /* Block clicks */ },
-        contentAlignment = Alignment.Center
+    // A Dialog for the same reason as ReceiverPairingOverlay: an in-window Box was hidden behind any
+    // dialog already open, so an incoming file could sit unanswered with no visible prompt.
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
     ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
