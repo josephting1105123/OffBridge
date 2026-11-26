@@ -16,18 +16,12 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.os.bundleOf
 import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
-import com.EntropicSoftwareLab.ClipboardShare.DiscoveredDevice
 import com.EntropicSoftwareLab.ClipboardShare.ImageThumbnails
 import com.EntropicSoftwareLab.ClipboardShare.MainActivity
 import com.EntropicSoftwareLab.ClipboardShare.PairingActivity
-import com.EntropicSoftwareLab.ClipboardShare.Ports
 import com.EntropicSoftwareLab.ClipboardShare.R
-import com.EntropicSoftwareLab.ClipboardShare.SecurityVault
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
-import com.EntropicSoftwareLab.ClipboardShare.TransferHistoryManager
 import com.EntropicSoftwareLab.ClipboardShare.TransferItem
-import com.EntropicSoftwareLab.ClipboardShare.TransferRecord
-import com.EntropicSoftwareLab.ClipboardShare.TransferSession
 import com.EntropicSoftwareLab.ClipboardShare.TransferUtils
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FilePreviewKind
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FilePreviewUi
@@ -41,9 +35,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.net.Socket
-import android.util.Base64
-import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
 import com.EntropicSoftwareLab.ClipboardShare.isLiteMode
@@ -170,16 +161,6 @@ class SendToDevicesFragment : Fragment() {
         /** First outgoing sessionId of the batch — the listener opens its history detail. */
         const val RESULT_SESSION_ID = "session_id"
 
-        /**
-         * First target of the offer batch currently in flight, or null when idle. Process-level
-         * rather than per-instance because the offer loop runs in a detached scope that outlives
-         * this Fragment: now that the screen no longer pops the moment Send is tapped, a rotation
-         * mid-send would otherwise rebuild it with a fresh, re-enabled Send button and let the user
-         * fire a duplicate OFFER at a device already receiving one.
-         */
-        @Volatile
-        private var activeSendTargetIp: String? = null
-
         fun newInstance(items: List<TransferItem>, isMultiple: Boolean = true): SendToDevicesFragment {
             return SendToDevicesFragment().apply {
                 arguments = TransferItemArgs.toBundle(items).apply {
@@ -188,14 +169,6 @@ class SendToDevicesFragment : Fragment() {
             }
         }
     }
-
-    /** One queued offer of [executeMultiDeviceTransfer]: its session plus the record identifiers. */
-    private data class PendingOffer(
-        val sessionId: String,
-        val targetIp: String,
-        val targetName: String,
-        val session: TransferSession,
-    )
 
     private var items: List<TransferItem> = emptyList()
     private val selectedTargetIps = mutableSetOf<String>()
@@ -217,7 +190,7 @@ class SendToDevicesFragment : Fragment() {
     // doesn't read this). Held separately from selectedTargetIps: the 1 Hz refreshDeviceListUI
     // prunes that set to whatever is still discovered + paired, so deriving the "Sending" label
     // from it flipped the row back to "Send" the moment the target blinked out of discovery —
-    // while the transfer was still running. Mirrors [activeSendTargetIp] for Compose to observe.
+    // while the transfer was still running. Mirrors [LanOfferSender.activeTargetIp] for Compose to observe.
     private val sendingIpState = mutableStateOf<String?>(null)
     private var isLite = false
     private var qrRequested = false
@@ -402,7 +375,7 @@ class SendToDevicesFragment : Fragment() {
         if (!isAdded) return
         // Re-adopt the process-level send lock every tick, so an instance rebuilt by a config change
         // mid-send comes back showing "Sending" and a disabled button rather than an idle one.
-        val inFlight = activeSendTargetIp
+        val inFlight = LanOfferSender.activeTargetIp
         if (sendingIpState.value != inFlight) sendingIpState.value = inFlight
         if (sendingState.value != (inFlight != null)) sendingState.value = inFlight != null
 
@@ -421,7 +394,7 @@ class SendToDevicesFragment : Fragment() {
         // then derive both lists from it: allDevices feeds Lite's One-Device tri-state card, which
         // needs unpaired rows to offer "Pair"; paired-only feeds Pro's multi-select and Lite's
         // Multiple mode. (Mapping once avoids decrypting each node's key 2–3× per poll tick.)
-        val allUi = sortedNodes.map { it.toUi() }
+        val allUi = sortedNodes.map { it.toSendDeviceUi(requireContext()) }
         allDevicesState.value = allUi
         val pairedUi = allUi.filter { it.isPaired }
         devicesState.value = pairedUi
@@ -435,158 +408,32 @@ class SendToDevicesFragment : Fragment() {
         }
     }
 
-    private fun DiscoveredDevice.toUi(): SendDeviceUi =
-        SendDeviceUi(
-            ip = ip, 
-            name = name, 
-            isWindows = os.equals("Windows", ignoreCase = true),
-            isPaired = SecurityVault.getKeyForNode(requireContext(), ip) != null
-        )
-
     private fun executeMultiDeviceTransfer() {
         val sendItems = items.toList()
         val ips = selectedTargetIps.toList()
-        // activeSendTargetIp, not sendingState: the lock has to survive a config change (see its doc).
-        if (sendItems.isEmpty() || ips.isEmpty() || activeSendTargetIp != null) return
+        // LanOfferSender.activeTargetIp, not sendingState: the lock has to survive a config change (see its doc).
+        if (sendItems.isEmpty() || ips.isEmpty() || LanOfferSender.activeTargetIp != null) return
 
         // Drives the bottom button (Pro) and the tapped device's capsule (Lite) to "Sending..." /
         // disabled. The screen deliberately STAYS on the device list for the whole send — it used to
         // pop the moment the offers were queued, which in Lite (endSendFlow clears the entire child
         // back stack) threw the user out to the hub the instant they tapped a device's Send.
-        activeSendTargetIp = ips.first()
+        LanOfferSender.activeTargetIp = ips.first()
         sendingState.value = true
         sendingIpState.value = ips.first()
 
         val appContext = requireContext().applicationContext
 
         CoroutineScope(Dispatchers.IO).launch {
-            val expandedItems = TransferItemExpander.expand(appContext, sendItems)
-            val manifestList = TransferItemExpander.buildManifest(appContext, expandedItems)
-            val fileUriStrings = expandedItems.map { it.uri.toString() }
-
-            // Register every target's session + pending record BEFORE any handshake so the history
-            // detail Pro opens on completion already exists; the offers themselves keep running in
-            // this detached scope even if the user leaves the screen first.
-            val offers = ips.map { targetIp ->
-                val sessionId = java.util.UUID.randomUUID().toString()
-                val session = TransferSession(
-                    sessionId = sessionId,
-                    senderName = TransferDaemon.customDeviceName,
-                    totalFiles = expandedItems.size,
-                    manifest = manifestList,
-                    fileUris = fileUriStrings,
-                    targetIp = targetIp,
-                    isIncoming = false,
-                    isPaused = false
-                )
-                TransferDaemon.putActiveSession(sessionId, session)
-
-                val targetName = TransferDaemon.discoveredNodes[targetIp]?.name ?: targetIp
-                TransferHistoryManager.addRecord(appContext, TransferRecord(
-                    sessionId = sessionId,
-                    deviceName = targetName,
-                    direction = "outgoing",
-                    fileNames = manifestList.map { TransferUtils.manifestDisplayLeaf(it.first) },
-                    totalBytes = manifestList.sumOf { it.second },
-                    timestamp = System.currentTimeMillis(),
-                    status = "pending",
-                    filesCompleted = 0,
-                    totalFiles = expandedItems.size,
-                    fileSizes = manifestList.map { it.second },
-                    currentFileOffset = 0L,
-                    transport = "lan"
-                ))
-                PendingOffer(sessionId, targetIp, targetName, session)
-            }
-
-            var hasFailures = false
-            for ((sessionId, targetIp, targetName, session) in offers) {
-
-                try {
-                    // Bounded connect (mirrors DownloadEngine's resume path): the 2-arg Socket
-                    // ctor blocks on the OS default SYN timeout — a vanished peer stalled the
-                    // whole multi-device offer loop for tens of seconds (AND-24). connect runs
-                    // INSIDE use so a timeout still closes the socket instead of leaking the fd.
-                    Socket().use { fileSocket ->
-                        fileSocket.connect(java.net.InetSocketAddress(targetIp, Ports.FILE_TRANSFER), 8000)
-                        val outStream = fileSocket.getOutputStream()
-                        val offerHeader = "OFFER|$sessionId|${TransferDaemon.customDeviceName}|${expandedItems.size}\n"
-                        var manifestStr = "MANIFEST|"
-                        for (manifestItem in manifestList) {
-                            manifestStr += "${manifestItem.first}:${manifestItem.second}|"
-                        }
-                        manifestStr += "\n"
-
-                        outStream.write(offerHeader.toByteArray(Charsets.UTF_8))
-                        outStream.write(manifestStr.toByteArray(Charsets.UTF_8))
-                        outStream.flush()
-
-                        // Wait for the receiver's next line (shared size-capped reader — the old
-                        // hand-rolled loop had no byte cap, AND-24).
-                        fileSocket.soTimeout = 10000
-                        val inStream = fileSocket.getInputStream()
-                        var response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
-
-                        // AUTH2: a new receiver may challenge us to prove we hold the shared pairing key
-                        // before it shows its incoming-file popup. Answer with HMAC-SHA256(pairingKey,
-                        // nonce), then read the real OFFER_RECEIVED. An old receiver sends OFFER_RECEIVED
-                        // directly and we fall straight through — so we tolerate BOTH sequences without
-                        // depending on the peer's advertised caps.
-                        if (response.startsWith("OFFER_CHALLENGE|")) {
-                            val nonce = Base64.decode(response.removePrefix("OFFER_CHALLENGE|"), Base64.NO_WRAP)
-                            val pairingKey = SecurityVault.getKeyForNode(appContext, targetIp)
-                                ?: throw Exception("No pairing key to answer OFFER_CHALLENGE for $targetIp")
-                            val proof = com.EntropicSoftwareLab.ClipboardShare.transport.SessionCrypto.hmacSha256(pairingKey, nonce)
-                            outStream.write("OFFER_PROOF|${android.util.Base64.encodeToString(proof, android.util.Base64.NO_WRAP)}\n".toByteArray(Charsets.UTF_8))
-                            outStream.flush()
-                            response = com.EntropicSoftwareLab.ClipboardShare.TransferUtils.readUntilNewline(inStream)
-                        }
-
-                        if (response != "OFFER_RECEIVED") {
-                            throw Exception("Receiver did not acknowledge offer")
-                        }
-
-                        // Stop here. Receiver will connect back with ACCEPT_OFFER or DECLINE_OFFER.
-                    }
-
-                    // Keep session paused so the loop doesn't kill it and it waits for Accept
-                    session.isPaused = true
-
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // Surface the precise reason to logcat (Android's real diagnostics surface) — the
-                    // generic "interrupted" toast + "paused" history below otherwise hides WHY the send
-                    // failed. Key case for the phone->laptop "no popup" bug: "No pairing key to answer
-                    // OFFER_CHALLENGE for <ip>" means the phone can't answer the receiver's AUTH2
-                    // challenge (missing key for the targeted IP) vs a plain connect timeout.
-                    Log.w("OffBridgeXfer", "OFFER to $targetName ($targetIp) failed: ${e.message}", e)
-                    hasFailures = true
-                    // Keep the session alive and mark as paused so receiver can reconnect
-                    session.isPaused = true
-                    session.lastUpdated = System.currentTimeMillis()
-                    TransferHistoryManager.addRecord(appContext, TransferRecord(
-                        sessionId = sessionId,
-                        deviceName = targetName,
-                        direction = "outgoing",
-                        fileNames = manifestList.map { TransferUtils.manifestDisplayLeaf(it.first) },
-                        totalBytes = manifestList.sumOf { it.second },
-                        timestamp = System.currentTimeMillis(),
-                        status = "paused",
-                        filesCompleted = session.currentFileIndex,
-                        totalFiles = expandedItems.size,
-                        fileSizes = manifestList.map { it.second },
-                        currentFileOffset = session.currentOffset,
-                        transport = "lan"
-                    ))
-                }
-            }
+            val result = LanOfferSender.sendOffers(appContext, sendItems, ips)
+            val hasFailures = result.hasFailures
 
             // Every offer is out. Release the in-flight lock so the list is usable again, then toast
             // via the app context (the user may have left in the meantime).
             withContext(Dispatchers.Main) {
                 // Release the process-level lock first: a rebuilt instance re-reads it on its next
                 // poll tick, so it must be clear before this instance's own state is.
-                activeSendTargetIp = null
+                LanOfferSender.activeTargetIp = null
                 sendingState.value = false
                 sendingIpState.value = null
                 val message = if (hasFailures) appContext.getString(R.string.toast_transfer_interrupted) else appContext.getString(R.string.toast_batch_transfer_complete)
@@ -599,7 +446,7 @@ class SendToDevicesFragment : Fragment() {
                 if (isAdded && !isLite) {
                     parentFragmentManager.setFragmentResult(
                         RESULT_KEY,
-                        bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
+                        bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to result.firstSessionId)
                     )
                     endSendFlow()
                 } else if (isAdded && !hasFailures) {
