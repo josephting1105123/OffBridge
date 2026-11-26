@@ -88,6 +88,12 @@
         <h2>DEVICE DISCOVERY ON YOUR LOCAL NETWORK</h2>
         
         To let your devices find each other automatically, the App periodically broadcasts a small discovery message on your local Wi-Fi or hotspot network. This message contains only your chosen device name, your device's local IP address, and its operating system type (for example, "Android"). These broadcasts are sent only on your local network so that nearby devices can offer to pair or connect. They are never sent to us, to the internet, or to any third party, and no internet connection is used for discovery. Unlike your clipboard and file transfers, which are encrypted as described above and exchanged only between your own devices, these discovery messages are not encrypted and are visible to other devices on the same local network. For this reason, we recommend using the App on trusted, private networks. You can stop these broadcasts at any time by turning off "Discoverable to other devices" in Settings.<br><br>
+        <h2>RECEIVING FILES THROUGH QUICK SHARE (WINDOWS)</h2>
+        
+        The Windows app has a setting called "Visible to Quick Share", which is on by default. While it is on and OffBridge is running, Android phones can use their standard Quick Share feature to offer files to your PC, without OffBridge on the phone and without pairing. To make this possible, your PC announces its OffBridge device name to your local network using mDNS and listens for Quick Share connections on TCP port 65436. This announcement is not encrypted, so other devices on the same local network can see the name and your PC's network address.<br><br>
+        Because a Quick Share sender does not need to be paired with your PC, it can be any device on the same network, including one that is not yours. When a sender offers files, OffBridge shows a prompt with a 4-digit PIN. Check that it matches the PIN on the sending phone. Files are saved only after you accept.<br><br>
+        These transfers are encrypted using the Quick Share protocol, with keys created for that connection, not with the OffBridge pairing keys. Files travel directly from the sender to your PC over your local network. OffBridge does not use a Google account, our servers or any other server to receive them.<br><br>
+        Turning off "Visible to Quick Share" in Settings on your PC stops both the announcement and the listening. The "Discoverable to other devices" setting does not control Quick Share.<br><br>
         <h2>WHICH FEATURES USE WHICH PERMISSIONS</h2>
         
         So it is clear what each feature does, here is how the App uses your network and permissions:<br><br>
@@ -158,6 +164,12 @@
         <h2>DESCUBRIMIENTO DE DISPOSITIVOS EN SU RED LOCAL</h2>
         
         Para que sus dispositivos se encuentren automáticamente, la Aplicación difunde periódicamente un pequeño mensaje de descubrimiento en su red Wi-Fi o de punto de acceso local. Este mensaje contiene únicamente el nombre de dispositivo que usted eligió, la dirección IP local de su dispositivo y su tipo de sistema operativo (por ejemplo, "Android"). Estas difusiones se envían solo en su red local para que los dispositivos cercanos puedan ofrecerse a emparejarse o conectarse. Nunca se nos envían a nosotros, a internet ni a ningún tercero, y no se utiliza ninguna conexión a internet para el descubrimiento. A diferencia de sus transferencias de portapapeles y archivos, que están cifradas como se describe más arriba y se intercambian solo entre sus propios dispositivos, estos mensajes de descubrimiento no están cifrados y son visibles para otros dispositivos en la misma red local. Por esta razón, recomendamos usar la Aplicación en redes privadas y de confianza. Puede detener estas difusiones en cualquier momento desactivando "Visible para otros dispositivos" en Configuración.<br><br>
+        <h2>RECIBIR ARCHIVOS MEDIANTE QUICK SHARE (WINDOWS)</h2>
+        
+        La aplicación para Windows tiene un ajuste llamado "Visible en Quick Share", que está activado de forma predeterminada. Mientras está activado y OffBridge se está ejecutando, los teléfonos Android pueden usar su función estándar Quick Share para ofrecer archivos a su PC, sin tener OffBridge en el teléfono y sin emparejamiento. Para que esto sea posible, su PC anuncia su nombre de dispositivo de OffBridge en su red local mediante mDNS y espera conexiones de Quick Share en el puerto TCP 65436. Este anuncio no está cifrado, por lo que otros dispositivos de la misma red local pueden ver el nombre y la dirección de red de su PC.<br><br>
+        Como un remitente de Quick Share no necesita estar emparejado con su PC, puede ser cualquier dispositivo de la misma red, incluido uno que no sea suyo. Cuando un remitente ofrece archivos, OffBridge muestra un aviso con un PIN de 4 dígitos. Compruebe que coincida con el PIN del teléfono que envía. Los archivos solo se guardan después de que usted acepte.<br><br>
+        Estas transferencias se cifran mediante el protocolo de Quick Share, con claves creadas para esa conexión, no con las claves de emparejamiento de OffBridge. Los archivos viajan directamente del remitente a su PC a través de su red local. OffBridge no usa una cuenta de Google, nuestros servidores ni ningún otro servidor para recibirlos.<br><br>
+        Si desactiva "Visible en Quick Share" en la Configuración de su PC, se detienen tanto el anuncio como la espera de conexiones. El ajuste "Visible para otros dispositivos" no controla Quick Share.<br><br>
         <h2>QUÉ FUNCIONES USAN QUÉ PERMISOS</h2>
         
         Para que quede claro lo que hace cada función, así es como la Aplicación usa su red y sus permisos:<br><br>
@@ -228,6 +240,12 @@
         <h2>DÉTECTION DES APPAREILS SUR VOTRE RÉSEAU LOCAL</h2>
         
         Pour permettre à vos appareils de se trouver automatiquement, l'Application diffuse périodiquement un petit message de détection sur votre réseau Wi-Fi ou point d'accès local. Ce message contient uniquement le nom d'appareil que vous avez choisi, l'adresse IP locale de votre appareil et son type de système d'exploitation (par exemple, "Android"). Ces diffusions ne sont envoyées que sur votre réseau local afin que les appareils à proximité puissent proposer de s'appairer ou de se connecter. Elles ne nous sont jamais envoyées, ni à internet, ni à un tiers, et aucune connexion internet n'est utilisée pour la détection. Contrairement à vos transferts de presse-papiers et de fichiers, qui sont chiffrés comme décrit ci-dessus et échangés uniquement entre vos propres appareils, ces messages de détection ne sont pas chiffrés et sont visibles par les autres appareils du même réseau local. Pour cette raison, nous recommandons d'utiliser l'Application sur des réseaux privés et de confiance. Vous pouvez arrêter ces diffusions à tout moment en désactivant "Visible par les autres appareils" dans les Paramètres.<br><br>
+        <h2>RÉCEPTION DE FICHIERS VIA QUICK SHARE (WINDOWS)</h2>
+        
+        L'application Windows comporte un réglage appelé "Visible dans Quick Share", activé par défaut. Tant qu'il est activé et qu'OffBridge est en cours d'exécution, les téléphones Android peuvent utiliser leur fonction Quick Share standard pour proposer des fichiers à votre PC, sans OffBridge sur le téléphone et sans appairage. Pour cela, votre PC annonce son nom d'appareil OffBridge sur votre réseau local au moyen de mDNS et attend les connexions Quick Share sur le port TCP 65436. Cette annonce n'est pas chiffrée : les autres appareils du même réseau local peuvent donc voir ce nom et l'adresse réseau de votre PC.<br><br>
+        Comme un expéditeur Quick Share n'a pas besoin d'être appairé avec votre PC, il peut s'agir de n'importe quel appareil du même réseau, y compris un appareil qui ne vous appartient pas. Lorsqu'un expéditeur propose des fichiers, OffBridge affiche une demande avec un code PIN à 4 chiffres. Vérifiez qu'il correspond au code affiché sur le téléphone expéditeur. Les fichiers ne sont enregistrés qu'après votre acceptation.<br><br>
+        Ces transferts sont chiffrés au moyen du protocole Quick Share, avec des clés créées pour cette connexion, et non avec les clés d'appairage d'OffBridge. Les fichiers vont directement de l'expéditeur à votre PC sur votre réseau local. OffBridge n'utilise ni compte Google, ni nos serveurs, ni aucun autre serveur pour les recevoir.<br><br>
+        Désactiver "Visible dans Quick Share" dans les Paramètres de votre PC arrête à la fois l'annonce et l'attente de connexions. Le réglage "Visible par les autres appareils" ne contrôle pas Quick Share.<br><br>
         <h2>QUELLES FONCTIONNALITÉS UTILISENT QUELLES AUTORISATIONS</h2>
         
         Pour que vous sachiez exactement ce que fait chaque fonctionnalité, voici comment l'Application utilise votre réseau et vos autorisations :<br><br>
@@ -298,6 +316,12 @@
         <h2>GERÄTEERKENNUNG IN IHREM LOKALEN NETZWERK</h2>
         
         Damit sich Ihre Geräte automatisch finden können, sendet die App in regelmäßigen Abständen eine kleine Erkennungsnachricht über Ihr lokales WLAN- oder Hotspot-Netzwerk. Diese Nachricht enthält nur den von Ihnen gewählten Gerätenamen, die lokale IP-Adresse Ihres Geräts und dessen Betriebssystemtyp (zum Beispiel "Android"). Diese Sendungen werden nur in Ihrem lokalen Netzwerk verbreitet, damit Geräte in der Nähe eine Kopplung oder Verbindung anbieten können. Sie werden niemals an uns, an das Internet oder an Dritte gesendet, und für die Erkennung wird keine Internetverbindung verwendet. Anders als Ihre Zwischenablage- und Dateiübertragungen, die wie oben beschrieben verschlüsselt sind und nur zwischen Ihren eigenen Geräten ausgetauscht werden, sind diese Erkennungsnachrichten nicht verschlüsselt und für andere Geräte im selben lokalen Netzwerk sichtbar. Aus diesem Grund empfehlen wir, die App in vertrauenswürdigen, privaten Netzwerken zu verwenden. Sie können diese Sendungen jederzeit stoppen, indem Sie "Für andere Geräte sichtbar" in den Einstellungen deaktivieren.<br><br>
+        <h2>DATEIEN ÜBER QUICK SHARE EMPFANGEN (WINDOWS)</h2>
+        
+        Die Windows-App hat eine Einstellung namens "Für Quick Share sichtbar", die standardmäßig aktiviert ist. Solange sie aktiviert ist und OffBridge läuft, können Android-Telefone Ihrem PC mit ihrer normalen Quick-Share-Funktion Dateien anbieten, ohne OffBridge auf dem Telefon und ohne Kopplung. Dafür macht Ihr PC seinen OffBridge-Gerätenamen per mDNS in Ihrem lokalen Netzwerk bekannt und wartet am TCP-Port 65436 auf Quick-Share-Verbindungen. Diese Bekanntmachung ist nicht verschlüsselt, daher können andere Geräte im selben lokalen Netzwerk den Namen und die Netzwerkadresse Ihres PCs sehen.<br><br>
+        Da ein Quick-Share-Absender nicht mit Ihrem PC gekoppelt sein muss, kann es jedes Gerät im selben Netzwerk sein, auch eines, das nicht Ihnen gehört. Wenn ein Absender Dateien anbietet, zeigt OffBridge eine Anfrage mit einer 4-stelligen PIN. Prüfen Sie, ob sie mit der PIN auf dem sendenden Telefon übereinstimmt. Dateien werden erst gespeichert, nachdem Sie sie angenommen haben.<br><br>
+        Diese Übertragungen werden mit dem Quick-Share-Protokoll verschlüsselt, mit Schlüsseln, die für die jeweilige Verbindung erzeugt werden, nicht mit den Kopplungsschlüsseln von OffBridge. Die Dateien gehen über Ihr lokales Netzwerk direkt vom Absender an Ihren PC. OffBridge verwendet für den Empfang weder ein Google-Konto noch unsere Server oder andere Server.<br><br>
+        Wenn Sie "Für Quick Share sichtbar" in den Einstellungen Ihres PCs deaktivieren, enden sowohl die Bekanntmachung als auch das Warten auf Verbindungen. Die Einstellung "Für andere Geräte sichtbar" steuert Quick Share nicht.<br><br>
         <h2>WELCHE FUNKTIONEN WELCHE BERECHTIGUNGEN NUTZEN</h2>
         
         Damit klar ist, was jede Funktion tut, erfahren Sie hier, wie die App Ihr Netzwerk und Ihre Berechtigungen nutzt:<br><br>
@@ -368,6 +392,12 @@
         <h2>DESCOBERTA DE DISPOSITIVOS NA SUA REDE LOCAL</h2>
         
         Para permitir que seus dispositivos se encontrem automaticamente, o Aplicativo transmite periodicamente uma pequena mensagem de descoberta na sua rede Wi-Fi ou de ponto de acesso local. Essa mensagem contém apenas o nome de dispositivo que você escolheu, o endereço IP local do seu dispositivo e o tipo de sistema operacional dele (por exemplo, "Android"). Essas transmissões são enviadas somente na sua rede local para que dispositivos próximos possam se oferecer para emparelhar ou conectar. Elas nunca são enviadas para nós, para a internet ou para terceiros, e nenhuma conexão com a internet é usada para a descoberta. Ao contrário das suas transferências de área de transferência e de arquivos, que são criptografadas conforme descrito acima e trocadas apenas entre os seus próprios dispositivos, essas mensagens de descoberta não são criptografadas e ficam visíveis para outros dispositivos na mesma rede local. Por esse motivo, recomendamos usar o Aplicativo em redes privadas e confiáveis. Você pode interromper essas transmissões a qualquer momento desativando "Visível para outros dispositivos" nas Configurações.<br><br>
+        <h2>RECEBER ARQUIVOS PELO QUICK SHARE (WINDOWS)</h2>
+        
+        O aplicativo para Windows tem uma configuração chamada "Visível no Quick Share", que vem ativada por padrão. Enquanto ela estiver ativada e o OffBridge estiver em execução, telefones Android podem usar o recurso padrão Quick Share para oferecer arquivos ao seu PC, sem o OffBridge no telefone e sem emparelhamento. Para isso, o seu PC anuncia o nome do dispositivo no OffBridge na sua rede local usando mDNS e aguarda conexões do Quick Share na porta TCP 65436. Esse anúncio não é criptografado; portanto, outros dispositivos na mesma rede local podem ver o nome e o endereço de rede do seu PC.<br><br>
+        Como um remetente do Quick Share não precisa estar emparelhado com o seu PC, ele pode ser qualquer dispositivo na mesma rede, inclusive um que não seja seu. Quando um remetente oferece arquivos, o OffBridge mostra um aviso com um PIN de 4 dígitos. Verifique se ele é igual ao PIN no telefone que está enviando. Os arquivos só são salvos depois que você aceita.<br><br>
+        Essas transferências são criptografadas pelo protocolo do Quick Share, com chaves criadas para aquela conexão, e não com as chaves de emparelhamento do OffBridge. Os arquivos vão diretamente do remetente para o seu PC pela sua rede local. O OffBridge não usa uma conta do Google, nossos servidores nem qualquer outro servidor para recebê-los.<br><br>
+        Desativar "Visível no Quick Share" nas Configurações do seu PC interrompe tanto o anúncio quanto a espera por conexões. A configuração "Visível para outros dispositivos" não controla o Quick Share.<br><br>
         <h2>QUAIS RECURSOS USAM QUAIS PERMISSÕES</h2>
         
         Para que fique claro o que cada recurso faz, veja como o Aplicativo usa sua rede e suas permissões:<br><br>
@@ -438,6 +468,12 @@
         <h2>PENEMUAN PERANGKAT DI JARINGAN LOKAL ANDA</h2>
         
         Agar perangkat Anda dapat saling menemukan secara otomatis, Aplikasi secara berkala menyiarkan pesan penemuan kecil di jaringan Wi-Fi atau hotspot lokal Anda. Pesan ini hanya berisi nama perangkat yang Anda pilih, alamat IP lokal perangkat Anda, dan jenis sistem operasinya (misalnya, "Android"). Siaran ini hanya dikirim di jaringan lokal Anda agar perangkat di sekitar dapat menawarkan untuk menyandingkan atau terhubung. Siaran ini tidak pernah dikirim kepada kami, ke internet, atau ke pihak ketiga mana pun, dan tidak ada koneksi internet yang digunakan untuk penemuan. Tidak seperti transfer papan klip dan file Anda, yang dienkripsi seperti dijelaskan di atas dan hanya dipertukarkan antara perangkat Anda sendiri, pesan penemuan ini tidak dienkripsi dan terlihat oleh perangkat lain di jaringan lokal yang sama. Karena itu, kami menyarankan untuk menggunakan Aplikasi di jaringan pribadi yang tepercaya. Anda dapat menghentikan siaran ini kapan saja dengan menonaktifkan "Dapat ditemukan perangkat lain" di Pengaturan.<br><br>
+        <h2>MENERIMA FILE MELALUI QUICK SHARE (WINDOWS)</h2>
+        
+        Aplikasi Windows memiliki pengaturan bernama "Terlihat di Quick Share", yang aktif secara bawaan. Selama pengaturan ini aktif dan OffBridge berjalan, ponsel Android dapat memakai fitur standar Quick Share untuk menawarkan file ke PC Anda, tanpa OffBridge di ponsel tersebut dan tanpa penyandingan. Agar hal ini bisa dilakukan, PC Anda mengumumkan nama perangkat OffBridge-nya ke jaringan lokal Anda menggunakan mDNS dan menunggu koneksi Quick Share pada port TCP 65436. Pengumuman ini tidak dienkripsi, sehingga perangkat lain di jaringan lokal yang sama dapat melihat nama tersebut dan alamat jaringan PC Anda.<br><br>
+        Karena pengirim Quick Share tidak perlu disandingkan dengan PC Anda, pengirim bisa berupa perangkat apa pun di jaringan yang sama, termasuk yang bukan milik Anda. Saat pengirim menawarkan file, OffBridge menampilkan permintaan konfirmasi dengan PIN 4 digit. Pastikan PIN tersebut sama dengan PIN di ponsel pengirim. File hanya disimpan setelah Anda menerimanya.<br><br>
+        Transfer ini dienkripsi menggunakan protokol Quick Share, dengan kunci yang dibuat untuk koneksi tersebut, bukan dengan kunci penyandingan OffBridge. File dikirim langsung dari pengirim ke PC Anda melalui jaringan lokal Anda. OffBridge tidak menggunakan akun Google, server kami, atau server lain untuk menerimanya.<br><br>
+        Mematikan "Terlihat di Quick Share" di Pengaturan pada PC Anda akan menghentikan pengumuman sekaligus penantian koneksi. Pengaturan "Dapat ditemukan oleh perangkat lain" tidak mengendalikan Quick Share.<br><br>
         <h2>FITUR MANA MENGGUNAKAN IZIN MANA</h2>
         
         Agar jelas apa yang dilakukan setiap fitur, berikut cara Aplikasi menggunakan jaringan dan izin Anda:<br><br>
@@ -508,6 +544,12 @@
         <h2>ОБНАРУЖЕНИЕ УСТРОЙСТВ В ВАШЕЙ ЛОКАЛЬНОЙ СЕТИ</h2>
         
         Чтобы ваши устройства могли автоматически находить друг друга, Приложение периодически рассылает небольшое сообщение обнаружения в вашей локальной сети Wi-Fi или точки доступа. Это сообщение содержит только выбранное вами имя устройства, локальный IP-адрес вашего устройства и тип его операционной системы (например, "Android"). Эти рассылки отправляются только в вашей локальной сети, чтобы находящиеся рядом устройства могли предложить сопряжение или подключение. Они никогда не отправляются нам, в интернет или каким-либо третьим лицам, и для обнаружения не используется интернет-соединение. В отличие от передач буфера обмена и файлов, которые шифруются, как описано выше, и передаются только между вашими собственными устройствами, эти сообщения обнаружения не шифруются и видны другим устройствам в той же локальной сети. По этой причине мы рекомендуем использовать Приложение в доверенных частных сетях. Вы можете в любой момент остановить эти рассылки, отключив "Видимо для других устройств" в Настройках.<br><br>
+        <h2>ПОЛУЧЕНИЕ ФАЙЛОВ ЧЕРЕЗ QUICK SHARE (WINDOWS)</h2>
+        
+        В приложении для Windows есть настройка "Виден в Quick Share", по умолчанию она включена. Пока она включена и OffBridge запущен, телефоны Android могут с помощью стандартной функции Quick Share предлагать файлы вашему компьютеру, без OffBridge на телефоне и без сопряжения. Для этого ваш компьютер объявляет своё имя устройства в OffBridge в вашей локальной сети по протоколу mDNS и принимает подключения Quick Share на TCP-порту 65436. Это объявление не шифруется, поэтому другие устройства в той же локальной сети могут видеть это имя и сетевой адрес вашего компьютера.<br><br>
+        Поскольку отправителю Quick Share не нужно быть сопряжённым с вашим компьютером, им может быть любое устройство в той же сети, в том числе не принадлежащее вам. Когда отправитель предлагает файлы, OffBridge показывает запрос с 4-значным PIN-кодом. Убедитесь, что он совпадает с PIN-кодом на отправляющем телефоне. Файлы сохраняются только после того, как вы их примете.<br><br>
+        Эти передачи шифруются по протоколу Quick Share ключами, созданными для данного подключения, а не ключами сопряжения OffBridge. Файлы передаются напрямую от отправителя на ваш компьютер по вашей локальной сети. Для их получения OffBridge не использует ни аккаунт Google, ни наши серверы, ни какие-либо другие серверы.<br><br>
+        Если отключить "Виден в Quick Share" в настройках на вашем компьютере, прекратятся и объявление, и приём подключений. Настройка "Доступно для обнаружения другими устройствами" не управляет Quick Share.<br><br>
         <h2>КАКИЕ ФУНКЦИИ ИСПОЛЬЗУЮТ КАКИЕ РАЗРЕШЕНИЯ</h2>
         
         Чтобы было понятно, что делает каждая функция, вот как Приложение использует вашу сеть и разрешения:<br><br>
@@ -578,6 +620,12 @@
         <h2>ローカルネットワークでのデバイス検出</h2>
         
         お使いのデバイスが自動的に互いを見つけられるように、アプリはローカルのWi-Fiまたはホットスポットネットワーク上で、小さな検出メッセージを定期的にブロードキャストします。このメッセージには、あなたが選んだデバイス名、デバイスのローカルIPアドレス、およびオペレーティングシステムの種類（例："Android"）のみが含まれます。これらのブロードキャストは、近くのデバイスがペアリングや接続を提案できるようにするためだけに、ローカルネットワーク上にのみ送信されます。当社、インターネット、または第三者に送信されることは一切なく、検出にインターネット接続は使用されません。上記のとおり暗号化され、ご自身のデバイス間でのみやり取りされるクリップボードおよびファイルの転送とは異なり、これらの検出メッセージは暗号化されておらず、同じローカルネットワーク上の他のデバイスから見える状態になります。このため、信頼できるプライベートなネットワークでアプリを使用することをお勧めします。設定で「他のデバイスから検出可能」をオフにすることで、いつでもこれらのブロードキャストを停止できます。<br><br>
+        <h2>Quick Share でのファイル受信（Windows）</h2>
+        
+        Windows アプリには「Quick Share に表示する」という設定があり、初期状態でオンになっています。この設定がオンで OffBridge が実行中の間は、Android スマートフォンの標準機能 Quick Share から、お使いのPCにファイルを送る申し出ができます。スマートフォン側に OffBridge は不要で、ペアリングも必要ありません。そのためにPCは、mDNS を使って OffBridge のデバイス名をローカルネットワークに通知し、TCP ポート 65436 で Quick Share の接続を待ち受けます。この通知は暗号化されていないため、同じローカルネットワーク上の他のデバイスは、このデバイス名とPCのネットワークアドレスを確認できます。<br><br>
+        Quick Share の送信元はPCとペアリングしている必要がないため、ご自身のものではないデバイスを含め、同じネットワーク上のどのデバイスも送信元になり得ます。送信元からファイルの申し出があると、OffBridge は4桁のPINを含む確認画面を表示します。送信元のスマートフォンに表示されているPINと一致することを確認してください。ファイルは、お客様が承認した後にのみ保存されます。<br><br>
+        この転送は、OffBridge のペアリング用の鍵ではなく、その接続のために作成される鍵を使い、Quick Share のプロトコルで暗号化されます。ファイルはローカルネットワークを通じて、送信元からPCへ直接送られます。OffBridge は、受信のために Google アカウント、当社のサーバー、その他のいかなるサーバーも使用しません。<br><br>
+        PCの設定で「Quick Share に表示する」をオフにすると、通知と接続の待ち受けの両方が停止します。「他のデバイスから検出可能」の設定は Quick Share には影響しません。<br><br>
         <h2>どの機能がどの権限を使用するか</h2>
         
         各機能が何を行うかを明確にするため、本アプリがあなたのネットワークと権限をどのように使用するかを以下に示します：<br><br>
@@ -648,6 +696,12 @@
         <h2>在您本地网络上的设备发现</h2>
         
         为了让您的设备能够自动相互发现，本应用会定期在您的本地 Wi-Fi 或热点网络上广播一条小的发现消息。该消息仅包含您所选择的设备名称、设备的本地 IP 地址及其操作系统类型（例如"Android"）。这些广播仅在您的本地网络上发送，以便附近的设备可以提出配对或连接。它们绝不会发送给我们、发送到互联网或任何第三方，并且发现过程不使用任何互联网连接。与您的剪贴板和文件传输（按上文所述加密，且仅在您自己的设备之间交换）不同，这些发现消息未经加密，同一本地网络上的其他设备均可看到。因此，我们建议在受信任的专用网络中使用本应用。您可以随时在设置中关闭"可被其他设备发现"来停止这些广播。<br><br>
+        <h2>通过 Quick Share 接收文件（Windows）</h2>
+        
+        Windows 版应用有一项名为“在 Quick Share 中可见”的设置，默认开启。当该设置开启且 OffBridge 正在运行时，Android 手机可以使用系统自带的 Quick Share 功能向您的电脑发送文件请求，手机上无需安装 OffBridge，也无需配对。为此，您的电脑会通过 mDNS 在本地网络中广播其 OffBridge 设备名称，并在 TCP 端口 65436 上等待 Quick Share 连接。该广播未加密，因此同一本地网络中的其他设备可以看到该名称以及您电脑的网络地址。<br><br>
+        由于 Quick Share 发送方无需与您的电脑配对，它可能是同一网络中的任何设备，包括不属于您的设备。当有发送方请求发送文件时，OffBridge 会显示带有 4 位 PIN 码的确认提示。请核对它是否与发送方手机上的 PIN 码一致。只有在您接受之后，文件才会被保存。<br><br>
+        这类传输使用 Quick Share 协议加密，所用密钥是为该次连接生成的，而非 OffBridge 的配对密钥。文件通过您的本地网络从发送方直接传到您的电脑。OffBridge 接收这些文件时不使用 Google 账号、我们的服务器或任何其他服务器。<br><br>
+        在电脑的设置中关闭“在 Quick Share 中可见”，广播和连接监听都会停止。“可被其他设备发现”设置不控制 Quick Share。<br><br>
         <h2>哪些功能使用哪些权限</h2>
         
         为了让您清楚每项功能的作用，以下说明本应用如何使用您的网络和权限：<br><br>
@@ -718,6 +772,12 @@
         <h2>在您區域網路上的裝置探索</h2>
         
         為了讓您的裝置能夠自動互相尋找，本應用程式會定期在您的區域 Wi-Fi 或熱點網路上廣播一則小型的探索訊息。此訊息僅包含您所選擇的裝置名稱、裝置的本機 IP 位址及其作業系統類型（例如"Android"）。這些廣播僅在您的區域網路上傳送，以便附近的裝置可以提出配對或連線。它們絕不會傳送給我們、傳送至網際網路或任何第三方，且探索過程不使用任何網際網路連線。與您的剪貼簿和檔案傳輸（按上文所述加密，且僅在您自己的裝置之間交換）不同，這些探索訊息未經加密，同一區域網路上的其他裝置皆可看到。因此，我們建議在受信任的私人網路中使用本應用程式。您可以隨時在設定中關閉"可被其他裝置發現"來停止這些廣播。<br><br>
+        <h2>透過 Quick Share 接收檔案（Windows）</h2>
+        
+        Windows 版應用程式有一項名為「在 Quick Share 中顯示」的設定，預設為開啟。當此設定開啟且 OffBridge 正在執行時，Android 手機可以使用內建的 Quick Share 功能向您的電腦提出傳送檔案的要求，手機上不需要安裝 OffBridge，也不需要配對。為此，您的電腦會透過 mDNS 在區域網路中廣播其 OffBridge 裝置名稱，並在 TCP 連接埠 65436 上等候 Quick Share 連線。此廣播未經加密，因此同一區域網路中的其他裝置可以看到該名稱以及您電腦的網路位址。<br><br>
+        由於 Quick Share 傳送端不需要與您的電腦配對，它可能是同一網路中的任何裝置，包括不屬於您的裝置。當傳送端要求傳送檔案時，OffBridge 會顯示附有 4 位數 PIN 碼的確認提示。請確認它與傳送端手機上的 PIN 碼相符。只有在您接受之後，檔案才會儲存。<br><br>
+        這類傳輸使用 Quick Share 通訊協定加密，所用金鑰是為該次連線產生的，而非 OffBridge 的配對金鑰。檔案會透過您的區域網路從傳送端直接傳到您的電腦。OffBridge 接收這些檔案時不使用 Google 帳戶、我們的伺服器或任何其他伺服器。<br><br>
+        在電腦的設定中關閉「在 Quick Share 中顯示」，廣播與連線監聽都會停止。「可被其他裝置發現」設定不會控制 Quick Share。<br><br>
         <h2>哪些功能使用哪些權限</h2>
         
         為了讓您清楚每項功能的作用，以下說明本應用程式如何使用您的網路和權限：<br><br>
