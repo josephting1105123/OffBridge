@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.jetbrains.compose)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.protobuf)
 }
 
 group = "com.EntropicSoftwareLab.ClipboardShare"
@@ -45,6 +46,8 @@ kotlin {
 
 tasks.named("compileKotlin") {
     dependsOn(generateAppVersion)
+    // The Kotlin sources reference the generated protobuf Java classes.
+    dependsOn("generateProto")
 }
 
 dependencies {
@@ -65,7 +68,25 @@ dependencies {
     // SecurityVault degrades to plaintext on non-Windows (e.g. Linux CI) so tests still run.
     implementation(libs.jna.platform)
 
+    // Quick Share receive: protobuf (lite runtime) for the Nearby wire formats in src/main/proto,
+    // and JmDNS to advertise the _FC9F5ED42C8A._tcp service that Android's share sheet browses for.
+    implementation(libs.protobuf.javalite)
+    implementation(libs.jmdns)
+
     testImplementation(libs.junit)
+}
+
+protobuf {
+    protoc {
+        artifact = libs.protobuf.protoc.get().toString()
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                named("java") { option("lite") }
+            }
+        }
+    }
 }
 
 compose.desktop {
@@ -73,6 +94,9 @@ compose.desktop {
         mainClass = "com.joseph.clipboard.windows.MainKt"
         System.getenv("JAVA_HOME")?.let { javaHome = it }
         nativeDistributions {
+            // sun.misc.Unsafe, which protobuf-javalite (Quick Share) reads and writes messages with.
+            // Not among jlink's defaults, so without this only the packaged app would fail.
+            modules("jdk.unsupported")
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.AppImage, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi)
             packageName = "OffBridge"
             packageVersion = "3.7.12"

@@ -1,0 +1,121 @@
+// Nearby Connections frames, trimmed to the messages and fields the Quick Share receiver reads or
+// writes (protobuf skips the rest). Field and enum numbers follow Chromium's
+// offline_wire_formats.proto (BSD-3-Clause, Copyright The Chromium Authors), as collected in
+// github.com/grishka/NearDrop.
+
+syntax = "proto2";
+
+package offbridge.quickshare.connections;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "OfflineWireProto";
+
+message OfflineFrame {
+  enum Version {
+    UNKNOWN_VERSION = 0;
+    V1 = 1;
+  }
+  optional Version version = 1;
+  optional V1Frame v1 = 2;
+}
+
+message V1Frame {
+  enum FrameType {
+    UNKNOWN_FRAME_TYPE = 0;
+    CONNECTION_REQUEST = 1;
+    CONNECTION_RESPONSE = 2;
+    PAYLOAD_TRANSFER = 3;
+    BANDWIDTH_UPGRADE_NEGOTIATION = 4;
+    KEEP_ALIVE = 5;
+    DISCONNECTION = 6;
+    PAIRED_KEY_ENCRYPTION = 7;
+  }
+  optional FrameType type = 1;
+
+  optional ConnectionRequestFrame connection_request = 2;
+  optional ConnectionResponseFrame connection_response = 3;
+  optional PayloadTransferFrame payload_transfer = 4;
+  optional KeepAliveFrame keep_alive = 6;
+  optional DisconnectionFrame disconnection = 7;
+}
+
+message ConnectionRequestFrame {
+  optional string endpoint_id = 1;
+  optional string endpoint_name = 2;
+  optional bytes endpoint_info = 6;
+}
+
+message ConnectionResponseFrame {
+  enum ResponseStatus {
+    UNKNOWN_RESPONSE_STATUS = 0;
+    ACCEPT = 1;
+    REJECT = 2;
+  }
+  optional int32 status = 1;
+  optional ResponseStatus response = 3;
+  optional OsInfo os_info = 4;
+}
+
+message OsInfo {
+  enum OsType {
+    UNKNOWN_OS_TYPE = 0;
+    ANDROID = 1;
+    CHROME_OS = 2;
+    WINDOWS = 3;
+    APPLE = 4;
+    LINUX = 100;
+  }
+  optional OsType type = 1;
+}
+
+message PayloadTransferFrame {
+  enum PacketType {
+    UNKNOWN_PACKET_TYPE = 0;
+    DATA = 1;
+    CONTROL = 2;
+    PAYLOAD_ACK = 3;
+  }
+
+  message PayloadHeader {
+    enum PayloadType {
+      UNKNOWN_PAYLOAD_TYPE = 0;
+      BYTES = 1;
+      FILE = 2;
+      STREAM = 3;
+    }
+    optional int64 id = 1;
+    optional PayloadType type = 2;
+    optional int64 total_size = 3;
+    optional bool is_sensitive = 4;
+    optional string file_name = 5;
+  }
+
+  message PayloadChunk {
+    // flags bit 0 = LAST_CHUNK
+    optional int32 flags = 1;
+    optional int64 offset = 2;
+    optional bytes body = 3;
+  }
+
+  message ControlMessage {
+    enum EventType {
+      UNKNOWN_EVENT_TYPE = 0;
+      PAYLOAD_ERROR = 1;
+      PAYLOAD_CANCELED = 2;
+      PAYLOAD_RECEIVED_ACK = 3;
+    }
+    optional EventType event = 1;
+    optional int64 offset = 2;
+  }
+
+  optional PacketType packet_type = 1;
+  optional PayloadHeader payload_header = 2;
+  optional PayloadChunk payload_chunk = 3;
+  optional ControlMessage control_message = 4;
+}
+
+message KeepAliveFrame {
+  optional bool ack = 1;
+}
+
+message DisconnectionFrame {}

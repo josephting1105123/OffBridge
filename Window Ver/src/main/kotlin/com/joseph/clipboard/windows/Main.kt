@@ -455,9 +455,9 @@ fun AppContent(onMinimize: () -> Unit, appController: ClipboardAppController) {
 /** Read-only segmented verification code (brand-bordered boxes, white digits) — mirrors the Android
  * `view_pin_code` design. The pairing overlays sit on a dark surface, so the digits are white. */
 @Composable
-private fun PinCodeBoxes(pin: String) {
+private fun PinCodeBoxes(pin: String, length: Int = 6) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (i in 0 until 6) {
+        for (i in 0 until length) {
             Box(
                 modifier = Modifier
                     .size(width = 40.dp, height = 50.dp)
@@ -695,8 +695,16 @@ fun ReceiverFileOfferOverlay(session: IncomingFileSession, appController: Clipbo
                 }
                 val filesText = TranslationManager.getString("label_files").takeIf { it != "label_files" } ?: "file(s)"
                 Text("${session.manifest.size} $filesText - $sizeStr", color = Color.Gray, fontSize = 14.sp)
+
+                // A Quick Share sender isn't paired: the code is how the user knows it is their phone.
+                session.pin?.let { pin ->
+                    Spacer(modifier = Modifier.height(24.dp))
+                    PinCodeBoxes(pin, length = pin.length)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    PairingVerifyLabel()
+                }
                 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(if (session.pin == null) 48.dp else 32.dp))
                 
                 Button(
                     onClick = { appController.acceptIncomingFileTransfer(session.sessionId) },

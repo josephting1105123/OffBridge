@@ -80,11 +80,13 @@ fun SettingsScreen(appController: ClipboardAppController) {
     // DEVICE-section toggles (device-name editing now lives only in the Pairing tab).
     val isDiscoverable by appController.isDiscoverable.collectAsState()
     val acceptClipboard by appController.acceptIncomingClipboard.collectAsState()
+    val quickShareVisible by appController.quickShareVisible.collectAsState()
 
     val generalText = TranslationManager.getString("settings_section_general")
     val deviceText = TranslationManager.getString("settings_section_device").takeIf { it != "settings_section_device" } ?: "DEVICE"
     val discoverableLabel = TranslationManager.getString("discoverable_to_other_devices").takeIf { it != "discoverable_to_other_devices" } ?: "Discoverable to other devices"
     val acceptClipboardLabel = TranslationManager.getString("accept_incoming_clipboard").takeIf { it != "accept_incoming_clipboard" } ?: "Accept Incoming Clipboard"
+    val quickShareLabel = TranslationManager.getString("quick_share_visible").takeIf { it != "quick_share_visible" } ?: "Visible to Quick Share"
     val historyBackupNote = TranslationManager.getString("settings_history_backup_note").takeIf { it != "settings_history_backup_note" } ?: "Clipboard and transfer history is backed up to your save-location folder."
     val themeText = TranslationManager.getString("theme_setting")
     val languageText = TranslationManager.getString("language_setting")
@@ -171,6 +173,7 @@ fun SettingsScreen(appController: ClipboardAppController) {
             GlassCard {
                 GlassToggleRow(discoverableLabel, isDiscoverable, onCheckedChange = { appController.updateDiscoverable(it) })
                 GlassToggleRow(acceptClipboardLabel, acceptClipboard, onCheckedChange = { appController.updateAcceptIncomingClipboard(it) })
+                GlassToggleRow(quickShareLabel, quickShareVisible, onCheckedChange = { appController.updateQuickShareVisible(it) })
             }
             Spacer(Modifier.height(Dimens.spaceXl))
 

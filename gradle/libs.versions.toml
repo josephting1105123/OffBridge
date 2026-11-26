@@ -21,6 +21,10 @@ ksp = "2.0.0-1.0.24"
 securityCrypto = "1.1.0"
 gson = "2.10.1"
 jna = "5.14.0"
+# Quick Share receive (:window-ver only). protoc and protobuf-javalite share one version.
+protobuf = "3.25.5"
+protobufPlugin = "0.9.5"
+jmdns = "3.5.12"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +50,9 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 jna-platform = { group = "net.java.dev.jna", name = "jna-platform", version.ref = "jna" }
+protobuf-javalite = { group = "com.google.protobuf", name = "protobuf-javalite", version.ref = "protobuf" }
+protobuf-protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
+jmdns = { group = "org.jmdns", name = "jmdns", version.ref = "jmdns" }
 
 # Jetpack Compose — BOM-managed; AGP 9 supplies the matching Compose compiler via buildFeatures.compose.
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -62,4 +69,5 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }
 

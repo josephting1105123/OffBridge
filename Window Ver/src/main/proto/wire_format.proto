@@ -1,0 +1,92 @@
+// Nearby Sharing frames (the layer inside BYTES payloads), trimmed to what the Quick Share
+// receiver reads or writes. Field and enum numbers follow Chromium's wire_format.proto
+// (BSD-3-Clause, Copyright The Chromium Authors), as collected in github.com/grishka/NearDrop.
+
+syntax = "proto2";
+
+package offbridge.quickshare.sharing;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "SharingWireProto";
+
+message FileMetadata {
+  optional string name = 1;
+  optional int64 payload_id = 3;
+  optional int64 size = 4;
+  optional string mime_type = 5;
+}
+
+message TextMetadata {
+  optional string text_title = 2;
+  optional int64 payload_id = 4;
+  optional int64 size = 5;
+}
+
+// Only their presence matters: a share carrying either is refused as unsupported.
+message WifiCredentialsMetadata {}
+
+message AppMetadata {}
+
+message StreamMetadata {}
+
+message Frame {
+  enum Version {
+    UNKNOWN_VERSION = 0;
+    V1 = 1;
+  }
+  optional Version version = 1;
+  optional V1Frame v1 = 2;
+}
+
+message V1Frame {
+  enum FrameType {
+    UNKNOWN_FRAME_TYPE = 0;
+    INTRODUCTION = 1;
+    RESPONSE = 2;
+    PAIRED_KEY_ENCRYPTION = 3;
+    PAIRED_KEY_RESULT = 4;
+    CERTIFICATE_INFO = 5;
+    CANCEL = 6;
+    PROGRESS_UPDATE = 7;
+  }
+  optional FrameType type = 1;
+  optional IntroductionFrame introduction = 2;
+  optional ConnectionResponseFrame connection_response = 3;
+  optional PairedKeyEncryptionFrame paired_key_encryption = 4;
+  optional PairedKeyResultFrame paired_key_result = 5;
+}
+
+message IntroductionFrame {
+  repeated FileMetadata file_metadata = 1;
+  repeated TextMetadata text_metadata = 2;
+  repeated WifiCredentialsMetadata wifi_credentials_metadata = 4;
+  repeated AppMetadata app_metadata = 5;
+  repeated StreamMetadata stream_metadata = 7;
+}
+
+message ConnectionResponseFrame {
+  enum Status {
+    UNKNOWN = 0;
+    ACCEPT = 1;
+    REJECT = 2;
+    NOT_ENOUGH_SPACE = 3;
+    UNSUPPORTED_ATTACHMENT_TYPE = 4;
+    TIMED_OUT = 5;
+  }
+  optional Status status = 1;
+}
+
+message PairedKeyEncryptionFrame {
+  optional bytes signed_data = 1;
+  optional bytes secret_id_hash = 2;
+}
+
+message PairedKeyResultFrame {
+  enum Status {
+    UNKNOWN = 0;
+    SUCCESS = 1;
+    FAIL = 2;
+    UNABLE = 3;
+  }
+  optional Status status = 1;
+}

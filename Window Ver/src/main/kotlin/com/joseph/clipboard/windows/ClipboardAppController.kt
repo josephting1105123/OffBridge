@@ -1,5 +1,11 @@
 package com.joseph.clipboard.windows
 
+import com.joseph.clipboard.windows.network.quickshare.QuickShareConnection
+import com.joseph.clipboard.windows.network.quickshare.QuickShareListener
+import com.joseph.clipboard.windows.network.quickshare.QuickShareOffer
+import com.joseph.clipboard.windows.network.quickshare.QuickShareOutcome
+import com.joseph.clipboard.windows.network.quickshare.QuickShareProgress
+import com.joseph.clipboard.windows.network.quickshare.QuickShareReceiver
 import com.joseph.clipboard.windows.storage.DiagLog
 import com.joseph.clipboard.windows.storage.SecurityVault
 import com.joseph.clipboard.windows.storage.TransferHistoryManager
@@ -36,6 +42,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -135,6 +142,9 @@ data class IncomingFileSession(
     // exactly the corruption class the cross-session name-reservation fix exists to prevent, just
     // triggered by two attempts on ONE session instead of two sessions sharing a name.
     val resumeInFlight: java.util.concurrent.atomic.AtomicBoolean = java.util.concurrent.atomic.AtomicBoolean(false),
+    // Non-null marks a Quick Share offer: the code the phone is showing. Such a sender is a stranger
+    // on the LAN rather than a paired device, has no senderIp to dial back, and can't resume.
+    val pin: String? = null,
 )
 
 // Mirrors Android TransferRecord (schema v2): per-file facts are
@@ -154,7 +164,7 @@ data class TransferRecord(
     val totalFiles: Int,
     val fileSizes: List<Long>,
     var currentFileOffset: Long,
-    val transport: String = "lan", // "lan" or "p2p"
+    val transport: String = "lan", // "lan", "p2p" or "quickshare"
     // Absolute source paths for outgoing files, index-aligned to fileNames.
     // Empty for incoming records and for legacy records saved before this field
     // existed — the history UI falls back to the save folder in those cases.
@@ -346,7 +356,7 @@ class ClipboardAppController {
             val safeManifest = manifest.map { (name, size) -> FileStreamer.sanitizeIncomingFileName(name) to size }
             val session = IncomingFileSession(sessionId, ip, deviceName, safeManifest)
             activeIncomingFileSessions[sessionId] = session
-            _incomingFileOffer.value = session
+            showPairedOffer(session)
             onRequestForeground?.invoke()
         },
         onAcceptReceived = { sessionId, fgcm, useV2, socket ->
@@ -432,6 +442,111 @@ class ClipboardAppController {
         isOffGridResumeSession = { sid -> activeOutgoingFileSessions[sid]?.transport == "p2p" },
         offGridResumeKey = { sid -> activeOutgoingFileSessions[sid]?.takeIf { it.transport == "p2p" }?.p2pAuthKey }
     )
+
+    /** Offers from stock Quick Share. They share the prompt, save folder and history with paired devices. */
+    private val quickShareListener = object : QuickShareListener {
+        override fun onOffer(connection: QuickShareConnection, offer: QuickShareOffer) {
+            val session = IncomingFileSession(
+                sessionId = connection.sessionId,
+                senderIp = "",
+                senderName = offer.senderName,
+                manifest = offer.files.map { it.name to it.size },
+                pin = offer.pin,
+            )
+            activeIncomingFileSessions[session.sessionId] = session
+            // Anyone on the network can send one, so it never replaces a prompt already on screen.
+            if (!_incomingFileOffer.compareAndSet(null, session)) {
+                declineQuickShare(session.sessionId)
+                return
+            }
+            // It may have ended before the prompt was set, in which case nothing else would clear it.
+            if (connection.isFinished) endQuickShare(session.sessionId, completed = false)
+            else onRequestForeground?.invoke()
+        }
+
+        override fun onProgress(connection: QuickShareConnection, progress: QuickShareProgress) {
+            val betweenFiles = progress.currentFileBytes == 0L
+            updateRecord(connection.sessionId, persist = betweenFiles) {
+                it.copy(
+                    fileNames = progress.files.map { file -> file.name },
+                    fileSizes = progress.files.map { file -> file.size },
+                    filesCompleted = progress.completedCount,
+                    currentFileOffset = progress.currentFileBytes,
+                )
+            }
+        }
+
+        override fun onFinished(connection: QuickShareConnection, outcome: QuickShareOutcome) {
+            if (outcome is QuickShareOutcome.Failed) DiagLog.w("QuickShare: connection ended: ${outcome.reason}")
+            endQuickShare(connection.sessionId, completed = outcome == QuickShareOutcome.Completed)
+        }
+    }
+
+    private val quickShareReceiver = QuickShareReceiver(
+        listener = quickShareListener,
+        deviceName = { _deviceName.value },
+        saveDir = { File(SecurityVault.getSaveLocation()) },
+        reservedNames = { resolvedIncomingNames.values.flatten().toSet() },
+    )
+
+    /** A paired device takes the prompt from an unanswered Quick Share offer, which is then refused. */
+    private fun showPairedOffer(session: IncomingFileSession) {
+        val displaced = _incomingFileOffer.getAndUpdate { session }
+        if (displaced?.pin != null) declineQuickShare(displaced.sessionId)
+    }
+
+    /** Clears everything held for a Quick Share session. Safe to call more than once. */
+    private fun endQuickShare(sessionId: String, completed: Boolean) {
+        _incomingFileOffer.update { if (it?.sessionId == sessionId) null else it }
+        activeIncomingFileSessions.remove(sessionId)
+        activeFileTransferSockets.remove(sessionId)
+        _activeIncomingSessions.update { it - sessionId }
+        // "cancelled" rather than "failed": "failed" offers a Resume, which Quick Share can't do.
+        updateRecord(sessionId) {
+            if (it.status == "transferring") it.copy(status = if (completed) "completed" else "cancelled") else it
+        }
+    }
+
+    private fun acceptQuickShare(session: IncomingFileSession) {
+        val sessionId = session.sessionId
+        scope.launch(Dispatchers.IO) {
+            val connection = quickShareReceiver.connection(sessionId)
+            val socket = quickShareReceiver.socketFor(sessionId)
+            if (connection == null || socket == null) {
+                endQuickShare(sessionId, completed = false)
+                return@launch
+            }
+            // The row exists before accepting so that the first progress report has somewhere to go.
+            val record = incomingCancelledRecord(session, sessionId)
+                .copy(status = "transferring", transport = "quickshare")
+            _transferHistory.update { listOf(record) + it }
+            saveHistory()
+            activeFileTransferSockets[sessionId] = socket // lets cancelTransfer stop it
+            _activeIncomingSessions.update { it + sessionId }
+            if (!connection.accept()) endQuickShare(sessionId, completed = false)
+        }
+    }
+
+    private fun declineQuickShare(sessionId: String) {
+        activeIncomingFileSessions.remove(sessionId)
+        // Off the caller's thread: it writes to the socket, and callers include the UI.
+        scope.launch(Dispatchers.IO) { quickShareReceiver.connection(sessionId)?.decline() }
+    }
+
+    private val _quickShareVisible = MutableStateFlow(SecurityVault.isQuickShareVisible())
+    val quickShareVisible: StateFlow<Boolean> = _quickShareVisible.asStateFlow()
+    private val quickShareStateLock = Any()
+
+    /** Starts or stops the receiver to match the setting. Reads it under the lock, so the last toggle wins. */
+    private fun applyQuickShareVisibility() = synchronized(quickShareStateLock) {
+        if (_quickShareVisible.value) quickShareReceiver.start() else quickShareReceiver.stop()
+    }
+
+    fun updateQuickShareVisible(visible: Boolean) {
+        SecurityVault.setQuickShareVisible(visible)
+        _quickShareVisible.value = visible
+        scope.launch(Dispatchers.IO) { applyQuickShareVisibility() }
+    }
 
     // UI State
     private val _discoveredDevices = MutableStateFlow<List<DiscoveredDevice>>(emptyList())
@@ -607,6 +722,7 @@ class ClipboardAppController {
     fun updateDeviceName(name: String) {
         SecurityVault.setDeviceName(name)
         _deviceName.value = name
+        quickShareReceiver.refreshAdvertisement()
     }
 
     fun updateDiscoverable(discoverable: Boolean) {
@@ -641,6 +757,7 @@ class ClipboardAppController {
                 pairingDaemon.stop()
                 clipboardDaemon.stop()
                 fileTransferDaemon.stop()
+                quickShareReceiver.stop()
 
                 // Give sockets a moment to unbind
                 delay(500)
@@ -650,15 +767,19 @@ class ClipboardAppController {
                 pairingDaemon.start()
                 clipboardDaemon.start()
                 fileTransferDaemon.start()
+                applyQuickShareVisibility()
 
                 val dead = buildList {
                     if (!transferDaemon.isAlive) add("discovery (${transferDaemon.lastBindError})")
                     if (!pairingDaemon.isAlive) add("pairing (${pairingDaemon.lastBindError})")
                     if (!clipboardDaemon.isAlive) add("clipboard (${clipboardDaemon.lastBindError})")
                     if (!fileTransferDaemon.isAlive) add("file transfer (${fileTransferDaemon.lastBindError})")
+                    if (_quickShareVisible.value && !quickShareReceiver.isAlive) {
+                        add("Quick Share (${quickShareReceiver.lastBindError})")
+                    }
                 }
                 if (dead.isEmpty()) {
-                    DiagLog.w("restart services: all four daemons rebound")
+                    DiagLog.w("restart services: all daemons rebound")
                 } else {
                     DiagLog.w("restart services: FAILED to rebind ${dead.joinToString("; ")}")
                 }
@@ -675,6 +796,7 @@ class ClipboardAppController {
         pairingDaemon.start()
         clipboardDaemon.start()
         fileTransferDaemon.start()
+        applyQuickShareVisibility()
 
         // Start OS Integrations
         ClipboardManager.addListener { newText ->
@@ -713,6 +835,7 @@ class ClipboardAppController {
         pairingDaemon.stop()
         clipboardDaemon.stop()
         fileTransferDaemon.stop()
+        quickShareReceiver.stop()
         ClipboardManager.stopPolling()
     }
 
@@ -1080,6 +1203,11 @@ class ClipboardAppController {
     fun acceptIncomingFileTransfer(sessionId: String) {
         val session = activeIncomingFileSessions[sessionId] ?: return
         _incomingFileOffer.value = null
+        if (session.pin != null) {
+            _navigateToTransferSession.value = sessionId
+            acceptQuickShare(session)
+            return
+        }
         
         // Emit navigation event so FileTransferScreen opens the transfer history detail
         _navigateToTransferSession.value = sessionId
@@ -1148,7 +1276,7 @@ class ClipboardAppController {
                 // otherwise restore the offer so the UI isn't stuck with the dialog dismissed and
                 // no transfer in flight.
                 if (_transferHistory.value.none { it.sessionId == sessionId }) {
-                    _incomingFileOffer.value = session
+                    showPairedOffer(session)
                 }
             }
         }
@@ -1523,7 +1651,9 @@ class ClipboardAppController {
         _incomingFileOffer.value = null
 
         // Send DECLINE_OFFER back to the sender so their UI updates from "pending" to "declined"
-        if (session != null) {
+        if (session?.pin != null) {
+            declineQuickShare(session.sessionId)
+        } else if (session != null) {
             // Declined: the offer will never be accepted, so drop the retained session.
             activeIncomingFileSessions.remove(session.sessionId)
             scope.launch(Dispatchers.IO) {
@@ -1616,8 +1746,8 @@ class ClipboardAppController {
             activeFileTransferSockets[sessionId]?.close()
             activeFileTransferSockets.remove(sessionId)
         } catch (e: Exception) { e.printStackTrace() }
-        // Notify peer
-        if (record != null) {
+        // Notify peer. Quick Share has no side channel: closing its socket above is the notice.
+        if (record != null && record.transport != "quickshare") {
             scope.launch(Dispatchers.IO) {
                 val targetIp = activeOutgoingFileSessions[sessionId]?.targetIp
                     ?: activeIncomingFileSessions[sessionId]?.senderIp

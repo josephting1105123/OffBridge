@@ -1,0 +1,20 @@
+// The one securegcm message the SecureMessage header needs: the public metadata that marks a
+// payload as a DeviceToDeviceMessage. Field and enum numbers follow Google's securegcm.proto
+// (github.com/google/ukey2, Apache-2.0, Copyright 2020 Google LLC).
+
+syntax = "proto2";
+
+package offbridge.quickshare.securegcm;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "SecureGcmProto";
+
+enum Type {
+  ENROLLMENT = 0;
+  DEVICE_TO_DEVICE_MESSAGE = 13;
+}
+
+message GcmMetadata {
+  required Type type = 1;
+  optional int32 version = 2 [default = 0];
+}
