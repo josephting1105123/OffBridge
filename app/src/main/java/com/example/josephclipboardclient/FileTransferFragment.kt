@@ -30,17 +30,24 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.EntropicSoftwareLab.ClipboardShare.offgrid.OffGridSendActivity
+import com.EntropicSoftwareLab.ClipboardShare.sendvia.LanOfferSender
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendToDevicesFragment
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.SendViaChoice
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.TransferItemArgs
 import com.EntropicSoftwareLab.ClipboardShare.sendvia.TransferItemExpander
+import com.EntropicSoftwareLab.ClipboardShare.sendvia.toSendDeviceUi
 import com.EntropicSoftwareLab.ClipboardShare.ui.screens.FileTransferScreen
+import com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen
+import com.EntropicSoftwareLab.ClipboardShare.ui.screens.SendDeviceUi
 import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -59,9 +66,12 @@ class FileTransferFragment : Fragment() {
     private var selectedFiles: MutableList<TransferItem> = mutableListOf()
     private var textCounter = 1
 
-    // Lite's screen calls onSendViaChoose directly (no SendViaOverlay, so showSendViaState never
-    // flips true); the double-fire guard below must not swallow those calls. Set in onCreateView.
+    // Set in onCreateView; gates Lite-only device polling in onViewCreated.
     private var isLiteMode = false
+
+    private val liteDevicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
+    private val liteDevicesLoadingState = mutableStateOf(true)
+    private val liteSendingIpState = mutableStateOf<String?>(null)
 
     // Compose-observable mirrors of the selection state.
     private val selectedFilesState = mutableStateOf<List<TransferItem>>(emptyList())
@@ -166,22 +176,28 @@ class FileTransferFragment : Fragment() {
                         Box(
                             modifier = Modifier.circularReveal(revealX, revealY)
                         ) {
-                            com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
+                            LiteSendScreen(
                                 selectedFiles = selectedFilesState.value,
                                 totalSizeBytes = totalSizeBytesState.value,
                                 onSelectFile = ::onSelectFile,
                                 onSelectMedia = ::onSelectMedia,
                                 onSelectText = ::onSelectText,
                                 onRemoveFile = ::onRemoveFile,
-                            onMoveFile = ::onMoveFile,
-                            onPreviewFile = ::previewFile,
-                            selectionMode = selectionModeState.value,
-                            selectedIndices = selectedIndicesState.value,
-                            onToggleSelectMode = ::setSelectionMode,
-                            onToggleSelection = ::toggleSelection,
-                            onSelectAll = ::toggleSelectAll,
-                            onDeleteSelected = ::deleteSelectedFiles,
-                            onSendViaChoose = ::onSendViaChoose
+                                onMoveFile = ::onMoveFile,
+                                onPreviewFile = ::previewFile,
+                                selectionMode = selectionModeState.value,
+                                selectedIndices = selectedIndicesState.value,
+                                onToggleSelectMode = ::setSelectionMode,
+                                onToggleSelection = ::toggleSelection,
+                                onSelectAll = ::toggleSelectAll,
+                                onDeleteSelected = ::deleteSelectedFiles,
+                                devices = liteDevicesState.value,
+                                devicesLoading = liteDevicesLoadingState.value,
+                                sendingIp = liteSendingIpState.value,
+                                onSendToDevice = ::sendToLiteDevice,
+                                onPairDevice = ::pairLiteDevice,
+                                onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
+                                onSendViaQr = { gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR) }
                             )
                         }
                     } else {
@@ -234,19 +250,13 @@ class FileTransferFragment : Fragment() {
             fragmentJob = Job()
             uiScope = CoroutineScope(Dispatchers.Main + fragmentJob)
         }
+        if (isLiteMode) startLiteDevicePolling()
 
-        // Clear the selection once the devices screen reports a queued send, then jump to the
-        // outgoing record's history detail (Pro); or hand off to QR off-grid send (Lite).
+        // Clear the selection once Pro's devices screen reports a queued send, then jump to the
+        // outgoing record's history detail.
         parentFragmentManager.setFragmentResultListener(
             SendToDevicesFragment.RESULT_KEY, viewLifecycleOwner
         ) { _, bundle ->
-            if (bundle.getBoolean(SendToDevicesFragment.RESULT_REQUEST_QR)) {
-                if (selectedFiles.isEmpty()) {
-                    handleMultipleFilesSelection(TransferItemArgs.fromBundle(bundle).toMutableList())
-                }
-                gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
-                return@setFragmentResultListener
-            }
             if (bundle.getBoolean(SendToDevicesFragment.RESULT_SENT)) {
                 selectedFiles.clear()
                 handleMultipleFilesSelection(selectedFiles)
@@ -449,33 +459,93 @@ class FileTransferFragment : Fragment() {
         showSendViaState.value = true
     }
 
-    /** Routes the Send-Via overlay's choice to the chosen transport. */
+    /** Routes Pro's Send-Via overlay choice to the chosen transport. */
     private fun onSendViaChoose(choice: String) {
-        // The double-fire guard only applies to the Pro overlay (SendViaOverlay/SendViaSheet), which
-        // sets showSendViaState true before it can call back. Lite's screens call this directly with
-        // no overlay involved, so showSendViaState never flips true there — skip the guard entirely.
-        if (!isLiteMode && !showSendViaState.value) return
+        // Double-fire guard for Pro's SendViaOverlay/SendViaSheet, which sets showSendViaState true
+        // before calling back.
+        if (!showSendViaState.value) return
         showSendViaState.value = false
         when {
             choice == SendViaChoice.DEVICES -> openSendToDevices(isMultiple = true)
             choice == SendViaChoice.QR -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
             choice == SendViaChoice.NFC -> gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_NFC)
-            choice.startsWith("devices_lite_") -> {
-                openSendToDevices(isMultiple = choice.endsWith("1"))
-            }
         }
     }
 
     private fun openSendToDevices(isMultiple: Boolean = true) {
         if (selectedFiles.isEmpty()) return
-        // Lite skips the overlay's double-fire guard, so a fast double-tap on the "Same network" card
-        // would stack two SendToDevices fragments; dedupe by tag (self-resets once it's popped).
+        // Dedupe by tag so a fast double-tap can't stack two SendToDevices fragments (self-resets once popped).
         if (parentFragmentManager.findFragmentByTag(SendToDevicesFragment.TAG) != null) return
         // Full-screen content fragment over the tab — covers the page, keeps the bottom nav visible.
         parentFragmentManager.beginTransaction()
             .add(R.id.nav_host_fragment, SendToDevicesFragment.newInstance(selectedFiles, isMultiple), SendToDevicesFragment.TAG)
             .addToBackStack(SendToDevicesFragment.TAG)
             .commit()
+    }
+
+    private fun startLiteDevicePolling() {
+        uiScope.launch {
+            var ticks = 0
+            while (isActive) {
+                if (!isHidden && viewLifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                    refreshLiteDevices(++ticks)
+                }
+                delay(1000)
+            }
+        }
+    }
+
+    private fun refreshLiteDevices(ticks: Int) {
+        if (!isAdded) return
+        val inFlight = LanOfferSender.activeTargetIp
+        if (liteSendingIpState.value != inFlight) {
+            liteSendingIpState.value = inFlight
+        }
+        val ui = TransferDaemon.discoveredNodes.values
+            .sortedBy { it.name }
+            .map { it.toSendDeviceUi(requireContext()) }
+        if (liteDevicesLoadingState.value && (ui.isNotEmpty() || ticks >= 3)) {
+            liteDevicesLoadingState.value = false
+        }
+        liteDevicesState.value = ui
+    }
+
+    private fun sendToLiteDevice(ip: String) {
+        if (selectedFiles.isEmpty() || LanOfferSender.activeTargetIp != null) return
+        val sendItems = selectedFiles.toList()
+        LanOfferSender.activeTargetIp = ip
+        liteSendingIpState.value = ip
+        val appContext = requireContext().applicationContext
+        // Detached IO scope on purpose: the offers must finish even if the user leaves the tab,
+        // the same as SendToDevicesFragment.
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = LanOfferSender.sendOffers(appContext, sendItems, listOf(ip))
+            withContext(Dispatchers.Main) {
+                LanOfferSender.activeTargetIp = null
+                liteSendingIpState.value = null
+                Toast.makeText(
+                    appContext,
+                    appContext.getString(
+                        if (result.hasFailures) R.string.toast_transfer_interrupted
+                        else R.string.toast_batch_transfer_complete
+                    ),
+                    Toast.LENGTH_LONG
+                ).show()
+                // Clean send: clear the picks, unless the user changed them while it ran.
+                // A failed send keeps them, so Send via QR still works as a fallback.
+                if (!result.hasFailures && isAdded && selectedFiles.toList() == sendItems) {
+                    selectedFiles.clear()
+                    handleMultipleFilesSelection(selectedFiles)
+                }
+            }
+        }
+    }
+
+    private fun pairLiteDevice(ip: String, name: String) {
+        startActivity(Intent(requireContext(), PairingActivity::class.java).apply {
+            putExtra("TARGET_NAME", name)
+            putExtra("TARGET_IP", ip)
+        })
     }
 
     /**

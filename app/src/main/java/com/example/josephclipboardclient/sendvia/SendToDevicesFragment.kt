@@ -1,7 +1,6 @@
 package com.EntropicSoftwareLab.ClipboardShare.sendvia
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -18,7 +17,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import com.EntropicSoftwareLab.ClipboardShare.ImageThumbnails
 import com.EntropicSoftwareLab.ClipboardShare.MainActivity
-import com.EntropicSoftwareLab.ClipboardShare.PairingActivity
 import com.EntropicSoftwareLab.ClipboardShare.R
 import com.EntropicSoftwareLab.ClipboardShare.TransferDaemon
 import com.EntropicSoftwareLab.ClipboardShare.TransferItem
@@ -36,8 +34,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.graphics.ImageBitmap
-import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
-import com.EntropicSoftwareLab.ClipboardShare.isLiteMode
 
 /**
  * Packs the user's file selection into a Parcelable-free Bundle
@@ -157,7 +153,6 @@ class SendToDevicesFragment : Fragment() {
         const val TAG = "send_to_devices"
         const val RESULT_KEY = "send_to_devices_result"
         const val RESULT_SENT = "sent"
-        const val RESULT_REQUEST_QR = "request_qr"
         /** First outgoing sessionId of the batch — the listener opens its history detail. */
         const val RESULT_SESSION_ID = "session_id"
 
@@ -177,28 +172,17 @@ class SendToDevicesFragment : Fragment() {
 
     // Compose state surfaced to SendToDevicesScreen (logic stays here; the screen is pure UI).
     private val previewsState = mutableStateOf<List<FilePreviewUi>>(emptyList())
-    // Paired devices only — feeds Pro's multi-select screen AND Lite's Multiple-device mode, both of
-    // which must only ever let you select/send to an already-paired device.
+    // Paired devices only — feeds Pro's multi-select screen, which must only ever let you
+    // select/send to an already-paired device.
     private val devicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
-    // Paired + unpaired — feeds ONLY Lite's One-Device tri-state card, which needs to show an
-    // unpaired device with a "Pair" action instead of just hiding it.
-    private val allDevicesState = mutableStateOf<List<SendDeviceUi>>(emptyList())
     private val selectedIpsState = mutableStateOf<Set<String>>(emptySet())
     private val loadingState = mutableStateOf(true)
     private val sendingState = mutableStateOf(false)
-    // The device Lite's per-device card marks as in flight (Pro's batch reports its first target and
-    // doesn't read this). Held separately from selectedTargetIps: the 1 Hz refreshDeviceListUI
-    // prunes that set to whatever is still discovered + paired, so deriving the "Sending" label
-    // from it flipped the row back to "Send" the moment the target blinked out of discovery —
-    // while the transfer was still running. Mirrors [LanOfferSender.activeTargetIp] for Compose to observe.
-    private val sendingIpState = mutableStateOf<String?>(null)
-    private var isLite = false
-    private var qrRequested = false
 
     private val fragmentJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + fragmentJob)
 
-    /** Pops this overlay back to the Send tab beneath (both Lite and Pro sit over the Send tab). */
+    /** Pops this overlay back to the Send tab beneath. */
     private fun endSendFlow() {
         parentFragmentManager.popBackStack()
     }
@@ -207,88 +191,24 @@ class SendToDevicesFragment : Fragment() {
         items = arguments?.let { TransferItemArgs.fromBundle(it) } ?: emptyList()
         val isMultiple = arguments?.getBoolean("is_multiple", true) ?: true
 
-        val prefs = requireContext().getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-        isLite = isLiteMode(requireContext())
-
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 AppTheme {
-                    if (isLite) {
-                        com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendToScreen(
-                            deviceName = TransferDaemon.customDeviceName,
-                            // Editable here (same as System Status): trim and persist only when
-                            // non-empty, mirroring SystemStatusFragment.onDeviceNameChange — otherwise
-                            // clearing the field would advertise/pair the device under a blank name.
-                            onDeviceNameChange = { newName ->
-                                val trimmed = newName.trim()
-                                if (trimmed.isNotEmpty()) {
-                                    TransferDaemon.customDeviceName = trimmed
-                                    prefs.edit().putString("device_name", trimmed).apply()
-                                }
-                            },
-                            // Lite Send-To is always the per-device tri-state card now (One/Multiple was
-                            // removed), so it needs the paired+unpaired list to offer "Pair" on unpaired
-                            // rows — see allDevicesState's doc comment above.
-                            devices = allDevicesState.value,
-                            loading = loadingState.value,
-                            sendingIp = sendingIpState.value,
-                            onSendToDevice = { ip ->
-                                // sendingState is a single fragment-wide flag (one transfer at a
-                                // time). Without this guard, tapping a second device's "Send" while
-                                // the first is still in flight would overwrite selectedTargetIps —
-                                // executeMultiDeviceTransfer's own re-entrancy check would then
-                                // silently drop the second tap, but the "Sending…" label (driven by
-                                // selectedTargetIps.first()) would have already jumped to the wrong
-                                // device. Ignoring taps while a send is in flight keeps both correct.
-                                if (!sendingState.value) {
-                                    selectedTargetIps.clear()
-                                    selectedTargetIps.add(ip)
-                                    selectedIpsState.value = selectedTargetIps.toSet()
-                                    executeMultiDeviceTransfer()
-                                }
-                            },
-                            // Per-device Pair launches PairingActivity for that device directly,
-                            // same as HistoryFragment.onPair.
-                            onPairDevice = { ip, name ->
-                                startActivity(
-                                    Intent(requireContext(), PairingActivity::class.java).apply {
-                                        putExtra("TARGET_NAME", name)
-                                        putExtra("TARGET_IP", ip)
-                                    }
-                                )
-                            },
-                            onSendViaQr = {
-                                if (!sendingState.value && !qrRequested) {
-                                    qrRequested = true
-                                    parentFragmentManager.setFragmentResult(
-                                        RESULT_KEY,
-                                        bundleOf(RESULT_REQUEST_QR to true).apply {
-                                            putAll(TransferItemArgs.toBundle(items))
-                                        }
-                                    )
-                                    endSendFlow()
-                                }
-                            },
-                            onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
-                            onDone = { endSendFlow() }
-                        )
-                    } else {
-                        SendToDevicesScreen(
-                            previews = previewsState.value,
-                            devices = devicesState.value,
-                            selectedIps = selectedIpsState.value,
-                            loading = loadingState.value,
-                            sending = sendingState.value,
-                            onBack = { parentFragmentManager.popBackStack() },
-                            onToggleDevice = ::onToggleDevice,
-                            onToggleSelectAll = ::onToggleSelectAll,
-                            onSend = ::executeMultiDeviceTransfer,
-                            // Tab switch only: this screen stays (hidden) on the back stack with the
-                            // selection intact, so the user pairs a device and returns to send.
-                            onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
-                        )
-                    }
+                    SendToDevicesScreen(
+                        previews = previewsState.value,
+                        devices = devicesState.value,
+                        selectedIps = selectedIpsState.value,
+                        loading = loadingState.value,
+                        sending = sendingState.value,
+                        onBack = { parentFragmentManager.popBackStack() },
+                        onToggleDevice = ::onToggleDevice,
+                        onToggleSelectAll = ::onToggleSelectAll,
+                        onSend = ::executeMultiDeviceTransfer,
+                        // Tab switch only: this screen stays (hidden) on the back stack with the
+                        // selection intact, so the user pairs a device and returns to send.
+                        onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
+                    )
                 }
             }
         }
@@ -376,7 +296,6 @@ class SendToDevicesFragment : Fragment() {
         // Re-adopt the process-level send lock every tick, so an instance rebuilt by a config change
         // mid-send comes back showing "Sending" and a disabled button rather than an idle one.
         val inFlight = LanOfferSender.activeTargetIp
-        if (sendingIpState.value != inFlight) sendingIpState.value = inFlight
         if (sendingState.value != (inFlight != null)) sendingState.value = inFlight != null
 
         val allNodes = TransferDaemon.discoveredNodes.values.toList()
@@ -390,13 +309,8 @@ class SendToDevicesFragment : Fragment() {
         }
         if (!firstPollDone) return
 
-        // Build the UI model once (toUi resolves isPaired via a single getKeyForNode per device),
-        // then derive both lists from it: allDevices feeds Lite's One-Device tri-state card, which
-        // needs unpaired rows to offer "Pair"; paired-only feeds Pro's multi-select and Lite's
-        // Multiple mode. (Mapping once avoids decrypting each node's key 2–3× per poll tick.)
-        val allUi = sortedNodes.map { it.toSendDeviceUi(requireContext()) }
-        allDevicesState.value = allUi
-        val pairedUi = allUi.filter { it.isPaired }
+        // Resolve isPaired once per device (toSendDeviceUi calls getKeyForNode) and keep paired only.
+        val pairedUi = sortedNodes.map { it.toSendDeviceUi(requireContext()) }.filter { it.isPaired }
         devicesState.value = pairedUi
 
         // Prune the multi-select set to devices that are still discovered AND still paired, so a node
@@ -414,13 +328,9 @@ class SendToDevicesFragment : Fragment() {
         // LanOfferSender.activeTargetIp, not sendingState: the lock has to survive a config change (see its doc).
         if (sendItems.isEmpty() || ips.isEmpty() || LanOfferSender.activeTargetIp != null) return
 
-        // Drives the bottom button (Pro) and the tapped device's capsule (Lite) to "Sending..." /
-        // disabled. The screen deliberately STAYS on the device list for the whole send — it used to
-        // pop the moment the offers were queued, which in Lite (endSendFlow clears the entire child
-        // back stack) threw the user out to the hub the instant they tapped a device's Send.
+        // Drives the bottom Send button to "Sending..." / disabled while the offers are in flight.
         LanOfferSender.activeTargetIp = ips.first()
         sendingState.value = true
-        sendingIpState.value = ips.first()
 
         val appContext = requireContext().applicationContext
 
@@ -435,25 +345,17 @@ class SendToDevicesFragment : Fragment() {
                 // poll tick, so it must be clear before this instance's own state is.
                 LanOfferSender.activeTargetIp = null
                 sendingState.value = false
-                sendingIpState.value = null
                 val message = if (hasFailures) appContext.getString(R.string.toast_transfer_interrupted) else appContext.getString(R.string.toast_batch_transfer_complete)
                 Toast.makeText(appContext, message, Toast.LENGTH_LONG).show()
 
-                // Pro reports the batch + session id so the Send tab clears its selection and opens
-                // the outgoing record's history detail, then pops. Lite reports RESULT_SENT only on
-                // clean completion (failed sends keep the Send tab's selection) while staying on the
-                // device list until Done.
-                if (isAdded && !isLite) {
+                // Report the batch + session id so the Send tab clears its selection and opens
+                // the outgoing record's history detail, then pop back to the Send tab.
+                if (isAdded) {
                     parentFragmentManager.setFragmentResult(
                         RESULT_KEY,
                         bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to result.firstSessionId)
                     )
                     endSendFlow()
-                } else if (isAdded && !hasFailures) {
-                    parentFragmentManager.setFragmentResult(
-                        RESULT_KEY,
-                        bundleOf(RESULT_SENT to true)
-                    )
                 }
             }
         }
