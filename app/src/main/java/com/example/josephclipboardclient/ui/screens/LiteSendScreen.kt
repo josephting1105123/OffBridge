@@ -104,7 +104,7 @@ fun LiteSendScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_qr_code),
+                        painter = painterResource(R.drawable.ic_qr_frame),
                         contentDescription = null,
                         tint = qrContentColor,
                         modifier = Modifier.size(dimens.iconMd)

@@ -546,8 +546,8 @@ class MainActivity : AppCompatActivity() {
         tabBackGuard.isEnabled = overlayExists && activeFragment != fragmentMap[R.id.nav_send_files]
     }
 
-    private fun applyFabIcon(lite: Boolean) {
-        fabMenu.setImageResource(if (lite) R.drawable.ic_hdr_settings else R.drawable.ic_power)
+    private fun applyFabIcon(@Suppress("UNUSED_PARAMETER") lite: Boolean) {
+        fabMenu.setImageResource(R.drawable.ic_power)
     }
 
     /** Anchors the centre menu FAB's top to [barId]'s top (+16dp) so it sits in the bottom-nav slot. */
