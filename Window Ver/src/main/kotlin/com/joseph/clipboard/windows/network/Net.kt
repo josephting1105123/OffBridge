@@ -14,6 +14,8 @@ object Ports {
     const val CLIPBOARD = 65432
     const val FILE_TRANSFER = 65433
     const val PAIRING = 65435
+    /** Quick Share receive (mDNS tells the phone the number; fixed so the installer can open it). */
+    const val QUICK_SHARE = 65436
 }
 
 /** Longest line accepted on the pairing port. Real lines (a base64 P-256 key, a sealed confirmation,

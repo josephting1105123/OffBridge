@@ -32,6 +32,7 @@ object SecurityVault {
     // TutorialTour.KEY_COMPLETED_V2 in spirit, but simpler — Windows has no Lite/Pro mode gate, so
     // this is a single persisted "has this ever been shown" flag, not a resumable step counter.
     private var firstRunTourShown: Boolean = false
+    private var quickShareVisible: Boolean = true
     // This install's own stable identifier, minted once and persisted. Trust records are keyed by IP,
     // so a peer that re-pairs from a new DHCP lease used to land as a SECOND entry next to the stale
     // one (two "Windows PC" rows in the Paired list). Peers exchange this id during the pairing
@@ -129,7 +130,8 @@ object SecurityVault {
         val theme: String? = null,
         val lastUpdateCheckEpochMillis: Long? = null,
         val autoUpdateCheckEnabled: Boolean? = null,
-        val firstRunTourShown: Boolean? = null
+        val firstRunTourShown: Boolean? = null,
+        val quickShareVisible: Boolean? = null
     )
 
     init {
@@ -155,6 +157,7 @@ object SecurityVault {
             dto.lastUpdateCheckEpochMillis?.let { lastUpdateCheckEpochMillis = it }
             dto.autoUpdateCheckEnabled?.let { autoUpdateCheckEnabled = it }
             dto.firstRunTourShown?.let { firstRunTourShown = it }
+            dto.quickShareVisible?.let { quickShareVisible = it }
             var legacyKeysPresent = false
             dto.nodes?.let { nodesStr ->
                 if (nodesStr.isNotBlank()) {
@@ -216,6 +219,7 @@ object SecurityVault {
                 lastUpdateCheckEpochMillis = lastUpdateCheckEpochMillis,
                 autoUpdateCheckEnabled = autoUpdateCheckEnabled,
                 firstRunTourShown = firstRunTourShown,
+                quickShareVisible = quickShareVisible,
             )
             // Atomic write — write to a temp file then move it into place so a
             // crash/race mid-write can't truncate config.json and lose all trusted-node keys.
@@ -254,6 +258,14 @@ object SecurityVault {
 
     fun setDiscoverable(discoverable: Boolean) {
         isDiscoverable = discoverable
+        save()
+    }
+
+    /** Whether stock Quick Share on nearby phones can find this PC and offer it files. */
+    fun isQuickShareVisible(): Boolean = quickShareVisible
+
+    fun setQuickShareVisible(visible: Boolean) {
+        quickShareVisible = visible
         save()
     }
 

@@ -1,0 +1,60 @@
+// SecureMessage envelope, trimmed to what the Quick Share receiver uses.
+// Field numbers follow Google's securemessage.proto (github.com/google/ukey2, Apache-2.0,
+// Copyright 2020 Google LLC). Only the package, Java options and unused messages differ.
+
+syntax = "proto2";
+
+package offbridge.quickshare.securemessage;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "SecureMessageProto";
+
+message SecureMessage {
+  // A serialized HeaderAndBody
+  required bytes header_and_body = 1;
+  // Signature of header_and_body
+  required bytes signature = 2;
+}
+
+enum SigScheme {
+  HMAC_SHA256 = 1;
+  ECDSA_P256_SHA256 = 2;
+  RSA2048_SHA256 = 3;
+}
+
+enum EncScheme {
+  NONE = 1;
+  AES_256_CBC = 2;
+}
+
+message Header {
+  required SigScheme signature_scheme = 1;
+  required EncScheme encryption_scheme = 2;
+  optional bytes verification_key_id = 3;
+  optional bytes decryption_key_id = 4;
+  optional bytes iv = 5;
+  optional bytes public_metadata = 6;
+  optional uint32 associated_data_length = 7 [default = 0];
+}
+
+message HeaderAndBody {
+  required Header header = 1;
+  required bytes body = 2;
+}
+
+enum PublicKeyType {
+  EC_P256 = 1;
+  RSA2048 = 2;
+  DH2048_MODP = 3;
+}
+
+message EcP256PublicKey {
+  // Big-endian two's complement. The receiver must check (x, y) is on the curve.
+  required bytes x = 1;
+  required bytes y = 2;
+}
+
+message GenericPublicKey {
+  required PublicKeyType type = 1;
+  optional EcP256PublicKey ec_p256_public_key = 2;
+}

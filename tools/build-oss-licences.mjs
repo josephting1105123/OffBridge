@@ -11,6 +11,8 @@
  * The document is deliberately NOT translated. Licence texts are legal instruments; a localised
  * paraphrase would not be the licence, and every one of these requires the text itself.
  *
+ * Dependencies only the Windows build ships are appended to its copy alone (section 6 on).
+ *
  * Writes:
  *   app/src/main/res/raw/oss_licences.txt          (Android, read via resources.openRawResource)
  *   Window Ver/src/main/resources/oss_licences.txt (Windows, read via the classloader)
@@ -39,12 +41,31 @@ const APACHE_DEPS = [
   'Google Android Material Components',
 ];
 
+// JmDNS's NOTICE.txt, which Apache-2.0 s4(d) asks redistributors to pass on.
+const JMDNS_NOTICE = [
+  'Java Multicast Domain Name Server (JmDNS)',
+  '',
+  'This project was originally developed by Arthur van Hoff under the GNU',
+  'Lesser General Public License as jRendevous.  It was moved to Sourceforge',
+  'by Rick Blair and renamed to JmDNS with the Arthur\'s kind permission.',
+  'It has been re-released under the Apache License, Version 2.0.',
+  'In 2014, it has been moved from Sourceforge to Github by Kai Kreuzer',
+  'with the kind approval from Arthur and Rick.',
+  '',
+  'Details of the Apache License, Version 2.0 can be found at:',
+  'http://www.apache.org/licenses/',
+  '',
+  'For other details please see the README.txt file.',
+].join('\n');
+
 async function main() {
-  const [license, notice, ofl, shimmer] = await Promise.all([
+  const [license, notice, ofl, shimmer, protobuf, slf4j] = await Promise.all([
     read('LICENSE'),
     read('NOTICE'),
     read('licenses/OFL-1.1.txt'),
     read('licenses/BSD-2-Clause-shimmer.txt'),
+    read('licenses/BSD-3-Clause-protobuf.txt'),
+    read('licenses/MIT-slf4j.txt'),
   ]);
 
   const doc = [
@@ -82,15 +103,33 @@ async function main() {
     'This section does not apply to the Android build, which bundles no Java runtime.\n',
   ].join('');
 
+  const windowsOnly = [
+    '\n\n',
+    rule('6. BSD 3-CLAUSE — Protocol Buffers and Chromium — Windows build only'),
+    protobuf.trimEnd() + '\n\n\n',
+
+    'The securemessage and UKEY2 message definitions follow the Google ukey2 project\n' +
+    '(github.com/google/ukey2, Copyright 2020 Google LLC), used under the Apache\n' +
+    'License, Version 2.0, reproduced in section 2.\n\n\n',
+
+    rule('7. JmDNS — Apache License 2.0 — Windows build only'),
+    'JmDNS is used under the Apache License, Version 2.0, reproduced in section 2.\n' +
+    'Its NOTICE file reads:\n\n' +
+    JMDNS_NOTICE + '\n\n',
+
+    rule('8. MIT — SLF4J — Windows build only'),
+    slf4j.trimEnd() + '\n',
+  ].join('');
+
   const targets = [
-    'app/src/main/res/raw/oss_licences.txt',
-    'Window Ver/src/main/resources/oss_licences.txt',
+    ['app/src/main/res/raw/oss_licences.txt', doc],
+    ['Window Ver/src/main/resources/oss_licences.txt', doc + windowsOnly],
   ];
-  for (const t of targets) {
+  for (const [t, text] of targets) {
     const abs = path.join(ROOT, t);
     await mkdir(path.dirname(abs), { recursive: true });
-    await writeFile(abs, doc, 'utf8');
-    console.log(`  ${t}  ${(doc.length / 1024).toFixed(1)}KB`);
+    await writeFile(abs, text, 'utf8');
+    console.log(`  ${t}  ${(text.length / 1024).toFixed(1)}KB`);
   }
 }
 

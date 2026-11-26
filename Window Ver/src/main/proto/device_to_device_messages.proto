@@ -1,0 +1,15 @@
+// Field numbers follow Google's device_to_device_messages.proto (github.com/google/ukey2,
+// Apache-2.0, Copyright 2020 Google LLC).
+
+syntax = "proto2";
+
+package offbridge.quickshare.d2d;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "DeviceToDeviceProto";
+
+message DeviceToDeviceMessage {
+  optional bytes message = 1;
+  // Starts at 1 and counts up independently in each direction.
+  optional int32 sequence_number = 2;
+}

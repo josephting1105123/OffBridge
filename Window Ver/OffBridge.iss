@@ -118,7 +118,8 @@ Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 ; push, or a file OFFER) is silently dropped and times out, while this PC dialing the phone still works
 ; (outbound is allowed by default). That one-sided block is exactly the "phone can't connect to the
 ; laptop, but the laptop connects to the phone" symptom. The daemons bind 0.0.0.0 on: TCP 65432
-; (clipboard), 65433 (file transfer + session control), 65435 (pairing); UDP 50001 (discovery).
+; (clipboard), 65433 (file transfer + session control), 65435 (pairing), 65436 (Quick Share receive);
+; UDP 50001 (discovery) and 5353 (mDNS, which is how Quick Share finds this PC).
 ; Delete-then-add keeps exactly one rule across reinstalls; the legacy single-65433 rule name is also
 ; deleted so an upgrade doesn't leave a stale duplicate behind.
 ; profile=any is REQUIRED (not a mistake): the primary off-grid path is the Wi-Fi Direct autonomous GO
@@ -132,12 +133,12 @@ Source: "..\licenses\*.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 ; Direct GO subnet (192.168.49.x, a /24 on the GO adapter), and the phone's hotspot/LOHS when this PC
 ; joins it. What it does NOT reach is a phone on a different routed subnet of the same
 ; site (separate guest VLAN, some mesh setups) — that was never reachable by discovery broadcast anyway.
-; All four ports keep the same scope; dropping any one of them reintroduces the one-sided block above.
+; All the ports keep the same scope; dropping any one of them reintroduces the one-sided block above.
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (TCP 65433)"""; Flags: runhidden
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN TCP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435 remoteip=localsubnet profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN TCP)"" dir=in action=allow protocol=TCP localport=65432,65433,65435,65436 remoteip=localsubnet profile=any"; Flags: runhidden
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""OffBridge (LAN UDP)"""; Flags: runhidden
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001 remoteip=localsubnet profile=any"; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""OffBridge (LAN UDP)"" dir=in action=allow protocol=UDP localport=50001,5353 remoteip=localsubnet profile=any"; Flags: runhidden
 ; Auto-launch at the end
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
 

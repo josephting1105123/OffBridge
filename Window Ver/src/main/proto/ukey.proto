@@ -1,0 +1,71 @@
+// UKEY2 handshake messages, trimmed to what the Quick Share receiver uses.
+// Field numbers follow Google's ukey.proto (github.com/google/ukey2, Apache-2.0,
+// Copyright 2020 Google LLC).
+
+syntax = "proto2";
+
+package offbridge.quickshare.ukey;
+
+option java_package = "com.joseph.clipboard.windows.network.quickshare.proto";
+option java_outer_classname = "UkeyProto";
+
+message Ukey2Message {
+  enum Type {
+    UNKNOWN_DO_NOT_USE = 0;
+    ALERT = 1;
+    CLIENT_INIT = 2;
+    SERVER_INIT = 3;
+    CLIENT_FINISH = 4;
+  }
+
+  optional Type message_type = 1;
+  optional bytes message_data = 2;
+}
+
+message Ukey2Alert {
+  enum AlertType {
+    BAD_MESSAGE = 1;
+    BAD_MESSAGE_TYPE = 2;
+    INCORRECT_MESSAGE = 3;
+    BAD_MESSAGE_DATA = 4;
+    BAD_VERSION = 100;
+    BAD_RANDOM = 101;
+    BAD_HANDSHAKE_CIPHER = 102;
+    BAD_NEXT_PROTOCOL = 103;
+    BAD_PUBLIC_KEY = 104;
+    INTERNAL_ERROR = 200;
+  }
+
+  optional AlertType type = 1;
+  optional string error_message = 2;
+}
+
+enum Ukey2HandshakeCipher {
+  RESERVED = 0;
+  P256_SHA512 = 100;
+  CURVE25519_SHA512 = 200;
+}
+
+message Ukey2ClientInit {
+  optional int32 version = 1;
+  optional bytes random = 2;
+
+  message CipherCommitment {
+    optional Ukey2HandshakeCipher handshake_cipher = 1;
+    optional bytes commitment = 2;
+  }
+  repeated CipherCommitment cipher_commitments = 3;
+
+  optional string next_protocol = 4;
+}
+
+message Ukey2ServerInit {
+  optional int32 version = 1;
+  optional bytes random = 2;
+  optional Ukey2HandshakeCipher handshake_cipher = 3;
+  optional bytes public_key = 4;
+}
+
+message Ukey2ClientFinished {
+  optional bytes public_key = 1;
+}
