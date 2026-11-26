@@ -377,6 +377,7 @@
     <string name="receive_nfc_listening">NFC à escuta — encoste os telefones</string>
     <string name="receive_nfc_unavailable_device">O NFC não está disponível neste dispositivo</string>
     <string name="receive_open_camera">Abrir Câmera</string>
+    <string name="receive_scan_qr">Ler QR</string>
     <string name="receive_title">Receber Arquivos</string>
     <string name="send_to_devices_title">Enviar para Dispositivos</string>
     <string name="send_via_connected_devices">Dispositivos Conectados</string>

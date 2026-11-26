@@ -45,7 +45,6 @@ import java.net.Socket
 import android.util.Base64
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.fragment.app.FragmentManager
 import com.EntropicSoftwareLab.ClipboardShare.FILE_BRIDGE_PREFS
 import com.EntropicSoftwareLab.ClipboardShare.isLiteMode
 
@@ -167,6 +166,7 @@ class SendToDevicesFragment : Fragment() {
         const val TAG = "send_to_devices"
         const val RESULT_KEY = "send_to_devices_result"
         const val RESULT_SENT = "sent"
+        const val RESULT_REQUEST_QR = "request_qr"
         /** First outgoing sessionId of the batch — the listener opens its history detail. */
         const val RESULT_SESSION_ID = "session_id"
 
@@ -220,20 +220,14 @@ class SendToDevicesFragment : Fragment() {
     // while the transfer was still running. Mirrors [activeSendTargetIp] for Compose to observe.
     private val sendingIpState = mutableStateOf<String?>(null)
     private var isLite = false
+    private var qrRequested = false
 
     private val fragmentJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + fragmentJob)
 
-    /** Lite ends the send flow back at the hub (clears the whole child back stack); Pro pops one
-     *  level back to the Send tab, where the history detail then opens. */
+    /** Pops this overlay back to the Send tab beneath (both Lite and Pro sit over the Send tab). */
     private fun endSendFlow() {
-        if (isLite) {
-            parentFragmentManager.popBackStack(
-                null, FragmentManager.POP_BACK_STACK_INCLUSIVE
-            )
-        } else {
-            parentFragmentManager.popBackStack()
-        }
+        parentFragmentManager.popBackStack()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -264,6 +258,7 @@ class SendToDevicesFragment : Fragment() {
                             // removed), so it needs the paired+unpaired list to offer "Pair" on unpaired
                             // rows — see allDevicesState's doc comment above.
                             devices = allDevicesState.value,
+                            loading = loadingState.value,
                             sendingIp = sendingIpState.value,
                             onSendToDevice = { ip ->
                                 // sendingState is a single fragment-wide flag (one transfer at a
@@ -280,8 +275,8 @@ class SendToDevicesFragment : Fragment() {
                                     executeMultiDeviceTransfer()
                                 }
                             },
-                            // No tab shell in Lite (openPairingTab is a no-op there) — launch pairing
-                            // for this specific device directly, same as HistoryFragment.onPair.
+                            // Per-device Pair launches PairingActivity for that device directly,
+                            // same as HistoryFragment.onPair.
                             onPairDevice = { ip, name ->
                                 startActivity(
                                     Intent(requireContext(), PairingActivity::class.java).apply {
@@ -290,6 +285,19 @@ class SendToDevicesFragment : Fragment() {
                                     }
                                 )
                             },
+                            onSendViaQr = {
+                                if (!sendingState.value && !qrRequested) {
+                                    qrRequested = true
+                                    parentFragmentManager.setFragmentResult(
+                                        RESULT_KEY,
+                                        bundleOf(RESULT_REQUEST_QR to true).apply {
+                                            putAll(TransferItemArgs.toBundle(items))
+                                        }
+                                    )
+                                    endSendFlow()
+                                }
+                            },
+                            onGoToPairing = { (activity as? MainActivity)?.openPairingTab() },
                             onDone = { endSendFlow() }
                         )
                     } else {
@@ -584,16 +592,21 @@ class SendToDevicesFragment : Fragment() {
                 val message = if (hasFailures) appContext.getString(R.string.toast_transfer_interrupted) else appContext.getString(R.string.toast_batch_transfer_complete)
                 Toast.makeText(appContext, message, Toast.LENGTH_LONG).show()
 
-                // Pro's completion path: report the batch so the Send tab opens the outgoing
-                // record's history detail, then close. Lite has no such listener (endSendFlow would
-                // clear the whole stack), so it stays on the device list and the user leaves via
-                // Done — which is the point of the fix above.
+                // Pro reports the batch + session id so the Send tab clears its selection and opens
+                // the outgoing record's history detail, then pops. Lite reports RESULT_SENT only on
+                // clean completion (failed sends keep the Send tab's selection) while staying on the
+                // device list until Done.
                 if (isAdded && !isLite) {
                     parentFragmentManager.setFragmentResult(
                         RESULT_KEY,
                         bundleOf(RESULT_SENT to true, RESULT_SESSION_ID to offers.first().sessionId)
                     )
                     endSendFlow()
+                } else if (isAdded && !hasFailures) {
+                    parentFragmentManager.setFragmentResult(
+                        RESULT_KEY,
+                        bundleOf(RESULT_SENT to true)
+                    )
                 }
             }
         }

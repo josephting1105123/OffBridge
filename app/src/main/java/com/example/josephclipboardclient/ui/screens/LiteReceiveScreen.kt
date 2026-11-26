@@ -125,8 +125,8 @@ fun LiteReceiveScreen(
             Spacer(modifier = Modifier.height(dimens.spaceXl))
 
             ReceiveGridButton(
-                iconRes = R.drawable.ic_camera,
-                label = stringResource(R.string.receive_open_camera),
+                iconRes = R.drawable.ic_qr_scan,
+                label = stringResource(R.string.receive_scan_qr),
                 modifier = Modifier.fillMaxWidth().height(dimens.buttonHeight * 1.5f),
                 onClick = onOpenCamera
             )

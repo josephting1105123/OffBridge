@@ -362,6 +362,7 @@
     <string name="receive_nfc_listening">NFC 監聽中——將手機相互貼合</string>
     <string name="receive_nfc_unavailable_device">此裝置不支援 NFC</string>
     <string name="receive_open_camera">開啟相機</string>
+    <string name="receive_scan_qr">掃描 QR 碼</string>
     <string name="receive_title">接收檔案</string>
     <string name="send_to_devices_title">傳送至裝置</string>
     <string name="send_via_connected_devices">已連接裝置</string>

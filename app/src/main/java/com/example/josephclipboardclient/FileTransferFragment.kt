@@ -158,8 +158,7 @@ class FileTransferFragment : Fragment() {
 
         return ComposeView(requireContext()).apply{
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            // Lite adds this over the hub — consume touches so empty areas don't fall through to the
-            // hub tiles beneath.
+            // Consume touches so taps on empty areas don't reach the hidden tab beneath.
             isClickable = true
             setContent {
                 AppTheme {
@@ -170,7 +169,6 @@ class FileTransferFragment : Fragment() {
                             com.EntropicSoftwareLab.ClipboardShare.ui.screens.LiteSendScreen(
                                 selectedFiles = selectedFilesState.value,
                                 totalSizeBytes = totalSizeBytesState.value,
-                                onBack = { parentFragmentManager.popBackStack() },
                                 onSelectFile = ::onSelectFile,
                                 onSelectMedia = ::onSelectMedia,
                                 onSelectText = ::onSelectText,
@@ -238,10 +236,17 @@ class FileTransferFragment : Fragment() {
         }
 
         // Clear the selection once the devices screen reports a queued send, then jump to the
-        // outgoing record's history detail so the sender watches its progress there.
+        // outgoing record's history detail (Pro); or hand off to QR off-grid send (Lite).
         parentFragmentManager.setFragmentResultListener(
             SendToDevicesFragment.RESULT_KEY, viewLifecycleOwner
         ) { _, bundle ->
+            if (bundle.getBoolean(SendToDevicesFragment.RESULT_REQUEST_QR)) {
+                if (selectedFiles.isEmpty()) {
+                    handleMultipleFilesSelection(TransferItemArgs.fromBundle(bundle).toMutableList())
+                }
+                gateAndLaunchOffGridSend(OffGridSendActivity.PRESENTATION_QR)
+                return@setFragmentResultListener
+            }
             if (bundle.getBoolean(SendToDevicesFragment.RESULT_SENT)) {
                 selectedFiles.clear()
                 handleMultipleFilesSelection(selectedFiles)
