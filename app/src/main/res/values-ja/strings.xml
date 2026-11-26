@@ -696,5 +696,14 @@
     <string name="update_check_again">再確認</string>
     <string name="update_check_failed">アップデートを確認できませんでした</string>
     <string name="update_try_again">再試行</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">スクリーンショット</string>
+    <string name="settings_screenshot_prompt">新しいスクリーンショットの送信を提案する</string>
+    <string name="settings_screenshot_prompt_needs_photos">新しいスクリーンショットを検出するには、すべての写真へのアクセスを許可してください。</string>
+    <string name="screenshot_prompt_title">スクリーンショットを撮影しました</string>
+    <string name="screenshot_prompt_send_to_one">%1$s に送信しますか？</string>
+    <string name="screenshot_prompt_send_to_any">接続中のデバイスに送信しますか？</string>
+    <string name="screenshot_prompt_action_send">送信</string>
+    <string name="screenshot_prompt_action_dismiss">後で</string>
 </resources>
 

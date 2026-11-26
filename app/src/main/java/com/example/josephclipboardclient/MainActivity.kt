@@ -511,6 +511,9 @@ class MainActivity : AppCompatActivity() {
 
     // THE FIX: New centralized method to handle share intents safely.
     private fun handleShareIntent(intent: Intent?) {
+        // A screenshot-prompt "Send" tap: clear that heads-up now that the share has been opened.
+        intent?.getIntExtra(ScreenshotWatcher.EXTRA_NOTIFICATION_ID, -1)?.takeIf { ScreenshotWatcher.isPromptId(it) }
+            ?.let { androidx.core.app.NotificationManagerCompat.from(this).cancel(it) }
         val uris = ArrayList<Uri>()
         if (intent?.action == Intent.ACTION_SEND) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -50,6 +50,8 @@ class ClipboardService : Service() {
     private var notificationStartTime = 0L
     private var chronometerBase = 0L
 
+    private var screenshotWatcher: ScreenshotWatcher? = null
+
     private val CHANNEL_ID = NotificationChannels.SERVICE
     private val PAIRING_CHANNEL_ID = NotificationChannels.PAIRING
 
@@ -74,6 +76,10 @@ class ClipboardService : Service() {
         const val ACTION_EXECUTE_NETWORK_PUSH = "com.example.josephclipboardclient.EXECUTE_PUSH"
         const val ACTION_EXECUTE_NETWORK_DELETE = "com.example.josephclipboardclient.EXECUTE_DELETE"
         const val ACTION_HISTORY_UPDATED = "com.example.josephclipboardclient.HISTORY_UPDATED"
+        const val ACTION_REFRESH_SCREENSHOT_WATCH = "com.example.josephclipboardclient.REFRESH_SCREENSHOT_WATCH"
+        // Start the watcher if it isn't running (idempotent); used when the switch is on but the
+        // watcher never started, e.g. permission was revoked and later re-granted.
+        const val ACTION_ENSURE_SCREENSHOT_WATCH = "com.example.josephclipboardclient.ENSURE_SCREENSHOT_WATCH"
         // Marks clips this app wrote itself (received sync / programmatic clear) so we can tell them
         // apart from user copies.
         const val CLIPBOARD_SOURCE_TAG = "com.example.josephclipboardclient.PROGRAMMATIC_COPY"
@@ -110,6 +116,10 @@ class ClipboardService : Service() {
         startForegroundServiceNotification()
         startTcpReceiver()
         startNotificationUpdater()
+
+        screenshotWatcher = ScreenshotWatcher(applicationContext, serviceScope) {
+            resolveClipboardTargets().map { it.second }
+        }.also { it.start() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -129,6 +139,8 @@ class ClipboardService : Service() {
                     wipeFromOSClipboardIfMatches(payload)
                 }
             }
+            ACTION_REFRESH_SCREENSHOT_WATCH -> screenshotWatcher?.restart()
+            ACTION_ENSURE_SCREENSHOT_WATCH -> screenshotWatcher?.start()
         }
         return START_STICKY
     }
@@ -309,6 +321,7 @@ class ClipboardService : Service() {
         manager.createNotificationChannel(transferProgressChannel)
         val transferRequestChannel = NotificationChannel(NotificationChannels.TRANSFER_REQUEST, applicationContext.getString(R.string.status_channel_incoming_transfers), NotificationManager.IMPORTANCE_HIGH)
         manager.createNotificationChannel(transferRequestChannel)
+        manager.createNotificationChannel(NotificationChannel(NotificationChannels.SCREENSHOT_PROMPT, applicationContext.getString(R.string.status_channel_screenshots), NotificationManager.IMPORTANCE_HIGH))
 
         val remoteViews = getCustomRemoteViews(applicationContext.getString(R.string.status_mesh_active))
         val mainActivityIntent = Intent(this, MainActivity::class.java)
@@ -553,6 +566,7 @@ class ClipboardService : Service() {
         // throws IllegalArgumentException ("Receiver not registered") and would crash teardown.
         try { unregisterReceiver(pairingNotificationReceiver) } catch (e: IllegalArgumentException) {}
         try { serverSocket?.close() } catch (e: Exception) {} // best-effort close on shutdown
+        screenshotWatcher?.stop()
         serviceJob.cancel()
     }
 }

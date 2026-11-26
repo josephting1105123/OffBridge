@@ -42,6 +42,11 @@ class SettingsFragment : Fragment() {
     private val hotspotAutoConnectState = mutableStateOf(false)
     private val acceptClipboardState = mutableStateOf(false)
     private val discoverableState = mutableStateOf(false)
+    private val screenshotPromptState = mutableStateOf(false)
+
+    private val screenshotPermLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->
+        onScreenshotPermissionResult()
+    }
 
     private val openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
@@ -83,6 +88,7 @@ class SettingsFragment : Fragment() {
                         hotspotAutoConnect = hotspotAutoConnectState.value,
                         acceptClipboard = acceptClipboardState.value,
                         discoverable = discoverableState.value,
+                        screenshotPrompt = screenshotPromptState.value,
                         onChangeLanguage = { showLanguageDialog() },
                         onChangeSaveLocation = { openDirectoryLauncher.launch(null) },
                         onChangeSaveMedia = { showSaveMediaDialog() },
@@ -95,6 +101,7 @@ class SettingsFragment : Fragment() {
                             SecurityVault.setDiscoverable(requireContext(), enabled)
                             discoverableState.value = enabled
                         },
+                        onScreenshotPromptChange = ::onScreenshotPromptChange,
                         onDonate = ::onDonate,
                         onPrivacyPolicy = { showPrivacyPolicyDialog() },
                         onOpenSourceLicences = { showOssLicencesDialog() },
@@ -127,9 +134,50 @@ class SettingsFragment : Fragment() {
         syncHotspotState()
         acceptClipboardState.value = ClipboardService.isSyncEnabled
         discoverableState.value = SecurityVault.isDiscoverable(requireContext())
+        screenshotPromptState.value = isScreenshotPromptOn()
     }
 
     private var hotspotSwitchUpdating = false
+
+    private fun isScreenshotPromptOn(): Boolean {
+        val ctx = requireContext()
+        return ScreenshotWatcher.isEnabled(ctx) && ScreenshotWatcher.hasReadPermission(ctx)
+    }
+
+    private fun onScreenshotPromptChange(enabled: Boolean) {
+        if (enabled) {
+            if (ScreenshotWatcher.hasReadPermission(requireContext())) {
+                setScreenshotPref(true)
+            } else {
+                screenshotPermLauncher.launch(ScreenshotWatcher.permissionsToRequest())
+            }
+        } else {
+            setScreenshotPref(false)
+        }
+    }
+
+    private fun onScreenshotPermissionResult() {
+        if (!isAdded) return
+        if (ScreenshotWatcher.hasReadPermission(requireContext())) {
+            setScreenshotPref(true)
+        } else {
+            setScreenshotPref(false)
+            Toast.makeText(requireContext(), getString(R.string.settings_screenshot_prompt_needs_photos), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun setScreenshotPref(on: Boolean) {
+        val ctx = requireContext()
+        ctx.getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
+            .edit().putBoolean(PREF_SCREENSHOT_PROMPT, on).apply()
+        screenshotPromptState.value = on
+        // Tell the running service to start/stop its watcher.
+        try {
+            ctx.startService(Intent(ctx, ClipboardService::class.java).setAction(ClipboardService.ACTION_REFRESH_SCREENSHOT_WATCH))
+        } catch (e: IllegalStateException) {
+            android.util.Log.w("SettingsFragment", "Could not refresh screenshot watcher", e)
+        }
+    }
 
     /** Donate: open the Buy-Me-A-Coffee page; toast on failure (e.g. no browser installed). */
     private fun onDonate() {
@@ -175,6 +223,17 @@ class SettingsFragment : Fragment() {
         // Keep the duplicated clipboard / discoverable toggles in sync with their other homes.
         acceptClipboardState.value = ClipboardService.isSyncEnabled
         discoverableState.value = SecurityVault.isDiscoverable(requireContext())
+        screenshotPromptState.value = isScreenshotPromptOn()
+        if (screenshotPromptState.value) {
+            // Switch is on and permission is held: make sure the watcher is actually running
+            // (it won't be if permission was revoked and re-granted while the service lived).
+            val ctx = requireContext()
+            try {
+                ctx.startService(Intent(ctx, ClipboardService::class.java).setAction(ClipboardService.ACTION_ENSURE_SCREENSHOT_WATCH))
+            } catch (e: IllegalStateException) {
+                android.util.Log.w("SettingsFragment", "Could not ensure screenshot watcher", e)
+            }
+        }
         syncHotspotState()
     }
 

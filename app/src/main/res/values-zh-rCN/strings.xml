@@ -686,5 +686,14 @@
     <string name="update_check_again">重新检查</string>
     <string name="update_check_failed">无法检查更新</string>
     <string name="update_try_again">重试</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">截图</string>
+    <string name="settings_screenshot_prompt">提示发送新截图</string>
+    <string name="settings_screenshot_prompt_needs_photos">请允许访问所有照片，以便 OffBridge 发现新截图。</string>
+    <string name="screenshot_prompt_title">已截图</string>
+    <string name="screenshot_prompt_send_to_one">发送到 %1$s？</string>
+    <string name="screenshot_prompt_send_to_any">发送到已连接的设备？</string>
+    <string name="screenshot_prompt_action_send">发送</string>
+    <string name="screenshot_prompt_action_dismiss">暂不</string>
 </resources>
 
