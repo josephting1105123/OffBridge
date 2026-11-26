@@ -96,11 +96,6 @@ object PairingDaemon {
         try { outgoingSocket?.close() } catch (_: Exception) {}
     }
 
-    /** The requester's user tapped "Codes match" for the PIN [initiatePairing] passed to onPin. */
-    fun confirmInitiatePairing() {
-        outgoingGate?.confirm()
-    }
-
     private val confirmationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val senderIp = intent?.getStringExtra("SENDER_IP") ?: return
@@ -544,7 +539,10 @@ object PairingDaemon {
                 val peerAwaitsConfirm = ackTail.contains(PairingWire.CONFIRM_TOKEN)
                 val (aesKey, visualPin) = ecdh.deriveSecrets(peerPubKey, useV2)
                 val pinShownAt = System.currentTimeMillis()
-                onPin(visualPin)   // the UI shows the code with "Codes match" / Cancel
+                onPin(visualPin)   // the UI shows the code with Cancel; only the receiving side's user compares it
+                // The sender no longer taps "Codes match": the receiver's Accept is the only human check, so
+                // confirm now. Cancel still wins until PAIR_ACCEPT arrives (outgoingCancelled is checked below).
+                gate.confirm()
 
                 // The peer parks this connection until a human taps Accept/Decline, so the final
                 // read must allow a real human accept window. A shorter timeout here would make the
@@ -554,10 +552,8 @@ object PairingDaemon {
                 if (outgoingCancelled) return@withContext "CANCELLED"
                 if (finalResponse != "PAIR_ACCEPT") return@withContext "DECLINED"
 
-                // PAIR_ACCEPT alone proves nothing: a rogue host that answered our tap sends it
-                // straight after its ACK. Trust needs our own user's PIN comparison too, in either
-                // order. The wait shares the window that started when the PIN appeared, so we give
-                // up no later than the peer stops waiting for PAIR_CONFIRM.
+                // The gate was confirmed when the PIN was shown (receiver-only acceptance); it still records a
+                // Cancel that raced in first. The wait shares the window that started when the PIN appeared.
                 val decision = gate.await(PAIR_CONFIRM_WINDOW_MS - (System.currentTimeMillis() - pinShownAt))
                 when {
                     decision == null -> return@withContext "TIMEOUT"
