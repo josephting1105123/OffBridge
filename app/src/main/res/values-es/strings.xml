@@ -703,5 +703,14 @@
     <string name="update_check_again">Volver a comprobar</string>
     <string name="update_check_failed">No se pudieron buscar actualizaciones</string>
     <string name="update_try_again">Reintentar</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">Capturas de pantalla</string>
+    <string name="settings_screenshot_prompt">Ofrecer enviar capturas nuevas</string>
+    <string name="settings_screenshot_prompt_needs_photos">Permite el acceso a todas las fotos para que OffBridge detecte capturas nuevas.</string>
+    <string name="screenshot_prompt_title">Captura realizada</string>
+    <string name="screenshot_prompt_send_to_one">¿Enviarla a %1$s?</string>
+    <string name="screenshot_prompt_send_to_any">¿Enviarla a un dispositivo conectado?</string>
+    <string name="screenshot_prompt_action_send">Enviar</string>
+    <string name="screenshot_prompt_action_dismiss">Ahora no</string>
 </resources>
 

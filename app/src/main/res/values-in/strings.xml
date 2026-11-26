@@ -703,5 +703,14 @@
     <string name="update_check_again">Periksa lagi</string>
     <string name="update_check_failed">Tidak dapat memeriksa pembaruan</string>
     <string name="update_try_again">Coba lagi</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">Tangkapan layar</string>
+    <string name="settings_screenshot_prompt">Tawarkan untuk mengirim tangkapan layar baru</string>
+    <string name="settings_screenshot_prompt_needs_photos">Izinkan akses ke semua foto agar OffBridge dapat mendeteksi tangkapan layar baru.</string>
+    <string name="screenshot_prompt_title">Tangkapan layar diambil</string>
+    <string name="screenshot_prompt_send_to_one">Kirim ke %1$s?</string>
+    <string name="screenshot_prompt_send_to_any">Kirim ke perangkat yang terhubung?</string>
+    <string name="screenshot_prompt_action_send">Kirim</string>
+    <string name="screenshot_prompt_action_dismiss">Nanti saja</string>
 </resources>
 

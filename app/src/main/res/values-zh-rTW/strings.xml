@@ -686,5 +686,14 @@
     <string name="update_check_again">重新檢查</string>
     <string name="update_check_failed">無法檢查更新</string>
     <string name="update_try_again">重試</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">螢幕截圖</string>
+    <string name="settings_screenshot_prompt">提示傳送新的螢幕截圖</string>
+    <string name="settings_screenshot_prompt_needs_photos">請允許存取所有相片，讓 OffBridge 能偵測新的螢幕截圖。</string>
+    <string name="screenshot_prompt_title">已擷取螢幕畫面</string>
+    <string name="screenshot_prompt_send_to_one">傳送到 %1$s？</string>
+    <string name="screenshot_prompt_send_to_any">傳送到已連線的裝置？</string>
+    <string name="screenshot_prompt_action_send">傳送</string>
+    <string name="screenshot_prompt_action_dismiss">稍後再說</string>
 </resources>
 

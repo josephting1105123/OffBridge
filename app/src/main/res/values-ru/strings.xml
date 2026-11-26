@@ -699,5 +699,14 @@
     <string name="update_check_again">Проверить снова</string>
     <string name="update_check_failed">Не удалось проверить наличие обновлений</string>
     <string name="update_try_again">Повторить</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">Скриншоты</string>
+    <string name="settings_screenshot_prompt">Предлагать отправить новые скриншоты</string>
+    <string name="settings_screenshot_prompt_needs_photos">Разрешите доступ ко всем фото, чтобы OffBridge замечал новые скриншоты.</string>
+    <string name="screenshot_prompt_title">Скриншот сделан</string>
+    <string name="screenshot_prompt_send_to_one">Отправить на %1$s?</string>
+    <string name="screenshot_prompt_send_to_any">Отправить на подключённое устройство?</string>
+    <string name="screenshot_prompt_action_send">Отправить</string>
+    <string name="screenshot_prompt_action_dismiss">Не сейчас</string>
 </resources>
 

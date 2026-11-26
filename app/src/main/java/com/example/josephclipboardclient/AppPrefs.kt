@@ -28,4 +28,8 @@ object NotificationChannels {
     const val CLIPBOARD_ALERTS = "CLIPBOARD_ALERT_CHANNEL_V2"
     const val PAIRING = "PAIRING_REQUESTS_CHANNEL_V2"
     const val TRANSFER_REQUEST = "FILE_TRANSFER_REQUEST_CHANNEL_V2"
+    const val SCREENSHOT_PROMPT = "SCREENSHOT_PROMPT_CHANNEL_V1"
 }
+
+/** Opt-in "offer to send new screenshots" toggle (Boolean in [FILE_BRIDGE_PREFS], default off). */
+const val PREF_SCREENSHOT_PROMPT = "screenshot_prompt_enabled"

@@ -698,5 +698,14 @@
     <string name="update_check_again">Check again</string>
     <string name="update_check_failed">Couldn\'t check for updates</string>
     <string name="update_try_again">Try again</string>
+    <!-- Screenshot send prompt -->
+    <string name="status_channel_screenshots">Screenshots</string>
+    <string name="settings_screenshot_prompt">Offer to send new screenshots</string>
+    <string name="settings_screenshot_prompt_needs_photos">Allow access to all photos so OffBridge can spot new screenshots.</string>
+    <string name="screenshot_prompt_title">Screenshot taken</string>
+    <string name="screenshot_prompt_send_to_one">Send it to %1$s?</string>
+    <string name="screenshot_prompt_send_to_any">Send it to a connected device?</string>
+    <string name="screenshot_prompt_action_send">Send</string>
+    <string name="screenshot_prompt_action_dismiss">Not now</string>
 </resources>
 
