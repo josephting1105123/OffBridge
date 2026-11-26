@@ -1,6 +1,7 @@
 package com.EntropicSoftwareLab.ClipboardShare
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,15 +13,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.os.PersistableBundle
-import android.os.SystemClock
 import android.util.Log
-import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.NotificationCompat
@@ -48,7 +46,6 @@ class ClipboardService : Service() {
     private lateinit var clipboardManager: ClipboardManager
 
     private var notificationStartTime = 0L
-    private var chronometerBase = 0L
 
     private var screenshotWatcher: ScreenshotWatcher? = null
 
@@ -276,39 +273,37 @@ class ClipboardService : Service() {
         serviceScope.launch(Dispatchers.Main) { delay(ALERT_NOTIFICATION_AUTO_DISMISS_MS); notificationManager.cancel(3) }
     }
 
-    private fun getCustomRemoteViews(statusText: String): RemoteViews {
-        val views = RemoteViews(packageName, R.layout.notification_custom)
-        val isNightMode = isDarkMode()
-
-        val textColor = if (isNightMode) Color.parseColor("#FFFFFFFF") else Color.parseColor("#FF000000")
-        val statusColor = if (isNightMode) Color.parseColor("#34D399") else Color.parseColor("#006400")
-        val iconResId = if (isNightMode) R.drawable.ic_clipboard_dark else R.drawable.ic_clipboard_light
-
-        views.setTextColor(R.id.notif_title, textColor)
-        views.setTextColor(R.id.notif_chronometer, textColor)
-        views.setTextColor(R.id.notif_status, statusColor)
-        views.setImageViewResource(R.id.btn_push_text, iconResId)
-        views.setInt(R.id.btn_transfer_file, "setColorFilter", textColor)
-
-        views.setTextViewText(R.id.notif_status, statusText)
-        views.setChronometer(R.id.notif_chronometer, chronometerBase, null, true)
-
+    // Standard template only: a custom layout here crashed the app when SystemUI
+    // couldn't resolve the layout right after a Play update (BadForegroundServiceNotificationException).
+    private fun buildServiceNotification(statusText: String): Notification {
         val pushIntent = Intent(this, ClipboardReaderActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pushPending = PendingIntent.getActivity(this, 0, pushIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        views.setOnClickPendingIntent(R.id.btn_push_text, pushPending)
-
         val fileIntent = Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK }
         val filePending = PendingIntent.getActivity(this, 1, fileIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        views.setOnClickPendingIntent(R.id.btn_transfer_file, filePending)
+        val mainPending = PendingIntent.getActivity(this, 2, Intent(this, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        return views
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(applicationContext.getString(R.string.app_name))
+            .setContentText(statusText)
+            .setWhen(notificationStartTime)
+            .setShowWhen(true)
+            .setUsesChronometer(true)
+            .setContentIntent(mainPending)
+            .addAction(0, applicationContext.getString(R.string.a11y_push_clipboard), pushPending)
+            .addAction(0, applicationContext.getString(R.string.a11y_transfer_file), filePending)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setSilent(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .build()
     }
 
     private fun startForegroundServiceNotification() {
         notificationStartTime = System.currentTimeMillis()
-        chronometerBase = SystemClock.elapsedRealtime()
 
         val manager = getSystemService(NotificationManager::class.java)
         val serviceChannel = NotificationChannel(CHANNEL_ID, applicationContext.getString(R.string.status_channel_service), NotificationManager.IMPORTANCE_LOW)
@@ -323,18 +318,7 @@ class ClipboardService : Service() {
         manager.createNotificationChannel(transferRequestChannel)
         manager.createNotificationChannel(NotificationChannel(NotificationChannels.SCREENSHOT_PROMPT, applicationContext.getString(R.string.status_channel_screenshots), NotificationManager.IMPORTANCE_HIGH))
 
-        val remoteViews = getCustomRemoteViews(applicationContext.getString(R.string.status_mesh_active))
-        val mainActivityIntent = Intent(this, MainActivity::class.java)
-        val mainPendingIntent = PendingIntent.getActivity(this, 2, mainActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(remoteViews)
-            .setContentIntent(mainPendingIntent)
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .build()
+        val notification = buildServiceNotification(applicationContext.getString(R.string.status_mesh_active))
 
         // On Android 12+/14 startForeground can throw ForegroundServiceStartNotAllowedException
         // (or SecurityException) when the app isn't allowed to start an FGS; an unhandled throw
@@ -378,7 +362,7 @@ class ClipboardService : Service() {
 
     private fun startNotificationUpdater() {
         // Off Main (AND-06): each tick reads per-peer keys from EncryptedSharedPreferences and
-        // builds RemoteViews — none of it needs the UI thread, and notify() is thread-safe.
+        // builds the notification — none of it needs the UI thread, and notify() is thread-safe.
         serviceScope.launch(Dispatchers.IO) {
             while (isActive) {
                 // Per-iteration guard: a notify() throw (e.g. TransactionTooLargeException) must not
@@ -390,16 +374,8 @@ class ClipboardService : Service() {
                     else if (TransferDaemon.discoveredNodes.isEmpty()) applicationContext.getString(R.string.status_scanning_devices)
                     else applicationContext.getString(R.string.status_connected_devices, pairedCount)
 
-                    val remoteViews = getCustomRemoteViews(statusText)
                     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    val notification = NotificationCompat.Builder(this@ClipboardService, CHANNEL_ID)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setStyle(NotificationCompat.DecoratedCustomViewStyle())
-                        .setCustomContentView(remoteViews)
-                        .setOngoing(true)
-                        .setSilent(true)
-                        .setPriority(NotificationCompat.PRIORITY_MAX)
-                        .build()
+                    val notification = buildServiceNotification(statusText)
                     notificationManager.notify(1, notification)
                 } catch (e: Exception) {
                     Log.w("ClipboardService", "Notification update failed, retrying: ${e.message}")
