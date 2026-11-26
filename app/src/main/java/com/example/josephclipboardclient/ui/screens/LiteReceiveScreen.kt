@@ -8,7 +8,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -54,7 +51,6 @@ import com.EntropicSoftwareLab.ClipboardShare.ui.theme.AppThemeTokens
 @Composable
 fun LiteReceiveScreen(
     deviceName: String,
-    onBack: () -> Unit,
     onDeviceNameChange: (String) -> Unit,
     onOpenCamera: () -> Unit
 ) {
@@ -80,21 +76,12 @@ fun LiteReceiveScreen(
                     .padding(top = 72.dp, bottom = dimens.spaceXl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimens.headerIcon)
-                        .padding(end = dimens.spaceLg)
-                        .clip(RoundedCornerShape(dimens.radiusMd))
-                        .clickable { onBack() },
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = stringResource(R.string.action_close),
-                        tint = colors.textPrimary,
-                        modifier = Modifier.size(dimens.iconMd)
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_receive),
+                    contentDescription = null,
+                    tint = colors.green,
+                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
+                )
                 Text(
                     stringResource(R.string.lite_receive_files),
                     style = MaterialTheme.typography.headlineSmall,
