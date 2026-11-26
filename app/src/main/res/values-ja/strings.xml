@@ -372,6 +372,7 @@
     <string name="receive_nfc_listening">NFC受信待機中。スマホどうしを合わせてください</string>
     <string name="receive_nfc_unavailable_device">このデバイスではNFCを利用できません</string>
     <string name="receive_open_camera">カメラを開く</string>
+    <string name="receive_scan_qr">QRをスキャン</string>
     <string name="receive_title">ファイルを受信</string>
     <string name="send_to_devices_title">デバイスに送信</string>
     <string name="send_via_connected_devices">接続されているデバイス</string>

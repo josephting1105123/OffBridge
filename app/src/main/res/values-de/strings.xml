@@ -375,6 +375,7 @@
     <string name="receive_nfc_listening">NFC wartet — Telefone zusammentippen</string>
     <string name="receive_nfc_unavailable_device">NFC ist auf diesem Gerät nicht verfügbar</string>
     <string name="receive_open_camera">Kamera öffnen</string>
+    <string name="receive_scan_qr">QR scannen</string>
     <string name="receive_title">Dateien empfangen</string>
     <string name="send_to_devices_title">An Geräte senden</string>
     <string name="send_via_connected_devices">Verbundene Geräte</string>

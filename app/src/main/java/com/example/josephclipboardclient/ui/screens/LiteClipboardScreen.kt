@@ -66,8 +66,7 @@ fun LiteClipboardScreen(
     onDelete: (String) -> Unit,
     onPair: (String) -> Unit,
     onUnpair: (String) -> Unit,
-    onRescan: () -> Unit,
-    onBack: () -> Unit
+    onRescan: () -> Unit
 ) {
     val colors = AppThemeTokens.colors
     val dimens = AppThemeTokens.dimens
@@ -86,21 +85,12 @@ fun LiteClipboardScreen(
                     .padding(top = 72.dp, bottom = dimens.spaceLg),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(dimens.headerIcon)
-                        .padding(end = dimens.spaceLg)
-                        .clip(RoundedCornerShape(dimens.radiusMd))
-                        .clickable { onBack() },
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = stringResource(R.string.action_close),
-                        tint = colors.textPrimary,
-                        modifier = Modifier.size(dimens.iconMd)
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_clipboard_light),
+                    contentDescription = null,
+                    tint = colors.green,
+                    modifier = Modifier.size(dimens.headerIcon).padding(end = dimens.spaceLg)
+                )
                 Text(
                     stringResource(R.string.clipboard_autosync_title),
                     style = MaterialTheme.typography.headlineSmall,

@@ -54,8 +54,7 @@ class HistoryFragment : Fragment() {
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            // Lite adds this over the hub — consume touches so empty areas don't fall through to the
-            // hub tiles beneath.
+            // Consume touches so taps on empty areas don't reach the hidden tab beneath.
             isClickable = true
             setContent {
                 AppTheme {
@@ -75,8 +74,7 @@ class HistoryFragment : Fragment() {
                                 onDelete = { deleteEntry(it) },
                                 onPair = { onPair(it) },
                                 onUnpair = { onUnpair(it) },
-                                onRescan = { rescanDevices() },
-                                onBack = { parentFragmentManager.popBackStack() }
+                                onRescan = { rescanDevices() }
                             )
                         }
                     } else {

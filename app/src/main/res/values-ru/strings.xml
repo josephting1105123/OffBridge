@@ -375,6 +375,7 @@
     <string name="receive_nfc_listening">NFC ожидает — приложите телефоны друг к другу</string>
     <string name="receive_nfc_unavailable_device">NFC недоступен на этом устройстве</string>
     <string name="receive_open_camera">Открыть камеру</string>
+    <string name="receive_scan_qr">Сканировать QR</string>
     <string name="receive_title">Получить файлы</string>
     <string name="send_to_devices_title">Отправить на устройства</string>
     <string name="send_via_connected_devices">Подключенные устройства</string>

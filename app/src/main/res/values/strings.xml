@@ -418,6 +418,7 @@
     <!-- V3.0+: Receive screen + NFC toggle -->
     <string name="receive_title">Receive Files</string>
     <string name="receive_open_camera">Open Camera</string>
+    <string name="receive_scan_qr">Scan QR</string>
     <string name="receive_enable_nfc">Enable NFC</string>
     <string name="receive_nfc_listening">NFC Listening — tap phones together</string>
     <string name="receive_nfc_unavailable_device">NFC is not available on this device</string>

@@ -35,8 +35,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
@@ -44,7 +42,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNavView: BottomNavigationView
     private lateinit var fabMenu: FloatingActionButton
-    private lateinit var liteNavBar: View
     /** Power-menu bottom sheet + its Lite/Pro toggle, promoted from setupMenuBottomSheet() locals so
      *  the forced tour's 7th step can drive the sheet (expand it, spotlight the toggle). */
     private lateinit var menuSheetView: View
@@ -52,7 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var designToggleView: ComposeView
     private val fragmentMap = mutableMapOf<Int, Fragment>()
     private var activeFragment: Fragment? = null
-    /** Tracks the live shell mode so the FAB/back-stack logic stays correct across an in-place switch. */
+    /** Tracks the live shell mode so the FAB icon and mode-switch reconciliation stay accurate. */
     private var currentIsLite = true
     /** Guards re-entrancy while the design-mode crossfade rebuild is running. */
     private var switchingMode = false
@@ -133,86 +130,44 @@ class MainActivity : AppCompatActivity() {
 
         bottomNavView = findViewById(R.id.bottom_nav_view)
         fabMenu = findViewById(R.id.fab_menu)
-        liteNavBar = findViewById(R.id.lite_nav_bar)
-        // The Lite bar is a plain View with an EXPLICIT height, so it can never be measured full-height.
-        // Height = max(the REAL Pro bar height measured/cached in Pro, a base + the nav-bar inset), so it
-        // sits at exactly Pro's height once the user has seen Pro, and a safe fallback before then — this
-        // is what stops it reading "too low". (Guarded so setting layoutParams doesn't loop the inset pass.)
-        val liteBarBasePx = (72f * resources.displayMetrics.density).toInt()
-        ViewCompat.setOnApplyWindowInsetsListener(liteNavBar) { v, insets ->
-            val bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val cachedPro = prefs.getInt("pro_nav_bar_height", 0)
-            val target = maxOf(cachedPro, liteBarBasePx + bottom)
-            if (v.layoutParams.height != target) {
-                v.layoutParams = v.layoutParams.apply { height = target }
-            }
-            insets
-        }
 
         val isLite = isLiteMode(this)
         currentIsLite = isLite
+        applyFabIcon(isLite)
 
-        if (isLite) {
-            // Lite never touches the Pro nav bar (mutating its menu/height at runtime was the source of
-            // the "too low" / stretched-bar bugs). Hide it and use the dedicated lite_nav_bar; the power
-            // FAB anchors to that bar and both are shown hub-only (see updateHubChrome).
-            bottomNavView.visibility = View.GONE
-            anchorFabTo(R.id.lite_nav_bar)
-            ViewCompat.requestApplyInsets(liteNavBar)
+        bottomNavView.visibility = View.VISIBLE
+        anchorFabTo(R.id.bottom_nav_view)
+        fragmentMap[R.id.nav_send_files] = FileTransferFragment()
+        fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
+        fragmentMap[R.id.nav_history] = HistoryFragment()
+        fragmentMap[R.id.nav_receive] = ReceiveFragment()
 
-            if (savedInstanceState == null) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, LiteHubFragment(), "main_tab_hub")
-                    .commitNowAllowingStateLoss()
+        val transaction = supportFragmentManager.beginTransaction()
+        for (id in fragmentMap.keys.toList()) {
+            val tag = "main_tab_${resources.getResourceEntryName(id)}"
+            val restored = supportFragmentManager.findFragmentByTag(tag)
+            if (restored != null) {
+                fragmentMap[id] = restored
+            } else {
+                val fragment = fragmentMap.getValue(id)
+                transaction.add(R.id.nav_host_fragment, fragment, tag).hide(fragment)
             }
-        } else {
-            bottomNavView.visibility = View.VISIBLE
-            liteNavBar.visibility = View.GONE
-            anchorFabTo(R.id.bottom_nav_view)
-            cacheProNavBarHeight()
-            fragmentMap[R.id.nav_send_files] = FileTransferFragment()
-            fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
-            fragmentMap[R.id.nav_history] = HistoryFragment()
-            fragmentMap[R.id.nav_receive] = ReceiveFragment()
-
-            val transaction = supportFragmentManager.beginTransaction()
-            for (id in fragmentMap.keys.toList()) {
-                val tag = "main_tab_${resources.getResourceEntryName(id)}"
-                val restored = supportFragmentManager.findFragmentByTag(tag)
-                if (restored != null) {
-                    fragmentMap[id] = restored
-                } else {
-                    val fragment = fragmentMap.getValue(id)
-                    transaction.add(R.id.nav_host_fragment, fragment, tag).hide(fragment)
-                }
-            }
-            transaction.commitNowAllowingStateLoss()
-            if (savedInstanceState != null) {
-                activeFragment = fragmentMap.values.firstOrNull { !it.isHidden }
-            }
+        }
+        transaction.commitNowAllowingStateLoss()
+        if (savedInstanceState != null) {
+            activeFragment = fragmentMap.values.firstOrNull { !it.isHidden }
         }
 
         if (savedInstanceState == null) {
             // THE FIX: Check the initial intent. If it's a share, handle it. Otherwise, load the default fragment.
             if (intent?.getBooleanExtra("SHOW_HISTORY", false) == true) {
-                if (isLite) {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, HistoryFragment())
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss()
-                } else {
-                    switchFragment(R.id.nav_send_files)
-                    bottomNavView.selectedItemId = R.id.nav_send_files
-                }
+                switchFragment(R.id.nav_send_files)
+                bottomNavView.selectedItemId = R.id.nav_send_files
 
                 val targetSessionId = intent.getStringExtra("HISTORY_SESSION_ID")
                 showTransferHistoryDetail(targetSessionId)
                 if (intent.getBooleanExtra("CLEAR_SEND_SELECTION", false)) {
-                    if (isLite) {
-                        (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? FileTransferFragment)?.clearSelectedFiles()
-                    } else {
-                        (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
-                    }
+                    (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
                 }
                 setIntent(Intent())
             } else if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE) {
@@ -221,10 +176,8 @@ class MainActivity : AppCompatActivity() {
                 // First launch after onboarding: force the 7-step conceptual guided tour.
                 startForcedTour()
             } else {
-                if (!isLite) {
-                    switchFragment(R.id.nav_send_files)
-                    bottomNavView.selectedItemId = R.id.nav_send_files
-                }
+                switchFragment(R.id.nav_send_files)
+                bottomNavView.selectedItemId = R.id.nav_send_files
             }
         } else if (prefs.getBoolean(TutorialTour.KEY_IN_PROGRESS, false)
             && !prefs.getBoolean(TutorialTour.KEY_COMPLETED_V2, false)
@@ -237,19 +190,15 @@ class MainActivity : AppCompatActivity() {
         // Warm the NFC antenna-position cache once, off the critical path.
         window.decorView.post { NfcAntennaLocator.zoneFor(applicationContext) }
 
-        // The Pro nav-item listener is Pro-only (Lite hides the bar entirely).
-        if (!isLite) installProNav()
+        installProNav()
 
         onBackPressedDispatcher.addCallback(this, tabBackGuard)
         // Added after tabBackGuard so it wins while enabled (last-added has highest priority).
         onBackPressedDispatcher.addCallback(this, tourBackGuard)
-        // One mode-aware listener drives both the tab back-guard and the hub-only Lite chrome (bar +
-        // FAB). Kept unconditional (not just in the Lite branch) so it stays correct after a mode switch.
+        // Keep tabBackGuard in sync when SendToDevicesFragment is pushed or popped.
         supportFragmentManager.addOnBackStackChangedListener {
             updateTabBackGuard()
-            updateHubChrome()
         }
-        updateHubChrome()
 
         setupMenuBottomSheet()
     }
@@ -469,26 +418,12 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if (intent?.getBooleanExtra("SHOW_HISTORY", false) == true) {
-            // Use the LIVE shell mode, not the pref — during an in-place switch the pref leads the
-            // shell by ~200ms, and targeting the wrong (not-yet-built) shell would mis-route/NPE.
-            val isLite = currentIsLite
-            if (isLite) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, HistoryFragment())
-                    .addToBackStack(null)
-                    .commitAllowingStateLoss()
-            } else {
-                switchFragment(R.id.nav_send_files)
-                bottomNavView.selectedItemId = R.id.nav_send_files
-            }
+            switchFragment(R.id.nav_send_files)
+            bottomNavView.selectedItemId = R.id.nav_send_files
             val targetSessionId = intent.getStringExtra("HISTORY_SESSION_ID")
             showTransferHistoryDetail(targetSessionId)
             if (intent.getBooleanExtra("CLEAR_SEND_SELECTION", false)) {
-                if (isLite) {
-                    (supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? FileTransferFragment)?.clearSelectedFiles()
-                } else {
-                    (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
-                }
+                (fragmentMap[R.id.nav_send_files] as? FileTransferFragment)?.clearSelectedFiles()
             }
             setIntent(Intent())
         } else if (intent?.action == Intent.ACTION_SEND || intent?.action == Intent.ACTION_SEND_MULTIPLE) {
@@ -540,29 +475,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (uris.isNotEmpty()) {
-            // Live shell mode, not the pref: the Pro branch below casts fragmentMap[send] which is only
-            // populated in the Pro shell, so a share arriving mid-switch (pref already flipped to Pro,
-            // shell still Lite / map empty) must NOT take the Pro branch and NPE on the cast.
-            val isLite = currentIsLite
+            // Safe cast instead of a hard `as`: a share can arrive mid-mode-switch while fragmentMap
+            // is momentarily empty during teardown, so bail cleanly rather than NPE on the cast.
+            val fileTransferFragment = fragmentMap[R.id.nav_send_files] as? FileTransferFragment ?: run {
+                setIntent(Intent())
+                return
+            }
 
-            val fileTransferFragment = if (isLite) {
-                val current = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
-                if (current is FileTransferFragment) current else FileTransferFragment().also {
-                    supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, it)
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss()
-                }
-            } else {
-                fragmentMap[R.id.nav_send_files] as FileTransferFragment
-            }
-            
             fileTransferFragment.ingestSharedUris(uris)
-            
-            if (!isLite) {
-                switchFragment(R.id.nav_send_files)
-                bottomNavView.selectedItemId = R.id.nav_send_files
-            }
+            switchFragment(R.id.nav_send_files)
+            bottomNavView.selectedItemId = R.id.nav_send_files
         } else {
             // No file streams — a plain-text share ("Share → OffBridge" from any app). Push it
             // to paired devices through the clipboard pipeline (the reliable, permission-free
@@ -624,23 +546,11 @@ class MainActivity : AppCompatActivity() {
         tabBackGuard.isEnabled = overlayExists && activeFragment != fragmentMap[R.id.nav_send_files]
     }
 
-    /** Pro: FAB always shown, no Lite bar. Lite: FAB + lite_nav_bar shown only on the hub (empty
-     *  back stack), hidden on the Send / Receive / Clipboard child screens. */
-    private fun updateHubChrome() {
-        if (!::fabMenu.isInitialized || !::liteNavBar.isInitialized) return
-        if (currentIsLite) {
-            val onHub = supportFragmentManager.backStackEntryCount == 0
-            val vis = if (onHub) View.VISIBLE else View.GONE
-            fabMenu.visibility = vis
-            liteNavBar.visibility = vis
-        } else {
-            fabMenu.visibility = View.VISIBLE
-            liteNavBar.visibility = View.GONE
-        }
+    private fun applyFabIcon(lite: Boolean) {
+        fabMenu.setImageResource(if (lite) R.drawable.ic_hdr_settings else R.drawable.ic_power)
     }
 
-    /** Re-anchors the power FAB's top to [barId]'s top (+16dp), so it rides just above whichever bar
-     *  the current mode shows (bottom_nav_view in Pro, lite_nav_bar in Lite). */
+    /** Anchors the centre menu FAB's top to [barId]'s top (+16dp) so it sits in the bottom-nav slot. */
     private fun anchorFabTo(barId: Int) {
         val lp = fabMenu.layoutParams as ConstraintLayout.LayoutParams
         lp.topToTop = barId
@@ -649,7 +559,7 @@ class MainActivity : AppCompatActivity() {
         fabMenu.layoutParams = lp
     }
 
-    /** Wires the Pro bottom-nav tab selection (shared by onCreate and the live mode switch). */
+    /** Wires bottom-nav tab selection (shared by onCreate and the live mode switch). */
     private fun installProNav() {
         bottomNavView.setOnItemSelectedListener { item ->
             if (item.itemId == R.id.nav_placeholder) return@setOnItemSelectedListener false
@@ -660,27 +570,15 @@ class MainActivity : AppCompatActivity() {
         bottomNavView.menu.findItem(R.id.nav_placeholder)?.isEnabled = false
     }
 
-    /** Record the REAL Pro bottom-nav height once it's laid out, so the Lite bar can match it exactly
-     *  (rather than guessing and reading "too low"). */
-    private fun cacheProNavBarHeight() {
-        bottomNavView.post {
-            val h = bottomNavView.height
-            if (h > 0) {
-                getSharedPreferences(FILE_BRIDGE_PREFS, Context.MODE_PRIVATE)
-                    .edit().putInt("pro_nav_bar_height", h).apply()
-            }
-        }
-    }
-
     /**
      * Switches Lite⇄Pro in place — no activity restart — with a short crossfade. The power-menu sheet
-     * is a separate window and stays open on top throughout (that's why the toggle can trigger this and
-     * still be visible). Re-entrancy and no-op (same-mode) calls are ignored.
+     * stays open on top throughout (that's why the toggle can trigger this and still be visible).
+     * Re-entrancy and no-op (same-mode) calls are ignored.
      */
     fun requestDesignModeSwitch(toLite: Boolean) {
         if (switchingMode || toLite == currentIsLite) return
         switchingMode = true
-        val fadeViews = listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
+        val fadeViews = listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, fabMenu)
         fadeViews.forEach { it.animate().alpha(0f).setDuration(180L).start() }
         bottomNavView.postDelayed({
             // Bail if we were backgrounded / destroyed during the fade — the fragment transactions
@@ -693,7 +591,7 @@ class MainActivity : AppCompatActivity() {
                 return@postDelayed
             }
             rebuildShellFor(toLite)
-            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu).forEach {
+            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, fabMenu).forEach {
                 it.alpha = 0f
                 it.animate().alpha(1f).setDuration(200L).start()
             }
@@ -712,8 +610,9 @@ class MainActivity : AppCompatActivity() {
         }, 200L)
     }
 
-    /** Tears down the current shell (child back stack + fragments) and builds the other mode's shell.
-     *  Only fragments in [R.id.nav_host_fragment] are removed — the power-menu dialog is left intact. */
+    /** Tears down the current tab fragments (plus any overlay on the back stack) and rebuilds the
+     *  4-tab shell so each fragment re-creates its view for [toLite]. Only fragments in
+     *  [R.id.nav_host_fragment] are removed — the menu sheet is left intact. */
     private fun rebuildShellFor(toLite: Boolean) {
         supportFragmentManager.popBackStackImmediate(
             null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
@@ -725,36 +624,24 @@ class MainActivity : AppCompatActivity() {
         fragmentMap.clear()
         activeFragment = null
         currentIsLite = toLite
+        applyFabIcon(toLite)
 
-        if (toLite) {
-            // Hide the Pro nav bar (never mutate its menu) and switch the FAB to the Lite bar.
-            bottomNavView.visibility = View.GONE
-            anchorFabTo(R.id.lite_nav_bar)
-            ViewCompat.requestApplyInsets(liteNavBar)
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, LiteHubFragment(), "main_tab_hub")
-                .commitNowAllowingStateLoss()
-        } else {
-            liteNavBar.visibility = View.GONE
-            bottomNavView.visibility = View.VISIBLE
-            anchorFabTo(R.id.bottom_nav_view)
-            cacheProNavBarHeight()
-            installProNav()
-            fragmentMap[R.id.nav_send_files] = FileTransferFragment()
-            fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
-            fragmentMap[R.id.nav_history] = HistoryFragment()
-            fragmentMap[R.id.nav_receive] = ReceiveFragment()
-            val tx = supportFragmentManager.beginTransaction()
-            for (id in fragmentMap.keys.toList()) {
-                val tag = "main_tab_${resources.getResourceEntryName(id)}"
-                val f = fragmentMap.getValue(id)
-                tx.add(R.id.nav_host_fragment, f, tag).hide(f)
-            }
-            tx.commitNowAllowingStateLoss()
-            switchFragment(R.id.nav_send_files)
-            bottomNavView.selectedItemId = R.id.nav_send_files
+        bottomNavView.visibility = View.VISIBLE
+        anchorFabTo(R.id.bottom_nav_view)
+        installProNav()
+        fragmentMap[R.id.nav_send_files] = FileTransferFragment()
+        fragmentMap[R.id.nav_system_status] = SystemStatusFragment()
+        fragmentMap[R.id.nav_history] = HistoryFragment()
+        fragmentMap[R.id.nav_receive] = ReceiveFragment()
+        val tx = supportFragmentManager.beginTransaction()
+        for (id in fragmentMap.keys.toList()) {
+            val tag = "main_tab_${resources.getResourceEntryName(id)}"
+            val f = fragmentMap.getValue(id)
+            tx.add(R.id.nav_host_fragment, f, tag).hide(f)
         }
-        updateHubChrome()
+        tx.commitNowAllowingStateLoss()
+        switchFragment(R.id.nav_send_files)
+        bottomNavView.selectedItemId = R.id.nav_send_files
     }
 
     override fun onResume() {
@@ -762,8 +649,8 @@ class MainActivity : AppCompatActivity() {
         isAppInForeground = true
         // Safety net: if a design-mode crossfade was interrupted by backgrounding (its rebuild bailed,
         // or a fade-in froze), the shell could be left dimmed/invisible. Restore full opacity on return.
-        if (!switchingMode && ::liteNavBar.isInitialized) {
-            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, liteNavBar, fabMenu)
+        if (!switchingMode && ::fabMenu.isInitialized) {
+            listOf(findViewById<View>(R.id.nav_host_fragment), bottomNavView, fabMenu)
                 .forEach { it.alpha = 1f }
         }
         // The scanner's final step durably marks completion (survives process death).

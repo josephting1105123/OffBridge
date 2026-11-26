@@ -377,6 +377,7 @@
     <string name="receive_nfc_listening">NFC Mendengarkan — sentuhkan kedua ponsel</string>
     <string name="receive_nfc_unavailable_device">NFC tidak tersedia di perangkat ini</string>
     <string name="receive_open_camera">Buka Kamera</string>
+    <string name="receive_scan_qr">Pindai QR</string>
     <string name="receive_title">Terima File</string>
     <string name="send_to_devices_title">Kirim ke Perangkat</string>
     <string name="send_via_connected_devices">Perangkat Terhubung</string>
