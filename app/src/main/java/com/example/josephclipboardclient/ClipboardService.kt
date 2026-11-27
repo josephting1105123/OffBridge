@@ -114,9 +114,7 @@ class ClipboardService : Service() {
         startTcpReceiver()
         startNotificationUpdater()
 
-        screenshotWatcher = ScreenshotWatcher(applicationContext, serviceScope) {
-            resolveClipboardTargets().map { it.second }
-        }.also { it.start() }
+        screenshotWatcher = ScreenshotWatcher(applicationContext, serviceScope).also { it.start() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

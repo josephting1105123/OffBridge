@@ -705,8 +705,7 @@
     <string name="settings_screenshot_prompt">Proposer d\'envoyer les nouvelles captures</string>
     <string name="settings_screenshot_prompt_needs_photos">Autorisez l\'accès à toutes les photos pour qu\'OffBridge repère les nouvelles captures.</string>
     <string name="screenshot_prompt_title">Capture d\'écran prise</string>
-    <string name="screenshot_prompt_send_to_one">L\'envoyer à %1$s ?</string>
-    <string name="screenshot_prompt_send_to_any">L\'envoyer à un appareil connecté ?</string>
+    <string name="screenshot_prompt_send">Envoyer cette capture d\'écran à un autre appareil ?</string>
     <string name="screenshot_prompt_action_send">Envoyer</string>
     <string name="screenshot_prompt_action_dismiss">Pas maintenant</string>
 </resources>

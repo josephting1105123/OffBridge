@@ -692,8 +692,7 @@
     <string name="settings_screenshot_prompt">提示傳送新的螢幕截圖</string>
     <string name="settings_screenshot_prompt_needs_photos">請允許存取所有相片，讓 OffBridge 能偵測新的螢幕截圖。</string>
     <string name="screenshot_prompt_title">已擷取螢幕畫面</string>
-    <string name="screenshot_prompt_send_to_one">傳送到 %1$s？</string>
-    <string name="screenshot_prompt_send_to_any">傳送到已連線的裝置？</string>
+    <string name="screenshot_prompt_send">將此螢幕截圖傳送到其他裝置？</string>
     <string name="screenshot_prompt_action_send">傳送</string>
     <string name="screenshot_prompt_action_dismiss">稍後再說</string>
 </resources>
