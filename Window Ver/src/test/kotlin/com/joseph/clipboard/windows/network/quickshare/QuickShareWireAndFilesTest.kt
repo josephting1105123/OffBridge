@@ -2,6 +2,7 @@ package com.joseph.clipboard.windows.network.quickshare
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -12,6 +13,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.EOFException
 import java.io.File
+import java.io.IOException
 import java.util.Base64
 
 class QuickShareWireAndFilesTest {
@@ -146,10 +148,30 @@ class QuickShareWireAndFilesTest {
     @Test
     fun finalizingRefusesToLeaveTheSaveFolder() {
         val dir = folder.newFolder()
-        assertThrows(java.io.IOException::class.java) {
-            QuickShareFiles.finalizeFile(part(dir, "x"), dir, "..\\escaped.txt")
+        val outside = File(dir.parentFile, "escaped.txt")
+
+        // Forward-slash traversal is a separator on every platform: must be refused, nothing moved.
+        val slashPart = part(dir, "x")
+        assertThrows(IOException::class.java) {
+            QuickShareFiles.finalizeFile(slashPart, dir, "../escaped.txt")
         }
-        assertTrue(!File(dir.parentFile, "escaped.txt").exists())
+        assertTrue("part file must stay put after a refused '../' name", slashPart.exists())
+        assertFalse("'../' name must not write outside the save folder", outside.exists())
+
+        // Backslash is a separator only on Windows; on Linux/macOS it is an ordinary leaf-name character.
+        val backslashPart = part(dir, "x")
+        if (File.separatorChar == '\\') {
+            assertThrows(IOException::class.java) {
+                QuickShareFiles.finalizeFile(backslashPart, dir, "..\\escaped.txt")
+            }
+            assertTrue("part file must stay put after a refused '..\\' name", backslashPart.exists())
+        } else {
+            val saved = QuickShareFiles.finalizeFile(backslashPart, dir, "..\\escaped.txt")
+            assertEquals("saved file must stay inside the save folder", dir.canonicalFile, saved.canonicalFile.parentFile)
+            assertEquals("backslash name is kept as one leaf name", "..\\escaped.txt", saved.name)
+            assertEquals("saved content", "x", saved.readText())
+        }
+        assertFalse("backslash name must not write outside the save folder", outside.exists())
     }
 
     private fun part(dir: File, content: String) = QuickShareFiles.createPartFile(dir).apply { writeText(content) }
